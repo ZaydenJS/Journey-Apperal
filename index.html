@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Journey Apparel — Modern Performance Essentials</title>
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta
+      name="description"
+      content="Premium athletic apparel. Minimal design. Maximum performance."
+    />
+  </head>
+  <body style="margin: 0; overflow-x: hidden">
+    <!-- Announcement + countdown -->
+    <div
+      class="announcement upper"
+      style="position: sticky; top: 0; left: 0; right: 0"
+    >
+      Free shipping over $75 • Launch in <span id="countdown">00:00:00</span>
+    </div>
+
+    <!-- Header -->
+    <header class="header" style="top: 0; left: 0; right: 0">
+      <div
+        class="container header-inner"
+        style="
+          max-width: none;
+          width: 100%;
+          padding-left: 16px;
+          padding-right: 16px;
+        "
+      >
+        <div class="nav-left row">
+          <button class="menu-toggle" aria-label="Open menu">
+            <span></span><span></span><span></span>
+          </button>
+          <nav class="nav" aria-label="Primary">
+            <a href="#" class="header-item"
+              >Shop
+              <div class="mega" role="dialog" aria-label="Mega menu">
+                <div class="mega-grid container">
+                  <div>
+                    <h4 class="upper">Shop by Category</h4>
+                    <div class="links">
+                      <a href="collection.html">Tops</a>
+                      <a href="collection.html">Bottoms</a>
+                      <a href="collection.html">Outerwear</a>
+                      <a href="collection.html">Accessories</a>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 class="upper">Shop by Collection</h4>
+                    <div class="links">
+                      <a href="collection.html">AeroLite</a>
+                      <a href="collection.html">Front Runner</a>
+                      <a href="collection.html">Core365</a>
+                      <a href="collection.html">Black Label</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+            <a href="collection.html" class="header-item">Collections</a>
+            <a href="collection.html" class="header-item">New In</a>
+            <a href="collection.html" class="header-item"
+              >Sale<span class="badge">-20%</span></a
+            >
+          </nav>
+        </div>
+        <h1 class="logo">
+          <a href="index.html" aria-label="Journey Apparel Home">JOURNEY</a>
+        </h1>
+        <!-- Search Overlay -->
+        <div
+          id="site-search"
+          style="
+            position: fixed;
+            inset: 0 0 auto 0;
+            top: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+            display: none;
+            padding: 12px 16px;
+          "
+        >
+          <form
+            id="site-search-form"
+            style="max-width: 800px; margin: 0 auto; display: flex; gap: 8px"
+          >
+            <input
+              id="site-search-input"
+              type="search"
+              placeholder="Search pages or sections (e.g., New Arrivals, Best Sellers, Pair It With, Cart)"
+              style="
+                flex: 1;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                font-size: 16px;
+                background: #fff;
+              "
+            />
+            <button
+              type="submit"
+              style="
+                padding: 12px 16px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                background: #fff;
+                font-weight: 600;
+                cursor: pointer;
+              "
+            >
+              Go
+            </button>
+            <button
+              type="button"
+              id="site-search-close"
+              style="
+                padding: 12px 14px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                background: #fff;
+                cursor: pointer;
+              "
+            >
+              ×
+            </button>
+          </form>
+        </div>
+
+        <div class="nav-right">
+          <button class="icon-btn" aria-label="Search">🔍</button>
+          <button class="icon-btn" aria-label="Account">👤</button>
+          <a class="icon-btn" aria-label="Cart" href="#">🛒</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Drawer & Overlay -->
+    <div id="drawer-overlay" class="drawer-overlay" aria-hidden="true"></div>
+    <aside
+      id="mobile-drawer"
+      class="drawer"
+      aria-hidden="true"
+      aria-label="Mobile navigation drawer"
+    >
+      <div class="drawer-top">
+        <button class="drawer-close" aria-label="Close menu">×</button>
+        <a href="#" class="cart-link" aria-label="Cart"
+          >Cart <span id="cart-count">0</span> 🛒</a
+        >
+      </div>
+      <nav class="drawer-nav" aria-label="Mobile navigation">
+        <a href="collection.html?section=new-arrivals" class="row-item"
+          >New Arrivals</a
+        >
+        <a href="collection.html?section=back-in-stock" class="row-item"
+          >Back in Stock</a
+        >
+        <a href="collection.html?section=shop-all" class="row-item">Shop All</a>
+
+        <button class="row-item accordion" data-accordion aria-expanded="false">
+          Shop by Category <span class="chev">›</span>
+        </button>
+        <div class="sub">
+          <a href="collection.html?category=tees">Tees</a>
+          <a href="collection.html?category=hoodies">Hoodies</a>
+          <a href="collection.html?category=shorts">Shorts</a>
+          <a href="collection.html?category=pants">Pants</a>
+          <a href="collection.html?category=outerwear">Outerwear</a>
+          <a href="collection.html?category=accessories">Accessories</a>
+        </div>
+
+        <button class="row-item accordion" data-accordion aria-expanded="false">
+          Shop by Collection <span class="chev">›</span>
+        </button>
+        <div class="sub">
+          <a href="collection.html?collection=best-sellers">Best Sellers</a>
+          <a href="collection.html?collection=ss25">SS/25</a>
+          <a href="collection.html?collection=lightweight">Lightweight</a>
+          <a href="collection.html?collection=boxing">Boxing</a>
+          <a href="collection.html?collection=womens-activewear"
+            >Women’s Activewear</a
+          >
+        </div>
+
+        <a href="#" class="row-item">Members Sign Up</a>
+
+        <button class="row-item accordion" data-accordion aria-expanded="false">
+          Customer Care <span class="chev">›</span>
+        </button>
+        <div class="sub">
+          <a href="returns.html">Exchanges & Returns</a>
+          <a href="shipping.html">Shipping</a>
+          <a href="policies.html">Policies</a>
+          <a href="contact.html">Contact</a>
+        </div>
+      </nav>
+
+      <div class="drawer-bottom">
+        <a href="#" class="row-item">👤 Log in / Create Account</a>
+      </div>
+    </aside>
+
+    <!-- Hero -->
+    <section
+      class="hero"
+      id="hero"
+      aria-label="Hero"
+      style="width: 100%; margin: 0; padding: 0; overflow: hidden"
+    >
+      <video
+        class="hero-media"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="auto"
+        poster="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1400&auto=format&fit=crop"
+        aria-hidden="true"
+        style="
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        "
+      >
+        <source
+          src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+          type="video/mp4"
+        />
+        <!-- Fallback to poster image if video fails -->
+      </video>
+      <noscript>
+        <img
+          class="hero-media"
+          src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1400&auto=format&fit=crop"
+          alt="Editorial running image"
+          style="
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          "
+        />
+      </noscript>
+      <div class="hero-overlay fade-in">
+        <div class="upper title">
+          <span style="display: block">Journeys</span
+          ><span style="display: block">Apparel</span>
+        </div>
+        <div class="subtitle">Precision engineered layers for any pace.</div>
+        <div class="btn-group">
+          <a class="btn" href="collection.html?section=shop-all">Shop Now</a>
+          <a class="btn outline" href="collection.html?section=new-arrivals"
+            >Discover New Arrivals</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- New Arrivals – Carousel like Front Runner -->
+    <section class="section container" id="new-arrivals">
+      <h2 class="center" style="text-align: center">New Arrivals</h2>
+      <div class="carousel arrivals-carousel">
+        <div class="carousel-row top">
+          <button
+            class="ctrl prev"
+            aria-label="Previous"
+            onmouseenter="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='rgba(255,255,255,0.35)'; this.firstElementChild.style.transform='scale(1.1)'"
+            onmouseleave="this.style.background='transparent'; this.style.borderColor='transparent'; this.firstElementChild.style.transform='scale(1)'"
+            onmousedown="this.firstElementChild.style.transform='scale(0.95)'"
+            onmouseup="this.firstElementChild.style.transform='scale(1.1)'"
+            style="
+              padding: 8px;
+              border: 1px solid transparent;
+              border-radius: 50%;
+              background: transparent;
+              color: #fff;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              line-height: 1;
+              font-size: 20px;
+              width: 36px;
+              height: 36px;
+            "
+          >
+            <span
+              style="
+                display: inline-block;
+                color: #fff;
+                transition: transform 120ms ease;
+              "
+              >‹</span
+            >
+          </button>
+          <button
+            class="ctrl next"
+            aria-label="Next"
+            onmouseenter="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='rgba(255,255,255,0.35)'; this.firstElementChild.style.transform='scale(1.1)'"
+            onmouseleave="this.style.background='transparent'; this.style.borderColor='transparent'; this.firstElementChild.style.transform='scale(1)'"
+            onmousedown="this.firstElementChild.style.transform='scale(0.95)'"
+            onmouseup="this.firstElementChild.style.transform='scale(1.1)'"
+            style="
+              padding: 8px;
+              border: 1px solid transparent;
+              border-radius: 50%;
+              background: transparent;
+              color: #fff;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              line-height: 1;
+              font-size: 20px;
+              width: 36px;
+              height: 36px;
+            "
+          >
+            <span
+              style="
+                display: inline-block;
+                color: #fff;
+                transition: transform 120ms ease;
+              "
+              >›</span
+            >
+          </button>
+          <div class="carousel-track">
+            <!-- Top row: 1,3,5,7 -->
+            <article class="card" data-href="product.html?slug=tech-tee">
+              <div class="img-wrap">
+                <img
+                  src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop"
+                  alt="Tech Tee"
+                  loading="lazy"
+                  onerror="this.src='https://via.placeholder.com/800x800/f0f0f0/666?text=Tech+Tee'"
+                />
+                <img
+                  class="alt"
+                  src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop"
+                  alt="Tech Tee alt"
+                  loading="lazy"
+                  onerror="this.src='https://via.placeholder.com/800x800/f0f0f0/666?text=Tech+Tee+Alt'"
+                />
+              </div>
+              <div
+                class="row mt-8"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 6px;
+                  margin-top: 14px;
+                  text-align: center;
+                "
+              >
+                <span
+                  style="
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 15px;
+                    color: #222;
+                  "
+                  >Tech Tee</span
+                >
+                <span
+                  class="price"
+                  style="font-size: 14px; color: #111; font-weight: 400"
+                  >$48</span
+                >
+              </div>
+              <div class="badges"><span class="tag">RESTOCKED</span></div>
+            </article>
+            <article
+              class="card"
+              data-href="product.html?slug=front-runner-vest"
+            >
+              <div class="img-wrap">
+                <img
+                  src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop"
+                  alt="Front Runner Vest"
+                  loading="lazy"
+                  onerror="this.src='https://via.placeholder.com/800x800/f0f0f0/666?text=Front+Runner+Vest'"
+                />
+                <img
+                  class="alt"
+                  src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"
+                  alt="Front Runner Vest alt"
+                  loading="lazy"
+                />
+              </div>
+              <div
+                class="row mt-8"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 6px;
+                  margin-top: 14px;
+                  text-align: center;
+                "
+              >
+                <span
+                  style="
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 15px;
+                    color: #222;
+                  "
+                  >Front Runner Vest</span
+                >
+                <span
+                  class="price"
+                  style="font-size: 14px; color: #111; font-weight: 400"
+                  >$98</span
+                >
+              </div>
+              <div class="badges"><span class="tag red">LIMITED</span></div>
+            </article>
+            <article class="card" data-href="product.html?slug=run-jacket">
+              <div class="img-wrap">
+                <img
+                  src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"
+                  alt="Run Jacket"
+                  loading="lazy"
+                />
+                <img
+                  class="alt"
+                  src="https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?q=80&w=800&auto=format&fit=crop"
+                  alt="Run Jacket alt"
+                  loading="lazy"
+                />
+              </div>
+              <div
+                class="row mt-8"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 6px;
+                  margin-top: 14px;
+                  text-align: center;
+                "
+              >
+                <span
+                  style="
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 15px;
+                    color: #222;
+                  "
+                  >Run Jacket</span
+                >
+                <span
+                  class="price"
+                  style="font-size: 14px; color: #111; font-weight: 400"
+                  >$128</span
+                >
+              </div>
+              <div class="badges"><span class="tag">RESTOCKED</span></div>
+            </article>
+            <article class="card" data-href="product.html?slug=city-hoodie">
+              <div class="img-wrap">
+                <img
+                  src="https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop"
+                  alt="City Hoodie"
+                  loading="lazy"
+                />
+                <img
+                  class="alt"
+                  src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop"
+                  alt="City Hoodie alt"
+                  loading="lazy"
+                />
+              </div>
+              <div
+                class="row mt-8"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 6px;
+                  margin-top: 14px;
+                  text-align: center;
+                "
+              >
+                <span
+                  style="
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 15px;
+                    color: #222;
+                  "
+                  >City Hoodie</span
+                >
+                <span
+                  class="price"
+                  style="font-size: 14px; color: #111; font-weight: 400"
+                  >$98</span
+                >
+              </div>
+              <div class="badges"><span class="tag">RESTOCKED</span></div>
+            </article>
+          </div>
+        </div>
+        <div class="carousel-row bottom">
+          <button
+            class="ctrl prev"
+            aria-label="Previous"
+            onmouseenter="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='rgba(255,255,255,0.35)'; this.firstElementChild.style.transform='scale(1.1)'"
+            onmouseleave="this.style.background='transparent'; this.style.borderColor='transparent'; this.firstElementChild.style.transform='scale(1)'"
+            onmousedown="this.firstElementChild.style.transform='scale(0.95)'"
+            onmouseup="this.firstElementChild.style.transform='scale(1.1)'"
+            style="
+              padding: 8px;
+              border: 1px solid transparent;
+              border-radius: 50%;
+              background: transparent;
+              color: #fff;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              line-height: 1;
+              font-size: 20px;
+              width: 36px;
+              height: 36px;
+            "
+          >
+            <span
+              style="
+                display: inline-block;
+                color: #fff;
+                transition: transform 120ms ease;
+              "
+              >‹</span
+            >
+          </button>
+          <button
+            class="ctrl next"
+            aria-label="Next"
+            onmouseenter="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='rgba(255,255,255,0.35)'; this.firstElementChild.style.transform='scale(1.1)'"
+            onmouseleave="this.style.background='transparent'; this.style.borderColor='transparent'; this.firstElementChild.style.transform='scale(1)'"
+            onmousedown="this.firstElementChild.style.transform='scale(0.95)'"
+            onmouseup="this.firstElementChild.style.transform='scale(1.1)'"
+            style="
+              padding: 8px;
+              border: 1px solid transparent;
+              border-radius: 50%;
+              background: transparent;
+              color: #fff;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              line-height: 1;
+              font-size: 20px;
+              width: 36px;
+              height: 36px;
+            "
+          >
+            <span
+              style="
+                display: inline-block;
+                color: #fff;
+                transition: transform 120ms ease;
+              "
+              >›</span
+            >
+          </button>
+          <div class="carousel-track">
+            <!-- Bottom row: 2,4,6,8 -->
+            <article class="card" data-href="product.html?slug=aero-jogger">
+              <div class="img-wrap">
+                <img
+                  src="https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop"
+                  alt="Aero Jogger"
+                  loading="lazy"
+                />
+                <img
+                  class="alt"
+                  src="https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop"
+                  alt="Aero Jogger alt"
+                  loading="lazy"
+                />
+              </div>
+              <div
+                class="row mt-8"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 6px;
+                  margin-top: 14px;
+                  text-align: center;
+                "
+              >
+                <span
+                  style="
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 15px;
+                    color: #222;
+                  "
+                  >Aero Jogger</span
+                >
+                <span
+                  class="price"
+                  style="font-size: 14px; color: #111; font-weight: 400"
+                  >$78</span
+                >
+              </div>
+              <div class="badges"><span class="tag">LIGHTWEIGHT</span></div>
+            </article>
+            <article class="card" data-href="product.html?slug=ultra-short">
+              <div class="img-wrap">
+                <img
+                  src="https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop"
+                  alt="Ultra Short"
+                  loading="lazy"
+                />
+                <img
+                  class="alt"
+                  src="https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop"
+                  alt="Ultra Short alt"
+                  loading="lazy"
+                />
+              </div>
+              <div
+                class="row mt-8"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 6px;
+                  margin-top: 14px;
+                  text-align: center;
+                "
+              >
+                <span
+                  style="
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 15px;
+                    color: #222;
+                  "
+                  >Ultra Short</span
+                >
+                <span
+                  class="price"
+                  style="font-size: 14px; color: #111; font-weight: 400"
+                  >$58</span
+                >
+              </div>
+              <div class="badges"><span class="tag">RESTOCKED</span></div>
+            </article>
+            <article class="card" data-href="product.html?slug=studio-tank">
+              <div class="img-wrap">
+                <img
+                  src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop"
+                  alt="Studio Tank"
+                  loading="lazy"
+                  onerror="this.src='https://via.placeholder.com/800x800/f0f0f0/666?text=Studio+Tank'"
+                />
+                <img
+                  class="alt"
+                  src="https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?q=80&w=800&auto=format&fit=crop"
+                  alt="Studio Tank alt"
+                  loading="lazy"
+                />
+              </div>
+              <div
+                class="row mt-8"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 6px;
+                  margin-top: 14px;
+                  text-align: center;
+                "
+              >
+                <span
+                  style="
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 15px;
+                    color: #222;
+                  "
+                  >Studio Tank</span
+                >
+                <span
+                  class="price"
+                  style="font-size: 14px; color: #111; font-weight: 400"
+                  >$44</span
+                >
+              </div>
+              <div class="badges"><span class="tag">LIGHTWEIGHT</span></div>
+            </article>
+            <article class="card" data-href="product.html?slug=everyday-cap">
+              <div class="img-wrap">
+                <img
+                  src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop"
+                  alt="Everyday Cap"
+                  loading="lazy"
+                  onerror="this.src='https://via.placeholder.com/800x800/f0f0f0/666?text=Everyday+Cap'"
+                />
+                <img
+                  class="alt"
+                  src="https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?q=80&w=800&auto=format&fit=crop"
+                  alt="Everyday Cap alt"
+                  loading="lazy"
+                />
+              </div>
+              <div
+                class="row mt-8"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 6px;
+                  margin-top: 14px;
+                  text-align: center;
+                "
+              >
+                <span
+                  style="
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 15px;
+                    color: #222;
+                  "
+                  >Everyday Cap</span
+                >
+                <span
+                  class="price"
+                  style="font-size: 14px; color: #111; font-weight: 400"
+                  >$28</span
+                >
+              </div>
+              <div class="badges"><span class="tag">RESTOCKED</span></div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category Panels -->
+    <section class="section container" id="categories">
+      <h2 style="text-align: center">Shop by Category</h2>
+      <div class="carousel category-carousel">
+        <button
+          class="ctrl prev"
+          aria-label="Previous"
+          onmouseenter="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='rgba(255,255,255,0.35)'; this.firstElementChild.style.transform='scale(1.1)'"
+          onmouseleave="this.style.background='transparent'; this.style.borderColor='transparent'; this.firstElementChild.style.transform='scale(1)'"
+          onmousedown="this.firstElementChild.style.transform='scale(0.95)'"
+          onmouseup="this.firstElementChild.style.transform='scale(1.1)'"
+          style="
+            padding: 8px;
+            border: 1px solid transparent;
+            border-radius: 50%;
+            background: transparent;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+          "
+        >
+          <span
+            style="
+              display: inline-block;
+              color: #fff;
+              transition: transform 120ms ease;
+            "
+            >‹</span
+          >
+        </button>
+        <div class="carousel-track panels" role="list">
+          <!-- Order: Tops, Shorts, Trackies & Pants, Outerwear, Accessories, Hoodies & Sweaters -->
+          <a class="panel" href="collection.html?category=tees" role="listitem">
+            <img
+              src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=1200&auto=format&fit=crop"
+              alt="Tees"
+              loading="lazy"
+              onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Tops'"
+            />
+            <div
+              class="caption center"
+              style="
+                text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <div class="upper">Tees</div>
+            </div>
+          </a>
+          <a
+            class="panel"
+            href="collection.html?category=shorts"
+            role="listitem"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=1200&auto=format&fit=crop"
+              alt="Shorts"
+              loading="lazy"
+              onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Shorts'"
+            />
+            <div
+              class="caption center"
+              style="
+                text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <div class="upper">Shorts</div>
+            </div>
+          </a>
+          <a
+            class="panel"
+            href="collection.html?category=pants"
+            role="listitem"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=1200&auto=format&fit=crop"
+              alt="Pants"
+              loading="lazy"
+              onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Trackies+%26+Pants'"
+            />
+            <div
+              class="caption center"
+              style="
+                text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <div class="upper">Pants</div>
+            </div>
+          </a>
+          <a
+            class="panel"
+            href="collection.html?category=outerwear"
+            role="listitem"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1200&auto=format&fit=crop"
+              alt="Outerwear"
+              loading="lazy"
+            />
+            <div
+              class="caption center"
+              style="
+                text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <div class="upper">Outerwear</div>
+            </div>
+          </a>
+          <a
+            class="panel"
+            href="collection.html?category=accessories"
+            role="listitem"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1200&auto=format&fit=crop"
+              alt="Accessories"
+              loading="lazy"
+              onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Accessories'"
+            />
+            <div
+              class="caption center"
+              style="
+                text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <div class="upper">Accessories</div>
+            </div>
+          </a>
+          <a
+            class="panel"
+            href="collection.html?category=hoodies"
+            role="listitem"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=1200&auto=format&fit=crop"
+              alt="Hoodies"
+              loading="lazy"
+            />
+            <div
+              class="caption center"
+              style="
+                text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <div class="upper">Hoodies</div>
+            </div>
+          </a>
+        </div>
+        <button
+          class="ctrl next"
+          aria-label="Next"
+          onmouseenter="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='rgba(255,255,255,0.35)'; this.firstElementChild.style.transform='scale(1.1)'"
+          onmouseleave="this.style.background='transparent'; this.style.borderColor='transparent'; this.firstElementChild.style.transform='scale(1)'"
+          onmousedown="this.firstElementChild.style.transform='scale(0.95)'"
+          onmouseup="this.firstElementChild.style.transform='scale(1.1)'"
+          style="
+            padding: 8px;
+            border: 1px solid transparent;
+            border-radius: 50%;
+            background: transparent;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+          "
+        >
+          <span
+            style="
+              display: inline-block;
+              color: #fff;
+              transition: transform 120ms ease;
+            "
+            >›</span
+          >
+        </button>
+      </div>
+    </section>
+
+    <!-- Best Sellers Carousel -->
+    <section class="section container" id="best-sellers">
+      <div class="row" style="justify-content: center; position: relative">
+        <h2 class="center" style="text-align: center">Best Sellers</h2>
+        <div
+          class="row muted"
+          style="font-size: 12px; position: absolute; right: 0"
+        >
+          Swipe →
+        </div>
+      </div>
+      <div class="carousel best-sellers">
+        <button
+          class="ctrl prev"
+          aria-label="Prev"
+          onmouseenter="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='rgba(255,255,255,0.35)'; this.firstElementChild.style.transform='scale(1.1)'"
+          onmouseleave="this.style.background='transparent'; this.style.borderColor='transparent'; this.firstElementChild.style.transform='scale(1)'"
+          onmousedown="this.firstElementChild.style.transform='scale(0.95)'"
+          onmouseup="this.firstElementChild.style.transform='scale(1.1)'"
+          style="
+            padding: 8px;
+            border: 1px solid transparent;
+            border-radius: 50%;
+            background: transparent;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+          "
+        >
+          <span
+            style="
+              display: inline-block;
+              color: #fff;
+              transition: transform 120ms ease;
+            "
+            >‹</span
+          >
+        </button>
+        <div class="carousel-track">
+          <article class="card" data-href="product.html?slug=zip-jacket">
+            <div class="img-wrap">
+              <img
+                src="https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?q=80&w=800&auto=format&fit=crop"
+                alt="Zip Jacket"
+                loading="lazy"
+              />
+              <img
+                class="alt"
+                src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"
+                alt="Zip Jacket alt"
+                loading="lazy"
+              />
+            </div>
+            <div
+              class="row mt-8"
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                margin-top: 14px;
+                text-align: center;
+              "
+            >
+              <span
+                style="
+                  max-width: 100%;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  font-size: 15px;
+                  color: #222;
+                "
+                >Zip Jacket</span
+              >
+              <span
+                class="price"
+                style="font-size: 14px; color: #111; font-weight: 400"
+                >$128</span
+              >
+            </div>
+            <div class="badges"><span class="tag">RESTOCKED</span></div>
+          </article>
+          <article class="card" data-href="product.html?slug=run-shell">
+            <div class="img-wrap">
+              <img
+                src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"
+                alt="Run Shell"
+                loading="lazy"
+              />
+              <img
+                class="alt"
+                src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop"
+                alt="Run Shell alt"
+                loading="lazy"
+              />
+            </div>
+            <div
+              class="row mt-8"
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                margin-top: 14px;
+                text-align: center;
+              "
+            >
+              <span
+                style="
+                  max-width: 100%;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  font-size: 15px;
+                  color: #222;
+                "
+                >Run Shell</span
+              >
+              <span
+                class="price"
+                style="font-size: 14px; color: #111; font-weight: 400"
+                >$148</span
+              >
+            </div>
+            <div class="badges"><span class="tag">LIGHTWEIGHT</span></div>
+          </article>
+          <article class="card" data-href="product.html?slug=aero-tee">
+            <div class="img-wrap">
+              <img
+                src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop"
+                alt="Aero Tee"
+                loading="lazy"
+              />
+              <img
+                class="alt"
+                src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop"
+                alt="Aero Tee alt"
+                loading="lazy"
+              />
+            </div>
+            <div
+              class="row mt-8"
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                margin-top: 14px;
+                text-align: center;
+              "
+            >
+              <span
+                style="
+                  max-width: 100%;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  font-size: 15px;
+                  color: #222;
+                "
+                >Aero Tee</span
+              >
+              <span
+                class="price"
+                style="font-size: 14px; color: #111; font-weight: 400"
+                >$48</span
+              >
+            </div>
+          </article>
+          <article class="card" data-href="product.html?slug=train-tank">
+            <div class="img-wrap">
+              <img
+                src="https://images.unsplash.com/photo-1542296332-2e4473faf563?q=80&w=800&auto=format&fit=crop"
+                alt="Train Tank"
+                loading="lazy"
+              />
+              <img
+                class="alt"
+                src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop"
+                alt="Train Tank alt"
+                loading="lazy"
+                onerror="this.src='https://via.placeholder.com/800x800/f0f0f0/666?text=Train+Tank+Alt'"
+              />
+            </div>
+            <div
+              class="row mt-8"
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                margin-top: 14px;
+                text-align: center;
+              "
+            >
+              <span
+                style="
+                  max-width: 100%;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  font-size: 15px;
+                  color: #222;
+                "
+                >Train Tank</span
+              >
+              <span
+                class="price"
+                style="font-size: 14px; color: #111; font-weight: 400"
+                >$44</span
+              >
+            </div>
+          </article>
+          <article class="card" data-href="product.html?slug=core-legging">
+            <div class="img-wrap">
+              <img
+                src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop"
+                alt="Core Legging"
+                loading="lazy"
+                onerror="this.src='https://via.placeholder.com/800x800/f0f0f0/666?text=Core+Legging'"
+              />
+              <img
+                class="alt"
+                src="https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop"
+                alt="Core Legging alt"
+                loading="lazy"
+              />
+            </div>
+            <div
+              class="row mt-8"
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                margin-top: 14px;
+                text-align: center;
+              "
+            >
+              <span
+                style="
+                  max-width: 100%;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  font-size: 15px;
+                  color: #222;
+                "
+                >Core Legging</span
+              >
+              <span
+                class="price"
+                style="font-size: 14px; color: #111; font-weight: 400"
+                >$88</span
+              >
+            </div>
+            <div class="badges"><span class="tag">SOLD OUT</span></div>
+          </article>
+        </div>
+        <button
+          class="ctrl next"
+          aria-label="Next"
+          onmouseenter="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='rgba(255,255,255,0.35)'; this.firstElementChild.style.transform='scale(1.1)'"
+          onmouseleave="this.style.background='transparent'; this.style.borderColor='transparent'; this.firstElementChild.style.transform='scale(1)'"
+          onmousedown="this.firstElementChild.style.transform='scale(0.95)'"
+          onmouseup="this.firstElementChild.style.transform='scale(1.1)'"
+          style="
+            padding: 8px;
+            border: 1px solid transparent;
+            border-radius: 50%;
+            background: transparent;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+          "
+        >
+          <span
+            style="
+              display: inline-block;
+              color: #fff;
+              transition: transform 120ms ease;
+            "
+            >›</span
+          >
+        </button>
+      </div>
+    </section>
+
+    <!-- Join the Club Banner -->
+    <section
+      class="section"
+      style="padding: 48px 16px 18px 16px; margin-bottom: 0"
+    >
+      <div
+        class="container center"
+        style="
+          max-width: 380px;
+          margin: 0 auto;
+          padding: 24px;
+          border-radius: 16px;
+          background: #111;
+          color: #fff;
+        "
+      >
+        <div
+          class="upper"
+          style="font-size: 18px; margin-bottom: 12px; font-weight: 700"
+        >
+          Join the Club
+        </div>
+        <p
+          class="muted"
+          style="font-size: 14px; margin-bottom: 20px; color: #ccc"
+        >
+          Early access to drops & rewards.
+        </p>
+        <div class="newsletter" style="max-width: 320px; margin: 0 auto">
+          <form
+            class="input"
+            aria-label="Newsletter"
+            style="
+              max-width: 320px;
+              margin: 0 auto;
+              display: flex;
+              gap: 8px;
+              align-items: center;
+            "
+          >
+            <input
+              type="email"
+              placeholder="Your email"
+              required
+              style="
+                flex: 1;
+                padding: 12px 16px;
+                border: 1px solid #333;
+                border-radius: 25px;
+                background: #222;
+                color: #fff;
+                font-size: 14px;
+                min-width: 0;
+              "
+            />
+            <button
+              type="submit"
+              style="
+                padding: 12px 20px;
+                border-radius: 25px;
+                background: #fff;
+                color: #000;
+                border: none;
+                font-weight: 600;
+                cursor: pointer;
+                min-width: 80px;
+                font-size: 14px;
+                white-space: nowrap;
+              "
+            >
+              Join
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Spacer between Join the Club and Footer -->
+    <div style="height: 48px; background: #f8f9fa"></div>
+
+    <!-- Footer -->
+    <footer style="background: #1a1a1a; color: #fff; margin-top: 0">
+      <!-- Main Footer Content -->
+      <div style="padding: 48px 0 32px 0">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px">
+          <!-- Footer Grid -->
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+              gap: 40px;
+              margin-bottom: 40px;
+            "
+          >
+            <!-- Brand Section -->
+            <div
+              style="
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+              "
+            >
+              <img
+                src="LOGO/1.png"
+                alt="Journey Apparel Logo"
+                style="height: 120px; margin: 0 auto 20px auto; display: block"
+              />
+              <p
+                style="
+                  color: #ccc;
+                  font-size: 14px;
+                  line-height: 1.6;
+                  margin: 0 0 20px 0;
+                  max-width: 280px;
+                  text-align: center;
+                "
+              >
+                Premium athletic apparel designed for modern performance.
+                Minimal design, maximum impact.
+              </p>
+              <!-- Social Icons -->
+              <div style="display: flex; justify-content: center; gap: 12px">
+                <a
+                  href="#"
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    background: #333;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                    text-decoration: none;
+                    transition: background 0.2s ease;
+                  "
+                  onmouseover="this.style.background='#555'"
+                  onmouseout="this.style.background='#333'"
+                  >📸</a
+                >
+                <a
+                  href="#"
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    background: #333;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                    text-decoration: none;
+                    transition: background 0.2s ease;
+                  "
+                  onmouseover="this.style.background='#555'"
+                  onmouseout="this.style.background='#333'"
+                  >▶️</a
+                >
+                <a
+                  href="#"
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    background: #333;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                    text-decoration: none;
+                    transition: background 0.2s ease;
+                  "
+                  onmouseover="this.style.background='#555'"
+                  onmouseout="this.style.background='#333'"
+                  >🐦</a
+                >
+              </div>
+            </div>
+
+            <!-- Customer Care -->
+            <div style="text-align: center">
+              <h4
+                style="
+                  font-size: 16px;
+                  font-weight: 700;
+                  margin: 0 0 20px 0;
+                  color: #fff;
+                "
+              >
+                Customer Care
+              </h4>
+              <div style="display: flex; flex-direction: column; gap: 12px">
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Contact Us</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Shipping Info</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Returns & Exchanges</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Size Guide</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >FAQ</a
+                >
+              </div>
+            </div>
+
+            <!-- Company -->
+            <div style="text-align: center">
+              <h4
+                style="
+                  font-size: 16px;
+                  font-weight: 700;
+                  margin: 0 0 20px 0;
+                  color: #fff;
+                "
+              >
+                Company
+              </h4>
+              <div style="display: flex; flex-direction: column; gap: 12px">
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >About Journey</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Careers</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Press</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Sustainability</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Investors</a
+                >
+              </div>
+            </div>
+
+            <!-- Newsletter -->
+            <div style="text-align: center">
+              <h4
+                style="
+                  font-size: 16px;
+                  font-weight: 700;
+                  margin: 0 0 20px 0;
+                  color: #fff;
+                "
+              >
+                Stay Connected
+              </h4>
+              <p style="color: #ccc; font-size: 14px; margin: 0 0 16px 0">
+                Get exclusive access to new drops and member rewards.
+              </p>
+              <form
+                style="
+                  display: flex;
+                  gap: 8px;
+                  max-width: 280px;
+                  margin: 0 auto;
+                "
+              >
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  required
+                  style="
+                    flex: 1;
+                    padding: 12px 16px;
+                    border: 1px solid #444;
+                    border-radius: 8px;
+                    background: #2a2a2a;
+                    color: #fff;
+                    font-size: 14px;
+                  "
+                />
+                <button
+                  type="submit"
+                  style="
+                    padding: 12px 16px;
+                    border-radius: 8px;
+                    background: #fff;
+                    color: #000;
+                    border: none;
+                    font-weight: 600;
+                    cursor: pointer;
+                    white-space: nowrap;
+                  "
+                >
+                  Subscribe
+                </button>
+              </form>
+              <p style="color: #888; font-size: 12px; margin: 12px 0 0 0">
+                By subscribing, you agree to our Privacy Policy.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Bottom -->
+      <div style="border-top: 1px solid #333; padding: 24px 0">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px">
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 16px;
+              text-align: center;
+            "
+          >
+            <!-- Copyright and Links -->
+            <div
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
+                gap: 24px;
+              "
+            >
+              <span style="color: #888; font-size: 14px"
+                >© 2025 Journey Apparel. All rights reserved. Prices in
+                AUD.</span
+              >
+              <div style="display: flex; gap: 20px">
+                <a
+                  href="#"
+                  style="
+                    color: #888;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#888'"
+                  >Privacy Policy</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #888;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#888'"
+                  >Terms of Service</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #888;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#888'"
+                  >Accessibility</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>

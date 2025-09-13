@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Card Clicks</title>
+    <style>
+        .card {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 10px;
+            cursor: pointer;
+            background: #f9f9f9;
+        }
+        .card:hover {
+            background: #e9e9e9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Card Clicks</h1>
+    
+    <article class="card" data-href="product.html?slug=test-product">
+        <div class="img-wrap">
+            <img src="https://via.placeholder.com/200x200" alt="Test Product" />
+        </div>
+        <div>
+            <span>Test Product</span><span class="price">$50</span>
+        </div>
+    </article>
+
+    <script>
+        function setupCardLinks() {
+            document.addEventListener("click", (e) => {
+                console.log("Click detected on:", e.target);
+                
+                if (e.target.closest(".ctrl,a,button")) {
+                    console.log("Click ignored - on control element");
+                    return;
+                }
+                
+                const card = e.target.closest(".card[data-href]");
+                console.log("Found card:", card);
+                
+                if (!card) {
+                    console.log("No card found");
+                    return;
+                }
+                
+                const href = card.getAttribute("data-href");
+                console.log("Card href:", href);
+                
+                if (href) {
+                    console.log("Navigating to:", href);
+                    alert("Would navigate to: " + href); // Use alert instead of actual navigation for testing
+                    // window.location.href = href;
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            setupCardLinks();
+            console.log("Card links setup complete");
+        });
+    </script>
+</body>
+</html>

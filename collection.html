@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Collection – Journey Apparel</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body style="margin: 0; overflow-x: hidden">
+    <div
+      class="announcement upper"
+      style="position: sticky; top: 0; left: 0; right: 0"
+    >
+      Free shipping over $75 • Launch in <span id="countdown">00:00:00</span>
+    </div>
+    <header class="header" style="top: 0; left: 0; right: 0">
+      <div
+        class="container header-inner"
+        style="
+          max-width: none;
+          width: 100%;
+          padding-left: 16px;
+          padding-right: 16px;
+        "
+      >
+        <div class="nav-left row">
+          <button class="menu-toggle" aria-label="Open menu">
+            <span></span><span></span><span></span>
+          </button>
+          <nav class="nav" aria-label="Primary">
+            <a href="#" class="header-item"
+              >Shop
+              <div class="mega" role="dialog" aria-label="Mega menu">
+                <div class="mega-grid container">
+                  <div>
+                    <h4 class="upper">Shop by Category</h4>
+                    <div class="links">
+                      <a href="collection.html">Tees</a>
+                      <a href="collection.html">Hoodies</a>
+                      <a href="collection.html">Shorts</a>
+                      <a href="collection.html">Pants</a>
+                      <a href="collection.html">Outerwear</a>
+                      <a href="collection.html">Accessories</a>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 class="upper">Shop by Collection</h4>
+                    <div class="links">
+                      <a href="collection.html">AeroLite</a>
+                      <a href="collection.html">Front Runner</a>
+                      <a href="collection.html">Core365</a>
+                      <a href="collection.html">Black Label</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+            <a href="collection.html" class="header-item">Collections</a>
+            <a href="collection.html" class="header-item">New In</a>
+            <a href="collection.html" class="header-item"
+              >Sale<span class="badge">-20%</span></a
+            >
+          </nav>
+        </div>
+        <h1 class="logo"><a href="index.html">JOURNEY</a></h1>
+        <div class="nav-right">
+          <button class="icon-btn" aria-label="Search">🔍</button>
+          <button class="icon-btn" aria-label="Account">👤</button>
+          <a class="icon-btn" aria-label="Cart" href="#">🛒</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Drawer & Overlay -->
+    <div id="drawer-overlay" class="drawer-overlay" aria-hidden="true"></div>
+    <aside
+      id="mobile-drawer"
+      class="drawer"
+      aria-hidden="true"
+      aria-label="Mobile navigation drawer"
+    >
+      <div class="drawer-top">
+        <button class="drawer-close" aria-label="Close menu">×</button>
+        <a href="#" class="cart-link" aria-label="Cart"
+          >Cart <span id="cart-count">0</span> 🛒</a
+        >
+      </div>
+      <nav class="drawer-nav" aria-label="Mobile navigation">
+        <a href="collection.html?section=new-arrivals" class="row-item"
+          >New Arrivals</a
+        >
+        <a href="collection.html?section=back-in-stock" class="row-item"
+          >Back in Stock</a
+        >
+        <a href="collection.html?section=shop-all" class="row-item">Shop All</a>
+
+        <button class="row-item accordion" data-accordion aria-expanded="false">
+          Shop by Category <span class="chev">›</span>
+        </button>
+        <div class="sub">
+          <a href="collection.html?category=tees">Tees</a>
+          <a href="collection.html?category=hoodies">Hoodies</a>
+          <a href="collection.html?category=shorts">Shorts</a>
+          <a href="collection.html?category=pants">Pants</a>
+          <a href="collection.html?category=outerwear">Outerwear</a>
+          <a href="collection.html?category=accessories">Accessories</a>
+        </div>
+
+        <button class="row-item accordion" data-accordion aria-expanded="false">
+          Shop by Collection <span class="chev">›</span>
+        </button>
+        <div class="sub">
+          <a href="collection.html?collection=best-sellers">Best Sellers</a>
+        </div>
+
+        <a href="#" class="row-item">Members Sign Up</a>
+
+        <button class="row-item accordion" data-accordion aria-expanded="false">
+          Customer Care <span class="chev">›</span>
+        </button>
+        <div class="sub">
+          <a href="returns.html">Exchanges & Returns</a>
+          <a href="shipping.html">Shipping</a>
+          <a href="policies.html">Policies</a>
+          <a href="contact.html">Contact</a>
+        </div>
+      </nav>
+
+      <div class="drawer-bottom">
+        <a href="#" class="row-item">👤 Log in / Create Account</a>
+      </div>
+    </aside>
+
+    <main class="container section">
+      <header class="mt-0" style="padding-left: 0; text-align: center">
+        <div class="upper" style="font-weight: 800">
+          Front Runner / New Arrivals
+        </div>
+        <div class="muted">23 products</div>
+      </header>
+
+      <!-- Divider under product count -->
+      <div
+        style="height: 1px; background: #e5e5e5; margin: 10px 16px 0 16px"
+      ></div>
+
+      <div
+        class="toolbar"
+        style="
+          display: grid;
+          grid-template-columns: 1fr 1fr auto;
+          gap: 12px;
+          align-items: center;
+          margin: 16px 0 12px 0;
+          padding: 0 16px 0 16px;
+        "
+      >
+        <button
+          id="filter-toggle"
+          style="
+            width: 100%;
+            border: 1px solid #ddd;
+            padding: 12px 14px;
+            min-height: 44px;
+            border-radius: 6px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            cursor: pointer;
+          "
+        >
+          <span>Filter</span>
+          <span style="opacity: 0.6">⚙</span>
+        </button>
+        <button
+          id="sort-toggle"
+          style="
+            width: 100%;
+            border: 1px solid #ddd;
+            padding: 12px 14px;
+            min-height: 44px;
+            border-radius: 6px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            cursor: pointer;
+          "
+        >
+          <span>Sort by</span>
+          <span style="opacity: 0.6">▾</span>
+        </button>
+        <!-- View toggle buttons -->
+        <div
+          id="view-toggle"
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            align-items: center;
+            justify-content: space-between;
+            align-self: stretch;
+            justify-self: end;
+            width: 24px;
+          "
+        >
+          <button
+            id="view-4"
+            aria-pressed="true"
+            title="Grid view"
+            style="
+              width: 20px;
+              height: 20px;
+              background: transparent;
+              border: 0;
+              padding: 0;
+              color: #111;
+              cursor: pointer;
+            "
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+              <rect x="3" y="3" width="6" height="6" fill="currentColor"></rect>
+              <rect
+                x="11"
+                y="3"
+                width="6"
+                height="6"
+                fill="currentColor"
+                opacity="0.6"
+              ></rect>
+              <rect
+                x="3"
+                y="11"
+                width="6"
+                height="6"
+                fill="currentColor"
+                opacity="0.6"
+              ></rect>
+              <rect
+                x="11"
+                y="11"
+                width="6"
+                height="6"
+                fill="currentColor"
+                opacity="0.6"
+              ></rect>
+            </svg>
+          </button>
+          <button
+            id="view-1"
+            aria-pressed="false"
+            title="Single view"
+            style="
+              width: 20px;
+              height: 20px;
+              background: transparent;
+              border: 0;
+              padding: 0;
+              color: #d9d9d9;
+              cursor: pointer;
+            "
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+              <rect
+                x="3"
+                y="3"
+                width="14"
+                height="14"
+                fill="currentColor"
+              ></rect>
+            </svg>
+          </button>
+        </div>
+        <div
+          id="sort-menu"
+          style="
+            position: relative;
+            width: 100%;
+            grid-column: 1 / -1;
+            height: 0;
+            overflow: visible;
+          "
+        >
+          <div
+            style="
+              position: absolute;
+              right: 0;
+              top: 8px;
+              background: #fff;
+              border: 1px solid #eee;
+              border-radius: 8px;
+              box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+              display: none;
+              min-width: 220px;
+              z-index: 10;
+            "
+            data-sort-panel
+          >
+            <button
+              data-sort="none"
+              style="
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 10px 12px;
+                background: none;
+                border: 0;
+                cursor: pointer;
+              "
+            >
+              None
+            </button>
+
+            <button
+              data-sort="featured"
+              style="
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 10px 12px;
+                background: none;
+                border: 0;
+                cursor: pointer;
+              "
+            >
+              Featured
+            </button>
+            <button
+              data-sort="bestselling"
+              style="
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 10px 12px;
+                background: none;
+                border: 0;
+                cursor: pointer;
+              "
+            >
+              Best selling
+            </button>
+            <button
+              data-sort="price-asc"
+              style="
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 10px 12px;
+                background: none;
+                border: 0;
+                cursor: pointer;
+              "
+            >
+              Price: Low to High
+            </button>
+            <button
+              data-sort="price-desc"
+              style="
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 10px 12px;
+                background: none;
+                border: 0;
+                cursor: pointer;
+              "
+            >
+              Price: High to Low
+            </button>
+            <button
+              data-sort="newest"
+              style="
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 10px 12px;
+                background: none;
+                border: 0;
+                cursor: pointer;
+              "
+            >
+              Newest
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <aside
+        id="filters"
+        class="filters"
+        aria-label="Filters"
+        style="
+          display: none;
+          position: absolute;
+          left: 0;
+          top: 0;
+          background: #fff;
+          border: 1px solid #e5e5e5;
+          border-radius: 10px;
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+          padding: 16px;
+          z-index: 1000;
+          width: auto;
+          min-width: 280px;
+        "
+      >
+        <div style="margin: 10px 0 12px 0; font-weight: 600">Filter by</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+          <button
+            class="filter-chip"
+            data-filter="size"
+            style="
+              border: 1px solid #ddd;
+              padding: 14px 16px;
+              height: 48px;
+              border-radius: 8px;
+              background: #fff;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              cursor: pointer;
+            "
+          >
+            <span>Size</span><span style="opacity: 0.6">▾</span>
+          </button>
+          <button
+            class="filter-chip"
+            data-filter="color"
+            style="
+              border: 1px solid #ddd;
+              padding: 14px 16px;
+              height: 48px;
+              border-radius: 8px;
+              background: #fff;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              cursor: pointer;
+            "
+          >
+            <span>Color</span><span style="opacity: 0.6">▾</span>
+          </button>
+          <button
+            class="filter-chip"
+            data-filter="type"
+            style="
+              border: 1px solid #ddd;
+              padding: 14px 16px;
+              height: 48px;
+              border-radius: 8px;
+              background: #fff;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              cursor: pointer;
+            "
+          >
+            <span>Product type</span><span style="opacity: 0.6">▾</span>
+          </button>
+          <button
+            class="filter-chip"
+            data-filter="availability"
+            style="
+              border: 1px solid #ddd;
+              padding: 14px 16px;
+              height: 48px;
+              border-radius: 8px;
+              background: #fff;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              cursor: pointer;
+            "
+          >
+            <span>Availability</span><span style="opacity: 0.6">▾</span>
+          </button>
+        </div>
+      </aside>
+
+      <section class="grid products mt-16" style="row-gap: 64px">
+        <!-- Product cards -->
+        <article class="card">
+          <a
+            href="product.html"
+            class="img-wrap"
+            style="display: block; aspect-ratio: 1 / 1.7; overflow: hidden"
+            ><img
+              src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop"
+              alt="Tech Tee"
+              loading="lazy"
+              style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+              "
+          /></a>
+          <div
+            class="row mt-8"
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 6px;
+              margin-top: 14px;
+              text-align: center;
+            "
+          >
+            <span
+              style="
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 15px;
+                color: #222;
+              "
+              >Tech Tee</span
+            >
+            <span
+              class="price"
+              style="font-size: 14px; color: #111; font-weight: 400"
+              >$48</span
+            >
+          </div>
+        </article>
+        <article class="card">
+          <a
+            href="product.html"
+            class="img-wrap"
+            style="display: block; aspect-ratio: 1 / 1.7; overflow: hidden"
+            ><img
+              src="https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop"
+              alt="Aero Jogger"
+              loading="lazy"
+              style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+              "
+          /></a>
+          <div
+            class="row mt-8"
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 6px;
+              margin-top: 14px;
+              text-align: center;
+            "
+          >
+            <span
+              style="
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 15px;
+                color: #222;
+              "
+              >Aero Jogger</span
+            >
+            <span
+              class="price"
+              style="font-size: 14px; color: #111; font-weight: 400"
+              >$78</span
+            >
+          </div>
+        </article>
+        <article class="card">
+          <a
+            href="product.html"
+            class="img-wrap"
+            style="display: block; aspect-ratio: 1 / 1.7; overflow: hidden"
+            ><img
+              src="https://images.unsplash.com/photo-1560243563-062b4b6eb650?q=80&w=800&auto=format&fit=crop"
+              alt="Front Runner Vest"
+              loading="lazy"
+              style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+              "
+          /></a>
+          <div
+            class="row mt-8"
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 6px;
+              margin-top: 14px;
+              text-align: center;
+            "
+          >
+            <span
+              style="
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 15px;
+                color: #222;
+              "
+              >Front Runner Vest</span
+            >
+            <span
+              class="price"
+              style="font-size: 14px; color: #111; font-weight: 400"
+              >$98</span
+            >
+          </div>
+        </article>
+        <article class="card">
+          <a
+            href="product.html"
+            class="img-wrap"
+            style="display: block; aspect-ratio: 1 / 1.7; overflow: hidden"
+            ><img
+              src="https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop"
+              alt="Ultra Short"
+              loading="lazy"
+              style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+              "
+          /></a>
+          <div
+            class="row mt-8"
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 6px;
+              margin-top: 14px;
+              text-align: center;
+            "
+          >
+            <span
+              style="
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 15px;
+                color: #222;
+              "
+              >Ultra Short</span
+            >
+            <span
+              class="price"
+              style="font-size: 14px; color: #111; font-weight: 400"
+              >$58</span
+            >
+          </div>
+        </article>
+        <article class="card">
+          <a
+            href="product.html"
+            class="img-wrap"
+            style="display: block; aspect-ratio: 1 / 1.7; overflow: hidden"
+            ><img
+              src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"
+              alt="Run Jacket"
+              loading="lazy"
+              style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+              "
+          /></a>
+          <div
+            class="row mt-8"
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 6px;
+              margin-top: 14px;
+              text-align: center;
+            "
+          >
+            <span
+              style="
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 15px;
+                color: #222;
+              "
+              >Run Jacket</span
+            >
+            <span
+              class="price"
+              style="font-size: 14px; color: #111; font-weight: 400"
+              >$128</span
+            >
+          </div>
+        </article>
+        <article class="card">
+          <a
+            href="product.html"
+            class="img-wrap"
+            style="display: block; aspect-ratio: 1 / 1.7; overflow: hidden"
+            ><img
+              src="https://images.unsplash.com/photo-1542296332-2e4473faf563?q=80&w=800&auto=format&fit=crop"
+              alt="Studio Tank"
+              loading="lazy"
+              style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+              "
+          /></a>
+          <div
+            class="row mt-8"
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 6px;
+              margin-top: 14px;
+              text-align: center;
+            "
+          >
+            <span
+              style="
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 15px;
+                color: #222;
+              "
+              >Studio Tank</span
+            >
+            <span
+              class="price"
+              style="font-size: 14px; color: #111; font-weight: 400"
+              >$44</span
+            >
+          </div>
+        </article>
+        <article class="card">
+          <a
+            href="product.html"
+            class="img-wrap"
+            style="display: block; aspect-ratio: 1 / 1.7; overflow: hidden"
+            ><img
+              src="https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop"
+              alt="City Hoodie"
+              loading="lazy"
+              style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+              "
+          /></a>
+          <div
+            class="row mt-8"
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 6px;
+              margin-top: 14px;
+              text-align: center;
+            "
+          >
+            <span
+              style="
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 15px;
+                color: #222;
+              "
+              >City Hoodie</span
+            >
+            <span
+              class="price"
+              style="font-size: 14px; color: #111; font-weight: 400"
+              >$98</span
+            >
+          </div>
+        </article>
+        <article class="card">
+          <a
+            href="product.html"
+            class="img-wrap"
+            style="display: block; aspect-ratio: 1 / 1.7; overflow: hidden"
+            ><img
+              src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop"
+              alt="Everyday Cap"
+              loading="lazy"
+              style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+              "
+          /></a>
+          <div
+            class="row mt-8"
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 6px;
+              margin-top: 14px;
+              text-align: center;
+            "
+          >
+            <span
+              style="
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 15px;
+                color: #222;
+              "
+              >Everyday Cap</span
+            >
+            <span
+              class="price"
+              style="font-size: 14px; color: #111; font-weight: 400"
+              >$28</span
+            >
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <!-- Join the Club Banner -->
+    <section
+      class="section"
+      style="padding: 48px 16px 18px 16px; margin-bottom: 0"
+    >
+      <div class="container center" style="max-width: 380px; margin: 0 auto">
+        <div
+          class="upper"
+          style="font-size: 18px; margin-bottom: 12px; font-weight: 700"
+        >
+          Join the Club
+        </div>
+        <p
+          class="muted"
+          style="font-size: 14px; margin-bottom: 20px; color: #ccc"
+        >
+          Early access to drops & rewards.
+        </p>
+        <div class="newsletter" style="max-width: 320px; margin: 0 auto">
+          <form
+            class="input"
+            aria-label="Newsletter"
+            style="display: flex; gap: 8px; align-items: center"
+          >
+            <input
+              type="email"
+              placeholder="Your email"
+              required
+              style="
+                flex: 1;
+                padding: 12px 16px;
+                border: 1px solid #333;
+                border-radius: 25px;
+                background: #222;
+                color: #fff;
+                font-size: 14px;
+                min-width: 0;
+              "
+            />
+            <button
+              type="submit"
+              style="
+                padding: 12px 20px;
+                border-radius: 25px;
+                background: #fff;
+                color: #000;
+                border: none;
+                font-weight: 600;
+                cursor: pointer;
+                min-width: 80px;
+                font-size: 14px;
+                white-space: nowrap;
+              "
+            >
+              Join
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Spacer between Join the Club and Footer -->
+    <div style="height: 48px; background: #f8f9fa"></div>
+
+    <!-- Footer -->
+    <footer style="background: #1a1a1a; color: #fff; margin-top: 0">
+      <!-- Main Footer Content -->
+      <div style="padding: 48px 0 32px 0">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px">
+          <!-- Footer Grid -->
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+              gap: 40px;
+              margin-bottom: 40px;
+            "
+          >
+            <!-- Brand Section -->
+            <div
+              style="
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+              "
+            >
+              <img
+                src="LOGO/1.png"
+                alt="Journey Apparel Logo"
+                style="height: 120px; margin: 0 auto 20px auto; display: block"
+              />
+              <p
+                style="
+                  color: #ccc;
+                  font-size: 14px;
+                  line-height: 1.6;
+                  margin: 0 0 20px 0;
+                  max-width: 280px;
+                  text-align: center;
+                "
+              >
+                Premium athletic apparel designed for modern performance.
+                Minimal design, maximum impact.
+              </p>
+              <!-- Social Icons -->
+              <div style="display: flex; justify-content: center; gap: 12px">
+                <a
+                  href="#"
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    background: #333;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                    text-decoration: none;
+                    transition: background 0.2s ease;
+                  "
+                  onmouseover="this.style.background='#555'"
+                  onmouseout="this.style.background='#333'"
+                  >📸</a
+                >
+                <a
+                  href="#"
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    background: #333;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                    text-decoration: none;
+                    transition: background 0.2s ease;
+                  "
+                  onmouseover="this.style.background='#555'"
+                  onmouseout="this.style.background='#333'"
+                  >▶️</a
+                >
+                <a
+                  href="#"
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    background: #333;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                    text-decoration: none;
+                    transition: background 0.2s ease;
+                  "
+                  onmouseover="this.style.background='#555'"
+                  onmouseout="this.style.background='#333'"
+                  >🐦</a
+                >
+              </div>
+            </div>
+
+            <!-- Customer Care -->
+            <div style="text-align: center">
+              <h4
+                style="
+                  font-size: 16px;
+                  font-weight: 700;
+                  margin: 0 0 20px 0;
+                  color: #fff;
+                "
+              >
+                Customer Care
+              </h4>
+              <div style="display: flex; flex-direction: column; gap: 12px">
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Contact Us</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Shipping Info</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Returns & Exchanges</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Size Guide</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >FAQ</a
+                >
+              </div>
+            </div>
+
+            <!-- Company -->
+            <div style="text-align: center">
+              <h4
+                style="
+                  font-size: 16px;
+                  font-weight: 700;
+                  margin: 0 0 20px 0;
+                  color: #fff;
+                "
+              >
+                Company
+              </h4>
+              <div style="display: flex; flex-direction: column; gap: 12px">
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >About Journey</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Careers</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Press</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Sustainability</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #ccc;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#ccc'"
+                  >Investors</a
+                >
+              </div>
+            </div>
+
+            <!-- Newsletter -->
+            <div style="text-align: center">
+              <h4
+                style="
+                  font-size: 16px;
+                  font-weight: 700;
+                  margin: 0 0 20px 0;
+                  color: #fff;
+                "
+              >
+                Stay Connected
+              </h4>
+              <p style="color: #ccc; font-size: 14px; margin: 0 0 16px 0">
+                Get exclusive access to new drops and member rewards.
+              </p>
+              <form
+                style="
+                  display: flex;
+                  gap: 8px;
+                  max-width: 280px;
+                  margin: 0 auto;
+                "
+              >
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  required
+                  style="
+                    flex: 1;
+                    padding: 12px 16px;
+                    border: 1px solid #444;
+                    border-radius: 8px;
+                    background: #2a2a2a;
+                    color: #fff;
+                    font-size: 14px;
+                  "
+                />
+                <button
+                  type="submit"
+                  style="
+                    padding: 12px 16px;
+                    border-radius: 8px;
+                    background: #fff;
+                    color: #000;
+                    border: none;
+                    font-weight: 600;
+                    cursor: pointer;
+                    white-space: nowrap;
+                  "
+                >
+                  Subscribe
+                </button>
+              </form>
+              <p style="color: #888; font-size: 12px; margin: 12px 0 0 0">
+                By subscribing, you agree to our Privacy Policy.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Bottom -->
+      <div style="border-top: 1px solid #333; padding: 24px 0">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px">
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 16px;
+              text-align: center;
+            "
+          >
+            <!-- Copyright and Links -->
+            <div
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
+                gap: 24px;
+              "
+            >
+              <span style="color: #888; font-size: 14px"
+                >© 2025 Journey Apparel. All rights reserved. Prices in
+                AUD.</span
+              >
+              <div style="display: flex; gap: 20px">
+                <a
+                  href="#"
+                  style="
+                    color: #888;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#888'"
+                  >Privacy Policy</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #888;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#888'"
+                  >Terms of Service</a
+                >
+                <a
+                  href="#"
+                  style="
+                    color: #888;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#fff'"
+                  onmouseout="this.style.color='#888'"
+                  >Accessibility</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>

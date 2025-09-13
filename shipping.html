@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shipping — Journey Apparel</title>
+    <meta
+      name="description"
+      content="Shipping information for Journey Apparel."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body
+    style="
+      margin: 0;
+      overflow-x: hidden;
+      background: #fff;
+      color: #111;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+        sans-serif;
+    "
+  >
+    <div
+      class="announcement upper"
+      style="position: sticky; top: 0; left: 0; right: 0"
+    >
+      Free shipping over $75 • Launch in <span id="countdown">00:00:00</span>
+    </div>
+
+    <header class="header" style="top: 0; left: 0; right: 0">
+      <div
+        class="container header-inner"
+        style="
+          max-width: none;
+          width: 100%;
+          padding-left: 16px;
+          padding-right: 16px;
+        "
+      >
+        <div class="nav-left row">
+          <button class="menu-toggle" aria-label="Open menu">
+            <span></span><span></span><span></span>
+          </button>
+          <nav class="nav" aria-label="Primary">
+            <a href="#" class="header-item"
+              >Shop
+              <div class="mega" role="dialog" aria-label="Mega menu">
+                <div class="mega-grid container">
+                  <div>
+                    <h4 class="upper">Shop by Category</h4>
+                    <div class="links">
+                      <a href="collection.html">Tops</a>
+                      <a href="collection.html">Bottoms</a>
+                      <a href="collection.html">Outerwear</a>
+                      <a href="collection.html">Accessories</a>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 class="upper">Shop by Collection</h4>
+                    <div class="links">
+                      <a href="collection.html">AeroLite</a>
+                      <a href="collection.html">Front Runner</a>
+                      <a href="collection.html">Core365</a>
+                      <a href="collection.html">Black Label</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+            <a href="collection.html" class="header-item">Collections</a>
+            <a href="collection.html" class="header-item">New In</a>
+            <a href="collection.html" class="header-item"
+              >Sale<span class="badge">-20%</span></a
+            >
+          </nav>
+        </div>
+        <h1 class="logo">
+          <a href="index.html" aria-label="Journey Apparel Home">JOURNEY</a>
+        </h1>
+        <!-- Search Overlay -->
+        <div
+          id="site-search"
+          style="
+            position: fixed;
+            inset: 0 0 auto 0;
+            top: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+            display: none;
+            padding: 12px 16px;
+          "
+        >
+          <form
+            id="site-search-form"
+            style="max-width: 800px; margin: 0 auto; display: flex; gap: 8px"
+          >
+            <input
+              id="site-search-input"
+              type="search"
+              placeholder="Search pages or sections (e.g., New Arrivals, Best Sellers, Pair It With, Cart)"
+              style="
+                flex: 1;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                font-size: 16px;
+                background: #fff;
+              "
+            />
+            <button
+              type="submit"
+              style="
+                padding: 12px 16px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                background: #fff;
+                font-weight: 600;
+                cursor: pointer;
+              "
+            >
+              Go
+            </button>
+            <button
+              type="button"
+              id="site-search-close"
+              style="
+                padding: 12px 14px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                background: #fff;
+                cursor: pointer;
+              "
+            >
+              ×
+            </button>
+          </form>
+        </div>
+
+        <!-- Cart Drawer -->
+        <div
+          id="cart-overlay"
+          style="
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            display: none;
+          "
+        ></div>
+        <aside
+          id="cart-drawer"
+          style="
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 88%;
+            max-width: 420px;
+            background: #fff;
+            box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
+            transform: translateX(100%);
+            transition: transform 0.25s ease;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 12px 16px;
+              border-bottom: 1px solid #eee;
+            "
+          >
+            <div style="font-weight: 800">Your Cart</div>
+            <button
+              id="cart-close"
+              style="
+                border: 0;
+                background: none;
+                font-size: 24px;
+                cursor: pointer;
+              "
+            >
+              ×
+            </button>
+          </div>
+          <div
+            id="cart-items"
+            style="flex: 1; overflow: auto; padding: 12px 16px"
+          ></div>
+          <div style="border-top: 1px solid #eee; padding: 12px 16px">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 8px;
+              "
+            >
+              <span>Subtotal</span><span id="cart-subtotal">$0.00</span>
+            </div>
+            <button
+              id="checkout-btn"
+              style="
+                width: 100%;
+                padding: 12px;
+                border-radius: 8px;
+                background: #000;
+                color: #fff;
+                font-weight: 600;
+                cursor: pointer;
+              "
+            >
+              Checkout
+            </button>
+          </div>
+        </aside>
+
+        <div class="nav-right">
+          <button class="icon-btn" aria-label="Search">🔍</button>
+          <button class="icon-btn" aria-label="Account">👤</button>
+          <a class="icon-btn" aria-label="Cart" href="#">🛒</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Drawer & Overlay -->
+    <div id="drawer-overlay" class="drawer-overlay" aria-hidden="true"></div>
+    <aside
+      id="mobile-drawer"
+      class="drawer"
+      aria-hidden="true"
+      aria-label="Mobile navigation drawer"
+    >
+      <div class="drawer-top">
+        <button class="drawer-close" aria-label="Close menu">×</button>
+        <a href="#" class="cart-link" aria-label="Cart"
+          >Cart <span id="cart-count">0</span> 🛒</a
+        >
+      </div>
+      <nav class="drawer-nav" aria-label="Mobile navigation">
+        <a href="collection.html?section=new-arrivals" class="row-item"
+          >New Arrivals</a
+        >
+        <a href="collection.html?section=back-in-stock" class="row-item"
+          >Back in Stock</a
+        >
+        <a href="collection.html?section=shop-all" class="row-item">Shop All</a>
+
+        <button class="row-item accordion" data-accordion aria-expanded="false">
+          Shop by Category <span class="chev">›</span>
+        </button>
+        <div class="sub">
+          <a href="collection.html?category=tees">Tees</a>
+          <a href="collection.html?category=hoodies">Hoodies</a>
+          <a href="collection.html?category=shorts">Shorts</a>
+          <a href="collection.html?category=pants">Pants</a>
+          <a href="collection.html?category=outerwear">Outerwear</a>
+          <a href="collection.html?category=accessories">Accessories</a>
+        </div>
+
+        <button class="row-item accordion" data-accordion aria-expanded="false">
+          Shop by Collection <span class="chev">›</span>
+        </button>
+        <div class="sub">
+          <a href="collection.html?collection=best-sellers">Best Sellers</a>
+          <a href="collection.html?collection=ss25">SS/25</a>
+          <a href="collection.html?collection=lightweight">Lightweight</a>
+          <a href="collection.html?collection=boxing">Boxing</a>
+          <a href="collection.html?collection=womens-activewear"
+            >Women’s Activewear</a
+          >
+        </div>
+
+        <a href="#" class="row-item">Members Sign Up</a>
+
+        <button class="row-item accordion" data-accordion aria-expanded="false">
+          Customer Care <span class="chev">›</span>
+        </button>
+        <div class="sub">
+          <a href="returns.html">Exchanges & Returns</a>
+          <a href="shipping.html">Shipping</a>
+          <a href="policies.html">Policies</a>
+          <a href="contact.html">Contact</a>
+        </div>
+      </nav>
+
+      <div class="drawer-bottom">
+        <a href="#" class="row-item">👤 Log in / Create Account</a>
+      </div>
+    </aside>
+
+    <section
+      style="
+        padding: 48px 16px;
+        background: #f7f7f8;
+        border-bottom: 1px solid #eee;
+        text-align: center;
+      "
+    >
+      <div style="max-width: 960px; margin: 0 auto">
+        <h1
+          class="upper"
+          style="
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+          "
+        >
+          Shipping
+        </h1>
+        <p style="margin: 0; color: #666; font-size: 14px">
+          Fast, trackable delivery worldwide.
+        </p>
+      </div>
+    </section>
+
+    <main
+      class="container section"
+      style="max-width: 960px; margin: 0 auto; padding: 24px 16px 64px 16px"
+    >
+      <div style="display: grid; grid-template-columns: 1fr; gap: 16px">
+        <div
+          style="
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+            padding: 20px;
+          "
+        >
+          <div class="upper" style="font-weight: 800; margin-bottom: 8px">
+            Australia
+          </div>
+          <ul
+            style="margin: 0; padding-left: 18px; color: #444; line-height: 1.6"
+          >
+            <li>Standard (2–5 business days): Free over $75, else $8</li>
+            <li>Express (1–3 business days): $12</li>
+          </ul>
+        </div>
+        <div
+          style="
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+            padding: 20px;
+          "
+        >
+          <div class="upper" style="font-weight: 800; margin-bottom: 8px">
+            New Zealand
+          </div>
+          <ul
+            style="margin: 0; padding-left: 18px; color: #444; line-height: 1.6"
+          >
+            <li>Standard (5–8 business days): $12</li>
+            <li>Express (3–5 business days): $18</li>
+          </ul>
+        </div>
+        <div
+          style="
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+            padding: 20px;
+          "
+        >
+          <div class="upper" style="font-weight: 800; margin-bottom: 8px">
+            International
+          </div>
+          <ul
+            style="margin: 0; padding-left: 18px; color: #444; line-height: 1.6"
+          >
+            <li>DHL Express (3–7 business days): Calculated at checkout</li>
+            <li>Duties/taxes included for most regions</li>
+          </ul>
+        </div>
+      </div>
+
+      <div
+        style="
+          margin-top: 24px;
+          border: 1px solid #e5e5e5;
+          border-radius: 12px;
+          padding: 20px;
+        "
+      >
+        <div class="upper" style="font-weight: 800; margin-bottom: 10px">
+          Tracking
+        </div>
+        <p style="margin: 0; color: #444">
+          A tracking link is emailed when your order ships. Delays may occur
+          during sales or holidays.
+        </p>
+      </div>
+    </main>
+
+    <footer
+      style="
+        background: #1a1a1a;
+        color: #fff;
+        text-align: center;
+        padding: 32px 16px;
+      "
+    >
+      <div style="font-weight: 900; letter-spacing: 2px; margin-bottom: 6px">
+        JOURNEY
+      </div>
+      <div style="color: #aaa; font-size: 13px">© 2025 Journey Apparel</div>
+    </footer>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>
