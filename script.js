@@ -99,13 +99,13 @@
       <a href="collection.html?collection=womens-activewear">Women’s Activewear</a>
     </div>
     <a href="#" class="row-item">Gift Cards</a>
-    <a href="#" class="row-item">Journey Sign Up</a>
-    <button class="row-item accordion" data-accordion aria-expanded="false">Help Center <span class="chev">›</span></button>
+    <a href="#" class="row-item">Members Sign Up</a>
+    <button class="row-item accordion" data-accordion aria-expanded="false">Customer Care <span class="chev">›</span></button>
     <div class="sub">
       <a href="#">Exchanges & Returns</a>
       <a href="#">Shipping</a>
       <a href="#">Policies</a>
-      <a href="#">Contact Us</a>
+      <a href="#">Contact</a>
     </div>
     <a href="#" class="row-item">Rewards</a>
   </nav>
@@ -115,64 +115,69 @@
   }
   document.addEventListener("DOMContentLoaded", () => {
     // Ensure standard header exists before wiring behaviors (no-op if already present)
-    ensureStandardHeader();
+    try {
+      ensureStandardHeader();
+    } catch (e) {
+      console.error("[init] ensureStandardHeader failed:", e);
+    }
 
-    setupMobileNav();
-    setupMegaMenuHoverIntent();
-    setupCarousel();
-    setupQuickShopTouch();
-    setupCardLinks();
+    const __safe = (name, fn) => {
+      try {
+        fn && fn();
+      } catch (e) {
+        console.error("[init]", name, "failed:", e);
+      }
+    };
 
-    setupModalFreeShipping();
-    setupCountdown();
-    setupNewsletter();
-    setupCurrency();
-    setupChatWidget();
-    setupCollapsibles();
-    setupGallery();
-    setupFilters();
-    setupCollectionFromQuery();
-    setupCollectionUI();
-    setupProductFromSlug();
-    setupRecentlyViewedAndBestSellers();
-    setupSizeSelection();
-    setupWishlist();
+    __safe("setupMobileNav", setupMobileNav);
+    __safe("setupMegaMenuHoverIntent", setupMegaMenuHoverIntent);
+    __safe("setupCarousel", setupCarousel);
+    __safe("setupQuickShopTouch", setupQuickShopTouch);
+    __safe("setupCardLinks", setupCardLinks);
+
+    __safe("setupModalFreeShipping", setupModalFreeShipping);
+    __safe("setupCountdown", setupCountdown);
+    __safe("setupNewsletter", setupNewsletter);
+    __safe("setupCurrency", setupCurrency);
+    __safe("setupChatWidget", setupChatWidget);
+    __safe("setupCollapsibles", setupCollapsibles);
+    __safe("setupGallery", setupGallery);
+    __safe("setupFilters", setupFilters);
+    __safe("setupCollectionFromQuery", setupCollectionFromQuery);
+    __safe("setupCollectionUI", setupCollectionUI);
+    __safe("setupProductFromSlug", setupProductFromSlug);
+    __safe(
+      "setupRecentlyViewedAndBestSellers",
+      setupRecentlyViewedAndBestSellers
+    );
+    __safe("setupSizeSelection", setupSizeSelection);
+    __safe("setupWishlist", setupWishlist);
 
     // New: sitewide search and cart
-    setupSearch();
-    setupCart();
-    setupAddToCart();
+    __safe("setupSearch", setupSearch);
+    __safe("setupCart", setupCart);
+    __safe("setupAddToCart", setupAddToCart);
 
-    setupAddToCartGuard();
-    normalizeTitleAndAnnouncement();
-    enableHoverSwapIn();
-    setupImageFallbacks();
-    setupThematicImages();
-    normalizeCarouselMedia();
+    __safe("setupAddToCartGuard", setupAddToCartGuard);
+    __safe("normalizeTitleAndAnnouncement", normalizeTitleAndAnnouncement);
+    __safe("enableHoverSwapIn", enableHoverSwapIn);
+    __safe("setupImageFallbacks", setupImageFallbacks);
+    __safe("setupThematicImages", setupThematicImages);
+    __safe("normalizeCarouselMedia", normalizeCarouselMedia);
   });
 
   function setupSizeSelection() {
     const grid = document.getElementById("size-grid");
     if (!grid) return;
     grid.querySelectorAll(".size").forEach((btn) => {
-      const select = () => {
+      btn.addEventListener("click", () => {
         grid.querySelectorAll(".size").forEach((b) => {
           b.classList.remove("selected");
           b.setAttribute("aria-pressed", "false");
         });
         btn.classList.add("selected");
         btn.setAttribute("aria-pressed", "true");
-      };
-      btn.addEventListener("click", select);
-      // iOS touch reliability
-      btn.addEventListener(
-        "touchend",
-        (e) => {
-          e.preventDefault();
-          select();
-        },
-        { passive: false }
-      );
+      });
     });
   }
 
@@ -519,7 +524,7 @@
     toggle.addEventListener("click", () => {
       const isOpen = drawer
         ? drawer.classList.contains("open")
-        : nav && nav.classList && nav.classList.contains("open");
+        : nav?.classList.contains("open");
       isOpen ? close() : open();
     });
 
@@ -954,8 +959,7 @@
     main.addEventListener("touchend", (e) => {
       if (!swiping) return;
       swiping = false;
-      const ct = (e.changedTouches && e.changedTouches[0]) || null;
-      const dx = ((ct && ct.clientX) || 0) - sx;
+      const dx = (e.changedTouches[0]?.clientX || 0) - sx;
       const threshold = 30;
       if (dx > threshold) apply(current - 1);
       else if (dx < -threshold) apply(current + 1);
@@ -1330,10 +1334,7 @@
       // Directly wire the sort actions so they always apply (click + iOS touch)
       sortPanel.querySelectorAll("[data-sort]").forEach((btn) => {
         const applySort = (ev) => {
-          if (ev) {
-            if (ev.preventDefault) ev.preventDefault();
-            if (ev.stopPropagation) ev.stopPropagation();
-          }
+          ev && (ev.preventDefault?.(), ev.stopPropagation?.());
           const val = btn.getAttribute("data-sort") || "featured";
           const label = btn.textContent.trim();
           const firstSpan = sortToggle.querySelector("span");
@@ -1533,17 +1534,6 @@
       const countEl = document.querySelector("main .muted");
       if (!grid) return;
 
-      // Preserve the intended two-column gap to restore after single view
-      const baseColGap = (() => {
-        try {
-          const cs = getComputedStyle(grid);
-          const cg = cs && cs.columnGap ? cs.columnGap : "";
-          return cg && cg !== "0px" ? cg : "16px";
-        } catch (_) {
-          return "16px";
-        }
-      })();
-
       // Build 50 demo products (adds 27 more to reach 50 total)
       const base = [
         {
@@ -1678,7 +1668,8 @@
         if (!gridEl) return;
         gridEl.style.display = "grid";
         gridEl.style.gridTemplateColumns = viewMode === "1" ? "1fr" : "1fr 1fr";
-        gridEl.style.columnGap = viewMode === "1" ? "0px" : baseColGap;
+        gridEl.style.columnGap =
+          viewMode === "1" ? "0px" : gridEl.style.columnGap || "16px";
         const wraps = gridEl.querySelectorAll(".img-wrap");
         wraps.forEach((w) => {
           w.style.aspectRatio = viewMode === "1" ? "1 / 1" : "1 / 1.7";
@@ -2024,22 +2015,13 @@
       currentItems = [];
     };
 
-    $$("[aria-label='Search']").forEach((btn) => {
-      const openSearch = (e) => {
-        e && (e.preventDefault(), e.stopPropagation());
+    $$("[aria-label='Search']").forEach((btn) =>
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // prevent delegated handler from double-triggering
         open();
-      };
-      btn.addEventListener("click", openSearch);
-      // iOS Safari reliability
-      btn.addEventListener(
-        "touchend",
-        (e) => {
-          e.preventDefault();
-          openSearch(e);
-        },
-        { passive: false }
-      );
-    });
+      })
+    );
     // Fallback: event delegation for any Search control added later
     document.addEventListener("click", (e) => {
       const t = e.target.closest("[aria-label='Search']");
@@ -2055,7 +2037,7 @@
       if (
         e.key === "/" &&
         !openState &&
-        (document.activeElement && document.activeElement.tagName) !== "INPUT"
+        document.activeElement?.tagName !== "INPUT"
       ) {
         e.preventDefault();
         open();
@@ -2107,7 +2089,7 @@
       list.querySelectorAll("a").forEach((a, i) => {
         a.addEventListener("click", (ev) => {
           ev.preventDefault();
-          const dest = (currentItems[i] && currentItems[i].url) || null;
+          const dest = currentItems[i]?.url;
           if (!dest) return;
           if (dest === "#cart") {
             openCart();
@@ -2122,7 +2104,7 @@
     // Submit fallback (if no suggestions)
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const q = (input && input.value ? input.value : "").trim().toLowerCase();
+      const q = (input?.value || "").trim().toLowerCase();
       if (!q) return close();
       if (currentItems[0]) {
         const dest = currentItems[0].url;
@@ -2160,8 +2142,7 @@
         },
         { url: "#cart", keys: ["cart", "bag", "checkout"] },
       ];
-      const route = routes.find((r) => r.keys.some((k) => q.includes(k)));
-      let dest = route ? route.url : undefined;
+      let dest = routes.find((r) => r.keys.some((k) => q.includes(k)))?.url;
       if (!dest)
         dest = q.includes("collection")
           ? "collection.html"
@@ -2257,7 +2238,12 @@
         drawer.style.display = "flex";
         drawer.style.flexDirection = "column";
 
-        const header = drawer.querySelector(":scope > div");
+        let header;
+        try {
+          header = drawer.querySelector(":scope > div");
+        } catch (_) {
+          header = drawer.firstElementChild || drawer.querySelector("div");
+        }
         if (header) {
           header.style.display = "flex";
           header.style.alignItems = "center";
@@ -2298,7 +2284,7 @@
           (header &&
             header.nextElementSibling &&
             header.nextElementSibling.nextElementSibling) ||
-          drawer.querySelector(":scope > div:last-child");
+          (drawer.children && drawer.children[drawer.children.length - 1]);
         if (footer) {
           footer.style.borderTop = "1px solid #eee";
           footer.style.padding = "16px";
@@ -2378,47 +2364,51 @@
 
     function updateCartCount(items = getCart()) {
       const count = items.reduce((a, it) => a + (it.qty || 1), 0);
+      // Update any existing count placeholders (e.g., in mobile drawer)
       $$("#cart-count").forEach((el) => (el.textContent = String(count)));
-      // Header icon badge
-      const targets = [
-        ...$$("a[aria-label='Cart']"),
-        ...$$("button[aria-label='Cart']"),
-      ];
-      targets.forEach((el) => {
-        // Ensure relative positioning
-        if (getComputedStyle(el).position === "static") {
-          el.style.position = "relative";
-        }
-        let badge = el.querySelector(".cart-badge");
-        if (!badge) {
-          badge = document.createElement("span");
-          badge.className = "cart-badge";
-          Object.assign(badge.style, {
-            position: "absolute",
-            top: "-4px",
-            right: "-4px",
-            minWidth: "18px",
-            height: "18px",
-            padding: "0 5px",
-            borderRadius: "9999px",
-            background: "#000",
-            color: "#fff",
-            fontSize: "11px",
-            lineHeight: "18px",
-            display: "none",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-            fontWeight: "700",
-          });
-          el.appendChild(badge);
-        }
-        if (count > 0) {
-          badge.style.display = "inline-flex";
-          badge.textContent = String(count);
-        } else {
-          badge.style.display = "none";
-        }
+
+      // Ensure a small badge on header cart icons (a[aria-label='Cart'])
+      // Limit to visible header icons: exclude items inside the mobile drawer
+      const anchors = Array.from(
+        document.querySelectorAll("a[aria-label='Cart']")
+      ).filter(
+        (a) => !a.closest('aside[aria-label="Mobile navigation drawer"]')
+      );
+      anchors.forEach((a) => {
+        try {
+          if (!a) return;
+          if (!a.style.position || a.style.position === "") {
+            a.style.position = "relative"; // anchor for absolute badge
+          }
+          // stabilize layout for consistent badge position
+          a.style.display = "inline-block";
+          a.style.lineHeight = "1";
+          let badge = a.querySelector("[data-cart-badge]");
+          if (!badge) {
+            badge = document.createElement("span");
+            badge.setAttribute("data-cart-badge", "");
+            // Inline premium badge styling
+            badge.style.position = "absolute";
+            badge.style.top = "-4px";
+            badge.style.right = "-4px";
+            badge.style.minWidth = "16px";
+            badge.style.height = "16px";
+            badge.style.padding = "0 4px";
+            badge.style.borderRadius = "999px";
+            badge.style.background = "#000";
+            badge.style.color = "#fff";
+            badge.style.fontSize = "10px";
+            badge.style.lineHeight = "16px";
+            badge.style.textAlign = "center";
+            badge.style.fontWeight = "700";
+            badge.style.pointerEvents = "none";
+            badge.style.boxSizing = "border-box";
+            a.appendChild(badge);
+          }
+          // Show when there are items; hide when empty
+          badge.textContent = String(Math.min(count, 99));
+          badge.style.display = count > 0 ? "inline-block" : "none";
+        } catch (_) {}
       });
     }
 
@@ -2528,21 +2518,12 @@
       });
     closeBtn && closeBtn.addEventListener("click", closeCart);
     const cartLinks = [...$$("a[aria-label='Cart']"), ...$$(".cart-link")];
-    cartLinks.forEach((lnk) => {
-      const open = (e) => {
-        e && e.preventDefault();
+    cartLinks.forEach((lnk) =>
+      lnk.addEventListener("click", (e) => {
+        e.preventDefault();
         window.openCart();
-      };
-      lnk.addEventListener("click", open);
-      lnk.addEventListener(
-        "touchend",
-        (e) => {
-          e.preventDefault();
-          open(e);
-        },
-        { passive: false }
-      );
-    });
+      })
+    );
     // Fallback: delegate for any future cart triggers
     document.addEventListener("click", (e) => {
       const trg = e.target.closest(
@@ -2562,52 +2543,29 @@
       (b) => /add\s*to\s*cart/i.test(b.textContent || "")
     );
     if (!btn) return;
-
-    const handleAdd = (e) => {
+    btn.addEventListener("click", (e) => {
       // allow guard to run; if size not selected it will alert
       const selected = document.querySelector(
         '#size-grid .size[aria-pressed="true"]'
       );
       if (!selected) return; // guard will have alerted
 
-      // Ensure cart is initialized (robust on product page)
-      if (!window.__cart || !window.__cart.setCart) {
-        try {
-          setupCart();
-        } catch {}
-      }
-
-      var nameEl = document.querySelector(".p-details h1");
       const name =
-        nameEl && nameEl.textContent ? nameEl.textContent.trim() : "Product";
-      var priceEl = document.querySelector(".p-details .p-price");
+        document.querySelector(".p-details h1")?.textContent?.trim() ||
+        "Product";
       const price =
-        priceEl && priceEl.textContent ? priceEl.textContent.trim() : "$0.00";
-      const size =
-        selected && selected.textContent ? selected.textContent.trim() : "";
-      var imgEl = document.querySelector(".gallery-main img");
+        document.querySelector(".p-details .p-price")?.textContent?.trim() ||
+        "$0.00";
+      const size = selected?.textContent?.trim() || "";
       const image =
-        imgEl && imgEl.getAttribute("src") ? imgEl.getAttribute("src") : "";
+        document.querySelector(".gallery-main img")?.getAttribute("src") || "";
 
-      const items =
-        (window.__cart && window.__cart.getCart
-          ? window.__cart.getCart()
-          : []) || [];
+      const items = (window.__cart?.getCart && window.__cart.getCart()) || [];
       const existing = items.find((it) => it.name === name && it.size === size);
       if (existing) existing.qty = (existing.qty || 1) + 1;
       else items.push({ name, price, size, image, qty: 1 });
-      if (window.__cart && window.__cart.setCart) window.__cart.setCart(items);
+      window.__cart?.setCart && window.__cart.setCart(items);
       window.openCart && window.openCart();
-    };
-
-    btn.addEventListener("click", handleAdd);
-    btn.addEventListener(
-      "touchend",
-      (e) => {
-        e.preventDefault();
-        handleAdd(e);
-      },
-      { passive: false }
-    );
+    });
   }
 })();
