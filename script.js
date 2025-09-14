@@ -1124,10 +1124,14 @@
     const panel = $("#filters");
     if (!btn || !panel) return;
 
+    // Force black text for Filter control and dropdown contents
+    btn.style.color = "#111";
+
     // Make the panel look like a seamless extension of the Filter/Sort toolbar
     Object.assign(panel.style, {
       position: "fixed",
       background: "#fff",
+      color: "#111",
       border: "1px solid #e5e5e5",
       borderRadius: "10px",
       boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
@@ -1227,9 +1231,27 @@
     const here = (location.pathname.split("/").pop() || "").toLowerCase();
     if (!here.endsWith("collection.html")) return;
 
+    // Ensure toolbar and chips render in black, not blue
+    const paintToolbar = () => {
+      ["#filter-toggle", "#sort-toggle"].forEach((sel) => {
+        const el = document.querySelector(sel);
+        if (el) el.style.color = "#111";
+      });
+      document
+        .querySelectorAll(".filter-chip")
+        .forEach((ch) => (ch.style.color = "#111"));
+    };
+    paintToolbar();
+
     const sortToggle = document.getElementById("sort-toggle");
     const sortPanel = document.querySelector("[data-sort-panel]");
     if (sortToggle && sortPanel) {
+      // Force black text for Sort control and items
+      sortToggle.style.color = "#111";
+      sortPanel.querySelectorAll("[data-sort]").forEach((b) => {
+        b.style.color = "#111";
+      });
+
       const show = (v) => (sortPanel.style.display = v ? "block" : "none");
       const position = () => {
         const r = sortToggle.getBoundingClientRect();
@@ -1273,17 +1295,28 @@
       document.addEventListener("click", () => show(false));
       window.addEventListener("scroll", () => show(false), { passive: true });
       window.addEventListener("resize", () => show(false));
-      document.querySelectorAll("[data-sort]").forEach((btn) =>
-        btn.addEventListener("click", () => {
-          const val = btn.getAttribute("data-sort");
+
+      // Directly wire the sort actions so they always apply
+      sortPanel.querySelectorAll("[data-sort]").forEach((btn) => {
+        btn.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          const val = btn.getAttribute("data-sort") || "featured";
           const label = btn.textContent.trim();
           const firstSpan = sortToggle.querySelector("span");
           if (firstSpan)
             firstSpan.textContent =
               val === "none" ? "Sort by" : `Sort by: ${label}`;
           show(false);
-        })
-      );
+          // Apply collection sort immediately if available
+          if (window.__applyCollection) {
+            // Bridge to the local variable via synthetic event
+            document.dispatchEvent(
+              new CustomEvent("__set-sort", { detail: val })
+            );
+          }
+        });
+      });
     }
 
     // Filter chips open the filter panel
@@ -1328,6 +1361,7 @@
         position: "absolute",
         display: "none",
         background: "#fff",
+        color: "#111",
         border: "1px solid #e5e5e5",
         borderRadius: "10px",
         boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
@@ -1348,6 +1382,7 @@
           cursor: "pointer",
           borderRadius: "8px",
           fontSize: "14px",
+          color: "#111",
         });
         row.addEventListener(
           "mouseenter",
@@ -1569,16 +1604,34 @@
       });
 
       let currentSort = "featured";
+      // Allow external controls (sort panel) to set sort mode directly
+      document.addEventListener("__set-sort", (ev) => {
+        try {
+          currentSort = ev.detail || "featured";
+        } catch (_) {
+          currentSort = "featured";
+        }
+        apply();
+      });
       let viewMode = "4"; // '4' = 2x2 grid, '1' = single large
       function updateView() {
         const gridEl = grid;
         if (!gridEl) return;
         gridEl.style.display = "grid";
         gridEl.style.gridTemplateColumns = viewMode === "1" ? "1fr" : "1fr 1fr";
+        gridEl.style.columnGap =
+          viewMode === "1" ? "0px" : gridEl.style.columnGap || "16px";
         const wraps = gridEl.querySelectorAll(".img-wrap");
-        wraps.forEach(
-          (w) => (w.style.aspectRatio = viewMode === "1" ? "1 / 1" : "1 / 1.7")
+        wraps.forEach((w) => {
+          w.style.aspectRatio = viewMode === "1" ? "1 / 1" : "1 / 1.7";
+        });
+        // Ensure items layout changes visibly even if external CSS interferes
+        const items = gridEl.querySelectorAll(
+          "article.card, .grid.products > *"
         );
+        items.forEach((it) => {
+          it.style.gridColumn = viewMode === "1" ? "1 / -1" : "auto";
+        });
       }
       // Expose for UI buttons
       window.__setCollectionView = function (mode) {
@@ -1679,11 +1732,15 @@
           v4.style.color = m === "4" ? "#111" : "#d9d9d9";
           v1.style.color = m === "1" ? "#111" : "#d9d9d9";
         };
-        v4.addEventListener("click", () => {
+        v4.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           if (window.__setCollectionView) window.__setCollectionView("4");
           reflect("4");
         });
-        v1.addEventListener("click", () => {
+        v1.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           if (window.__setCollectionView) window.__setCollectionView("1");
           reflect("1");
         });
