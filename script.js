@@ -1285,14 +1285,30 @@
       setTimeout(syncToggleColumn, 0);
 
       show(false);
-      sortToggle.addEventListener("click", (e) => {
-        e.stopPropagation();
+      const toggleSort = (e) => {
+        e && e.stopPropagation();
         const open = sortPanel.style.display !== "block";
         if (open) position();
         show(open);
         syncToggleColumn();
+      };
+      sortToggle.addEventListener("click", toggleSort);
+      // iOS Safari: ensure touch taps trigger reliably
+      sortToggle.addEventListener(
+        "touchend",
+        (e) => {
+          e.preventDefault();
+          toggleSort(e);
+        },
+        { passive: false }
+      );
+      // Keep panel open when clicking inside it or the toggle
+      sortPanel.addEventListener("click", (e) => e.stopPropagation());
+      document.addEventListener("click", (e) => {
+        if (sortPanel.contains(e.target) || sortToggle.contains(e.target))
+          return;
+        show(false);
       });
-      document.addEventListener("click", () => show(false));
       window.addEventListener("scroll", () => show(false), { passive: true });
       window.addEventListener("resize", () => show(false));
 
@@ -1732,18 +1748,21 @@
           v4.style.color = m === "4" ? "#111" : "#d9d9d9";
           v1.style.color = m === "1" ? "#111" : "#d9d9d9";
         };
-        v4.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
+        const set4 = (e) => {
+          e && (e.preventDefault(), e.stopPropagation());
           if (window.__setCollectionView) window.__setCollectionView("4");
           reflect("4");
-        });
-        v1.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
+        };
+        const set1 = (e) => {
+          e && (e.preventDefault(), e.stopPropagation());
           if (window.__setCollectionView) window.__setCollectionView("1");
           reflect("1");
-        });
+        };
+        v4.addEventListener("click", set4);
+        v1.addEventListener("click", set1);
+        // iOS Safari: also bind touchend for reliable taps
+        v4.addEventListener("touchend", set4, { passive: false });
+        v1.addEventListener("touchend", set1, { passive: false });
         reflect("4");
       })();
 
