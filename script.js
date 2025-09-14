@@ -22,8 +22,8 @@
                 <h4 class="upper">Shop by Category</h4>
                 <div class="links">
                   <a href="collection.html">Tops</a>
+                  <a href="collection.html">Hoodies</a>
                   <a href="collection.html">Bottoms</a>
-                  <a href="collection.html">Outerwear</a>
                   <a href="collection.html">Accessories</a>
                 </div>
               </div>
@@ -31,7 +31,7 @@
                 <h4 class="upper">Shop by Collection</h4>
                 <div class="links">
                   <a href="collection.html">AeroLite</a>
-                  <a href="collection.html">Front Runner</a>
+                  <a href="collection.html">Journey</a>
                   <a href="collection.html">Core365</a>
                   <a href="collection.html">Black Label</a>
                 </div>
@@ -88,7 +88,6 @@
       <a href="collection.html?category=hoodies">Hoodies</a>
       <a href="collection.html?category=shorts">Shorts</a>
       <a href="collection.html?category=pants">Pants</a>
-      <a href="collection.html?category=outerwear">Outerwear</a>
       <a href="collection.html?category=accessories">Accessories</a>
     </div>
     <button class="row-item accordion" data-accordion aria-expanded="false">Shop by Collection <span class="chev">›</span></button>
@@ -135,6 +134,7 @@
     setupCollectionFromQuery();
     setupCollectionUI();
     setupProductFromSlug();
+    setupRecentlyViewedAndBestSellers();
     setupSizeSelection();
     setupWishlist();
 
@@ -146,6 +146,9 @@
     setupAddToCartGuard();
     normalizeTitleAndAnnouncement();
     enableHoverSwapIn();
+    setupImageFallbacks();
+    setupThematicImages();
+    normalizeCarouselMedia();
   });
 
   function setupSizeSelection() {
@@ -192,16 +195,16 @@
         alt: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
       },
       "front-runner-vest": {
-        name: "Front Runner Vest",
+        name: "City Hoodie",
         price: "$98",
-        main: "https://images.unsplash.com/photo-1560243563-062b4b6eb650?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop",
+        main: "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=1200&auto=format&fit=crop",
+        alt: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
       },
       "run-jacket": {
-        name: "Run Jacket",
-        price: "$128",
-        main: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop",
+        name: "Aero Tee",
+        price: "$48",
+        main: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=1200&auto=format&fit=crop",
+        alt: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
       },
       "city-hoodie": {
         name: "City Hoodie",
@@ -234,16 +237,16 @@
         alt: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop",
       },
       "zip-jacket": {
-        name: "Zip Jacket",
-        price: "$128",
-        main: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop",
+        name: "Everyday Cap",
+        price: "$28",
+        main: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop",
+        alt: "https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?q=80&w=800&auto=format&fit=crop",
       },
       "run-shell": {
-        name: "Run Shell",
-        price: "$148",
-        main: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
+        name: "Aero Jogger",
+        price: "$78",
+        main: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=1200&auto=format&fit=crop",
+        alt: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
       },
       "aero-tee": {
         name: "Aero Tee",
@@ -283,33 +286,174 @@
     if (titleEl) titleEl.textContent = p.name;
     if (priceEl) priceEl.textContent = p.price;
 
+    const pair = getImagesForLabel(p.name, 1200, 800);
     if (mainGalleryImg) {
-      mainGalleryImg.src = p.main;
+      mainGalleryImg.src = pair.main;
       mainGalleryImg.alt = p.name;
       if (galleryThumbs[0]) {
-        galleryThumbs[0].src = p.main;
+        galleryThumbs[0].src = pair.main;
         galleryThumbs[0].alt = p.name;
       }
       if (galleryThumbs[1]) {
-        galleryThumbs[1].src = p.alt;
+        galleryThumbs[1].src = pair.alt;
         galleryThumbs[1].alt = p.name + " alt";
       }
     }
 
     if (mainImg) {
-      mainImg.src = p.main;
+      mainImg.src = pair.main;
       mainImg.alt = p.name;
     }
     if (rightImg) {
-      rightImg.src = p.alt;
+      rightImg.src = pair.alt;
       rightImg.alt = p.name + " alt";
     }
     if (leftImg) {
-      leftImg.src = p.alt;
+      leftImg.src = pair.alt;
       leftImg.alt = p.name + " alt 2";
     }
 
     document.title = p.name + " — Journey Apparel";
+
+    // Record this product into Recently Viewed (localStorage)
+    try {
+      const key = "recentlyViewedV1";
+      const current = JSON.parse(localStorage.getItem(key) || "[]");
+      const item = {
+        slug,
+        name: p.name,
+        price: p.price,
+        main: p.main,
+        alt: p.alt,
+        href: "product.html?slug=" + slug,
+      };
+      const filtered = (current || []).filter((x) => x && x.slug !== slug);
+      filtered.unshift(item);
+      localStorage.setItem(key, JSON.stringify(filtered.slice(0, 20)));
+    } catch (_) {}
+  }
+
+  function setupRecentlyViewedAndBestSellers() {
+    const here = (location.pathname.split("/").pop() || "").toLowerCase();
+    if (!here.endsWith("product.html")) return;
+
+    const cardHTML = (it) => {
+      const href = it.href || "product.html";
+      const price = it.price || "";
+      const name = it.name || "";
+      const pair = getImagesForLabel(name, 800, 800);
+      const altImg = `<img class=\"hover-img\" src=\"${pair.alt}\" alt=\"\" style=\"position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition: opacity 180ms ease; pointer-events:none;\" />`;
+      return `
+      <article class="card" data-href="${href}" style="cursor:pointer">
+        <a href="${href}" class="img-wrap" onmouseenter="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='1'}" onmouseleave="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='0'}" style="position:relative; display:block; aspect-ratio:3/4; overflow:hidden; border-radius:0">
+          <img src="${pair.main}" alt="${name}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"/>
+          ${altImg}
+        </a>
+        <div class="row mt-8" style="display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:8px; font-size:14px; text-align:center;">
+          <span style="font-weight:400; text-transform:uppercase; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:95%">${name}</span>
+          <span class="price" style="font-weight:400">${price}</span>
+        </div>
+      </article>`;
+    };
+
+    // Recently Viewed: render from localStorage if present
+    try {
+      const track = document.querySelector("#you-also-viewed .carousel-track");
+      if (track) {
+        const items = JSON.parse(
+          localStorage.getItem("recentlyViewedV1") || "[]"
+        ).filter(Boolean);
+        if (items && items.length) {
+          track.innerHTML = items.map(cardHTML).join("");
+        }
+      }
+    } catch (_) {}
+
+    // Best Sellers: populate a longer list so arrows can scroll through
+    const bestSection = document.querySelector("#featured-collection");
+    const bestTrack =
+      bestSection && bestSection.querySelector(".carousel-track");
+    if (bestTrack) {
+      const best = [
+        {
+          name: "City Hoodie",
+          price: "$98.00 AUD",
+          main: "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop",
+          alt: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
+          href: "product.html?slug=city-hoodie",
+        },
+        {
+          name: "Aero Tee",
+          price: "$48.00 AUD",
+          main: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
+          alt: "https://images.unsplash.com/photo-1528701800489-20be0b02f47e?q=80&w=800&auto=format&fit=crop",
+          href: "product.html?slug=aero-tee",
+        },
+        {
+          name: "Tech Tee",
+          price: "$48.00 AUD",
+          main: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
+          alt: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
+          href: "product.html?slug=tech-tee",
+        },
+        {
+          name: "Aero Jogger",
+          price: "$78.00 AUD",
+          main: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop",
+          alt: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
+          href: "product.html?slug=aero-jogger",
+        },
+        {
+          name: "City Hoodie",
+          price: "$98.00 AUD",
+          main: "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop",
+          alt: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
+          href: "product.html?slug=city-hoodie",
+        },
+        {
+          name: "Ultra Short",
+          price: "$58.00 AUD",
+          main: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
+          alt: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop",
+          href: "product.html?slug=ultra-short",
+        },
+        {
+          name: "Aero Jogger",
+          price: "$78.00 AUD",
+          main: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop",
+          alt: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
+          href: "product.html?slug=aero-jogger",
+        },
+      ];
+
+      let idx = 0;
+      const renderPair = () => {
+        if (!best.length) return;
+        const a = best[idx % best.length];
+        const b = best[(idx + 1) % best.length];
+        bestTrack.innerHTML = [cardHTML(a), cardHTML(b)].join("");
+      };
+      renderPair();
+
+      const prevBtn = bestSection && bestSection.querySelector(".ctrl.prev");
+      const nextBtn = bestSection && bestSection.querySelector(".ctrl.next");
+      if (prevBtn) {
+        prevBtn.removeAttribute("onclick");
+        prevBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          idx = (idx - 2 + best.length) % best.length;
+          renderPair();
+        });
+      }
+      if (nextBtn) {
+        nextBtn.removeAttribute("onclick");
+        nextBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          idx = (idx + 2) % best.length;
+          renderPair();
+        });
+      }
+    }
   }
 
   function setupMobileNav() {
@@ -516,6 +660,52 @@
         wrap.addEventListener("mouseleave", hide);
         wrap.addEventListener("touchstart", show, { passive: true });
         wrap.addEventListener("touchend", hide);
+      });
+    } catch (_) {}
+  }
+
+  // Normalize carousel/media wrappers on homepage so images always fill and swap correctly
+  function normalizeCarouselMedia(root) {
+    try {
+      const scope = root || document;
+      const wraps = scope.querySelectorAll(
+        "#new-arrivals .img-wrap, #best-sellers .img-wrap"
+      );
+      wraps.forEach((wrap) => {
+        // wrapper sizing
+        wrap.style.position = wrap.style.position || "relative";
+        wrap.style.display = wrap.style.display || "block";
+        if (!wrap.style.aspectRatio) wrap.style.aspectRatio = "3 / 4";
+        wrap.style.overflow = wrap.style.overflow || "hidden";
+
+        const imgs = wrap.querySelectorAll("img");
+        imgs.forEach((img, i) => {
+          img.style.position = "absolute";
+          img.style.inset = "0";
+          img.style.width = "100%";
+          img.style.height = "100%";
+          img.style.objectFit = img.style.objectFit || "cover";
+          const isAlt =
+            i > 0 ||
+            img.classList.contains("alt") ||
+            img.classList.contains("hover-img");
+          if (isAlt) {
+            img.classList.add("hover-img");
+            if (!img.style.transition)
+              img.style.transition = "opacity 180ms ease";
+            img.style.pointerEvents = "none";
+            if (!img.style.opacity) img.style.opacity = "0";
+          }
+        });
+        // hover handlers
+        wrap.onmouseenter = function () {
+          const h = this.querySelector("img.hover-img, img.alt");
+          if (h) h.style.opacity = "1";
+        };
+        wrap.onmouseleave = function () {
+          const h = this.querySelector("img.hover-img, img.alt");
+          if (h) h.style.opacity = "0";
+        };
       });
     } catch (_) {}
   }
@@ -760,6 +950,161 @@
     });
   }
 
+  function setupImageFallbacks() {
+    try {
+      const FALLBACK = "LOGO/1.png";
+      const attach = (img) => {
+        if (!img || img.__fallbackBound) return;
+        img.__fallbackBound = true;
+        img.addEventListener(
+          "error",
+          () => {
+            if (img.__failedOnce) return; // prevent loops if fallback also fails
+            img.__failedOnce = true;
+            img.src = FALLBACK;
+            if (!img.alt || !img.alt.trim()) img.alt = "Image unavailable";
+          },
+          { passive: true }
+        );
+      };
+
+      // Existing images on the page
+      Array.from(document.images || []).forEach(attach);
+
+      // Observe future <img> insertions (e.g., carousels, Recently Viewed)
+      const obs = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          m.addedNodes &&
+            m.addedNodes.forEach((node) => {
+              if (node.nodeType !== 1) return;
+              if (node.tagName === "IMG") attach(node);
+              const imgs =
+                node.querySelectorAll && node.querySelectorAll("img");
+              if (imgs && imgs.length) imgs.forEach(attach);
+            });
+        }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+    } catch (_) {}
+
+    // Map product/category keywords to curated Unsplash image IDs
+    const CATEGORY_IMAGES = {
+      tee: {
+        main: "1523381210434-271e8be1f52b",
+        alt: "1441986300917-64674bd600d8",
+      },
+      tank: {
+        main: "1542296332-2e4473faf563",
+        alt: "1571019613454-1cb2f99b2d8b",
+      },
+      hoodie: {
+        main: "1547949003-9792a18a2601",
+        alt: "1523381210434-271e8be1f52b",
+      },
+      shorts: {
+        main: "1535530992830-e25d07cfa780",
+        alt: "1520975922324-c2e5a62b2398",
+      },
+      pants: {
+        main: "1520975922324-c2e5a62b2398",
+        alt: "1535530992830-e25d07cfa780",
+      },
+      jogger: {
+        main: "1520975922324-c2e5a62b2398",
+        alt: "1535530992830-e25d07cfa780",
+      },
+      jacket: {
+        main: "1519741497674-611481863552",
+        alt: "1544966503-7cc5ac882d5f",
+      },
+      vest: {
+        main: "1560243563-062b4b6eb650",
+        alt: "1519741497674-611481863552",
+      },
+      shell: {
+        main: "1519741497674-611481863552",
+        alt: "1523381210434-271e8be1f52b",
+      },
+      cap: { main: "1542291026-7eec264c27ff", alt: "1544966503-7cc5ac882d5f" },
+      hat: { main: "1542291026-7eec264c27ff", alt: "1544966503-7cc5ac882d5f" },
+      legging: {
+        main: "1503341338985-c0477be52513",
+        alt: "1528701800489-20be0b02f47e",
+      },
+      accessories: {
+        main: "1544966503-7cc5ac882d5f",
+        alt: "1542291026-7eec264c27ff",
+      },
+      default: {
+        main: "1544022613-e87cdf0dfaa7",
+        alt: "1519741497674-611481863552",
+      },
+    };
+    function imgUrl(id, w) {
+      const width = w || 800;
+      return `https://images.unsplash.com/photo-${id}?q=80&w=${width}&auto=format&fit=crop`;
+    }
+    function getCategoryFromLabel(label) {
+      const s = String(label || "").toLowerCase();
+      if (/hood/.test(s)) return "hoodie";
+      if (/\btee|t-shirt|tshirt\b/.test(s)) return "tee";
+      if (/tank/.test(s)) return "tank";
+      if (/short/.test(s)) return "shorts";
+      if (/jogger|pant|trouser/.test(s)) return "pants";
+      if (/jacket/.test(s)) return "hoodie";
+      if (/vest/.test(s)) return "hoodie";
+      if (/shell/.test(s)) return "hoodie";
+      if (/cap|hat/.test(s)) return "cap";
+      if (/legging|tight/.test(s)) return "legging";
+      if (/accessor/.test(s)) return "accessories";
+      return "default";
+    }
+    function getImagesForLabel(label, wMain, wAlt) {
+      const cat = getCategoryFromLabel(label);
+      const ids = CATEGORY_IMAGES[cat] || CATEGORY_IMAGES.default;
+      return {
+        main: imgUrl(ids.main, wMain || 1200),
+        alt: imgUrl(ids.alt, wAlt || 800),
+      };
+    }
+    function setupThematicImages() {
+      const apply = (root) => {
+        const scope = root || document;
+        scope.querySelectorAll("article.card").forEach((card) => {
+          const nameEl = card.querySelector(
+            ".row span, .card-title, h3, h2, .upper, .name"
+          );
+          const name = (nameEl && nameEl.textContent.trim()) || "";
+          if (!name) return;
+          const pair = getImagesForLabel(name, 800, 800);
+          const mainImg =
+            card.querySelector(".img-wrap img:not(.hover-img):not(.alt)") ||
+            card.querySelector("img");
+          if (mainImg) {
+            mainImg.src = pair.main;
+            if (!mainImg.alt) mainImg.alt = name;
+          }
+          const hoverImg = card.querySelector("img.hover-img, img.alt");
+          if (hoverImg) hoverImg.src = pair.alt;
+        });
+      };
+      apply(document);
+      const obs = new MutationObserver((mutations) => {
+        mutations.forEach((m) => {
+          m.addedNodes &&
+            m.addedNodes.forEach((node) => {
+              if (node.nodeType !== 1) return;
+              if (node.matches && node.matches("article.card")) apply(node);
+              else if (node.querySelectorAll) apply(node);
+            });
+        });
+      });
+      try {
+        obs.observe(document.body, { childList: true, subtree: true });
+      } catch (_) {}
+    }
+  }
+
   function setupFilters() {
     const btn = $("#filter-toggle");
     const panel = $("#filters");
@@ -942,7 +1287,7 @@
     const chipMenus = {
       size: ["XS", "S", "M", "L", "XL"],
       color: ["Black", "White", "Gray", "Blue", "Green"],
-      type: ["Tees", "Hoodies", "Shorts", "Pants", "Outerwear", "Accessories"],
+      type: ["Tees", "Hoodies", "Shorts", "Pants", "Accessories"],
 
       availability: ["In stock"],
     };
@@ -1116,12 +1461,12 @@
           sizes: ["XS", "S", "M", "L", "XL"],
         },
         {
-          name: "Front Runner Vest",
-          type: "Outerwear",
+          name: "City Hoodie",
+          type: "Hoodies",
           image:
-            "https://images.unsplash.com/photo-1560243563-062b4b6eb650?q=80&w=800&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop",
           hover:
-            "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
           price: 98,
           color: "Blue",
           sizes: ["S", "M", "L", "XL"],
@@ -1138,13 +1483,13 @@
           sizes: ["XS", "S", "M", "L", "XL"],
         },
         {
-          name: "Run Jacket",
-          type: "Outerwear",
+          name: "Aero Tee",
+          type: "Tees",
           image:
-            "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
           hover:
-            "https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?q=80&w=800&auto=format&fit=crop",
-          price: 128,
+            "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
+          price: 48,
           color: "Black",
           sizes: ["S", "M", "L", "XL"],
         },
@@ -1360,10 +1705,37 @@
 
   // --- Sitewide Search ---
   function setupSearch() {
-    const overlay = document.getElementById("site-search");
-    const form = document.getElementById("site-search-form");
-    const input = document.getElementById("site-search-input");
-    const closeBtn = document.getElementById("site-search-close");
+    let overlay = document.getElementById("site-search");
+    let form = document.getElementById("site-search-form");
+    let input = document.getElementById("site-search-input");
+    let closeBtn = document.getElementById("site-search-close");
+
+    // Ensure required DOM exists even if page's header omitted it
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "site-search";
+      Object.assign(overlay.style, {
+        position: "fixed",
+        inset: "0 0 auto 0",
+        top: "0",
+        background: "rgba(0,0,0,.6)",
+        backdropFilter: "blur(2px)",
+        zIndex: "1000",
+        display: "none",
+        padding: "12px 16px",
+      });
+      overlay.innerHTML =
+        '<form id="site-search-form" style="max-width:800px; margin:0 auto; display:flex; gap:8px">' +
+        '<input id="site-search-input" type="search" placeholder="Search pages or sections (e.g., New Arrivals, Best Sellers, Pair It With, Cart)" style="flex:1; padding:12px; border-radius:8px; border:1px solid #ddd; font-size:16px; background:#fff" />' +
+        '<button type="submit" style="padding:12px 16px; border-radius:8px; border:1px solid #ddd; background:#fff; font-weight:600; cursor:pointer;">Go</button>' +
+        '<button type="button" id="site-search-close" style="padding:12px 14px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer;">×</button>' +
+        "</form>";
+      document.body.appendChild(overlay);
+    }
+    // Refresh references
+    form = document.getElementById("site-search-form");
+    input = document.getElementById("site-search-input");
+    closeBtn = document.getElementById("site-search-close");
 
     if (!overlay || !form || !input) return;
 
@@ -1404,8 +1776,8 @@
       // Categories (align to user’s taxonomy)
       [
         ["Tops", "collection.html?category=tees"],
+        ["Hoodies", "collection.html?category=hoodies"],
         ["Bottoms", "collection.html?category=pants"],
-        ["Outerwear", "collection.html?category=outerwear"],
         ["Accessories", "collection.html?category=accessories"],
       ].forEach(([label, url]) => add(label, url, "Category"));
 
@@ -1526,6 +1898,13 @@
         open();
       })
     );
+    // Fallback: event delegation for any Search control added later
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("[aria-label='Search']");
+      if (!t) return;
+      e.preventDefault();
+      open();
+    });
 
     // Close handlers
     closeBtn && closeBtn.addEventListener("click", close);
@@ -1969,6 +2348,15 @@
         window.openCart();
       })
     );
+    // Fallback: delegate for any future cart triggers
+    document.addEventListener("click", (e) => {
+      const trg = e.target.closest(
+        "a[aria-label='Cart'], .cart-link, [data-open-cart]"
+      );
+      if (!trg) return;
+      e.preventDefault();
+      window.openCart();
+    });
 
     // expose helpers for other modules
     window.__cart = { getCart, setCart, updateCartCount, renderCart };

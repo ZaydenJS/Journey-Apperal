@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Exchanges & Returns — Journey Apparel</title>
+    <title>Partners — Journey Apparel</title>
     <meta
       name="description"
-      content="Exchanges & returns policy for Journey Apparel."
+      content="Brand partnerships and wholesale opportunities with Journey Apparel."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -137,88 +137,6 @@
           </form>
         </div>
 
-        <!-- Cart Drawer -->
-        <div
-          id="cart-overlay"
-          style="
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 1000;
-            display: none;
-          "
-        ></div>
-        <aside
-          id="cart-drawer"
-          style="
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            width: 88%;
-            max-width: 420px;
-            background: #fff;
-            box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
-            transform: translateX(100%);
-            transition: transform 0.25s ease;
-            z-index: 1001;
-            display: flex;
-            flex-direction: column;
-          "
-        >
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              padding: 12px 16px;
-              border-bottom: 1px solid #eee;
-            "
-          >
-            <div style="font-weight: 800">Your Cart</div>
-            <button
-              id="cart-close"
-              style="
-                border: 0;
-                background: none;
-                font-size: 24px;
-                cursor: pointer;
-              "
-            >
-              ×
-            </button>
-          </div>
-          <div
-            id="cart-items"
-            style="flex: 1; overflow: auto; padding: 12px 16px"
-          ></div>
-          <div style="border-top: 1px solid #eee; padding: 12px 16px">
-            <div
-              style="
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 8px;
-              "
-            >
-              <span>Subtotal</span><span id="cart-subtotal">$0.00</span>
-            </div>
-            <button
-              id="checkout-btn"
-              style="
-                width: 100%;
-                padding: 12px;
-                border-radius: 8px;
-                background: #000;
-                color: #fff;
-                font-weight: 600;
-                cursor: pointer;
-              "
-            >
-              Checkout
-            </button>
-          </div>
-        </aside>
-
         <div class="nav-right">
           <button class="icon-btn" aria-label="Search">🔍</button>
           <button class="icon-btn" aria-label="Account">👤</button>
@@ -227,194 +145,72 @@
       </div>
     </header>
 
-    <!-- Mobile Drawer & Overlay -->
-    <div id="drawer-overlay" class="drawer-overlay" aria-hidden="true"></div>
-    <aside
-      id="mobile-drawer"
-      class="drawer"
-      aria-hidden="true"
-      aria-label="Mobile navigation drawer"
-    >
-      <div class="drawer-top">
-        <button class="drawer-close" aria-label="Close menu">×</button>
-        <a href="#" class="cart-link" aria-label="Cart"
-          >Cart <span id="cart-count">0</span> 🛒</a
-        >
-      </div>
-      <nav class="drawer-nav" aria-label="Mobile navigation">
-        <a href="collection.html?section=new-arrivals" class="row-item"
-          >New Arrivals</a
-        >
-        <a href="collection.html?section=back-in-stock" class="row-item"
-          >Back in Stock</a
-        >
-        <a href="collection.html?section=shop-all" class="row-item">Shop All</a>
-
-        <button class="row-item accordion" data-accordion aria-expanded="false">
-          Shop by Category <span class="chev">›</span>
-        </button>
-        <div class="sub">
-          <a href="collection.html?category=tees">Tees</a>
-          <a href="collection.html?category=hoodies">Hoodies</a>
-          <a href="collection.html?category=shorts">Shorts</a>
-          <a href="collection.html?category=pants">Pants</a>
-          <a href="collection.html?category=accessories">Accessories</a>
-        </div>
-
-        <button class="row-item accordion" data-accordion aria-expanded="false">
-          Shop by Collection <span class="chev">›</span>
-        </button>
-        <div class="sub">
-          <a href="collection.html?collection=best-sellers">Best Sellers</a>
-          <a href="collection.html?collection=ss25">SS/25</a>
-          <a href="collection.html?collection=lightweight">Lightweight</a>
-          <a href="collection.html?collection=boxing">Boxing</a>
-          <a href="collection.html?collection=womens-activewear"
-            >Women’s Activewear</a
-          >
-        </div>
-
-        <a href="#" class="row-item">Members Sign Up</a>
-
-        <button class="row-item accordion" data-accordion aria-expanded="false">
-          Customer Care <span class="chev">›</span>
-        </button>
-        <div class="sub">
-          <a href="returns.html">Exchanges & Returns</a>
-          <a href="shipping.html">Shipping</a>
-          <a href="policies.html">Policies</a>
-          <a href="contact.html">Contact</a>
-        </div>
-      </nav>
-
-      <div class="drawer-bottom">
-        <a href="#" class="row-item">👤 Log in / Create Account</a>
-      </div>
-    </aside>
-
-    <section
-      style="
-        padding: 48px 16px;
-        background: #f7f7f8;
-        border-bottom: 1px solid #eee;
-        text-align: center;
-      "
-    >
-      <div style="max-width: 960px; margin: 0 auto">
+    <main style="max-width: 1200px; margin: 24px auto 48px; padding: 0 16px">
+      <section style="margin: 0 0 24px 0; text-align: center">
         <h1
           class="upper"
           style="
             margin: 0 0 8px 0;
-            font-size: 28px;
             font-weight: 900;
+            font-size: 28px;
             letter-spacing: 0.5px;
           "
         >
-          Exchanges & Returns
+          Partners
         </h1>
-        <p style="margin: 0; color: #666; font-size: 14px">
-          Hassle‑free returns within 30 days. Seamless exchanges for size or
-          color.
+        <div
+          style="
+            width: 64px;
+            height: 2px;
+            background: #111;
+            opacity: 0.1;
+            margin: 0 0 16px 0;
+          "
+        ></div>
+        <p style="margin: 0 0 16px 0; color: #444; line-height: 1.7">
+          We collaborate with like‑minded brands, retailers and teams. If you'd
+          like to partner with Journey Apparel for wholesale or campaigns, we'd
+          love to hear from you.
         </p>
-      </div>
-    </section>
-
-    <main
-      class="container section"
-      style="max-width: 960px; margin: 0 auto; padding: 24px 16px 64px 16px"
-    >
-      <div style="display: grid; grid-template-columns: 1fr; gap: 16px">
         <div
           style="
-            border: 1px solid #e5e5e5;
-            border-radius: 12px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
-            padding: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            justify-content: center;
           "
         >
-          <div class="upper" style="font-weight: 800; margin-bottom: 8px">
-            Return Window
-          </div>
-          <p style="margin: 0; color: #444">
-            30 days from delivery for refund or exchange. Items must be unworn,
-            unwashed, and in original packaging.
-          </p>
+          <a
+            href="contact.html"
+            style="
+              display: inline-block;
+              padding: 12px 16px;
+              border: 1px solid #111;
+              border-radius: 8px;
+              background: #111;
+              color: #fff;
+              text-decoration: none;
+              font-weight: 600;
+            "
+            >Contact Partnerships</a
+          >
+          <a
+            href="collection.html"
+            style="
+              display: inline-block;
+              padding: 12px 16px;
+              border: 1px solid #ddd;
+              border-radius: 8px;
+              background: #fff;
+              color: #111;
+              text-decoration: none;
+              font-weight: 600;
+            "
+            >View Collections</a
+          >
         </div>
-        <div
-          style="
-            border: 1px solid #e5e5e5;
-            border-radius: 12px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
-            padding: 20px;
-          "
-        >
-          <div class="upper" style="font-weight: 800; margin-bottom: 8px">
-            Exchanges
-          </div>
-          <p style="margin: 0; color: #444">
-            Free exchanges for size or color on domestic orders. We’ll ship your
-            new item as soon as the original scans in.
-          </p>
-        </div>
-        <div
-          style="
-            border: 1px solid #e5e5e5;
-            border-radius: 12px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
-            padding: 20px;
-          "
-        >
-          <div class="upper" style="font-weight: 800; margin-bottom: 8px">
-            Refunds
-          </div>
-          <p style="margin: 0; color: #444">
-            Refunds are issued to the original payment method within 3–5
-            business days after inspection.
-          </p>
-        </div>
-        <div
-          style="
-            border: 1px solid #e5e5e5;
-            border-radius: 12px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
-            padding: 20px;
-          "
-        >
-          <div class="upper" style="font-weight: 800; margin-bottom: 8px">
-            Exceptions
-          </div>
-          <p style="margin: 0; color: #444">
-            Final sale items are not eligible for returns. Sets must be returned
-            complete.
-          </p>
-        </div>
-      </div>
-
-      <div
-        style="
-          margin-top: 24px;
-          border: 1px solid #e5e5e5;
-          border-radius: 12px;
-          padding: 20px;
-        "
-      >
-        <div class="upper" style="font-weight: 800; margin-bottom: 10px">
-          Start a Return or Exchange
-        </div>
-        <ol
-          style="margin: 0; padding-left: 18px; color: #444; line-height: 1.6"
-        >
-          <li>Locate your order number (e.g., in your confirmation email)</li>
-          <li>
-            Contact us via the
-            <a href="contact.html" style="color: #111; font-weight: 600"
-              >Contact page</a
-            >
-            or reply to your order email
-          </li>
-          <li>We’ll send a prepaid return label and instructions</li>
-        </ol>
-      </div>
+      </section>
       <!-- Join Journey CTA -->
       <section
         aria-label="Join Journey"
