@@ -99,13 +99,13 @@
       <a href="collection.html?collection=womens-activewear">Women’s Activewear</a>
     </div>
     <a href="#" class="row-item">Gift Cards</a>
-    <a href="#" class="row-item">Members Sign Up</a>
-    <button class="row-item accordion" data-accordion aria-expanded="false">Customer Care <span class="chev">›</span></button>
+    <a href="#" class="row-item">Journey Sign Up</a>
+    <button class="row-item accordion" data-accordion aria-expanded="false">Help Center <span class="chev">›</span></button>
     <div class="sub">
       <a href="#">Exchanges & Returns</a>
       <a href="#">Shipping</a>
       <a href="#">Policies</a>
-      <a href="#">Contact</a>
+      <a href="#">Contact Us</a>
     </div>
     <a href="#" class="row-item">Rewards</a>
   </nav>
@@ -155,14 +155,24 @@
     const grid = document.getElementById("size-grid");
     if (!grid) return;
     grid.querySelectorAll(".size").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      const select = () => {
         grid.querySelectorAll(".size").forEach((b) => {
           b.classList.remove("selected");
           b.setAttribute("aria-pressed", "false");
         });
         btn.classList.add("selected");
         btn.setAttribute("aria-pressed", "true");
-      });
+      };
+      btn.addEventListener("click", select);
+      // iOS touch reliability
+      btn.addEventListener(
+        "touchend",
+        (e) => {
+          e.preventDefault();
+          select();
+        },
+        { passive: false }
+      );
     });
   }
 
@@ -509,7 +519,7 @@
     toggle.addEventListener("click", () => {
       const isOpen = drawer
         ? drawer.classList.contains("open")
-        : nav?.classList.contains("open");
+        : nav && nav.classList && nav.classList.contains("open");
       isOpen ? close() : open();
     });
 
@@ -944,7 +954,8 @@
     main.addEventListener("touchend", (e) => {
       if (!swiping) return;
       swiping = false;
-      const dx = (e.changedTouches[0]?.clientX || 0) - sx;
+      const ct = (e.changedTouches && e.changedTouches[0]) || null;
+      const dx = ((ct && ct.clientX) || 0) - sx;
       const threshold = 30;
       if (dx > threshold) apply(current - 1);
       else if (dx < -threshold) apply(current + 1);
@@ -1319,7 +1330,10 @@
       // Directly wire the sort actions so they always apply (click + iOS touch)
       sortPanel.querySelectorAll("[data-sort]").forEach((btn) => {
         const applySort = (ev) => {
-          ev && (ev.preventDefault?.(), ev.stopPropagation?.());
+          if (ev) {
+            if (ev.preventDefault) ev.preventDefault();
+            if (ev.stopPropagation) ev.stopPropagation();
+          }
           const val = btn.getAttribute("data-sort") || "featured";
           const label = btn.textContent.trim();
           const firstSpan = sortToggle.querySelector("span");
@@ -2010,13 +2024,22 @@
       currentItems = [];
     };
 
-    $$("[aria-label='Search']").forEach((btn) =>
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation(); // prevent delegated handler from double-triggering
+    $$("[aria-label='Search']").forEach((btn) => {
+      const openSearch = (e) => {
+        e && (e.preventDefault(), e.stopPropagation());
         open();
-      })
-    );
+      };
+      btn.addEventListener("click", openSearch);
+      // iOS Safari reliability
+      btn.addEventListener(
+        "touchend",
+        (e) => {
+          e.preventDefault();
+          openSearch(e);
+        },
+        { passive: false }
+      );
+    });
     // Fallback: event delegation for any Search control added later
     document.addEventListener("click", (e) => {
       const t = e.target.closest("[aria-label='Search']");
@@ -2032,7 +2055,7 @@
       if (
         e.key === "/" &&
         !openState &&
-        document.activeElement?.tagName !== "INPUT"
+        (document.activeElement && document.activeElement.tagName) !== "INPUT"
       ) {
         e.preventDefault();
         open();
@@ -2084,7 +2107,7 @@
       list.querySelectorAll("a").forEach((a, i) => {
         a.addEventListener("click", (ev) => {
           ev.preventDefault();
-          const dest = currentItems[i]?.url;
+          const dest = (currentItems[i] && currentItems[i].url) || null;
           if (!dest) return;
           if (dest === "#cart") {
             openCart();
@@ -2099,7 +2122,7 @@
     // Submit fallback (if no suggestions)
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const q = (input?.value || "").trim().toLowerCase();
+      const q = (input && input.value ? input.value : "").trim().toLowerCase();
       if (!q) return close();
       if (currentItems[0]) {
         const dest = currentItems[0].url;
@@ -2137,7 +2160,8 @@
         },
         { url: "#cart", keys: ["cart", "bag", "checkout"] },
       ];
-      let dest = routes.find((r) => r.keys.some((k) => q.includes(k)))?.url;
+      const route = routes.find((r) => r.keys.some((k) => q.includes(k)));
+      let dest = route ? route.url : undefined;
       if (!dest)
         dest = q.includes("collection")
           ? "collection.html"
@@ -2271,7 +2295,9 @@
         }
 
         const footer =
-          header?.nextElementSibling?.nextElementSibling ||
+          (header &&
+            header.nextElementSibling &&
+            header.nextElementSibling.nextElementSibling) ||
           drawer.querySelector(":scope > div:last-child");
         if (footer) {
           footer.style.borderTop = "1px solid #eee";
@@ -2353,6 +2379,47 @@
     function updateCartCount(items = getCart()) {
       const count = items.reduce((a, it) => a + (it.qty || 1), 0);
       $$("#cart-count").forEach((el) => (el.textContent = String(count)));
+      // Header icon badge
+      const targets = [
+        ...$$("a[aria-label='Cart']"),
+        ...$$("button[aria-label='Cart']"),
+      ];
+      targets.forEach((el) => {
+        // Ensure relative positioning
+        if (getComputedStyle(el).position === "static") {
+          el.style.position = "relative";
+        }
+        let badge = el.querySelector(".cart-badge");
+        if (!badge) {
+          badge = document.createElement("span");
+          badge.className = "cart-badge";
+          Object.assign(badge.style, {
+            position: "absolute",
+            top: "-4px",
+            right: "-4px",
+            minWidth: "18px",
+            height: "18px",
+            padding: "0 5px",
+            borderRadius: "9999px",
+            background: "#000",
+            color: "#fff",
+            fontSize: "11px",
+            lineHeight: "18px",
+            display: "none",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            fontWeight: "700",
+          });
+          el.appendChild(badge);
+        }
+        if (count > 0) {
+          badge.style.display = "inline-flex";
+          badge.textContent = String(count);
+        } else {
+          badge.style.display = "none";
+        }
+      });
     }
 
     function renderCart(items = getCart()) {
@@ -2461,12 +2528,21 @@
       });
     closeBtn && closeBtn.addEventListener("click", closeCart);
     const cartLinks = [...$$("a[aria-label='Cart']"), ...$$(".cart-link")];
-    cartLinks.forEach((lnk) =>
-      lnk.addEventListener("click", (e) => {
-        e.preventDefault();
+    cartLinks.forEach((lnk) => {
+      const open = (e) => {
+        e && e.preventDefault();
         window.openCart();
-      })
-    );
+      };
+      lnk.addEventListener("click", open);
+      lnk.addEventListener(
+        "touchend",
+        (e) => {
+          e.preventDefault();
+          open(e);
+        },
+        { passive: false }
+      );
+    });
     // Fallback: delegate for any future cart triggers
     document.addEventListener("click", (e) => {
       const trg = e.target.closest(
@@ -2486,29 +2562,52 @@
       (b) => /add\s*to\s*cart/i.test(b.textContent || "")
     );
     if (!btn) return;
-    btn.addEventListener("click", (e) => {
+
+    const handleAdd = (e) => {
       // allow guard to run; if size not selected it will alert
       const selected = document.querySelector(
         '#size-grid .size[aria-pressed="true"]'
       );
       if (!selected) return; // guard will have alerted
 
-      const name =
-        document.querySelector(".p-details h1")?.textContent?.trim() ||
-        "Product";
-      const price =
-        document.querySelector(".p-details .p-price")?.textContent?.trim() ||
-        "$0.00";
-      const size = selected?.textContent?.trim() || "";
-      const image =
-        document.querySelector(".gallery-main img")?.getAttribute("src") || "";
+      // Ensure cart is initialized (robust on product page)
+      if (!window.__cart || !window.__cart.setCart) {
+        try {
+          setupCart();
+        } catch {}
+      }
 
-      const items = (window.__cart?.getCart && window.__cart.getCart()) || [];
+      var nameEl = document.querySelector(".p-details h1");
+      const name =
+        nameEl && nameEl.textContent ? nameEl.textContent.trim() : "Product";
+      var priceEl = document.querySelector(".p-details .p-price");
+      const price =
+        priceEl && priceEl.textContent ? priceEl.textContent.trim() : "$0.00";
+      const size =
+        selected && selected.textContent ? selected.textContent.trim() : "";
+      var imgEl = document.querySelector(".gallery-main img");
+      const image =
+        imgEl && imgEl.getAttribute("src") ? imgEl.getAttribute("src") : "";
+
+      const items =
+        (window.__cart && window.__cart.getCart
+          ? window.__cart.getCart()
+          : []) || [];
       const existing = items.find((it) => it.name === name && it.size === size);
       if (existing) existing.qty = (existing.qty || 1) + 1;
       else items.push({ name, price, size, image, qty: 1 });
-      window.__cart?.setCart && window.__cart.setCart(items);
+      if (window.__cart && window.__cart.setCart) window.__cart.setCart(items);
       window.openCart && window.openCart();
-    });
+    };
+
+    btn.addEventListener("click", handleAdd);
+    btn.addEventListener(
+      "touchend",
+      (e) => {
+        e.preventDefault();
+        handleAdd(e);
+      },
+      { passive: false }
+    );
   }
 })();
