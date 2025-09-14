@@ -1185,6 +1185,10 @@
         panel.style.opacity = "0";
         panel.style.transform = "translateY(-2px)";
         panel.style.display = "none";
+        // Also close any open chip dropdown menus (Size/Color/Availability)
+        document
+          .querySelectorAll("[data-chip-panel]")
+          .forEach((m) => (m.style.display = "none"));
       }
       btn.setAttribute("aria-expanded", String(v));
     };
