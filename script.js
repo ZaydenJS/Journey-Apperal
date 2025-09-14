@@ -860,6 +860,26 @@
   }
 
   function setupCollapsibles() {
+    // Helpers to close other collapsibles and global close behavior
+    const closeAnyCollapsible = (section) => {
+      if (!section) return;
+      const b = section.querySelector("button");
+      const p = section.querySelector(".content");
+      if (!b || !p) return;
+      section.classList.remove("open");
+      b.setAttribute("aria-expanded", "false");
+      const current = p.scrollHeight;
+      p.style.height = current + "px";
+      requestAnimationFrame(() => {
+        p.style.height = "0px";
+      });
+    };
+    const closeAllCollapsiblesExcept = (except) => {
+      document.querySelectorAll(".collapsible.open").forEach((sec) => {
+        if (sec !== except) closeAnyCollapsible(sec);
+      });
+    };
+
     $$(".collapsible").forEach((sec, idx) => {
       const btn = $("button", sec);
       const panel = $(".content", sec);
@@ -898,7 +918,6 @@
       const closePanel = () => {
         sec.classList.remove("open");
         btn.setAttribute("aria-expanded", "false");
-        // if currently auto, set explicit height first
         const current = panel.scrollHeight;
         panel.style.height = current + "px";
         requestAnimationFrame(() => {
@@ -908,7 +927,13 @@
 
       const toggle = () => {
         const isOpen = btn.getAttribute("aria-expanded") === "true";
-        isOpen ? closePanel() : openPanel();
+        if (isOpen) {
+          closePanel();
+        } else {
+          // Close any other open collapsibles before opening this one
+          closeAllCollapsiblesExcept(sec);
+          openPanel();
+        }
       };
 
       btn.addEventListener("click", toggle);
@@ -919,6 +944,16 @@
         }
       });
     });
+
+    // Global listeners: clicking outside, scrolling, or resizing closes any open collapsibles
+    document.addEventListener("click", (e) => {
+      if (e.target.closest(".collapsible")) return;
+      closeAllCollapsiblesExcept(null);
+    });
+    window.addEventListener("scroll", () => closeAllCollapsiblesExcept(null), {
+      passive: true,
+    });
+    window.addEventListener("resize", () => closeAllCollapsiblesExcept(null));
   }
 
   function setupGallery() {
@@ -984,6 +1019,12 @@
       const FALLBACK = "LOGO/1.png";
       const attach = (img) => {
         if (!img || img.__fallbackBound) return;
+        // Opt-out: do not apply fallback on Rewards banner or any element marked no-fallback
+        if (
+          img.dataset.noFallback != null ||
+          img.closest("[data-rewards-banner]")
+        )
+          return;
         img.__fallbackBound = true;
         img.addEventListener(
           "error",
