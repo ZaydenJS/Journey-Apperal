@@ -464,6 +464,19 @@
     const closeBtn = $(".drawer-close");
     const nav = $(".nav"); // desktop fallback
 
+    // Ensure mobile drawer text/icons are black (no default link blue)
+    const paint = () => {
+      if (!drawer) return;
+      [
+        ...drawer.querySelectorAll(
+          "a, button, .row-item, .drawer-close, .chev"
+        ),
+      ].forEach((el) => {
+        el.style.color = "#111";
+        if (el.tagName === "A") el.style.textDecoration = "none";
+      });
+    };
+
     // Safety: ensure no stale scroll lock
     document.body.style.overflow = "";
 
@@ -473,6 +486,7 @@
         drawer.setAttribute("aria-hidden", "false");
         overlay && overlay.classList.add("active");
         document.body.style.overflow = "hidden";
+        paint();
       } else if (nav) {
         nav.classList.add("open");
       }
@@ -1866,7 +1880,7 @@
 
     const open = () => {
       if (!overlay) return;
-      if (openState) return close(); // toggle behavior
+      if (openState) return; // idempotent open to avoid double-trigger close
       overlay.style.display = "block";
       overlay.style.inset = "0"; // full-screen for background click-close
       overlay.style.opacity = "0";
@@ -1895,6 +1909,7 @@
     $$("[aria-label='Search']").forEach((btn) =>
       btn.addEventListener("click", (e) => {
         e.preventDefault();
+        e.stopPropagation(); // prevent delegated handler from double-triggering
         open();
       })
     );
