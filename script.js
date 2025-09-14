@@ -1228,8 +1228,12 @@
   }
 
   function setupCollectionUI() {
-    const here = (location.pathname.split("/").pop() || "").toLowerCase();
-    if (!here.endsWith("collection.html")) return;
+    // Robust init: activate if collection toolbar or grid exists (supports SPA/pretty URLs)
+    const exists =
+      document.getElementById("sort-toggle") ||
+      document.getElementById("filter-toggle") ||
+      document.querySelector(".grid.products");
+    if (!exists) return;
 
     // Ensure toolbar and chips render in black, not blue
     const paintToolbar = () => {
@@ -1312,11 +1316,10 @@
       window.addEventListener("scroll", () => show(false), { passive: true });
       window.addEventListener("resize", () => show(false));
 
-      // Directly wire the sort actions so they always apply
+      // Directly wire the sort actions so they always apply (click + iOS touch)
       sortPanel.querySelectorAll("[data-sort]").forEach((btn) => {
-        btn.addEventListener("click", (ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
+        const applySort = (ev) => {
+          ev && (ev.preventDefault?.(), ev.stopPropagation?.());
           const val = btn.getAttribute("data-sort") || "featured";
           const label = btn.textContent.trim();
           const firstSpan = sortToggle.querySelector("span");
@@ -1324,14 +1327,19 @@
             firstSpan.textContent =
               val === "none" ? "Sort by" : `Sort by: ${label}`;
           show(false);
-          // Apply collection sort immediately if available
-          if (window.__applyCollection) {
-            // Bridge to the local variable via synthetic event
-            document.dispatchEvent(
-              new CustomEvent("__set-sort", { detail: val })
-            );
-          }
-        });
+          document.dispatchEvent(
+            new CustomEvent("__set-sort", { detail: val })
+          );
+        };
+        btn.addEventListener("click", applySort);
+        btn.addEventListener(
+          "touchend",
+          (e) => {
+            e.preventDefault();
+            applySort(e);
+          },
+          { passive: false }
+        );
       });
     }
 
@@ -1382,7 +1390,7 @@
         borderRadius: "10px",
         boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
         padding: "8px",
-        zIndex: 1100,
+        zIndex: 1200,
         transition: "opacity 140ms ease, transform 140ms ease",
         opacity: "0",
         transform: "translateY(-2px)",
@@ -1468,6 +1476,17 @@
         if (menu.style.display === "block") close();
         else open();
       });
+      // iOS Safari: ensure touch taps toggle reliably
+      chip.addEventListener(
+        "touchend",
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (menu.style.display === "block") close();
+          else open();
+        },
+        { passive: false }
+      );
       window.addEventListener("resize", () => close());
       window.addEventListener("scroll", () => close(), { passive: true });
 
@@ -1495,8 +1514,7 @@
 
     // ---- Collection: Data, render, filter, sort ----
     (function () {
-      const here = (location.pathname.split("/").pop() || "").toLowerCase();
-      if (!here.endsWith("collection.html")) return;
+      // Robust init by presence
       const grid = document.querySelector(".grid.products");
       const countEl = document.querySelector("main .muted");
       if (!grid) return;
