@@ -1519,6 +1519,17 @@
       const countEl = document.querySelector("main .muted");
       if (!grid) return;
 
+      // Preserve the intended two-column gap to restore after single view
+      const baseColGap = (() => {
+        try {
+          const cs = getComputedStyle(grid);
+          const cg = cs && cs.columnGap ? cs.columnGap : "";
+          return cg && cg !== "0px" ? cg : "16px";
+        } catch (_) {
+          return "16px";
+        }
+      })();
+
       // Build 50 demo products (adds 27 more to reach 50 total)
       const base = [
         {
@@ -1653,8 +1664,7 @@
         if (!gridEl) return;
         gridEl.style.display = "grid";
         gridEl.style.gridTemplateColumns = viewMode === "1" ? "1fr" : "1fr 1fr";
-        gridEl.style.columnGap =
-          viewMode === "1" ? "0px" : gridEl.style.columnGap || "16px";
+        gridEl.style.columnGap = viewMode === "1" ? "0px" : baseColGap;
         const wraps = gridEl.querySelectorAll(".img-wrap");
         wraps.forEach((w) => {
           w.style.aspectRatio = viewMode === "1" ? "1 / 1" : "1 / 1.7";
