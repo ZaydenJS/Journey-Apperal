@@ -549,7 +549,12 @@
           <a
             href="product.html?slug=tech-tee"
             class="img-wrap"
-            style="display: block; aspect-ratio: 1 / 2.2; overflow: hidden"
+            style="
+              display: block;
+              aspect-ratio: 1 / 2.2;
+              overflow: hidden;
+              border-radius: 0;
+            "
             ><img
               src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop"
               alt="Tech Tee"
@@ -559,6 +564,7 @@
                 height: 100%;
                 object-fit: cover;
                 display: block;
+                border-radius: 0;
               "
           /></a>
           <div
@@ -594,7 +600,12 @@
           <a
             href="product.html?slug=aero-jogger"
             class="img-wrap"
-            style="display: block; aspect-ratio: 1 / 2.2; overflow: hidden"
+            style="
+              display: block;
+              aspect-ratio: 1 / 2.2;
+              overflow: hidden;
+              border-radius: 0;
+            "
             ><img
               src="https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop"
               alt="Aero Jogger"
@@ -604,6 +615,7 @@
                 height: 100%;
                 object-fit: cover;
                 display: block;
+                border-radius: 0;
               "
           /></a>
           <div
@@ -639,7 +651,12 @@
           <a
             href="product.html?slug=city-hoodie"
             class="img-wrap"
-            style="display: block; aspect-ratio: 1 / 2.2; overflow: hidden"
+            style="
+              display: block;
+              aspect-ratio: 1 / 2.2;
+              overflow: hidden;
+              border-radius: 0;
+            "
             ><img
               src="https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop"
               alt="City Hoodie"
@@ -649,6 +666,7 @@
                 height: 100%;
                 object-fit: cover;
                 display: block;
+                border-radius: 0;
               "
           /></a>
           <div
@@ -684,7 +702,12 @@
           <a
             href="product.html?slug=ultra-short"
             class="img-wrap"
-            style="display: block; aspect-ratio: 1 / 2.2; overflow: hidden"
+            style="
+              display: block;
+              aspect-ratio: 1 / 2.2;
+              overflow: hidden;
+              border-radius: 0;
+            "
             ><img
               src="https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop"
               alt="Ultra Short"
@@ -694,6 +717,7 @@
                 height: 100%;
                 object-fit: cover;
                 display: block;
+                border-radius: 0;
               "
           /></a>
           <div
@@ -729,7 +753,12 @@
           <a
             href="product.html?slug=ultra-short"
             class="img-wrap"
-            style="display: block; aspect-ratio: 1 / 2.2; overflow: hidden"
+            style="
+              display: block;
+              aspect-ratio: 1 / 2.2;
+              overflow: hidden;
+              border-radius: 0;
+            "
             ><img
               src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"
               alt="Ultra Short"
@@ -739,6 +768,7 @@
                 height: 100%;
                 object-fit: cover;
                 display: block;
+                border-radius: 0;
               "
           /></a>
           <div
@@ -774,7 +804,12 @@
           <a
             href="product.html?slug=studio-tank"
             class="img-wrap"
-            style="display: block; aspect-ratio: 1 / 2.2; overflow: hidden"
+            style="
+              display: block;
+              aspect-ratio: 1 / 2.2;
+              overflow: hidden;
+              border-radius: 0;
+            "
             ><img
               src="https://images.unsplash.com/photo-1542296332-2e4473faf563?q=80&w=800&auto=format&fit=crop"
               alt="Studio Tank"
@@ -784,6 +819,7 @@
                 height: 100%;
                 object-fit: cover;
                 display: block;
+                border-radius: 0;
               "
           /></a>
           <div
@@ -819,7 +855,12 @@
           <a
             href="product.html?slug=city-hoodie"
             class="img-wrap"
-            style="display: block; aspect-ratio: 1 / 2.2; overflow: hidden"
+            style="
+              display: block;
+              aspect-ratio: 1 / 2.2;
+              overflow: hidden;
+              border-radius: 0;
+            "
             ><img
               src="https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop"
               alt="City Hoodie"
@@ -829,6 +870,7 @@
                 height: 100%;
                 object-fit: cover;
                 display: block;
+                border-radius: 0;
               "
           /></a>
           <div
@@ -864,7 +906,12 @@
           <a
             href="product.html?slug=everyday-cap"
             class="img-wrap"
-            style="display: block; aspect-ratio: 1 / 2.2; overflow: hidden"
+            style="
+              display: block;
+              aspect-ratio: 1 / 2.2;
+              overflow: hidden;
+              border-radius: 0;
+            "
             ><img
               src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop"
               alt="Everyday Cap"
@@ -874,6 +921,7 @@
                 height: 100%;
                 object-fit: cover;
                 display: block;
+                border-radius: 0;
               "
           /></a>
           <div
@@ -1282,6 +1330,32 @@
         </div>
       </div>
     </footer>
+
+    <script>
+      (function enforceSquareImages() {
+        function square() {
+          var nodes = document.querySelectorAll(
+            ".grid.products .img-wrap, .grid.products .img-wrap img"
+          );
+          nodes.forEach(function (el) {
+            el.style.borderRadius = "0px";
+            if (el.classList && el.classList.contains("img-wrap")) {
+              el.style.overflow = "hidden";
+            }
+          });
+        }
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", square);
+        } else {
+          square();
+        }
+        // Re-apply if products are injected dynamically
+        var mo = new MutationObserver(function () {
+          square();
+        });
+        mo.observe(document.body, { childList: true, subtree: true });
+      })();
+    </script>
 
     <script src="script.js" defer></script>
   </body>
