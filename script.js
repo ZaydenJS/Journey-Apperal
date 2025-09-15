@@ -13,7 +13,11 @@
 <header class="header" style="top: 0; left: 0; right: 0">
   <div class="container header-inner" style="max-width: none; width: 100%; padding-left: 16px; padding-right: 16px;">
     <div class="nav-left row">
-      <button class="menu-toggle" aria-label="Open menu" style="background: transparent; border: none; padding: 8px; display: inline-flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 0; box-shadow: none;"><span style="display:block; width:22px; height:2px; background:#000; border-radius:1px;"></span><span style="display:block; width:22px; height:2px; background:#000; border-radius:1px;"></span><span style="display:block; width:22px; height:2px; background:#000; border-radius:1px;"></span></button>
+      <button class="menu-toggle" aria-label="Open menu" style="background: transparent; border: none; padding: 8px; display: inline-flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 0; box-shadow: none;">
+        <span style="display:block; width:22px; height:2px; background:#000; border-radius:1px;"></span>
+        <span style="display:block; width:22px; height:2px; background:#000; border-radius:1px;"></span>
+        <span style="display:block; width:22px; height:2px; background:#000; border-radius:1px;"></span>
+      </button>
       <nav class="nav" aria-label="Primary">
         <a href="#" class="header-item">Shop
           <div class="mega" role="dialog" aria-label="Mega menu">
@@ -67,7 +71,7 @@
     <div class="nav-right">
       <button class="icon-btn" aria-label="Search">🔍</button>
       <button class="icon-btn" aria-label="Account">👤</button>
-      <button class="icon-btn" aria-label="Wishlist">♡</button>
+
       <a class="icon-btn" aria-label="Cart" href="#">🛒</a>
     </div>
   </div>
@@ -2650,140 +2654,169 @@
       window.openCart && window.openCart();
     });
   }
-  function setupMobileCTA() {
-      try {
-        const params = new URLSearchParams(location.search);
-        const force = params.get("cta") === "1" || params.get("cta") === "show";
-        const isMobile = window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
-        if (!isMobile && !force) return;
-        const key = "journey_cta_seen";
-        if (!force && localStorage.getItem(key) === "1") return;
+})();
 
-        setTimeout(() => {
-          const overlay = document.createElement("div");
+// Mobile CTA popup inspired by Frontrunners (first-visit, short delay)
+function setupMobileCTA() {
+  try {
+    const params = new URLSearchParams(location.search);
+    const force = params.get("cta") === "show" || params.get("cta") === "1";
+    const isMobile = matchMedia("(max-width: 768px)").matches;
+    const key = "journey_cta_seen";
+    if (!force) {
+      if (!isMobile) return;
+      if (localStorage.getItem(key) === "1") return;
+    }
+
+    setTimeout(
+      () => {
+        const overlay = document.createElement("div");
         overlay.setAttribute("role", "dialog");
         overlay.setAttribute("aria-modal", "true");
-        overlay.setAttribute("aria-label", "Special offer");
         overlay.style.cssText = [
-          "position:fixed",
-          "inset:0",
-          "z-index:2000",
-          "display:flex",
-          "align-items:center",
-          "justify-content:center",
-          "background:rgba(0,0,0,.5)",
-          "backdrop-filter:blur(2px)",
+          "position: fixed",
+          "inset: 0",
+          "background: rgba(0,0,0,0.5)",
+          "display: flex",
+          "align-items: center",
+          "justify-content: center",
+          "z-index: 9999",
+          "padding: 16px",
         ].join(";");
-
-        const prevOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
 
         const card = document.createElement("div");
         card.style.cssText = [
-          "width:92%",
-          "max-width:420px",
-          "background:#fff",
-          "border-radius:14px",
-          "overflow:hidden",
-          "box-shadow:0 10px 30px rgba(0,0,0,.25)",
-          "transform:translateY(10px)",
-          "opacity:0",
-          "transition:all .25s ease",
+          "width: 100%",
+          "max-width: 420px",
+          "background: #fff",
+          "border-radius: 14px",
+          "overflow: hidden",
+          "box-shadow: 0 10px 30px rgba(0,0,0,0.25)",
+          "position: relative",
         ].join(";");
 
-        const hero = document.createElement("div");
-        hero.style.cssText =
-          "position:relative; height:200px; background:#f5f5f5; overflow:hidden;";
-        const img = document.createElement("img");
-        img.src =
-          "https://images.unsplash.com/photo-1556909114-16a3b61255f2?q=80&w=1200&auto=format&fit=crop";
-        img.alt = "New arrivals";
-        img.style.cssText =
-          "width:100%; height:100%; object-fit:cover; display:block;";
-        hero.appendChild(img);
+        const closeBtn = document.createElement("button");
+        closeBtn.setAttribute("aria-label", "Close");
+        closeBtn.textContent = "×";
+        closeBtn.style.cssText = [
+          "position: absolute",
+          "top: 8px",
+          "right: 10px",
+          "background: transparent",
+          "border: 0",
+          "font-size: 28px",
+          "line-height: 1",
+          "color: #000",
+          "cursor: pointer",
+        ].join(";");
 
-        const inner = document.createElement("div");
-        inner.style.cssText = "padding:16px; text-align:center;";
-        const h = document.createElement("div");
-        h.textContent = "New Arrivals Just Dropped";
-        h.style.cssText =
-          "font-size:18px; font-weight:800; margin:6px 0 8px 0; color:#000; letter-spacing:.2px;";
-        const p = document.createElement("div");
-        p.textContent = "Premium fits. Limited runs. Be first.";
-        p.style.cssText = "font-size:14px; color:#333; margin-bottom:14px;";
+        const img = new Image();
+        img.src = "images/cta-mobile.jpg"; // replace with your preferred asset
+        img.alt = "New Arrivals";
+        img.style.cssText = [
+          "display: block",
+          "width: 100%",
+          "height: 200px",
+          "object-fit: cover",
+          "background: linear-gradient(135deg,#f2f2f2,#e8e8e8)",
+        ].join(";");
+        img.onerror = () => {
+          img.style.display = "none";
+          card.style.borderTopLeftRadius = "14px";
+          card.style.borderTopRightRadius = "14px";
+        };
+
+        const content = document.createElement("div");
+        content.style.cssText = [
+          "padding: 18px 16px 16px",
+          "text-align: left",
+          "color: #000",
+        ].join(";");
+
+        const headline = document.createElement("div");
+        headline.textContent = "New Arrivals Just Dropped";
+        headline.style.cssText = [
+          "font-size: 18px",
+          "font-weight: 700",
+          "margin-bottom: 8px",
+        ].join(";");
+
+        const sub = document.createElement("div");
+        sub.textContent = "Premium essentials. Limited restocks.";
+        sub.style.cssText = [
+          "font-size: 14px",
+          "opacity: 0.85",
+          "margin-bottom: 14px",
+        ].join(";");
 
         const cta = document.createElement("a");
         cta.href = "collection.html?section=new-arrivals";
         cta.textContent = "Shop New Arrivals";
         cta.style.cssText = [
-          "display:inline-block",
-          "padding:12px 16px",
-          "background:#000",
-          "color:#fff",
-          "border-radius:999px",
-          "text-decoration:none",
-          "font-weight:700",
-          "font-size:14px",
+          "display: inline-block",
+          "padding: 10px 14px",
+          "background: #000",
+          "color: #fff",
+          "text-decoration: none",
+          "border-radius: 8px",
+          "font-size: 14px",
+          "font-weight: 600",
         ].join(";");
 
-        const minor = document.createElement("button");
-        minor.type = "button";
-        minor.textContent = "Maybe later";
-        minor.style.cssText =
-          "display:block; margin:10px auto 0; background:none; border:0; color:#555; font-size:12px; text-decoration:underline;";
-
-        const close = document.createElement("button");
-        close.type = "button";
-        close.setAttribute("aria-label", "Close");
-        close.textContent = "×";
-        close.style.cssText = [
-          "position:absolute",
-          "top:8px",
-          "right:10px",
-          "width:32px",
-          "height:32px",
-          "border-radius:50%",
-          "border:0",
-          "background:rgba(255,255,255,.9)",
-          "font-size:22px",
-          "line-height:32px",
-          "cursor:pointer",
-          "box-shadow:0 2px 8px rgba(0,0,0,.15)",
+        const later = document.createElement("a");
+        later.href = "#";
+        later.textContent = "Maybe later";
+        later.style.cssText = [
+          "display: inline-block",
+          "margin-left: 12px",
+          "font-size: 13px",
+          "color: #000",
+          "text-decoration: underline",
         ].join(";");
 
+        const prevOverflow = document.body.style.overflow;
         function dismiss() {
-          localStorage.setItem(key, "1");
           try {
-            document.body.style.overflow = prevOverflow || "";
-            document.body.removeChild(overlay);
+            localStorage.setItem(key, "1");
           } catch (e) {}
+          document.body.style.overflow = prevOverflow || "";
+          if (overlay && overlay.parentNode)
+            overlay.parentNode.removeChild(overlay);
         }
 
-        cta.addEventListener("click", dismiss);
-        minor.addEventListener("click", dismiss);
-        close.addEventListener("click", dismiss);
         overlay.addEventListener("click", (e) => {
           if (e.target === overlay) dismiss();
         });
-
-        inner.appendChild(h);
-        inner.appendChild(p);
-        inner.appendChild(cta);
-        inner.appendChild(minor);
-        card.appendChild(hero);
-        card.appendChild(inner);
-        card.appendChild(close);
-        overlay.appendChild(card);
-        document.body.appendChild(overlay);
-
-        requestAnimationFrame(() => {
-          card.style.transform = "translateY(0)";
-          card.style.opacity = "1";
+        closeBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          dismiss();
         });
-        }, 1400);
-      } catch (e) {
-        console.error("setupMobileCTA failed", e);
-      }
-    }
+        later.addEventListener("click", (e) => {
+          e.preventDefault();
+          dismiss();
+        });
+        cta.addEventListener("click", () => {
+          try {
+            localStorage.setItem(key, "1");
+          } catch (e) {}
+          document.body.style.overflow = prevOverflow || "";
+        });
+
+        content.appendChild(headline);
+        content.appendChild(sub);
+        content.appendChild(cta);
+        content.appendChild(later);
+        card.appendChild(closeBtn);
+        card.appendChild(img);
+        card.appendChild(content);
+        overlay.appendChild(card);
+
+        document.body.appendChild(overlay);
+        document.body.style.overflow = "hidden";
+      },
+      force ? 100 : 1400
+    );
+  } catch (err) {
+    console.warn("setupMobileCTA error", err);
   }
-})();
+}
