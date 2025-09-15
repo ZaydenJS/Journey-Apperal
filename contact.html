@@ -24,7 +24,7 @@
       class="announcement upper"
       style="position: sticky; top: 0; left: 0; right: 0"
     >
-      Free shipping over $75 • Launch in <span id="countdown">00:00:00</span>
+      Free Shipping Over $100
     </div>
 
     <header class="header" style="top: 0; left: 0; right: 0">
@@ -331,7 +331,6 @@
           <a href="policies.html">Policies</a>
           <a href="contact.html">Contact</a>
           <a href="about.html">About</a>
-          <a href="partners.html">Partners</a>
         </div>
       </nav>
 
@@ -401,17 +400,31 @@
       </div>
 
       <form
+        id="contact-form"
         style="
-          margin-top: 24px;
+          margin: 24px auto 0;
           border: 1px solid #e5e5e5;
           border-radius: 12px;
           padding: 20px;
           display: grid;
           grid-template-columns: 1fr;
           gap: 12px;
+          max-width: 720px;
+          width: 100%;
+          box-sizing: border-box;
+          overflow: hidden;
         "
       >
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+        <div
+          id="contact-names"
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            box-sizing: border-box;
+          "
+        >
           <input
             placeholder="First name"
             required
@@ -420,6 +433,8 @@
               border: 1px solid #ddd;
               border-radius: 8px;
               font-size: 14px;
+              width: 100%;
+              box-sizing: border-box;
             "
           />
           <input
@@ -430,6 +445,8 @@
               border: 1px solid #ddd;
               border-radius: 8px;
               font-size: 14px;
+              width: 100%;
+              box-sizing: border-box;
             "
           />
         </div>
@@ -442,6 +459,8 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
           "
         />
         <textarea
@@ -453,6 +472,9 @@
             border-radius: 8px;
             font-size: 14px;
             resize: vertical;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
           "
         ></textarea>
         <button
@@ -470,6 +492,23 @@
           Send
         </button>
       </form>
+      <script>
+        (function () {
+          function adjust() {
+            var row = document.getElementById("contact-names");
+            if (!row) return;
+            row.style.gridTemplateColumns =
+              window.innerWidth < 560 ? "1fr" : "1fr 1fr";
+          }
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", adjust);
+          } else {
+            adjust();
+          }
+          window.addEventListener("resize", adjust);
+        })();
+      </script>
+
       <!-- Join Journey CTA -->
       <section
         aria-label="Join Journey"
@@ -701,18 +740,6 @@
                   onmouseover="this.style.color='#000'"
                   onmouseout="this.style.color='#000'"
                   >About</a
-                >
-                <a
-                  href="partners.html"
-                  style="
-                    color: #000;
-                    text-decoration: none;
-                    font-size: 14px;
-                    transition: color 0.2s ease;
-                  "
-                  onmouseover="this.style.color='#000'"
-                  onmouseout="this.style.color='#000'"
-                  >Partners</a
                 >
               </div>
             </div>
