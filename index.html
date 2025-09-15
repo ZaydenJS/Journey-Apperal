@@ -1724,6 +1724,267 @@
       </div>
     </footer>
 
+    <!-- Premium Rewards Modal (Home only) -->
+    <div
+      id="promo-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden="true"
+      tabindex="-1"
+      style="
+        position: fixed;
+        inset: 0;
+        display: none;
+        z-index: 1200;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(2px);
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      "
+    >
+      <div
+        style="
+          display: flex;
+          flex-wrap: wrap;
+          width: min(840px, 92vw);
+          background: #fff;
+          color: #111;
+          border-radius: 0;
+          box-shadow: 0 22px 60px rgba(0, 0, 0, 0.35);
+          overflow: hidden;
+          position: relative;
+        "
+      >
+        <!-- Visual -->
+        <div
+          style="
+            flex: 1 1 360px;
+            min-width: 300px;
+            height: clamp(220px, 34vh, 340px);
+            position: relative;
+            background: linear-gradient(
+                180deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.45)
+              ),
+              url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80')
+                center/cover no-repeat;
+          "
+        >
+          <div
+            style="
+              position: absolute;
+              left: 16px;
+              right: 16px;
+              bottom: 16px;
+              color: #fff;
+            "
+          >
+            <div
+              style="
+                font-weight: 900;
+                font-size: clamp(20px, 3.2vw, 28px);
+                letter-spacing: 0.4px;
+                line-height: 1.15;
+              "
+            >
+              Get Free Shipping
+            </div>
+            <div
+              style="
+                margin-top: 4px;
+                font-size: 12px;
+                letter-spacing: 0.8px;
+                opacity: 0.95;
+              "
+            >
+              GET FREE SHIPPING ON YOUR FIRST ORDER.
+            </div>
+          </div>
+        </div>
+        <!-- Content -->
+        <div
+          style="
+            flex: 1 1 360px;
+            min-width: 300px;
+            padding: 22px 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+          "
+        >
+          <form
+            id="promo-form"
+            style="display: flex; gap: 8px; width: 100%; margin-top: 6px"
+          >
+            <input
+              id="promo-email"
+              type="email"
+              inputmode="email"
+              placeholder="Enter your email"
+              required
+              style="
+                flex: 1;
+                padding: 12px 14px;
+                border: 1px solid #ddd;
+                border-radius: 0;
+                font-size: 14px;
+                color: #111;
+                background: #fff;
+              "
+            />
+            <button
+              id="promo-cta"
+              type="submit"
+              style="
+                padding: 12px 14px;
+                background: #111;
+                color: #fff;
+                border: none;
+                border-radius: 0;
+                font-weight: 800;
+                letter-spacing: 0.4px;
+                cursor: pointer;
+                white-space: nowrap;
+              "
+            >
+              I'll Take It
+            </button>
+          </form>
+          <div style="font-size: 11px; color: #777">Australia Wide-Only</div>
+        </div>
+        <!-- Close -->
+        <button
+          id="promo-close"
+          aria-label="Close"
+          style="
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #fff;
+            border: 1px solid #ddd;
+            width: 32px;
+            height: 32px;
+            line-height: 30px;
+            text-align: center;
+            border-radius: 0;
+            cursor: pointer;
+          "
+        >
+          ×
+        </button>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var KEY = "jrny_promo_next",
+          VER = "3",
+          VKEY = "jrny_promo_ver";
+        var now = Date.now();
+        function qs(id) {
+          return document.getElementById(id);
+        }
+        function bodyNoScroll(on) {
+          try {
+            document.body.style.overflow = on ? "hidden" : "";
+          } catch (e) {}
+        }
+        function openM() {
+          var m = qs("promo-modal");
+          if (!m) return;
+          m.style.display = "flex";
+          m.setAttribute("aria-hidden", "false");
+          bodyNoScroll(true);
+          setTimeout(function () {
+            var c = qs("promo-cta") || qs("promo-close");
+            if (c)
+              try {
+                c.focus();
+              } catch (e) {}
+          }, 0);
+          window.__openPromo = openM;
+          window.__closePromo = closeM;
+          window.__resetPromo = function () {
+            try {
+              localStorage.removeItem(KEY);
+            } catch (e) {}
+          };
+        }
+        function closeM(setSupp) {
+          var m = qs("promo-modal");
+          if (!m) return;
+          m.style.display = "none";
+          m.setAttribute("aria-hidden", "true");
+          bodyNoScroll(false);
+          if (setSupp !== false) {
+            try {
+              localStorage.setItem(
+                KEY,
+                String(Date.now() + 24 * 60 * 60 * 1000)
+              );
+            } catch (e) {}
+          }
+        }
+        function force() {
+          return (
+            location.hash.indexOf("promo") >= 0 ||
+            location.search.indexOf("promo=1") >= 0
+          );
+        }
+        function init() {
+          var m = qs("promo-modal");
+          if (!m) return;
+          try {
+            var pv = localStorage.getItem(VKEY);
+            if (pv !== VER) {
+              localStorage.removeItem(KEY);
+              localStorage.setItem(VKEY, VER);
+            }
+          } catch (e) {}
+          var cta = qs("promo-cta"),
+            no = qs("promo-no"),
+            x = qs("promo-close"),
+            form = document.getElementById("promo-form");
+          if (cta)
+            cta.addEventListener("click", function (e) {
+              e.preventDefault();
+              closeM(true);
+            });
+          if (form)
+            form.addEventListener("submit", function (e) {
+              e.preventDefault();
+              closeM(true);
+            });
+          if (no)
+            no.addEventListener("click", function () {
+              closeM(true);
+            });
+          if (x)
+            x.addEventListener("click", function () {
+              closeM(true);
+            });
+          m.addEventListener("click", function (e) {
+            if (e.target === m) closeM(true);
+          });
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") closeM(true);
+          });
+          if (force()) {
+            try {
+              localStorage.removeItem(KEY);
+            } catch (e) {}
+            return setTimeout(openM, 100);
+          }
+          var until = parseInt(localStorage.getItem(KEY) || "0", 10);
+          if (!(until > now)) setTimeout(openM, 2500);
+        }
+        if (document.readyState === "loading")
+          document.addEventListener("DOMContentLoaded", init);
+        else init();
+      })();
+    </script>
+
     <script src="script.js" defer></script>
   </body>
 </html>
