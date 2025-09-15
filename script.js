@@ -2649,15 +2649,18 @@
       window.__cart?.setCart && window.__cart.setCart(items);
       window.openCart && window.openCart();
     });
-    function setupMobileCTA() {
+  }
+  function setupMobileCTA() {
       try {
-        const isMobile =
-          window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
-        if (!isMobile) return;
+        const params = new URLSearchParams(location.search);
+        const force = params.get("cta") === "1" || params.get("cta") === "show";
+        const isMobile = window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
+        if (!isMobile && !force) return;
         const key = "journey_cta_seen";
-        if (localStorage.getItem(key) === "1") return;
+        if (!force && localStorage.getItem(key) === "1") return;
 
-        const overlay = document.createElement("div");
+        setTimeout(() => {
+          const overlay = document.createElement("div");
         overlay.setAttribute("role", "dialog");
         overlay.setAttribute("aria-modal", "true");
         overlay.setAttribute("aria-label", "Special offer");
@@ -2671,6 +2674,9 @@
           "background:rgba(0,0,0,.5)",
           "backdrop-filter:blur(2px)",
         ].join(";");
+
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
 
         const card = document.createElement("div");
         card.style.cssText = [
@@ -2748,6 +2754,7 @@
         function dismiss() {
           localStorage.setItem(key, "1");
           try {
+            document.body.style.overflow = prevOverflow || "";
             document.body.removeChild(overlay);
           } catch (e) {}
         }
@@ -2773,6 +2780,7 @@
           card.style.transform = "translateY(0)";
           card.style.opacity = "1";
         });
+        }, 1400);
       } catch (e) {
         console.error("setupMobileCTA failed", e);
       }
