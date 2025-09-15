@@ -38,8 +38,51 @@
         "
       >
         <div class="nav-left row">
-          <button class="menu-toggle" aria-label="Open menu">
-            <span></span><span></span><span></span>
+          <button
+            class="menu-toggle"
+            aria-label="Open menu"
+            style="
+              background: transparent;
+              border: none;
+              padding: 8px;
+              display: inline-flex;
+              flex-direction: column;
+              gap: 4px;
+              align-items: center;
+              justify-content: center;
+              width: 36px;
+              height: 36px;
+              border-radius: 0;
+              box-shadow: none;
+            "
+          >
+            <span
+              style="
+                display: block;
+                width: 22px;
+                height: 2px;
+                background: #000;
+                border-radius: 1px;
+              "
+            ></span>
+            <span
+              style="
+                display: block;
+                width: 22px;
+                height: 2px;
+                background: #000;
+                border-radius: 1px;
+              "
+            ></span>
+            <span
+              style="
+                display: block;
+                width: 22px;
+                height: 2px;
+                background: #000;
+                border-radius: 1px;
+              "
+            ></span>
           </button>
           <nav class="nav" aria-label="Primary">
             <a href="#" class="header-item"
@@ -266,24 +309,20 @@
         </button>
         <div class="sub">
           <a href="collection.html?collection=best-sellers">Best Sellers</a>
-          <a href="collection.html?collection=ss25">SS/25</a>
-          <a href="collection.html?collection=lightweight">Lightweight</a>
-          <a href="collection.html?collection=boxing">Boxing</a>
-          <a href="collection.html?collection=womens-activewear"
-            >Women’s Activewear</a
-          >
         </div>
 
-        <a href="#" class="row-item">Members Sign Up</a>
+        <a href="#" class="row-item">Journey Sign Up</a>
 
         <button class="row-item accordion" data-accordion aria-expanded="false">
-          Customer Care <span class="chev">›</span>
+          Support & Contact <span class="chev">›</span>
         </button>
         <div class="sub">
           <a href="returns.html">Exchanges & Returns</a>
           <a href="shipping.html">Shipping</a>
           <a href="policies.html">Policies</a>
           <a href="contact.html">Contact</a>
+          <a href="about.html">About</a>
+          <a href="partners.html">Partners</a>
         </div>
       </nav>
 
@@ -532,11 +571,11 @@
                   color: #000;
                 "
               >
-                Customer Care
+                Support & Contact
               </h4>
               <div style="display: flex; flex-direction: column; gap: 12px">
                 <a
-                  href="contact.html"
+                  href="returns.html"
                   style="
                     color: #000;
                     text-decoration: none;
@@ -545,7 +584,7 @@
                   "
                   onmouseover="this.style.color='#000'"
                   onmouseout="this.style.color='#000'"
-                  >Contact Us</a
+                  >Exchanges & Returns</a
                 >
                 <a
                   href="shipping.html"
@@ -557,31 +596,7 @@
                   "
                   onmouseover="this.style.color='#000'"
                   onmouseout="this.style.color='#000'"
-                  >Shipping Info</a
-                >
-                <a
-                  href="returns.html"
-                  style="
-                    color: #000;
-                    text-decoration: none;
-                    font-size: 14px;
-                    transition: color 0.2s ease;
-                  "
-                  onmouseover="this.style.color='#000'"
-                  onmouseout="this.style.color='#000'"
-                  >Returns & Exchanges</a
-                >
-                <a
-                  href="product.html#size-guide"
-                  style="
-                    color: #000;
-                    text-decoration: none;
-                    font-size: 14px;
-                    transition: color 0.2s ease;
-                  "
-                  onmouseover="this.style.color='#000'"
-                  onmouseout="this.style.color='#000'"
-                  >Size Guide</a
+                  >Shipping</a
                 >
                 <a
                   href="policies.html"
@@ -593,7 +608,19 @@
                   "
                   onmouseover="this.style.color='#000'"
                   onmouseout="this.style.color='#000'"
-                  >FAQ</a
+                  >Policies</a
+                >
+                <a
+                  href="contact.html"
+                  style="
+                    color: #000;
+                    text-decoration: none;
+                    font-size: 14px;
+                    transition: color 0.2s ease;
+                  "
+                  onmouseover="this.style.color='#000'"
+                  onmouseout="this.style.color='#000'"
+                  >Contact</a
                 >
               </div>
             </div>
@@ -621,7 +648,7 @@
                   "
                   onmouseover="this.style.color='#000'"
                   onmouseout="this.style.color='#000'"
-                  >About Journey</a
+                  >About</a
                 >
                 <a
                   href="partners.html"

@@ -13,7 +13,7 @@
 <header class="header" style="top: 0; left: 0; right: 0">
   <div class="container header-inner" style="max-width: none; width: 100%; padding-left: 16px; padding-right: 16px;">
     <div class="nav-left row">
-      <button class="menu-toggle" aria-label="Open menu"><span></span><span></span><span></span></button>
+      <button class="menu-toggle" aria-label="Open menu" style="background: transparent; border: none; padding: 8px; display: inline-flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 0; box-shadow: none;"><span style="display:block; width:22px; height:2px; background:#000; border-radius:1px;"></span><span style="display:block; width:22px; height:2px; background:#000; border-radius:1px;"></span><span style="display:block; width:22px; height:2px; background:#000; border-radius:1px;"></span></button>
       <nav class="nav" aria-label="Primary">
         <a href="#" class="header-item">Shop
           <div class="mega" role="dialog" aria-label="Mega menu">
@@ -164,6 +164,7 @@
     __safe("setupImageFallbacks", setupImageFallbacks);
     __safe("setupThematicImages", setupThematicImages);
     __safe("normalizeCarouselMedia", normalizeCarouselMedia);
+    __safe("setupMobileCTA", setupMobileCTA);
   });
 
   function setupSizeSelection() {
@@ -1812,6 +1813,42 @@
         apply();
       });
 
+      // Prefilter by URL category (e.g., ?category=tees)
+      try {
+        const p = new URLSearchParams(location.search);
+        const cat = (p.get("category") || "").toLowerCase();
+        if (cat) {
+          const map = {
+            tees: "Tees",
+            hoodies: "Hoodies",
+            shorts: "Shorts",
+            pants: "Pants",
+            accessories: "Accessories",
+            tops: "Tees",
+            bottoms: "Pants",
+            outerwear: "Hoodies",
+          };
+          const t = map[cat];
+          if (t) {
+            chipState.type.add(t);
+            const chip = document.querySelector(
+              '.filter-chip[data-filter="type"]'
+            );
+            if (chip) {
+              const nameSpan = chip.querySelector("span");
+              if (nameSpan) {
+                const base =
+                  chip.getAttribute("data-label-base") ||
+                  nameSpan.textContent.split("•")[0].trim();
+                chip.setAttribute("data-label-base", base);
+                const count = chipState.type.size;
+                nameSpan.textContent = count ? base + " • " + count : base;
+                chip.style.border = count ? "1px solid #000" : "1px solid #ddd";
+              }
+            }
+          }
+        }
+      } catch (_) {}
       // Initial render
       apply();
 
@@ -2612,5 +2649,133 @@
       window.__cart?.setCart && window.__cart.setCart(items);
       window.openCart && window.openCart();
     });
+    function setupMobileCTA() {
+      try {
+        const isMobile =
+          window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
+        if (!isMobile) return;
+        const key = "journey_cta_seen";
+        if (localStorage.getItem(key) === "1") return;
+
+        const overlay = document.createElement("div");
+        overlay.setAttribute("role", "dialog");
+        overlay.setAttribute("aria-modal", "true");
+        overlay.setAttribute("aria-label", "Special offer");
+        overlay.style.cssText = [
+          "position:fixed",
+          "inset:0",
+          "z-index:2000",
+          "display:flex",
+          "align-items:center",
+          "justify-content:center",
+          "background:rgba(0,0,0,.5)",
+          "backdrop-filter:blur(2px)",
+        ].join(";");
+
+        const card = document.createElement("div");
+        card.style.cssText = [
+          "width:92%",
+          "max-width:420px",
+          "background:#fff",
+          "border-radius:14px",
+          "overflow:hidden",
+          "box-shadow:0 10px 30px rgba(0,0,0,.25)",
+          "transform:translateY(10px)",
+          "opacity:0",
+          "transition:all .25s ease",
+        ].join(";");
+
+        const hero = document.createElement("div");
+        hero.style.cssText =
+          "position:relative; height:200px; background:#f5f5f5; overflow:hidden;";
+        const img = document.createElement("img");
+        img.src =
+          "https://images.unsplash.com/photo-1556909114-16a3b61255f2?q=80&w=1200&auto=format&fit=crop";
+        img.alt = "New arrivals";
+        img.style.cssText =
+          "width:100%; height:100%; object-fit:cover; display:block;";
+        hero.appendChild(img);
+
+        const inner = document.createElement("div");
+        inner.style.cssText = "padding:16px; text-align:center;";
+        const h = document.createElement("div");
+        h.textContent = "New Arrivals Just Dropped";
+        h.style.cssText =
+          "font-size:18px; font-weight:800; margin:6px 0 8px 0; color:#000; letter-spacing:.2px;";
+        const p = document.createElement("div");
+        p.textContent = "Premium fits. Limited runs. Be first.";
+        p.style.cssText = "font-size:14px; color:#333; margin-bottom:14px;";
+
+        const cta = document.createElement("a");
+        cta.href = "collection.html?section=new-arrivals";
+        cta.textContent = "Shop New Arrivals";
+        cta.style.cssText = [
+          "display:inline-block",
+          "padding:12px 16px",
+          "background:#000",
+          "color:#fff",
+          "border-radius:999px",
+          "text-decoration:none",
+          "font-weight:700",
+          "font-size:14px",
+        ].join(";");
+
+        const minor = document.createElement("button");
+        minor.type = "button";
+        minor.textContent = "Maybe later";
+        minor.style.cssText =
+          "display:block; margin:10px auto 0; background:none; border:0; color:#555; font-size:12px; text-decoration:underline;";
+
+        const close = document.createElement("button");
+        close.type = "button";
+        close.setAttribute("aria-label", "Close");
+        close.textContent = "×";
+        close.style.cssText = [
+          "position:absolute",
+          "top:8px",
+          "right:10px",
+          "width:32px",
+          "height:32px",
+          "border-radius:50%",
+          "border:0",
+          "background:rgba(255,255,255,.9)",
+          "font-size:22px",
+          "line-height:32px",
+          "cursor:pointer",
+          "box-shadow:0 2px 8px rgba(0,0,0,.15)",
+        ].join(";");
+
+        function dismiss() {
+          localStorage.setItem(key, "1");
+          try {
+            document.body.removeChild(overlay);
+          } catch (e) {}
+        }
+
+        cta.addEventListener("click", dismiss);
+        minor.addEventListener("click", dismiss);
+        close.addEventListener("click", dismiss);
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) dismiss();
+        });
+
+        inner.appendChild(h);
+        inner.appendChild(p);
+        inner.appendChild(cta);
+        inner.appendChild(minor);
+        card.appendChild(hero);
+        card.appendChild(inner);
+        card.appendChild(close);
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+
+        requestAnimationFrame(() => {
+          card.style.transform = "translateY(0)";
+          card.style.opacity = "1";
+        });
+      } catch (e) {
+        console.error("setupMobileCTA failed", e);
+      }
+    }
   }
 })();
