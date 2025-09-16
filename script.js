@@ -1209,14 +1209,19 @@
       const tr = toolbar ? toolbar.getBoundingClientRect() : r;
       const sortToggle = document.getElementById("sort-toggle");
       const sr = sortToggle ? sortToggle.getBoundingClientRect() : tr;
-      panel.style.left = r.left + "px"; // fixed: viewport coordinates
+      const left = Math.floor(r.left);
+      const right = Math.ceil(sr.right);
+      panel.style.left = left + "px"; // fixed: viewport coordinates
       // Attach to the bottom of the taller of the two buttons to eliminate any gap
       const bottom = Math.max(r.bottom, sr.bottom);
       panel.style.top = bottom - 1 + "px";
-      panel.style.width = Math.max(sr.right - r.left, r.width) + "px";
+      panel.style.width = Math.max(0, right - left) + "px"; // span Filter -> Sort by exactly
+      panel.style.minWidth = "0";
+      panel.style.maxWidth = "none";
       panel.style.borderTopLeftRadius = "0px";
       panel.style.borderTopRightRadius = "0px";
       panel.style.borderTop = "0";
+      panel.style.boxSizing = "border-box";
     };
 
     const show = (v) => {
@@ -1243,6 +1248,11 @@
 
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
+      // Close Sort panel if open when opening Filter
+      var sp = document.querySelector("[data-sort-panel]");
+      var sb = document.getElementById("sort-toggle");
+      if (sp) sp.style.display = "none";
+      if (sb) sb.setAttribute("aria-expanded", "false");
       show(panel.style.display !== "block");
     });
 
@@ -1324,12 +1334,15 @@
       const show = (v) => (sortPanel.style.display = v ? "block" : "none");
       const position = () => {
         const r = sortToggle.getBoundingClientRect();
+        const left = Math.floor(r.left);
+        const width = Math.ceil(r.width);
         Object.assign(sortPanel.style, {
           position: "fixed",
-          left: r.left + "px",
+          left: left + "px",
           top: r.bottom - 1 + "px",
-          width: Math.round(r.width) + "px", // exact match to Sort by card
+          width: width + "px", // exact match to Sort by card
           minWidth: "0",
+          boxSizing: "border-box",
           background: "#fff",
           border: "1px solid #e5e5e5",
           padding: "6px 0",
@@ -1356,6 +1369,15 @@
       show(false);
       const toggleSort = (e) => {
         e && e.stopPropagation();
+        // Close Filter panel if open when toggling Sort
+        const filterPanel = document.getElementById("filters");
+        const filterBtn = document.getElementById("filter-toggle");
+        if (filterPanel) {
+          filterPanel.style.display = "none";
+          filterPanel.style.opacity = "0";
+          filterPanel.style.transform = "translateY(-2px)";
+        }
+        if (filterBtn) filterBtn.setAttribute("aria-expanded", "false");
         const open = sortPanel.style.display !== "block";
         if (open) position();
         show(open);

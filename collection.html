@@ -1324,62 +1324,8 @@
     </footer>
 
     <script>
-      // Ensure Filter and Sort never stay open together
-      (function oneOpenFilterSort() {
-        function $(id) {
-          return document.getElementById(id);
-        }
-        function show(el) {
-          if (el) el.style.display = "block";
-        }
-        function hide(el) {
-          if (el) el.style.display = "none";
-        }
-        function isOpen(el) {
-          return !!el && el.style.display === "block";
-        }
-        function init() {
-          var filterBtn = $("filter-toggle");
-          var sortBtn = $("sort-toggle");
-          var filters = $("filters");
-          var sortPanel = document.querySelector("[data-sort-panel]");
-          if (!filterBtn || !sortBtn || !filters || !sortPanel) return;
-
-          filterBtn.setAttribute("aria-controls", "filters");
-          sortBtn.setAttribute("aria-controls", "sort-menu");
-          filterBtn.setAttribute("aria-expanded", "false");
-          sortBtn.setAttribute("aria-expanded", "false");
-
-          filterBtn.addEventListener("click", function () {
-            var currentlyOpen = isOpen(filters);
-            hide(sortPanel);
-            sortBtn.setAttribute("aria-expanded", "false");
-            if (currentlyOpen) {
-              hide(filters);
-              filterBtn.setAttribute("aria-expanded", "false");
-            } else {
-              show(filters);
-              filterBtn.setAttribute("aria-expanded", "true");
-            }
-          });
-
-          sortBtn.addEventListener("click", function () {
-            var currentlyOpen = isOpen(sortPanel);
-            hide(filters);
-            filterBtn.setAttribute("aria-expanded", "false");
-            if (currentlyOpen) {
-              hide(sortPanel);
-              sortBtn.setAttribute("aria-expanded", "false");
-            } else {
-              show(sortPanel);
-              sortBtn.setAttribute("aria-expanded", "true");
-            }
-          });
-        }
-        if (document.readyState === "loading")
-          document.addEventListener("DOMContentLoaded", init);
-        else init();
-      })();
+      // Filter/Sort interactions are handled in script.js (setupFilters, setupCollectionUI).
+      // This inline block was removed to avoid double-binding and conflicts.
     </script>
 
     <script>
