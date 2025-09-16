@@ -1221,6 +1221,11 @@
 
     const show = (v) => {
       if (v) {
+        // Close Sort dropdown when opening Filters (mutually exclusive)
+        const sp = document.querySelector("[data-sort-panel]");
+        const st = document.getElementById("sort-toggle");
+        if (sp) sp.style.display = "none";
+        if (st) st.setAttribute("aria-expanded", "false");
         position();
         panel.style.display = "block";
         requestAnimationFrame(() => {
@@ -1357,7 +1362,14 @@
       const toggleSort = (e) => {
         e && e.stopPropagation();
         const open = sortPanel.style.display !== "block";
-        if (open) position();
+        // Close Filters when opening Sort (mutually exclusive)
+        if (open) {
+          const filters = document.getElementById("filters");
+          const fb = document.getElementById("filter-toggle");
+          if (filters) filters.style.display = "none";
+          if (fb) fb.setAttribute("aria-expanded", "false");
+          position();
+        }
         show(open);
         syncToggleColumn();
       };

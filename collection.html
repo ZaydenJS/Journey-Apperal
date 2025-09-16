@@ -181,7 +181,7 @@
       </div>
     </aside>
 
-    <main class="container section">
+    <main class="container section" style="padding-left: 0; padding-right: 0">
       <header class="mt-0" style="padding-left: 0; text-align: center">
         <div class="upper" style="font-weight: 800">Journey / New Arrivals</div>
         <div class="muted">23 products</div>
@@ -546,7 +546,10 @@
         </div>
       </aside>
 
-      <section class="grid products mt-16" style="row-gap: 80px">
+      <section
+        class="grid products mt-16"
+        style="row-gap: 80px; column-gap: 14px"
+      >
         <!-- Product cards -->
         <article class="card">
           <a
@@ -1322,65 +1325,6 @@
         </div>
       </div>
     </footer>
-
-    <script>
-      // Ensure Filter and Sort never stay open together
-      (function oneOpenFilterSort() {
-        function $(id) {
-          return document.getElementById(id);
-        }
-        function show(el) {
-          if (el) el.style.display = "block";
-        }
-        function hide(el) {
-          if (el) el.style.display = "none";
-        }
-        function isOpen(el) {
-          return !!el && el.style.display === "block";
-        }
-        function init() {
-          var filterBtn = $("filter-toggle");
-          var sortBtn = $("sort-toggle");
-          var filters = $("filters");
-          var sortPanel = document.querySelector("[data-sort-panel]");
-          if (!filterBtn || !sortBtn || !filters || !sortPanel) return;
-
-          filterBtn.setAttribute("aria-controls", "filters");
-          sortBtn.setAttribute("aria-controls", "sort-menu");
-          filterBtn.setAttribute("aria-expanded", "false");
-          sortBtn.setAttribute("aria-expanded", "false");
-
-          filterBtn.addEventListener("click", function () {
-            var currentlyOpen = isOpen(filters);
-            hide(sortPanel);
-            sortBtn.setAttribute("aria-expanded", "false");
-            if (currentlyOpen) {
-              hide(filters);
-              filterBtn.setAttribute("aria-expanded", "false");
-            } else {
-              show(filters);
-              filterBtn.setAttribute("aria-expanded", "true");
-            }
-          });
-
-          sortBtn.addEventListener("click", function () {
-            var currentlyOpen = isOpen(sortPanel);
-            hide(filters);
-            filterBtn.setAttribute("aria-expanded", "false");
-            if (currentlyOpen) {
-              hide(sortPanel);
-              sortBtn.setAttribute("aria-expanded", "false");
-            } else {
-              show(sortPanel);
-              sortBtn.setAttribute("aria-expanded", "true");
-            }
-          });
-        }
-        if (document.readyState === "loading")
-          document.addEventListener("DOMContentLoaded", init);
-        else init();
-      })();
-    </script>
 
     <script>
       (function enforceSquareImages() {
