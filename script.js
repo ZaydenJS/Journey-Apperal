@@ -1875,6 +1875,16 @@
           }
         }
       } catch (_) {}
+
+      // Respect URL-intent for sections/collections
+      try {
+        const _p = new URLSearchParams(location.search);
+        const sec = (_p.get("section") || "").toLowerCase();
+        const coll = (_p.get("collection") || "").toLowerCase();
+        if (sec === "new-arrivals") currentSort = "newest";
+        if (coll === "best-sellers") currentSort = "bestselling";
+      } catch (_) {}
+
       // Initial render
       apply();
 
