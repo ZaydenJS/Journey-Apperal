@@ -86,19 +86,18 @@
                   <div>
                     <h4 class="upper">Shop by Category</h4>
                     <div class="links">
-                      <a href="collection.html?category=tops">Tops</a>
-                      <a href="collection.html?category=hoodies">Hoodies</a>
-                      <a href="collection.html?category=bottoms">Bottoms</a>
-                      <a href="collection.html?category=accessories"
-                        >Accessories</a
-                      >
+                      <a href="collection.html">Tops</a>
+                      <a href="collection.html">Hoodies</a>
+                      <a href="collection.html">Bottoms</a>
+                      <a href="collection.html?category=hats">Hats</a>
                     </div>
                   </div>
                   <div>
                     <h4 class="upper">Shop by Collection</h4>
                     <div class="links">
-                      <a href="collection.html?collection=best-sellers"
-                        >Best Sellers</a
+                      <a
+                        href="collection.html?collection=journeys-x-leyos-collection"
+                        >Journeys X Leyos Collection</a
                       >
                       <a href="collection.html">AeroLite</a>
                       <a href="collection.html">Journey</a>
@@ -110,9 +109,7 @@
               </div>
             </a>
             <a href="collection.html" class="header-item">Collections</a>
-            <a href="collection.html?section=new-arrivals" class="header-item"
-              >New In</a
-            >
+            <a href="collection.html" class="header-item">New In</a>
             <a href="collection.html" class="header-item"
               >Sale<span class="badge">-20%</span></a
             >
@@ -228,8 +225,7 @@
           <a href="collection.html?category=tees">Tees</a>
           <a href="collection.html?category=hoodies">Hoodies</a>
           <a href="collection.html?category=shorts">Shorts</a>
-          <a href="collection.html?category=pants">Pants</a>
-          <a href="collection.html?category=accessories">Accessories</a>
+          <a href="collection.html?category=hats">Hats</a>
         </div>
 
         <button class="row-item accordion" data-accordion aria-expanded="false">
@@ -237,6 +233,9 @@
         </button>
         <div class="sub">
           <a href="collection.html?collection=best-sellers">Best Sellers</a>
+          <a href="collection.html?collection=journeys-x-leyos-collection"
+            >Journeys X Leyos Collection</a
+          >
         </div>
 
         <a href="#" class="row-item">Journey Sign Up</a>
@@ -832,6 +831,31 @@
           overflow: hidden;
         "
       >
+        <!-- Background video for Journeys Summer Set -->
+        <video
+          aria-hidden="true"
+          muted
+          playsinline
+          autoplay
+          loop
+          preload="metadata"
+          src="journey%20summer%20set%20video/10.mp4"
+          style="
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            pointer-events: none;
+          "
+        >
+          <source
+            src="journey%20summer%20set%20video/10.mp4"
+            type="video/mp4"
+          />
+        </video>
+
         <div
           style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.2)"
         ></div>
@@ -920,7 +944,7 @@
           <!-- Tees -->
           <a class="panel" href="collection.html?category=tees" role="listitem">
             <img
-              src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=1200&auto=format&fit=crop"
+              src="Category%20images/Tee.jpg"
               alt="Tees"
               loading="lazy"
               onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Tees'"
@@ -944,7 +968,7 @@
             role="listitem"
           >
             <img
-              src="https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=1200&auto=format&fit=crop"
+              src="Category%20images/Hoodie.jpg"
               alt="Hoodies"
               loading="lazy"
             />
@@ -967,7 +991,7 @@
             role="listitem"
           >
             <img
-              src="https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=1200&auto=format&fit=crop"
+              src="Category%20images/Shorts.jpg"
               alt="Shorts"
               loading="lazy"
               onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Shorts'"
@@ -985,16 +1009,12 @@
             </div>
           </a>
           <!-- Pants -->
-          <a
-            class="panel"
-            href="collection.html?category=pants"
-            role="listitem"
-          >
+          <a class="panel" href="collection.html?category=hats" role="listitem">
             <img
-              src="https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=1200&auto=format&fit=crop"
-              alt="Pants"
+              src="Category%20images/Hat.heic"
+              alt="Hats"
               loading="lazy"
-              onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Pants'"
+              onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Hats'"
             />
             <div
               class="caption center"
@@ -1005,31 +1025,7 @@
                 justify-content: center;
               "
             >
-              <div class="upper">Pants</div>
-            </div>
-          </a>
-          <!-- Accessories -->
-          <a
-            class="panel"
-            href="collection.html?category=accessories"
-            role="listitem"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1200&auto=format&fit=crop"
-              alt="Accessories"
-              loading="lazy"
-              onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Accessories'"
-            />
-            <div
-              class="caption center"
-              style="
-                text-align: center;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              "
-            >
-              <div class="upper">Accessories</div>
+              <div class="upper">Hats</div>
             </div>
           </a>
         </div>

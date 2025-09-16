@@ -81,14 +81,16 @@
                       <a href="collection.html?category=tops">Tops</a>
                       <a href="collection.html?category=hoodies">Hoodies</a>
                       <a href="collection.html?category=bottoms">Bottoms</a>
-                      <a href="collection.html?category=accessories"
-                        >Accessories</a
-                      >
+                      <a href="collection.html?category=hats">Hats</a>
                     </div>
                   </div>
                   <div>
                     <h4 class="upper">Shop by Collection</h4>
                     <div class="links">
+                      <a
+                        href="collection.html?collection=journeys-x-leyos-collection"
+                        >Journeys X Leyos Collection</a
+                      >
                       <a href="collection.html">AeroLite</a>
                       <a href="collection.html">Journey</a>
                       <a href="collection.html">Core365</a>
@@ -152,7 +154,7 @@
           <a href="collection.html?category=tops">Tops</a>
           <a href="collection.html?category=hoodies">Hoodies</a>
           <a href="collection.html?category=bottoms">Bottoms</a>
-          <a href="collection.html?category=accessories">Accessories</a>
+          <a href="collection.html?category=hats">Hats</a>
         </div>
 
         <button class="row-item accordion" data-accordion aria-expanded="false">
@@ -160,6 +162,9 @@
         </button>
         <div class="sub">
           <a href="collection.html?collection=best-sellers">Best Sellers</a>
+          <a href="collection.html?collection=journeys-x-leyos-collection"
+            >Journeys X Leyos Collection</a
+          >
         </div>
 
         <a href="#" class="row-item">Journey Sign Up</a>
@@ -181,7 +186,7 @@
       </div>
     </aside>
 
-    <main class="container section" style="padding-left: 0; padding-right: 0">
+    <main class="container section">
       <header class="mt-0" style="padding-left: 0; text-align: center">
         <div class="upper" style="font-weight: 800">Journey / New Arrivals</div>
         <div class="muted">23 products</div>
@@ -546,10 +551,7 @@
         </div>
       </aside>
 
-      <section
-        class="grid products mt-16"
-        style="row-gap: 80px; column-gap: 14px"
-      >
+      <section class="grid products mt-16" style="row-gap: 80px">
         <!-- Product cards -->
         <article class="card">
           <a
@@ -1327,6 +1329,10 @@
     </footer>
 
     <script>
+      // Ensure Filter and Sort never stay open together
+    </script>
+
+    <script>
       (function enforceSquareImages() {
         function square() {
           var nodes = document.querySelectorAll(
@@ -1349,38 +1355,6 @@
           square();
         });
         mo.observe(document.body, { childList: true, subtree: true });
-      })();
-    </script>
-
-    <script>
-      // Ensure the collection header label reflects URL params even on mobile
-      (function () {
-        try {
-          var params = new URLSearchParams(location.search);
-          var hdr = document.querySelector("main .mt-0 .upper");
-          if (!hdr) return;
-          var toTitle = function (s) {
-            return String(s || "")
-              .replace(/[-_]+/g, " ")
-              .replace(/\b\w/g, function (m) {
-                return m.toUpperCase();
-              });
-          };
-          var label = "";
-          if (params.get("category")) label = toTitle(params.get("category"));
-          else if (params.get("collection"))
-            label = toTitle(params.get("collection"));
-          else if (params.get("section")) {
-            var v = params.get("section");
-            var map = {
-              "new-arrivals": "New Arrivals",
-              "back-in-stock": "Back In Stock",
-              "shop-all": "Shop All",
-            };
-            label = map[v] || toTitle(v);
-          }
-          if (label) hdr.textContent = label.toUpperCase();
-        } catch (e) {}
       })();
     </script>
 

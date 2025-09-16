@@ -1209,7 +1209,9 @@
       const tr = toolbar ? toolbar.getBoundingClientRect() : r;
       const sortToggle = document.getElementById("sort-toggle");
       const sr = sortToggle ? sortToggle.getBoundingClientRect() : tr;
-      panel.style.left = r.left + "px"; // fixed: viewport coordinates
+      panel.style.position = "fixed"; // align with viewport coords
+      panel.style.zIndex = "1100";
+      panel.style.left = r.left + "px"; // viewport coordinates
       // Attach to the bottom of the taller of the two buttons to eliminate any gap
       const bottom = Math.max(r.bottom, sr.bottom);
       panel.style.top = bottom - 1 + "px";
@@ -1221,11 +1223,11 @@
 
     const show = (v) => {
       if (v) {
-        // Close Sort dropdown when opening Filters (mutually exclusive)
-        const sp = document.querySelector("[data-sort-panel]");
-        const st = document.getElementById("sort-toggle");
-        if (sp) sp.style.display = "none";
-        if (st) st.setAttribute("aria-expanded", "false");
+        // Ensure mutual exclusivity: hide Sort by when opening Filters
+        const sortPanel = document.querySelector("[data-sort-panel]");
+        const sortBtn = document.getElementById("sort-toggle");
+        if (sortPanel) sortPanel.style.display = "none";
+        if (sortBtn) sortBtn.setAttribute("aria-expanded", "false");
         position();
         panel.style.display = "block";
         requestAnimationFrame(() => {
@@ -1362,13 +1364,13 @@
       const toggleSort = (e) => {
         e && e.stopPropagation();
         const open = sortPanel.style.display !== "block";
-        // Close Filters when opening Sort (mutually exclusive)
         if (open) {
-          const filters = document.getElementById("filters");
-          const fb = document.getElementById("filter-toggle");
-          if (filters) filters.style.display = "none";
-          if (fb) fb.setAttribute("aria-expanded", "false");
           position();
+          // Ensure mutual exclusivity: hide Filters when opening Sort by
+          const filters = document.getElementById("filters");
+          const filterBtn = document.getElementById("filter-toggle");
+          if (filters) filters.style.display = "none";
+          if (filterBtn) filterBtn.setAttribute("aria-expanded", "false");
         }
         show(open);
         syncToggleColumn();
@@ -1596,17 +1598,6 @@
       const countEl = document.querySelector("main .muted");
       if (!grid) return;
 
-      // Preserve the original column gap so toggling views restores it
-      const __origColGap = (function () {
-        try {
-          const cg = getComputedStyle(grid).columnGap;
-          // Fallback if browser returns 'normal'
-          return cg && cg !== "normal" ? cg : "14px";
-        } catch (_) {
-          return "14px";
-        }
-      })();
-
       // Build 50 demo products (adds 27 more to reach 50 total)
       const base = [
         {
@@ -1741,7 +1732,8 @@
         if (!gridEl) return;
         gridEl.style.display = "grid";
         gridEl.style.gridTemplateColumns = viewMode === "1" ? "1fr" : "1fr 1fr";
-        gridEl.style.columnGap = viewMode === "1" ? "0px" : __origColGap;
+        gridEl.style.columnGap =
+          viewMode === "1" ? "0px" : gridEl.style.columnGap || "16px";
         const wraps = gridEl.querySelectorAll(".img-wrap");
         wraps.forEach((w) => {
           w.style.aspectRatio = viewMode === "1" ? "1 / 1" : "1 / 1.7";
@@ -1875,16 +1867,6 @@
           }
         }
       } catch (_) {}
-
-      // Respect URL-intent for sections/collections
-      try {
-        const _p = new URLSearchParams(location.search);
-        const sec = (_p.get("section") || "").toLowerCase();
-        const coll = (_p.get("collection") || "").toLowerCase();
-        if (sec === "new-arrivals") currentSort = "newest";
-        if (coll === "best-sellers") currentSort = "bestselling";
-      } catch (_) {}
-
       // Initial render
       apply();
 
