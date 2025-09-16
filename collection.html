@@ -1352,6 +1352,38 @@
       })();
     </script>
 
+    <script>
+      // Ensure the collection header label reflects URL params even on mobile
+      (function () {
+        try {
+          var params = new URLSearchParams(location.search);
+          var hdr = document.querySelector("main .mt-0 .upper");
+          if (!hdr) return;
+          var toTitle = function (s) {
+            return String(s || "")
+              .replace(/[-_]+/g, " ")
+              .replace(/\b\w/g, function (m) {
+                return m.toUpperCase();
+              });
+          };
+          var label = "";
+          if (params.get("category")) label = toTitle(params.get("category"));
+          else if (params.get("collection"))
+            label = toTitle(params.get("collection"));
+          else if (params.get("section")) {
+            var v = params.get("section");
+            var map = {
+              "new-arrivals": "New Arrivals",
+              "back-in-stock": "Back In Stock",
+              "shop-all": "Shop All",
+            };
+            label = map[v] || toTitle(v);
+          }
+          if (label) hdr.textContent = label.toUpperCase();
+        } catch (e) {}
+      })();
+    </script>
+
     <script src="script.js" defer></script>
   </body>
 </html>
