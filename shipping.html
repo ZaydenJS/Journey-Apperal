@@ -710,7 +710,22 @@
       <div style="padding: 48px 0 32px 0">
         <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px">
           <!-- Footer Grid -->
+          <style>
+            @media (max-width: 767px) {
+              #footer-grid h4 {
+                margin-bottom: 16px !important;
+              }
+              #footer-grid div[style*="flex-direction: column"] {
+                gap: 12px !important;
+              }
+              #footer-grid > div {
+                margin-bottom: 16px !important;
+              }
+            }
+          </style>
+
           <div
+            id="footer-grid"
             style="
               display: grid;
               grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -774,13 +789,13 @@
                 style="
                   font-size: 16px;
                   font-weight: 700;
-                  margin: 0 0 20px 0;
+                  margin: 0 0 12px 0;
                   color: #000;
                 "
               >
                 Customer Care
               </h4>
-              <div style="display: flex; flex-direction: column; gap: 12px">
+              <div style="display: flex; flex-direction: column; gap: 8px">
                 <a
                   href="contact.html"
                   style="
@@ -850,13 +865,13 @@
                 style="
                   font-size: 16px;
                   font-weight: 700;
-                  margin: 0 0 20px 0;
+                  margin: 0 0 12px 0;
                   color: #000;
                 "
               >
                 Company
               </h4>
-              <div style="display: flex; flex-direction: column; gap: 12px">
+              <div style="display: flex; flex-direction: column; gap: 8px">
                 <a
                   href="about.html"
                   style="
@@ -878,7 +893,7 @@
                 style="
                   font-size: 16px;
                   font-weight: 700;
-                  margin: 0 0 20px 0;
+                  margin: 0 0 12px 0;
                   color: #000;
                 "
               >

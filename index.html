@@ -2193,7 +2193,22 @@
       <div style="padding: 48px 0 32px 0">
         <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px">
           <!-- Footer Grid -->
+          <style>
+            @media (max-width: 767px) {
+              #footer-grid h4 {
+                margin-bottom: 16px !important;
+              }
+              #footer-grid div[style*="flex-direction: column"] {
+                gap: 12px !important;
+              }
+              #footer-grid > div {
+                margin-bottom: 16px !important;
+              }
+            }
+          </style>
+
           <div
+            id="footer-grid"
             style="
               display: grid;
               grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -2260,13 +2275,13 @@
                 style="
                   font-size: 16px;
                   font-weight: 700;
-                  margin: 0 0 20px 0;
+                  margin: 0 0 12px 0;
                   color: #000;
                 "
               >
                 Support & Contact
               </h4>
-              <div style="display: flex; flex-direction: column; gap: 12px">
+              <div style="display: flex; flex-direction: column; gap: 8px">
                 <a
                   href="contact.html"
                   style="
@@ -2336,13 +2351,13 @@
                 style="
                   font-size: 16px;
                   font-weight: 700;
-                  margin: 0 0 20px 0;
+                  margin: 0 0 12px 0;
                   color: #000;
                 "
               >
                 Company
               </h4>
-              <div style="display: flex; flex-direction: column; gap: 12px">
+              <div style="display: flex; flex-direction: column; gap: 8px">
                 <a
                   href="about.html"
                   style="
@@ -2364,7 +2379,7 @@
                 style="
                   font-size: 16px;
                   font-weight: 700;
-                  margin: 0 0 20px 0;
+                  margin: 0 0 12px 0;
                   color: #000;
                 "
               >
@@ -2539,6 +2554,7 @@
         </div>
         <!-- Content -->
         <div
+          id="promo-content"
           style="
             flex: 1 1 360px;
             min-width: 300px;
@@ -2620,6 +2636,29 @@
         </button>
       </div>
     </div>
+    <style>
+      /* Mobile-only: ensure equal left/right spacing for promo input and CTA,
+         and account for device safe areas (iOS notch, etc.). Desktop unaffected. */
+      @media (max-width: 1023px) {
+        #promo-content {
+          padding-left: calc(20px + env(safe-area-inset-left)) !important;
+          padding-right: calc(20px + env(safe-area-inset-right)) !important;
+        }
+        #promo-form {
+          /* keep full-width and no external margins */
+          width: 100% !important;
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+        }
+        #promo-email,
+        #promo-cta {
+          /* no stray margins; box sizing safety */
+          margin: 0 !important;
+          box-sizing: border-box !important;
+        }
+      }
+    </style>
+
     <script>
       (function () {
         var KEY = "jrny_promo_next",
