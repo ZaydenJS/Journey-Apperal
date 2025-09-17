@@ -126,6 +126,13 @@
           align-items: start !important;
           gap: 24px !important;
           padding-top: 16px !important;
+          /* Ensure full-bleed main container on desktop */
+          max-width: none !important;
+          width: 100% !important;
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
         }
         .p-gallery {
           margin: 0 !important;
@@ -133,17 +140,37 @@
         .p-details {
           background: transparent !important;
           border: 0 !important;
-          padding: 0 !important;
+          padding: 0 48px !important; /* further increase equal gutters to narrow column */
+          margin-right: 0 !important; /* ensure symmetry; no extra right-only margin */
         }
+        /* Desktop: place price under product title */
+        .p-details > .row:first-child {
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          justify-content: flex-start !important;
+          gap: 4px !important;
+        }
+        .p-details > .row:first-child .p-price {
+          align-self: flex-start !important;
+          margin-top: 2px !important;
+        }
+
+        /* Hide the inline (right-column) versions of these sections on desktop */
+        .p-details #you-also-viewed,
+        .p-details #featured-collection,
+        .p-details section[aria-label="Join Journey"] {
+          display: none !important;
+        }
+
         /* Recently Viewed & Best Sellers: 4-up horizontal on desktop */
         .product .carousel-track.mobile-2x1 {
           display: grid !important;
-          grid-auto-flow: column !important;
-          grid-auto-columns: 25% !important;
-          grid-template-columns: none !important;
+          grid-template-columns: repeat(
+            4,
+            1fr
+          ) !important; /* 4x1 layout on desktop */
           gap: 16px !important;
-          overflow-x: hidden !important;
-          scroll-snap-type: none !important;
+          overflow: visible !important;
         }
       }
     </style>
@@ -407,6 +434,37 @@
       </div>
     </header>
 
+    <style>
+      /* Desktop-only: center the JOURNEYS logo perfectly and ensure mega can overflow */
+      @media (min-width: 1024px) {
+        header.header .header-inner {
+          position: relative !important;
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        header.header .logo {
+          position: absolute !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          margin: 0 !important;
+        }
+        header.header .nav {
+          overflow: visible !important;
+          position: relative !important;
+          z-index: 20 !important; /* ensure nav is above logo for clicks */
+        }
+        header.header .nav .header-item {
+          position: relative !important;
+        }
+        header.header .nav .header-item .mega {
+          z-index: 200;
+        }
+        header.header .logo {
+          z-index: 1 !important; /* keep logo below nav so Shop is clickable */
+        }
+      }
+    </style>
+
     <!-- Mobile Drawer & Overlay -->
     <div id="drawer-overlay" class="drawer-overlay" aria-hidden="true"></div>
     <aside
@@ -469,7 +527,17 @@
       </div>
     </aside>
 
-    <main class="container section product" style="padding-top: 0">
+    <main
+      class="container section product"
+      style="
+        padding-top: 0;
+        max-width: none;
+        width: 100%;
+        margin: 0;
+        padding-left: 0;
+        padding-right: 0;
+      "
+    >
       <section class="gallery p-gallery" style="padding: 0; margin: 0">
         <div
           class="gallery-main"
@@ -645,9 +713,14 @@
               (announce && getComputedStyle(announce).position !== "static"
                 ? announce.offsetHeight || 0
                 : 0);
+            var isDesktop = window.innerWidth >= 1024;
+            var factor = isDesktop
+              ? 0.78
+              : 0.55; /* make desktop gallery notably taller */
+            var minH = isDesktop ? 520 : 280;
             var h = Math.max(
-              240,
-              Math.round((window.innerHeight - headerH) * 0.5)
+              minH,
+              Math.round((window.innerHeight - headerH) * factor)
             );
             track.style.height = h + "px";
             Array.from(track.querySelectorAll("img")).forEach(function (img) {
@@ -818,7 +891,7 @@
         <div
           class="size-grid"
           id="size-grid"
-          style="margin-top: 8px; margin-bottom: 8px"
+          style="margin-top: 8px; margin-bottom: 12px"
         >
           <button class="size" aria-pressed="true">XXS</button>
           <button class="size">XS</button>
@@ -838,7 +911,7 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            margin-top: 8px;
+            margin-top: 12px;
           "
         >
           <button
@@ -1579,6 +1652,130 @@
                     >
                   </div>
                 </article>
+                <article
+                  class="card"
+                  data-href="product.html?slug=heritage-tee"
+                  style="cursor: pointer"
+                >
+                  <div
+                    class="img-wrap"
+                    onmouseenter="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='1'}"
+                    onmouseleave="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='0'}"
+                    style="
+                      aspect-ratio: 3/4;
+                      overflow: hidden;
+                      position: relative;
+                      border-radius: 0;
+                    "
+                  >
+                    <img
+                      src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop"
+                      alt="Featured Item 3"
+                      style="width: 100%; height: 100%; object-fit: cover"
+                    />
+                    <img
+                      class="hover-img"
+                      src="https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop"
+                      alt="Featured Item 3 - alternate"
+                      style="
+                        position: absolute;
+                        inset: 0;
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        opacity: 0;
+                        transition: opacity 180ms ease;
+                        pointer-events: none;
+                      "
+                    />
+                  </div>
+                  <div
+                    class="row mt-8"
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      gap: 6px;
+                      margin-top: 8px;
+                      font-size: 14px;
+                      text-align: center;
+                    "
+                  >
+                    <span
+                      style="
+                        font-weight: 400;
+                        text-transform: uppercase;
+                        font-size: 12px;
+                      "
+                      >FEATURED ITEM 3</span
+                    >
+                    <span class="price" style="font-weight: 400"
+                      >$72.00 AUD</span
+                    >
+                  </div>
+                </article>
+                <article
+                  class="card"
+                  data-href="product.html?slug=journeys-cap"
+                  style="cursor: pointer"
+                >
+                  <div
+                    class="img-wrap"
+                    onmouseenter="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='1'}"
+                    onmouseleave="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='0'}"
+                    style="
+                      aspect-ratio: 3/4;
+                      overflow: hidden;
+                      position: relative;
+                      border-radius: 0;
+                    "
+                  >
+                    <img
+                      src="https://images.unsplash.com/photo-1520975619016-6f2aeb47b5f4?q=80&w=800&auto=format&fit=crop"
+                      alt="Featured Item 4"
+                      style="width: 100%; height: 100%; object-fit: cover"
+                    />
+                    <img
+                      class="hover-img"
+                      src="https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop"
+                      alt="Featured Item 4 - alternate"
+                      style="
+                        position: absolute;
+                        inset: 0;
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        opacity: 0;
+                        transition: opacity 180ms ease;
+                        pointer-events: none;
+                      "
+                    />
+                  </div>
+                  <div
+                    class="row mt-8"
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      gap: 6px;
+                      margin-top: 8px;
+                      font-size: 14px;
+                      text-align: center;
+                    "
+                  >
+                    <span
+                      style="
+                        font-weight: 400;
+                        text-transform: uppercase;
+                        font-size: 12px;
+                      "
+                      >FEATURED ITEM 4</span
+                    >
+                    <span class="price" style="font-weight: 400"
+                      >$59.00 AUD</span
+                    >
+                  </div>
+                </article>
               </div>
               <button
                 class="ctrl next"
@@ -1683,6 +1880,87 @@
         </section>
       </section>
     </main>
+    <!-- Desktop-only: full-width Recently Viewed, Best Sellers, and Join Journey below the product grid -->
+    <section
+      id="below-product-sections"
+      style="width: 100%; max-width: none; margin: 0; padding: 0"
+    ></section>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        try {
+          if (window.innerWidth >= 1024) {
+            var afterMain = document.querySelector(
+              "main.container.section.product"
+            );
+            var target = document.getElementById("below-product-sections");
+            if (!target && afterMain) {
+              target = document.createElement("section");
+              target.id = "below-product-sections";
+              target.setAttribute(
+                "style",
+                "width:100%;max-width:none;margin:0;padding:0;"
+              );
+              afterMain.insertAdjacentElement("afterend", target);
+            }
+
+            function cloneAndNormalize(el) {
+              var c = el.cloneNode(true);
+              c.style.margin = "48px 0 0 0";
+              c.style.padding = "0";
+              // Make carousel containers full-bleed within this section
+              var car = c.querySelector(".carousel");
+              if (car) {
+                car.style.marginLeft = "0";
+                car.style.marginRight = "0";
+                car.style.width = "100%";
+              }
+              var track = c.querySelector(".carousel-track");
+              if (track) {
+                track.style.display = "grid";
+                track.style.gridAutoFlow = "row";
+                track.style.gridAutoColumns = "initial";
+                track.style.gridTemplateColumns = "repeat(4, 1fr)";
+                track.style.gap = "16px";
+                track.style.overflowX = "visible";
+                track.style.scrollSnapType = "none";
+              }
+              // Ensure 4 cards visible on desktop; if fewer, pad by cloning existing
+              try {
+                var kids = Array.from(track.children || []);
+                if (kids.length > 0 && kids.length < 4) {
+                  var base = kids.slice();
+                  for (var i = 0; i < 4 - base.length; i++) {
+                    track.appendChild(base[i % base.length].cloneNode(true));
+                  }
+                }
+              } catch (e) {}
+
+              return c;
+            }
+
+            var rv = document.getElementById("you-also-viewed");
+            var bs = document.getElementById("featured-collection");
+            var cta = document.querySelector(
+              ".p-details section[aria-label='Join Journey']"
+            );
+
+            if (target) {
+              if (rv) target.appendChild(cloneAndNormalize(rv));
+              if (bs) target.appendChild(cloneAndNormalize(bs));
+              if (cta) {
+                var c = cta.cloneNode(true);
+                c.style.maxWidth = "980px";
+                c.style.margin = "44px auto 56px";
+                c.style.textAlign = "center";
+                target.appendChild(c);
+              }
+            }
+          }
+        } catch (e) {
+          if (console && console.warn) console.warn("layout clone error", e);
+        }
+      });
+    </script>
 
     <!-- Footer -->
     <footer style="background: #fff; color: #111; margin-top: 0">
@@ -1749,6 +2027,7 @@
             </div>
 
             <!-- Customer Care -->
+
             <div style="text-align: center">
               <h4
                 style="

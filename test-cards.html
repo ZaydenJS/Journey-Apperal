@@ -1,67 +1,349 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Test Card Clicks</title>
     <style>
-        .card {
-            border: 1px solid #ccc;
-            padding: 20px;
-            margin: 10px;
-            cursor: pointer;
-            background: #f9f9f9;
-        }
-        .card:hover {
-            background: #e9e9e9;
-        }
+      .card {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin: 10px;
+        cursor: pointer;
+        background: #f9f9f9;
+      }
+      .card:hover {
+        background: #e9e9e9;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body style="margin: 0; overflow-x: hidden">
+    <!-- Header (same as index.html) -->
+    <header class="header" style="top: 0; left: 0; right: 0">
+      <div
+        class="container header-inner"
+        style="
+          max-width: none;
+          width: 100%;
+          padding-left: 0;
+          padding-right: 16px;
+        "
+      >
+        <div class="nav-left row">
+          <button
+            class="menu-toggle"
+            aria-label="Open menu"
+            style="
+              background: transparent;
+              border: none;
+              padding: 8px;
+              display: inline-flex;
+              flex-direction: column;
+              gap: 4px;
+              align-items: center;
+              justify-content: center;
+              width: 36px;
+              height: 36px;
+              border-radius: 0;
+              box-shadow: none;
+            "
+          >
+            <span
+              style="
+                display: block;
+                width: 22px;
+                height: 2px;
+                background: #000;
+                border-radius: 1px;
+              "
+            ></span>
+            <span
+              style="
+                display: block;
+                width: 22px;
+                height: 2px;
+                background: #000;
+                border-radius: 1px;
+              "
+            ></span>
+            <span
+              style="
+                display: block;
+                width: 22px;
+                height: 2px;
+                background: #000;
+                border-radius: 1px;
+              "
+            ></span>
+          </button>
+          <nav class="nav" aria-label="Primary">
+            <a
+              href="#"
+              class="header-item"
+              aria-haspopup="true"
+              aria-expanded="false"
+              style="
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+              "
+              >Shop
+              <span
+                class="shop-hamburger"
+                onclick="if(window.innerWidth>=1024){event.preventDefault();event.stopPropagation();var t=document.querySelector('.menu-toggle');if(t)t.click();}"
+                style="
+                  display: none;
+                  order: -1;
+                  margin-right: 14px;
+                  margin-left: 0;
+                  vertical-align: middle;
+                  cursor: pointer;
+                  user-select: none;
+                  width: 18px;
+                  height: 12px;
+                  align-items: center;
+                  justify-content: space-between;
+                  flex-direction: column;
+                "
+              >
+                <span
+                  style="
+                    display: block;
+                    width: 18px;
+                    height: 2px;
+                    background: #000;
+                  "
+                ></span>
+                <span
+                  style="
+                    display: block;
+                    width: 18px;
+                    height: 2px;
+                    background: #000;
+                  "
+                ></span>
+                <span
+                  style="
+                    display: block;
+                    width: 18px;
+                    height: 2px;
+                    background: #000;
+                  "
+                ></span>
+              </span>
+              <div
+                class="mega"
+                role="dialog"
+                aria-label="Mega menu"
+                style="
+                  display: none;
+                  position: absolute;
+                  left: 0;
+                  top: calc(100% + 8px);
+                  background: #fff;
+                  border: 1px solid rgba(0, 0, 0, 0.08);
+                  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+                  padding: 18px 22px;
+                  border-radius: 8px;
+                  width: max-content;
+                  min-width: 560px;
+                  z-index: 200;
+                "
+              >
+                <div class="mega-grid container">
+                  <div>
+                    <h4 class="upper">Shop by Category</h4>
+                    <div class="links">
+                      <a href="collection.html">Tops</a>
+                      <a href="collection.html">Hoodies</a>
+                      <a href="collection.html">Bottoms</a>
+                      <a href="collection.html?category=hats">Hats</a>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 class="upper">Shop by Collection</h4>
+                    <div class="links">
+                      <a
+                        href="collection.html?collection=journeys-x-leyos-collection"
+                        >Journeys X Leyos Collection</a
+                      >
+                      <a href="collection.html">AeroLite</a>
+                      <a href="collection.html">Journey</a>
+                      <a href="collection.html">Core365</a>
+                      <a href="collection.html">Black Label</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+            <a
+              href="collection.html?collection=best-sellers"
+              class="header-item"
+              >Best Sellers</a
+            >
+            <a href="collection.html?section=new-arrivals" class="header-item"
+              >New Arrivals</a
+            >
+            <a
+              href="collection.html?collection=journeys-x-leyos-collection"
+              class="header-item"
+              >Journeys X Leyos</a
+            >
+          </nav>
+        </div>
+        <h1 class="logo">
+          <a
+            href="index.html"
+            aria-label="Journeys Apparel Home"
+            style="font-size: 0.94em; letter-spacing: 1.8px"
+            >JOURNEYS</a
+          >
+        </h1>
+        <!-- Search Overlay -->
+        <div
+          id="site-search"
+          style="
+            position: fixed;
+            inset: 0 0 auto 0;
+            top: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+            display: none;
+            padding: 12px 16px;
+          "
+        >
+          <form
+            id="site-search-form"
+            style="max-width: 800px; margin: 0 auto; display: flex; gap: 8px"
+          >
+            <input
+              id="site-search-input"
+              type="search"
+              placeholder="Search pages or sections (e.g., New Arrivals, Best Sellers, Pair It With, Cart)"
+              style="
+                flex: 1;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                font-size: 16px;
+                background: #fff;
+              "
+            />
+            <button
+              type="submit"
+              style="
+                padding: 12px 16px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                background: #fff;
+                font-weight: 600;
+                cursor: pointer;
+              "
+            >
+              Go
+            </button>
+            <button
+              type="button"
+              id="site-search-close"
+              style="
+                padding: 12px 14px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                background: #fff;
+                cursor: pointer;
+              "
+            >
+              ×
+            </button>
+          </form>
+        </div>
+        <div class="nav-right">
+          <button class="icon-btn" aria-label="Account" style="order: 1">
+            👤
+          </button>
+          <button class="icon-btn" aria-label="Search" style="order: 2">
+            🔍
+          </button>
+          <a class="icon-btn" aria-label="Cart" href="#" style="order: 3">🛒</a>
+        </div>
+      </div>
+    </header>
+
+    <style>
+      /* Desktop-only: center the JOURNEYS logo perfectly and ensure mega can overflow */
+      @media (min-width: 1024px) {
+        header.header .header-inner {
+          position: relative !important;
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        header.header .logo {
+          position: absolute !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          margin: 0 !important;
+        }
+        header.header .nav {
+          overflow: visible !important;
+          position: relative !important;
+          z-index: 20 !important; /* ensure nav is above logo for clicks */
+        }
+        header.header .nav .header-item {
+          position: relative !important;
+        }
+        header.header .nav .header-item .mega {
+          z-index: 200;
+        }
+        header.header .logo {
+          z-index: 1 !important; /* keep logo below nav so Shop is clickable */
+        }
+      }
+    </style>
+
     <h1>Test Card Clicks</h1>
-    
+
     <article class="card" data-href="product.html?slug=test-product">
-        <div class="img-wrap">
-            <img src="https://via.placeholder.com/200x200" alt="Test Product" />
-        </div>
-        <div>
-            <span>Test Product</span><span class="price">$50</span>
-        </div>
+      <div class="img-wrap">
+        <img src="https://via.placeholder.com/200x200" alt="Test Product" />
+      </div>
+      <div><span>Test Product</span><span class="price">$50</span></div>
     </article>
 
     <script>
-        function setupCardLinks() {
-            document.addEventListener("click", (e) => {
-                console.log("Click detected on:", e.target);
-                
-                if (e.target.closest(".ctrl,a,button")) {
-                    console.log("Click ignored - on control element");
-                    return;
-                }
-                
-                const card = e.target.closest(".card[data-href]");
-                console.log("Found card:", card);
-                
-                if (!card) {
-                    console.log("No card found");
-                    return;
-                }
-                
-                const href = card.getAttribute("data-href");
-                console.log("Card href:", href);
-                
-                if (href) {
-                    console.log("Navigating to:", href);
-                    alert("Would navigate to: " + href); // Use alert instead of actual navigation for testing
-                    // window.location.href = href;
-                }
-            });
-        }
+      function setupCardLinks() {
+        document.addEventListener("click", (e) => {
+          console.log("Click detected on:", e.target);
 
-        document.addEventListener("DOMContentLoaded", () => {
-            setupCardLinks();
-            console.log("Card links setup complete");
+          if (e.target.closest(".ctrl,a,button")) {
+            console.log("Click ignored - on control element");
+            return;
+          }
+
+          const card = e.target.closest(".card[data-href]");
+          console.log("Found card:", card);
+
+          if (!card) {
+            console.log("No card found");
+            return;
+          }
+
+          const href = card.getAttribute("data-href");
+          console.log("Card href:", href);
+
+          if (href) {
+            console.log("Navigating to:", href);
+            alert("Would navigate to: " + href); // Use alert instead of actual navigation for testing
+            // window.location.href = href;
+          }
         });
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        setupCardLinks();
+        console.log("Card links setup complete");
+      });
     </script>
-</body>
+    <script src="script.js" defer></script>
+  </body>
 </html>

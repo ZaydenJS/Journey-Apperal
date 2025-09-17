@@ -2043,7 +2043,7 @@
             href="#"
             style="
               display: inline-block;
-              width: min(940px, 90%);
+              width: min(360px, 90%);
               background: #fff;
               color: #111;
               padding: 18px 24px;
@@ -2069,31 +2069,10 @@
             "
           >
             <a
-              href="#"
+              href="https://www.instagram.com/journeysapparel/"
               aria-label="Instagram"
               style="color: #fff; text-decoration: none; font-weight: 600"
               >Instagram</a
-            >
-            <span style="opacity: 0.5">•</span>
-            <a
-              href="#"
-              aria-label="YouTube"
-              style="color: #fff; text-decoration: none; font-weight: 600"
-              >YouTube</a
-            >
-            <span style="opacity: 0.5">•</span>
-            <a
-              href="#"
-              aria-label="Careers"
-              style="color: #fff; text-decoration: none; font-weight: 600"
-              >Careers</a
-            >
-            <span style="opacity: 0.5">•</span>
-            <a
-              href="policies.html#help"
-              aria-label="Help"
-              style="color: #fff; text-decoration: none; font-weight: 600"
-              >Help</a
             >
           </div>
         </div>
@@ -2120,6 +2099,27 @@
               el.style.overflow = "";
             }
           });
+
+          // Desktop-only: shrink Join the Club banner; keep mobile full-width
+          (function () {
+            var banner = document.querySelector("[data-rewards-banner]");
+            if (!banner) return;
+            var img = banner.querySelector("img");
+            if (isDesktop) {
+              banner.style.width = "min(560px, 92%)";
+              banner.style.maxWidth = "560px";
+              banner.style.margin = "0 auto";
+              banner.style.borderRadius = "12px";
+              if (img) img.style.height = "clamp(260px, 40vh, 380px)";
+            } else {
+              banner.style.width = "100%";
+              banner.style.maxWidth = "none";
+              banner.style.margin = "0";
+              banner.style.borderRadius = "0px";
+              if (img) img.style.height = "clamp(360px, 56vh, 620px)";
+            }
+          })();
+
           var summer = document.querySelector(
             "#back-in-stock-promo .video-mobile"
           );

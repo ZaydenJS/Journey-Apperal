@@ -297,6 +297,37 @@
       </div>
     </header>
 
+    <style>
+      /* Desktop-only: center the JOURNEYS logo perfectly and ensure mega can overflow */
+      @media (min-width: 1024px) {
+        header.header .header-inner {
+          position: relative !important;
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        header.header .logo {
+          position: absolute !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          margin: 0 !important;
+        }
+        header.header .nav {
+          overflow: visible !important;
+          position: relative !important;
+          z-index: 20 !important; /* ensure nav is above logo for clicks */
+        }
+        header.header .nav .header-item {
+          position: relative !important;
+        }
+        header.header .nav .header-item .mega {
+          z-index: 200;
+        }
+        header.header .logo {
+          z-index: 1 !important; /* keep logo below nav so Shop is clickable */
+        }
+      }
+    </style>
+
     <!-- Mobile Drawer & Overlay -->
     <div id="drawer-overlay" class="drawer-overlay" aria-hidden="true"></div>
     <aside
