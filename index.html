@@ -10,17 +10,84 @@
       name="description"
       content="Premium athletic apparel. Minimal design. Maximum performance."
     />
+    <style id="desktop-overrides">
+      @media (min-width: 1024px) {
+        /* Hide mobile hero overlay, show desktop version */
+        .hero-overlay.mobile-only {
+          display: none !important;
+        }
+        #hero-overlay-desktop {
+          display: flex !important;
+        }
+        /* New Arrivals: 5x1 on desktop */
+        .arrivals-carousel .carousel-row.bottom {
+          display: none !important;
+        }
+        .arrivals-carousel .carousel-track {
+          grid-auto-columns: calc(
+            (100% - 64px) / 5
+          ) !important; /* 5 across, fill edge-to-edge */
+          gap: 16px !important;
+          justify-content: start !important;
+        }
+        /* Best Sellers: keep 4-up */
+        #best-sellers .carousel-track {
+          grid-auto-columns: 25% !important;
+        }
+        /* Category row: 4-up — fill width exactly on desktop */
+        #categories .category-carousel .carousel-track {
+          /* Explicit 4-up grid filling the full row */
+          grid-template-columns: repeat(4, 1fr) !important;
+          grid-auto-columns: unset !important;
+          /* Let inline gap control spacing on mobile; desktop can use px gaps from CSS if needed */
+          justify-content: stretch !important;
+          overflow-x: hidden !important;
+        }
+        /* Desktop-only: Category padding and sizing without affecting mobile */
+        #categories {
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        #categories .category-carousel {
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        #categories .category-carousel .carousel-track.panels {
+          gap: 0.5% !important;
+        }
+        #categories .category-carousel .panel img {
+          height: clamp(380px, 36vw, 620px) !important;
+        }
+
+        /* Back in Stock: show split images on desktop, hide mobile video block */
+        #back-in-stock-promo .split-desktop {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr;
+          gap: 0;
+          position: relative;
+          height: 78vh !important; /* 78% of desktop screen */
+          overflow: hidden !important;
+        }
+        #back-in-stock-promo .video-mobile {
+          display: none !important;
+        }
+        .shop-hamburger {
+          display: inline-flex !important;
+        }
+      }
+    </style>
   </head>
   <body style="margin: 0; overflow-x: hidden">
     <!-- Announcement + countdown -->
     <div
       class="announcement upper"
-      style="position: sticky; top: 0; left: 0; right: 0"
+      style="position: sticky; top: 0; left: 0; right: 0; text-align: center"
     >
-      Free Shipping Over $100
+      Free Shipping On Orders Over $100
     </div>
 
     <!-- Header -->
+
     <header class="header" style="top: 0; left: 0; right: 0">
       <div
         class="container header-inner"
@@ -79,9 +146,74 @@
             ></span>
           </button>
           <nav class="nav" aria-label="Primary">
-            <a href="#" class="header-item"
+            <a
+              href="#"
+              class="header-item"
+              onclick="if(window.innerWidth>=1024){event.preventDefault();var m=this.querySelector('.mega');if(!m)return false;var open=m.style.display==='block';m.style.display=open?'':'block';this.setAttribute('aria-expanded',open?'false':'true');return false;}"
+              aria-haspopup="true"
+              aria-expanded="false"
+              style="position: relative"
               >Shop
-              <div class="mega" role="dialog" aria-label="Mega menu">
+              <span
+                class="shop-hamburger"
+                style="
+                  display: none;
+                  margin-left: 8px;
+                  vertical-align: middle;
+                  cursor: pointer;
+                  user-select: none;
+                  width: 18px;
+                  height: 12px;
+                  align-items: center;
+                  justify-content: space-between;
+                  flex-direction: column;
+                "
+                onclick="if(window.innerWidth>=1024){event.preventDefault();event.stopPropagation();var m=this.parentElement.querySelector('.mega');if(!m)return false;var o=m.style.display==='block';m.style.display=o?'':'block';this.parentElement.setAttribute('aria-expanded',o?'false':'true');return false;}"
+              >
+                <span
+                  style="
+                    display: block;
+                    width: 18px;
+                    height: 2px;
+                    background: #000;
+                  "
+                ></span>
+                <span
+                  style="
+                    display: block;
+                    width: 18px;
+                    height: 2px;
+                    background: #000;
+                  "
+                ></span>
+                <span
+                  style="
+                    display: block;
+                    width: 18px;
+                    height: 2px;
+                    background: #000;
+                  "
+                ></span>
+              </span>
+              <div
+                class="mega"
+                role="dialog"
+                aria-label="Mega menu"
+                style="
+                  display: none;
+                  position: absolute;
+                  left: 0;
+                  top: calc(100% + 8px);
+                  background: #fff;
+                  border: 1px solid rgba(0, 0, 0, 0.08);
+                  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+                  padding: 18px 22px;
+                  border-radius: 8px;
+                  width: max-content;
+                  min-width: 560px;
+                  z-index: 200;
+                "
+              >
                 <div class="mega-grid container">
                   <div>
                     <h4 class="upper">Shop by Category</h4>
@@ -108,10 +240,18 @@
                 </div>
               </div>
             </a>
-            <a href="collection.html" class="header-item">Collections</a>
-            <a href="collection.html" class="header-item">New In</a>
-            <a href="collection.html" class="header-item"
-              >Sale<span class="badge">-20%</span></a
+            <a
+              href="collection.html?collection=best-sellers"
+              class="header-item"
+              >Best Sellers</a
+            >
+            <a href="collection.html?section=new-arrivals" class="header-item"
+              >New Arrivals</a
+            >
+            <a
+              href="collection.html?collection=journeys-x-leyos-collection"
+              class="header-item"
+              >Journeys X Leyos</a
             >
           </nav>
         </div>
@@ -262,7 +402,7 @@
       class="hero"
       id="hero"
       aria-label="Hero"
-      style="width: 100%; margin: 0; padding: 0; overflow: hidden"
+      style="width: 100%; margin: 0 0 36px; padding: 0; overflow: hidden"
     >
       <video
         class="hero-media"
@@ -298,7 +438,7 @@
           "
         />
       </noscript>
-      <div class="hero-overlay fade-in">
+      <div class="hero-overlay fade-in mobile-only">
         <div class="upper title">
           <span style="display: block">Journeys</span
           ><span style="display: block">Apparel</span>
@@ -311,12 +451,102 @@
           >
         </div>
       </div>
+      <!-- Desktop-only overlay (shown on >=1024px) -->
+      <div
+        id="hero-overlay-desktop"
+        class="fade-in"
+        style="
+          position: absolute;
+          inset: 0;
+          display: none;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          color: #fff;
+          gap: 12px;
+          flex-direction: column;
+          padding: 16px;
+        "
+      >
+        <div
+          class="upper title"
+          style="
+            font-weight: 800;
+            letter-spacing: 1.8px;
+            font-size: clamp(34px, 4.8vw, 84px);
+            line-height: 1.08;
+            text-shadow: 0 3px 18px rgba(0, 0, 0, 0.4);
+            margin-bottom: 4px;
+          "
+        >
+          <span style="display: block">Journeys</span
+          ><span style="display: block">Apparel</span>
+        </div>
+        <div
+          class="subtitle"
+          style="
+            font-size: clamp(14px, 1.1vw, 18px);
+            opacity: 0.96;
+            text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+          "
+        >
+          Precision engineered layers for any pace.
+        </div>
+        <div
+          class="btn-group"
+          style="display: inline-flex; gap: 10px; margin-top: 8px"
+        >
+          <a
+            class="btn"
+            href="collection.html?section=shop-all"
+            style="
+              padding: 12px 22px;
+              font-size: 15px;
+              border-radius: 8px;
+              letter-spacing: 0.2px;
+            "
+            >Shop Now</a
+          >
+          <a
+            class="btn outline"
+            href="collection.html?section=new-arrivals"
+            style="
+              padding: 12px 22px;
+              font-size: 15px;
+              border-radius: 8px;
+              letter-spacing: 0.2px;
+            "
+            >Discover New Arrivals</a
+          >
+        </div>
+      </div>
     </section>
 
     <!-- New Arrivals – Carousel like Journey -->
-    <section class="section container" id="new-arrivals">
-      <h2 class="center" style="text-align: center">New Arrivals</h2>
-      <div class="carousel arrivals-carousel">
+    <section
+      class="section container"
+      id="new-arrivals"
+      style="
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding-left: 0;
+        padding-right: 0;
+      "
+    >
+      <h2 class="center" style="text-align: center; margin: 20px 0 22px">
+        New Arrivals
+      </h2>
+      <div
+        class="carousel arrivals-carousel"
+        style="
+          width: 100%;
+          max-width: none;
+          margin: 0;
+          padding-left: 0;
+          padding-right: 0;
+        "
+      >
         <div class="carousel-row top">
           <button
             class="ctrl prev"
@@ -559,6 +789,51 @@
                 >
               </div>
               <div class="badges"><span class="tag">RESTOCKED</span></div>
+            </article>
+            <!-- Added 5th card for 5x1 layout (duplicated from bottom row) -->
+            <article class="card" data-href="product.html?slug=aero-jogger">
+              <div class="img-wrap" style="border-radius: 0">
+                <img
+                  src="https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop"
+                  alt="Aero Jogger"
+                  loading="lazy"
+                />
+                <img
+                  class="alt"
+                  src="https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop"
+                  alt="Aero Jogger alt"
+                  loading="lazy"
+                />
+              </div>
+              <div
+                class="row mt-8"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 6px;
+                  margin-top: 14px;
+                  text-align: center;
+                "
+              >
+                <span
+                  style="
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 15px;
+                    color: #222;
+                  "
+                  >Aero Jogger</span
+                >
+                <span
+                  class="price"
+                  style="font-size: 14px; color: #111; font-weight: 400"
+                  >$78</span
+                >
+              </div>
+              <div class="badges"><span class="tag">LIGHTWEIGHT</span></div>
             </article>
           </div>
         </div>
@@ -816,13 +1091,22 @@
       class="section container"
       id="back-in-stock-promo"
       aria-label="Back in Stock"
-      style="padding-top: 0; padding-bottom: 0; margin: 24px auto 40px"
+      style="
+        padding-top: 0;
+        padding-bottom: 0;
+        margin: 24px 0 40px;
+        width: 100%;
+        max-width: none;
+        padding-left: 0;
+        padding-right: 0;
+      "
     >
       <div
+        class="video-mobile"
         style="
           position: relative;
           width: 100%;
-          min-height: calc(68vh - 15px);
+          min-height: calc(76vh - 15px);
           background-image: url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80');
           background-size: cover;
           background-position: center;
@@ -903,11 +1187,99 @@
           >
         </div>
       </div>
+      <!-- Desktop-only split banner -->
+      <div
+        class="split-desktop"
+        style="display: none; height: 70vh; overflow: hidden"
+      >
+        <img
+          src="https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?q=80&w=1200&auto=format&fit=crop"
+          alt="Back in Stock left"
+          style="
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            grid-column: 1 / 2;
+          "
+          onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Back+in+Stock'"
+        />
+        <img
+          src="https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=1200&auto=format&fit=crop"
+          alt="Back in Stock right"
+          style="
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            grid-column: 2 / 3;
+          "
+          onerror="this.src='https://via.placeholder.com/1200x800/eaeaea/666?text=Back+in+Stock'"
+        />
+        <div
+          style="
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -56%);
+            text-align: center;
+            color: #fff;
+          "
+        >
+          <div
+            class="upper"
+            style="
+              font-weight: 800;
+              letter-spacing: 1.5px;
+              font-size: clamp(28px, 5vw, 56px);
+              margin-bottom: 10px;
+              text-shadow: 0 3px 18px rgba(0, 0, 0, 0.35);
+            "
+          >
+            Journeys Summer Set
+          </div>
+          <a
+            href="collection.html?section=back-in-stock"
+            aria-label="Shop Back in Stock"
+            style="
+              display: inline-block;
+              padding: 14px 40px;
+              background: #ffffff;
+              color: #111111;
+              text-decoration: none;
+              border: 1px solid rgba(0, 0, 0, 0.08);
+              border-radius: 2px;
+              font-size: 14px;
+              letter-spacing: 0.5px;
+            "
+            onmouseenter="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 18px rgba(0,0,0,0.15)';"
+            onmouseleave="this.style.transform='scale(1)'; this.style.boxShadow='none'"
+            >SHOP NOW</a
+          >
+        </div>
+      </div>
     </section>
 
-    <section class="section container" id="categories">
-      <h2 style="text-align: center">Shop by Category</h2>
-      <div class="carousel category-carousel">
+    <section
+      class="section container"
+      id="categories"
+      style="
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding-left: 0;
+        padding-right: 0;
+      "
+    >
+      <h2 style="text-align: center; margin: 20px 0 22px">Shop by Category</h2>
+      <div
+        class="carousel category-carousel"
+        style="
+          width: 100%;
+          max-width: none;
+          margin: 0;
+          padding-left: 0;
+          padding-right: 0;
+        "
+      >
         <button
           class="ctrl prev"
           aria-label="Previous"
@@ -920,7 +1292,7 @@
             border: 1px solid transparent;
             border-radius: 50%;
             background: transparent;
-            color: #fff;
+            color: #000;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -933,32 +1305,75 @@
           <span
             style="
               display: inline-block;
-              color: #fff;
+              color: #000;
               transition: transform 120ms ease;
             "
             >‹</span
           >
         </button>
-        <div class="carousel-track panels" role="list">
+        <div
+          class="carousel-track panels"
+          role="list"
+          style="
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            gap: 1.333%;
+            justify-content: space-between;
+          "
+        >
           <!-- Order: Tees, Hoodies, Shorts, Pants, Accessories -->
           <!-- Tees -->
-          <a class="panel" href="collection.html?category=tees" role="listitem">
+          <a
+            class="panel"
+            href="collection.html?category=tees"
+            role="listitem"
+            style="display: block; background: #fff"
+          >
             <img
               src="Category%20images/Tee.jpg"
               alt="Tees"
               loading="lazy"
               onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Tees'"
+              style="
+                display: block;
+                width: 100%;
+                height: clamp(340px, 35vw, 580px);
+                object-fit: cover;
+                object-position: center;
+              "
             />
             <div
-              class="caption center"
+              class="caption"
               style="
+                background: #fff;
+                border-top: 1px solid #eaeaea;
+                padding: 10px 14px;
                 text-align: center;
-                display: flex;
-                align-items: center;
-                justify-content: center;
               "
             >
-              <div class="upper">Tees</div>
+              <div
+                class="upper"
+                style="
+                  font-weight: 600;
+                  letter-spacing: 1px;
+                  font-size: 13px;
+                  color: #111;
+                "
+              >
+                Tees
+              </div>
+              <div
+                style="
+                  font-size: 10px;
+                  color: #666;
+                  letter-spacing: 0.5px;
+                  margin-top: 4px;
+                "
+              >
+                SHOP NOW
+              </div>
             </div>
           </a>
           <!-- Hoodies -->
@@ -966,66 +1381,154 @@
             class="panel"
             href="collection.html?category=hoodies"
             role="listitem"
+            style="display: block; background: #fff"
           >
             <img
               src="Category%20images/Hoodie.jpg"
               alt="Hoodies"
               loading="lazy"
+              style="
+                display: block;
+                width: 100%;
+                height: clamp(340px, 35vw, 580px);
+                object-fit: cover;
+                object-position: center;
+              "
             />
             <div
-              class="caption center"
+              class="caption"
               style="
+                background: #fff;
+                border-top: 1px solid #eaeaea;
+                padding: 10px 14px;
                 text-align: center;
-                display: flex;
-                align-items: center;
-                justify-content: center;
               "
             >
-              <div class="upper">Hoodies</div>
+              <div
+                class="upper"
+                style="
+                  font-weight: 600;
+                  letter-spacing: 1px;
+                  font-size: 13px;
+                  color: #111;
+                "
+              >
+                Hoodies
+              </div>
+              <div
+                style="
+                  font-size: 10px;
+                  color: #666;
+                  letter-spacing: 0.5px;
+                  margin-top: 4px;
+                "
+              >
+                SHOP NOW
+              </div>
             </div>
           </a>
-          <!-- Shorts -->
+          <!-- Bottoms -->
           <a
             class="panel"
-            href="collection.html?category=shorts"
+            href="collection.html?category=bottoms"
             role="listitem"
+            style="display: block; background: #fff"
           >
             <img
-              src="Category%20images/Shorts.jpg"
-              alt="Shorts"
+              src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1200&auto=format&fit=crop"
+              alt="Bottoms"
               loading="lazy"
-              onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Shorts'"
+              onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Bottoms'"
+              style="
+                display: block;
+                width: 100%;
+                height: clamp(340px, 35vw, 580px);
+                object-fit: cover;
+                object-position: center;
+              "
             />
             <div
-              class="caption center"
+              class="caption"
               style="
+                background: #fff;
+                border-top: 1px solid #eaeaea;
+                padding: 10px 14px;
                 text-align: center;
-                display: flex;
-                align-items: center;
-                justify-content: center;
               "
             >
-              <div class="upper">Shorts</div>
+              <div
+                class="upper"
+                style="
+                  font-weight: 600;
+                  letter-spacing: 1px;
+                  font-size: 13px;
+                  color: #111;
+                "
+              >
+                Bottoms
+              </div>
+              <div
+                style="
+                  font-size: 10px;
+                  color: #666;
+                  letter-spacing: 0.5px;
+                  margin-top: 4px;
+                "
+              >
+                SHOP NOW
+              </div>
             </div>
           </a>
           <!-- Pants -->
-          <a class="panel" href="collection.html?category=hats" role="listitem">
+          <a
+            class="panel"
+            href="collection.html?category=hats"
+            role="listitem"
+            style="display: block; background: #fff"
+          >
             <img
               src="Category%20images/Hat.heic"
               alt="Hats"
               loading="lazy"
               onerror="this.src='https://via.placeholder.com/1200x800/f0f0f0/666?text=Hats'"
+              style="
+                display: block;
+                width: 100%;
+                height: clamp(340px, 35vw, 580px);
+                object-fit: cover;
+                object-position: center;
+              "
             />
             <div
-              class="caption center"
+              class="caption"
               style="
+                background: #fff;
+                border-top: 1px solid #eaeaea;
+                padding: 10px 14px;
                 text-align: center;
-                display: flex;
-                align-items: center;
-                justify-content: center;
               "
             >
-              <div class="upper">Hats</div>
+              <div
+                class="upper"
+                style="
+                  font-weight: 600;
+                  letter-spacing: 1px;
+                  font-size: 13px;
+                  color: #111;
+                "
+              >
+                Hats
+              </div>
+              <div
+                style="
+                  font-size: 10px;
+                  color: #666;
+                  letter-spacing: 0.5px;
+                  margin-top: 4px;
+                "
+              >
+                SHOP NOW
+              </div>
             </div>
           </a>
         </div>
@@ -1041,7 +1544,7 @@
             border: 1px solid transparent;
             border-radius: 50%;
             background: transparent;
-            color: #fff;
+            color: #000;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -1054,7 +1557,7 @@
           <span
             style="
               display: inline-block;
-              color: #fff;
+              color: #000;
               transition: transform 120ms ease;
             "
             >›</span
@@ -1063,10 +1566,41 @@
       </div>
     </section>
 
+    <script>
+      (function () {
+        function reorder() {
+          if (window.innerWidth >= 1024) {
+            var cat = document.getElementById("categories");
+            var back = document.getElementById("back-in-stock-promo");
+            if (cat && back && back.previousElementSibling !== cat) {
+              back.parentNode.insertBefore(cat, back);
+            }
+          }
+        }
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", reorder);
+        } else {
+          reorder();
+        }
+      })();
+    </script>
+
     <!-- Best Sellers Carousel -->
-    <section class="section container" id="best-sellers">
+    <section
+      class="section container"
+      id="best-sellers"
+      style="
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding-left: 0;
+        padding-right: 0;
+      "
+    >
       <div class="row" style="justify-content: center; position: relative">
-        <h2 class="center" style="text-align: center">Best Sellers</h2>
+        <h2 class="center" style="text-align: center; margin: 20px 0 22px">
+          Best Sellers
+        </h2>
         <div
           class="row muted"
           style="font-size: 12px; position: absolute; right: 0"
@@ -1074,7 +1608,16 @@
           Swipe →
         </div>
       </div>
-      <div class="carousel best-sellers">
+      <div
+        class="carousel best-sellers"
+        style="
+          width: 100%;
+          max-width: none;
+          margin: 0;
+          padding-left: 0;
+          padding-right: 0;
+        "
+      >
         <button
           class="ctrl prev"
           aria-label="Prev"
@@ -1368,8 +1911,9 @@
         data-rewards-banner
         style="
           position: relative;
-          max-width: 1200px;
-          margin: 0 auto;
+          width: 100%;
+          max-width: none;
+          margin: 0;
           border-radius: 0px;
           overflow: hidden;
         "
@@ -1418,7 +1962,7 @@
               text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
             "
           >
-            JOURNEY REWARDS
+            JOIN THE CLUB
           </div>
           <div
             style="
@@ -1457,14 +2001,137 @@
             "
             onmouseover="this.style.background='#f5f5f5'"
             onmouseout="this.style.background='#fff'"
-            >JOIN JOURNEY</a
+            >JOIN NOW</a
           >
+          <div
+            style="
+              display: flex;
+              gap: 16px;
+              justify-content: center;
+              align-items: center;
+              margin-top: 14px;
+
+              color: #fff;
+            "
+          >
+            <a
+              href="#"
+              aria-label="Instagram"
+              style="color: #fff; text-decoration: none; font-weight: 600"
+              >Instagram</a
+            >
+            <span style="opacity: 0.5">•</span>
+            <a
+              href="#"
+              aria-label="YouTube"
+              style="color: #fff; text-decoration: none; font-weight: 600"
+              >YouTube</a
+            >
+            <span style="opacity: 0.5">•</span>
+            <a
+              href="#"
+              aria-label="Careers"
+              style="color: #fff; text-decoration: none; font-weight: 600"
+              >Careers</a
+            >
+            <span style="opacity: 0.5">•</span>
+            <a
+              href="policies.html#help"
+              aria-label="Help"
+              style="color: #fff; text-decoration: none; font-weight: 600"
+              >Help</a
+            >
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Spacer between Join the Club and Footer -->
-    <div style="height: 48px; background: #f8f9fa"></div>
+    <script>
+      (function () {
+        function applyOverflow() {
+          var isDesktop = window.innerWidth >= 1024;
+          var sections = [
+            document.querySelector("#new-arrivals"),
+            document.querySelector("#new-arrivals .carousel"),
+            document.querySelector("#best-sellers"),
+            document.querySelector("#best-sellers .carousel"),
+          ];
+          sections.forEach(function (el) {
+            if (!el) return;
+            if (isDesktop) {
+              el.style.overflowX = "hidden";
+              el.style.overflow = "hidden";
+            } else {
+              el.style.overflowX = "";
+              el.style.overflow = "";
+            }
+          });
+          var summer = document.querySelector(
+            "#back-in-stock-promo .video-mobile"
+          );
+          if (summer) {
+            summer.style.minHeight = isDesktop ? "24vh" : "calc(76vh - 15px)";
+          }
+          var burger = document.querySelector(".menu-toggle");
+          if (burger) {
+            burger.style.display = isDesktop ? "none" : "inline-flex";
+          }
+        }
+        window.addEventListener("load", applyOverflow);
+        window.addEventListener("resize", applyOverflow);
+      })();
+    </script>
+    <style>
+      /* Hide horizontal scrollbars for carousels on desktop while preserving scroll/arrow behavior */
+      @media (min-width: 1024px) {
+        #new-arrivals .carousel-track,
+        #best-sellers .carousel-track {
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE 10+ */
+        }
+        #new-arrivals .carousel-track::-webkit-scrollbar,
+        #best-sellers .carousel-track::-webkit-scrollbar {
+          display: none; /* Chrome/Safari */
+          height: 0;
+        }
+      }
+    </style>
+    <style>
+      /* Desktop-only: make Journeys Summer Set block much shorter */
+      @media (min-width: 1024px) {
+        #back-in-stock-promo .video-mobile {
+          min-height: 28vh !important;
+        }
+      }
+    </style>
+    <style>
+      /* Desktop-only: center the JOURNEYS logo perfectly and ensure mega can overflow */
+      @media (min-width: 1024px) {
+        header.header .header-inner {
+          position: relative !important;
+        }
+        header.header .logo {
+          position: absolute !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          margin: 0 !important;
+        }
+        header.header .nav {
+          overflow: visible !important;
+          position: relative !important;
+          z-index: 20 !important; /* ensure nav is above logo for clicks */
+        }
+        header.header .nav .header-item {
+          position: relative !important;
+        }
+        header.header .nav .header-item .mega {
+          z-index: 200;
+        }
+        header.header .logo {
+          z-index: 1 !important; /* keep logo below nav so Shop is clickable */
+        }
+      }
+    </style>
 
     <!-- Footer -->
     <footer style="background: #fff; color: #111; margin-top: 0">
@@ -1476,6 +2143,9 @@
             style="
               display: grid;
               grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    <!-- Desktop email capture (also fine on mobile) -->
+
+
               gap: 40px;
               margin-bottom: 40px;
             "

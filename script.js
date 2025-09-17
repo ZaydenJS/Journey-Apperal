@@ -7,10 +7,10 @@
     // If a header already exists, do nothing (prevents affecting existing pages)
     if (document.querySelector("header.header")) return;
     const tpl = `
-<div class="announcement upper" style="position: sticky; top: 0; left: 0; right: 0">
-  Free shipping over $75 • Launch in <span id="countdown">00:00:00</span>
+<div class="announcement upper" data-injected="1" style="position: sticky; top: 0; left: 0; right: 0">
+  Free Shipping On Orders Over $100
 </div>
-<header class="header" style="top: 0; left: 0; right: 0">
+<header class="header" data-injected="1" style="top: 0; left: 0; right: 0">
   <div class="container header-inner" style="max-width: none; width: 100%; padding-left: 16px; padding-right: 16px;">
     <div class="nav-left row">
       <button class="menu-toggle" aria-label="Open menu" style="background: transparent; border: none; padding: 8px; display: inline-flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 0; box-shadow: none;">
@@ -125,6 +125,22 @@
       console.error("[init] ensureStandardHeader failed:", e);
     }
 
+    // De-duplicate any auto-injected header/announcement if a page header exists
+    try {
+      const headers = document.querySelectorAll("header.header");
+      if (headers.length > 1) {
+        headers.forEach((h) => {
+          if (h.dataset && h.dataset.injected === "1") h.remove();
+        });
+      }
+      const anns = document.querySelectorAll(".announcement.upper");
+      if (anns.length > 1) {
+        anns.forEach((a) => {
+          if (a.dataset && a.dataset.injected === "1") a.remove();
+        });
+      }
+    } catch (e) {}
+
     const __safe = (name, fn) => {
       try {
         fn && fn();
@@ -135,6 +151,7 @@
 
     __safe("setupMobileNav", setupMobileNav);
     __safe("setupMegaMenuHoverIntent", setupMegaMenuHoverIntent);
+
     __safe("setupCarousel", setupCarousel);
     __safe("setupQuickShopTouch", setupQuickShopTouch);
     __safe("setupCardLinks", setupCardLinks);
@@ -558,12 +575,53 @@
   }
 
   function setupMegaMenuHoverIntent() {
-    // Desktop: show mega on hover via CSS; add focus/escape accessibility
+    // Desktop: show mega on hover via CSS; plus click-to-toggle for "Shop"
     const header = $(".header");
     if (!header) return;
+
+    // Escape closes any open mega
     header.addEventListener("keyup", (e) => {
       if (e.key === "Escape")
         $$(".mega", header).forEach((m) => (m.style.display = "none"));
+    });
+
+    // Click-to-toggle on desktop (>=1024px) for the Shop item
+    const mega = header.querySelector(".nav .header-item .mega");
+    if (!mega) return;
+    const trigger = mega.parentElement;
+    trigger.setAttribute("aria-haspopup", "true");
+    trigger.setAttribute("aria-expanded", "false");
+
+    const isDesktop = () => window.innerWidth >= 1024;
+    const open = () => {
+      mega.style.display = "block";
+      trigger.setAttribute("aria-expanded", "true");
+    };
+    const close = () => {
+      mega.style.display = "";
+      trigger.setAttribute("aria-expanded", "false");
+    };
+
+    trigger.addEventListener("click", (e) => {
+      if (!isDesktop()) return; // mobile uses drawer
+      e.preventDefault();
+      e.stopPropagation();
+      const isOpen = mega.style.display === "block";
+      if (isOpen) close();
+      else open();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!isDesktop()) return;
+      if (!trigger.contains(e.target)) close();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") close();
+    });
+
+    window.addEventListener("resize", () => {
+      if (!isDesktop()) close();
     });
   }
 
@@ -614,6 +672,7 @@
       // Fallback: single-track carousel
       const track = $(".carousel-track", carousel);
       if (!track) return;
+
       const prevs = $$(".prev", carousel);
       const nexts = $$(".next", carousel);
       const step = () => {
@@ -791,6 +850,54 @@
       }
     });
     const form = $("form", modal);
+
+    function setupMegaMenuClickToggle() {
+      const header = document.querySelector("header.header");
+      if (!header) return;
+      const mega = header.querySelector(".nav .header-item .mega");
+      if (!mega) return;
+      const trigger = mega.parentElement; // the <a class="header-item">Shop ...
+
+      // Accessibility
+      trigger.setAttribute("aria-haspopup", "true");
+      trigger.setAttribute("aria-expanded", "false");
+
+      const isDesktop = () => window.innerWidth >= 1024;
+      const open = () => {
+        mega.style.display = "block"; // override stylesheet hover-only behavior
+        trigger.setAttribute("aria-expanded", "true");
+      };
+      const close = () => {
+        mega.style.display = ""; // restore to stylesheet-controlled state
+        trigger.setAttribute("aria-expanded", "false");
+      };
+
+      trigger.addEventListener("click", (e) => {
+        if (!isDesktop()) return; // mobile uses drawer
+        e.preventDefault();
+        e.stopPropagation();
+        const isOpen = mega.style.display === "block";
+        if (isOpen) close();
+        else open();
+      });
+
+      // Click outside to close
+      document.addEventListener("click", (e) => {
+        if (!isDesktop()) return;
+        if (!trigger.contains(e.target)) close();
+      });
+
+      // Escape to close
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+      });
+
+      // On resize away from desktop, ensure it's closed
+      window.addEventListener("resize", () => {
+        if (!isDesktop()) close();
+      });
+    }
+
     form &&
       form.addEventListener("submit", (e) => {
         e.preventDefault();
@@ -1732,8 +1839,17 @@
         if (!gridEl) return;
         gridEl.style.display = "grid";
         gridEl.style.gridTemplateColumns = viewMode === "1" ? "1fr" : "1fr 1fr";
+        // Always restore the center column gap when toggling back to 2x2
+        if (!gridEl.dataset.defaultGap) {
+          try {
+            const cs = getComputedStyle(gridEl);
+            gridEl.dataset.defaultGap = cs.columnGap || cs.gap || "14px";
+          } catch (_) {
+            gridEl.dataset.defaultGap = "14px";
+          }
+        }
         gridEl.style.columnGap =
-          viewMode === "1" ? "0px" : gridEl.style.columnGap || "16px";
+          viewMode === "1" ? "0px" : gridEl.dataset.defaultGap;
         const wraps = gridEl.querySelectorAll(".img-wrap");
         wraps.forEach((w) => {
           w.style.aspectRatio = viewMode === "1" ? "1 / 1" : "1 / 1.7";
@@ -1916,10 +2032,7 @@
       }
       const ann = document.querySelector(".announcement.upper");
       if (ann && /[\x00-\x1F]/.test(ann.textContent || "")) {
-        const span = ann.querySelector("#countdown");
-        ann.innerHTML = `Free shipping over $75 • Launch in <span id="countdown">${
-          span ? span.textContent : "00:00:00"
-        }</span>`;
+        ann.textContent = "Free Shipping On Orders Over $100";
       }
     } catch (e) {
       /* no-op */

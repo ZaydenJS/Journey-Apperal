@@ -5,13 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>City Hoodie – Journey Apparel</title>
     <link rel="stylesheet" href="styles.css" />
+    <style id="desktop-product-overrides">
+      @media (min-width: 1024px) {
+        /* Side-by-side product layout: images left, details right */
+        main.container.section.product {
+          display: grid !important;
+          grid-template-columns: 1.1fr 0.9fr !important;
+          align-items: start !important;
+          gap: 24px !important;
+          padding-top: 16px !important;
+        }
+        .p-gallery {
+          margin: 0 !important;
+        }
+        .p-details {
+          background: transparent !important;
+          border: 0 !important;
+          padding: 0 !important;
+        }
+        /* Recently Viewed & Best Sellers: 4-up horizontal on desktop */
+        .product .carousel-track.mobile-2x1 {
+          display: grid !important;
+          grid-auto-flow: column !important;
+          grid-auto-columns: 25% !important;
+          grid-template-columns: none !important;
+          gap: 16px !important;
+          overflow-x: hidden !important;
+          scroll-snap-type: none !important;
+        }
+      }
+    </style>
   </head>
   <body style="margin: 0; overflow-x: hidden">
     <div
       class="announcement upper"
-      style="position: sticky; top: 0; left: 0; right: 0"
+      style="position: sticky; top: 0; left: 0; right: 0; text-align: center"
     >
-      Free Shipping Over $100
+      Free Shipping On Orders Over $100
     </div>
     <header class="header" style="top: 0; left: 0; right: 0">
       <div
@@ -1837,7 +1867,7 @@
             >
               <button
                 type="button"
-                data-sg-tab="tops"
+                data-sg-tab="heavy-tee"
                 aria-pressed="true"
                 style="
                   padding: 8px 12px;
@@ -1849,11 +1879,11 @@
                   cursor: pointer;
                 "
               >
-                Tops
+                Heavy Tee
               </button>
               <button
                 type="button"
-                data-sg-tab="bottoms"
+                data-sg-tab="relax-hoodie"
                 aria-pressed="false"
                 style="
                   padding: 8px 12px;
@@ -1865,12 +1895,12 @@
                   cursor: pointer;
                 "
               >
-                Bottoms
+                Relax Hoodie
               </button>
 
               <button
                 type="button"
-                data-sg-tab="hoodies"
+                data-sg-tab="heavy-hoodie"
                 aria-pressed="false"
                 style="
                   padding: 8px 12px;
@@ -1882,11 +1912,11 @@
                   cursor: pointer;
                 "
               >
-                Hoodies
+                Heavy Hoodie
               </button>
               <button
                 type="button"
-                data-sg-tab="accessories"
+                data-sg-tab="shorts"
                 aria-pressed="false"
                 style="
                   padding: 8px 12px;
@@ -1898,7 +1928,23 @@
                   cursor: pointer;
                 "
               >
-                Accessories
+                Shorts
+              </button>
+              <button
+                type="button"
+                data-sg-tab="hats"
+                aria-pressed="false"
+                style="
+                  padding: 8px 12px;
+                  border: 1px solid #ddd;
+                  background: #fff;
+                  color: #111;
+                  border-radius: 999px;
+                  font-size: 12px;
+                  cursor: pointer;
+                "
+              >
+                Hats
               </button>
             </div>
             <div
@@ -2119,65 +2165,121 @@
         var chart = document.getElementById("sg-chart");
 
         var unit = "cm",
-          tab = "tops";
+          tab = "heavy-tee";
         var DATA = {
-          tops: [
-            ["XXS", 78, 82],
-            ["XS", 83, 87],
-            ["S", 88, 93],
-            ["M", 94, 100],
-            ["L", 101, 107],
-            ["XL", 108, 114],
-            ["2XL", 115, 121],
-            ["3XL", 122, 128],
+          // Tees – width x length in cm
+          "heavy-tee": [
+            ["SML", 51, 71.5],
+            ["MED", 55, 75],
+            ["LRG", 59, 78.5],
+            ["XLG", 63, 82],
+            ["2XL", 67, 85.5],
+            ["3XL", 71, 87.5],
           ],
 
-          hoodies: [
-            ["XXS", 82, 86],
-            ["XS", 87, 91],
-            ["S", 92, 97],
-            ["M", 98, 104],
-            ["L", 105, 112],
-            ["XL", 113, 120],
-            ["2XL", 121, 128],
-            ["3XL", 129, 136],
+          // Hoodies – width x length in cm
+          "relax-hoodie": [
+            ["XSM", 57, 68.5],
+            ["SML", 60, 71],
+            ["MED", 63, 73.5],
+            ["LRG", 66, 76],
+            ["XLG", 69, 78.5],
+            ["2XL", 72, 81],
+            ["3XL", 75, 83.5],
           ],
-          bottoms: [
-            ["XXS", 66, 70, 84, 88, 76],
-            ["XS", 71, 75, 89, 93, 76],
-            ["S", 76, 81, 94, 98, 77],
-            ["M", 82, 87, 99, 104, 78],
-            ["L", 88, 94, 105, 110, 79],
-            ["XL", 95, 101, 111, 116, 80],
-            ["2XL", 102, 108, 117, 122, 81],
-            ["3XL", 109, 115, 123, 128, 82],
+          "heavy-hoodie": [
+            ["XSM", 54, 68],
+            ["SML", 57, 70.5],
+            ["MED", 60, 73],
+            ["LRG", 63, 75.5],
+            ["XLG", 66, 78],
+            ["2XL", 69, 80.5],
+            ["3XL", 72, 83],
+          ],
+
+          // Shorts – waist / inseam / length in inches
+          shorts: [
+            ["S", 26.8, 4.1, 15.9],
+            ["M", 28.3, 4.3, 16.5],
+            ["L", 29.9, 4.5, 17.1],
+            ["XL", 31.5, 4.7, 17.7],
+            ["XXL", 33.1, 4.9, 18.3],
           ],
         };
         function toIn(v) {
           return Math.round(v / 2.54);
         }
-        function fmt(a, b) {
+        function toCm(v) {
+          return Math.round(v * 2.54);
+        }
+        function fmtRange(a, b) {
           if (unit === "cm") return a + "–" + b + " cm";
           return toIn(a) + "–" + toIn(b) + " in";
         }
         function renderChart() {
-          if (tab === "accessories") {
-            chart.innerHTML =
-              '<div style="padding:16px;color:#444;font-size:14px">Most accessories are one size. Refer to product description for specifics.</div>';
+          if (tab === "hats") {
+            var u = unit === "cm" ? "cm" : "in";
+            var circ = unit === "cm" ? 61 : toIn(61);
+            var height = unit === "cm" ? 8.5 : toIn(8.5);
+            var meta =
+              "Journeys Active Cap - 1180 • Fabric: 100% Recycled Nylon Body + Mesh • Style: Low Profile, Flat Peak, Adjustable Fastener • One Size (OS)";
+            var html =
+              '<div style="padding:8px 10px;color:#555;font-size:12px">' +
+              meta +
+              "</div>" +
+              '<table style="width:100%;border-collapse:separate;border-spacing:0"><thead><tr>' +
+              '<th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">Measurement</th>' +
+              '<th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">One Size (' +
+              u +
+              ")</th></tr></thead><tbody>" +
+              '<tr><td style="padding:10px;color:#111">Circumference</td><td style="padding:10px;color:#111">' +
+              circ +
+              " " +
+              u +
+              "</td></tr>" +
+              '<tr><td style="padding:10px;color:#111">Height</td><td style="padding:10px;color:#111">' +
+              height +
+              " " +
+              u +
+              "</td></tr></tbody></table>";
+            chart.innerHTML = html;
             return;
           }
-          var html =
+          var meta = "";
+          if (tab === "heavy-tee") {
+            meta =
+              "Heavy Tee — 280GSM, 100% cotton. Regular fit. Available up to 3XL.";
+          } else if (tab === "heavy-hoodie") {
+            meta =
+              "Heavy Hoodie — 400GSM, 100% cotton fleece. Regular fit. Available up to 3XL.";
+          } else if (tab === "relax-hoodie") {
+            meta =
+              "Relax Hoodie — 500GSM, 100% cotton. Relaxed fit. Available up to 3XL.";
+          } else if (tab === "shorts") {
+            meta =
+              "155 Mesh Shorts — lightweight, breathable mesh. Black with JOURNEYS print.";
+          }
+          var html = meta
+            ? '<div style="padding:8px 10px;color:#555;font-size:12px">' +
+              meta +
+              "</div>"
+            : "";
+          html +=
             '<table style="width:100%;border-collapse:separate;border-spacing:0"><thead><tr>';
-          if (tab === "bottoms") {
+          if (tab === "shorts") {
             html +=
               '<th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">Size</th><th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">Waist (' +
               (unit === "cm" ? "cm" : "in") +
-              ')</th><th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">Hip (' +
+              ')</th><th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">Inseam (' +
               (unit === "cm" ? "cm" : "in") +
-              ')</th><th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">Inseam</th>';
+              ')</th><th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">Length (' +
+              (unit === "cm" ? "cm" : "in") +
+              ")</th>";
           } else {
             html +=
-              '<th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">Size</th><th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">Chest (' +
+              '<th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">Size</th><th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">Width (' +
+              (unit === "cm" ? "cm" : "in") +
+              ')</th><th style="text-align:left;padding:10px;border-bottom:1px solid #eee;color:#777;font-weight:600">Length (' +
               (unit === "cm" ? "cm" : "in") +
               ")</th>";
           }
@@ -2185,30 +2287,44 @@
           (DATA[tab] || []).forEach(function (r) {
             var sz = r[0],
               row = "";
-            if (tab === "bottoms") {
-              var wl = r[1],
-                wh = r[2],
-                hl = r[3],
-                hh = r[4],
-                ins = r[5];
+            if (tab === "shorts") {
+              var waist = r[1],
+                inseam = r[2],
+                len = r[3];
+              if (unit === "cm") {
+                waist = toCm(waist);
+                inseam = toCm(inseam);
+                len = toCm(len);
+              }
               row =
                 '<td style="padding:10px;color:#111">' +
                 sz +
                 '</td><td style="padding:10px;color:#111">' +
-                fmt(wl, wh) +
+                waist +
+                (unit === "cm" ? " cm" : " in") +
                 '</td><td style="padding:10px;color:#111">' +
-                fmt(hl, hh) +
+                inseam +
+                (unit === "cm" ? " cm" : " in") +
                 '</td><td style="padding:10px;color:#111">' +
-                (unit === "cm" ? ins + " cm" : toIn(ins) + " in") +
+                len +
+                (unit === "cm" ? " cm" : " in") +
                 "</td>";
             } else {
-              var cl = r[1],
-                ch = r[2];
+              var w = r[1],
+                l = r[2];
+              if (unit === "in") {
+                w = toIn(w);
+                l = toIn(l);
+              }
               row =
                 '<td style="padding:10px;color:#111">' +
                 sz +
                 '</td><td style="padding:10px;color:#111">' +
-                fmt(cl, ch) +
+                w +
+                (unit === "cm" ? " cm" : " in") +
+                '</td><td style="padding:10px;color:#111">' +
+                l +
+                (unit === "cm" ? " cm" : " in") +
                 "</td>";
             }
             html += "<tr>" + row + "</tr>";
@@ -2235,6 +2351,42 @@
           }
           return null;
         }
+        function normalizeSizeForList(sz, list) {
+          var codes = (list || []).map(function (r) {
+            return r[0];
+          });
+          if (codes.indexOf(sz) !== -1) return sz;
+          var hasWordCodes = codes.some(function (c) {
+            return ["XSM", "SML", "MED", "LRG", "XLG"].indexOf(c) !== -1;
+          });
+          if (hasWordCodes) {
+            var map1 = { XS: "XSM", S: "SML", M: "MED", L: "LRG", XL: "XLG" };
+            if (map1[sz] && codes.indexOf(map1[sz]) !== -1) return map1[sz];
+          }
+          var map2 = {
+            "2XL": "XXL",
+            "3XL": "XXXL",
+            "4XL": "XXXXL",
+            "5XL": "XXXXXL",
+          };
+          if (map2[sz] && codes.indexOf(map2[sz]) !== -1) return map2[sz];
+          return codes[0] || sz;
+        }
+        function nearestByWaistCm(valCm, list) {
+          var best = null,
+            bestd = 1e9;
+          (list || []).forEach(function (r) {
+            var waistIn = r[1];
+            var waistCm = waistIn * 2.54;
+            var d = Math.abs(waistCm - valCm);
+            if (d < bestd) {
+              bestd = d;
+              best = r[0];
+            }
+          });
+          return best;
+        }
+
         function adjustByFit(sz, list) {
           var idx = list.findIndex(function (r) {
             return r[0] === sz;
@@ -2268,19 +2420,22 @@
             if (t != null) t = Math.round(t * 2.54);
           }
           var base = null;
-          if (tab === "bottoms") {
+          if (tab === "shorts") {
             if (t != null) {
-              base =
-                clampToRange(t, DATA.bottoms) ||
-                nearestByRange(t, DATA.bottoms);
+              base = nearestByWaistCm(t, DATA.shorts);
             }
-          } else {
+          } else if (
+            tab !== "heavy-tee" &&
+            tab !== "relax-hoodie" &&
+            tab !== "heavy-hoodie"
+          ) {
             if (c != null) {
               base = clampToRange(c, DATA[tab]) || nearestByRange(c, DATA[tab]);
             }
           }
           if (!base) base = recFromHW(h, w);
-          rec = adjustByFit(base, DATA[tab] || DATA.tops);
+          var norm = normalizeSizeForList(base, DATA[tab] || DATA["heavy-tee"]);
+          rec = adjustByFit(norm, DATA[tab] || DATA["heavy-tee"]);
           result.textContent =
             "We recommend: " +
             rec +
