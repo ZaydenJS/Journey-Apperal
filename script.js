@@ -524,6 +524,28 @@
         overlay && overlay.classList.add("active");
         document.body.style.overflow = "hidden";
         paint();
+        try {
+          if (window.innerWidth >= 1024) {
+            var header = document.querySelector("header.header");
+            var top = header ? header.getBoundingClientRect().bottom : 0;
+            if (overlay) {
+              overlay.style.top = top + "px";
+              overlay.style.left = "0";
+              overlay.style.right = "0";
+              overlay.style.bottom = "0";
+            }
+            if (drawer) {
+              drawer.style.top = top + "px";
+              drawer.style.height = "calc(100vh - " + top + "px)";
+            }
+          } else {
+            if (overlay) overlay.style.top = "0";
+            if (drawer) {
+              drawer.style.top = "0";
+              drawer.style.height = "";
+            }
+          }
+        } catch (_) {}
       } else if (nav) {
         nav.classList.add("open");
       }
@@ -536,6 +558,34 @@
 
         overlay && overlay.classList.remove("active");
         document.body.style.overflow = "";
+        try {
+          if (window.innerWidth >= 1024) {
+            // Keep the drawer aligned under the header during the close animation
+            var header = document.querySelector("header.header");
+            var top = header ? header.getBoundingClientRect().bottom : 0;
+            if (overlay) overlay.style.top = top + "px";
+            if (drawer) {
+              drawer.style.top = top + "px";
+              drawer.style.height = "calc(100vh - " + top + "px)";
+            }
+            // After the transition ends, optionally reset for mobile use
+            setTimeout(function () {
+              if (window.innerWidth < 1024) {
+                if (overlay) overlay.style.top = "0";
+                if (drawer) {
+                  drawer.style.top = "0";
+                  drawer.style.height = "";
+                }
+              }
+            }, 360);
+          } else {
+            if (overlay) overlay.style.top = "0";
+            if (drawer) {
+              drawer.style.top = "0";
+              drawer.style.height = "";
+            }
+          }
+        } catch (_) {}
       } else if (nav) {
         nav.classList.remove("open");
       }

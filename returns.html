@@ -9,6 +9,117 @@
       content="Exchanges & returns policy for Journey Apparel."
     />
     <link rel="stylesheet" href="styles.css" />
+    <style id="desktop-overrides">
+      @media (min-width: 1024px) {
+        /* Hide mobile hero overlay, show desktop version */
+        .hero-overlay.mobile-only {
+          display: none !important;
+        }
+        #hero-overlay-desktop {
+          display: flex !important;
+        }
+        /* New Arrivals: 5x1 on desktop */
+        .arrivals-carousel .carousel-row.bottom {
+          display: none !important;
+        }
+        .arrivals-carousel .carousel-track {
+          grid-auto-columns: calc((100% - 64px) / 5) !important; /* 5 across */
+          gap: 16px !important;
+          justify-content: start !important;
+        }
+        /* Best Sellers: keep 4-up */
+        #best-sellers .carousel-track {
+          grid-auto-columns: 25% !important;
+        }
+        /* Category row: 4-up — fill width exactly on desktop */
+        #categories .category-carousel .carousel-track {
+          grid-template-columns: repeat(4, 1fr) !important;
+          grid-auto-columns: unset !important;
+          justify-content: stretch !important;
+          overflow-x: hidden !important;
+        }
+        /* Desktop-only: Category padding and sizing */
+        #categories {
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        #categories .category-carousel {
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        #categories .category-carousel .carousel-track.panels {
+          gap: 0.5% !important;
+        }
+        #categories .category-carousel .panel img {
+          height: clamp(380px, 36vw, 620px) !important;
+        }
+
+        /* Desktop: stabilize header layering and layout */
+        header.header {
+          background: #fff !important;
+          position: sticky !important;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 500 !important;
+          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+        }
+        header.header .header-inner {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        header.header .nav-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        header.header .menu-toggle {
+          display: none !important;
+        }
+        header.header .nav {
+          display: flex !important;
+          gap: 14px;
+          overflow: visible !important;
+        }
+        header.header .nav .header-item {
+          padding: 8px 6px !important;
+          color: #111 !important;
+          text-decoration: none !important;
+        }
+        header.header .nav .header-item .mega {
+          z-index: 600 !important;
+          top: calc(100% + 12px) !important;
+        }
+        header.header .nav .header-item .shop-hamburger {
+          display: inline-flex !important;
+        }
+
+        /* Desktop: premium mega menu */
+        header.header .nav .header-item:hover .mega,
+        header.header .nav .header-item:focus-within .mega {
+          display: block !important;
+        }
+
+        /* Back in Stock: desktop split images */
+        #back-in-stock-promo .split-desktop {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr;
+          gap: 0;
+          position: relative;
+          height: 78vh !important;
+          overflow: hidden !important;
+        }
+        #back-in-stock-promo .video-mobile {
+          display: none !important;
+        }
+        .shop-hamburger {
+          display: inline-flex !important;
+        }
+      }
+    </style>
   </head>
   <body
     style="
@@ -33,7 +144,7 @@
         style="
           max-width: none;
           width: 100%;
-          padding-left: 8px;
+          padding-left: 0;
           padding-right: 16px;
         "
       >
@@ -85,9 +196,79 @@
             ></span>
           </button>
           <nav class="nav" aria-label="Primary">
-            <a href="#" class="header-item"
+            <a
+              href="#"
+              class="header-item"
+              aria-haspopup="true"
+              aria-expanded="false"
+              style="
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+              "
               >Shop
-              <div class="mega" role="dialog" aria-label="Mega menu">
+              <span
+                class="shop-hamburger"
+                onclick="if(window.innerWidth>=1024){event.preventDefault();event.stopPropagation();var t=document.querySelector('.menu-toggle');if(t)t.click();}"
+                style="
+                  display: none;
+                  order: -1;
+                  margin-right: 14px;
+                  margin-left: 0;
+                  vertical-align: middle;
+                  cursor: pointer;
+                  user-select: none;
+                  width: 18px;
+                  height: 12px;
+                  align-items: center;
+                  justify-content: space-between;
+                  flex-direction: column;
+                "
+              >
+                <span
+                  style="
+                    display: block;
+                    width: 18px;
+                    height: 2px;
+                    background: #000;
+                  "
+                ></span>
+                <span
+                  style="
+                    display: block;
+                    width: 18px;
+                    height: 2px;
+                    background: #000;
+                  "
+                ></span>
+                <span
+                  style="
+                    display: block;
+                    width: 18px;
+                    height: 2px;
+                    background: #000;
+                  "
+                ></span>
+              </span>
+              <div
+                class="mega"
+                role="dialog"
+                aria-label="Mega menu"
+                style="
+                  display: none;
+                  position: absolute;
+                  left: 0;
+                  top: calc(100% + 8px);
+                  background: #fff;
+                  border: 1px solid rgba(0, 0, 0, 0.08);
+                  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+                  padding: 18px 22px;
+                  border-radius: 8px;
+                  width: max-content;
+                  min-width: 560px;
+                  z-index: 200;
+                "
+              >
                 <div class="mega-grid container">
                   <div>
                     <h4 class="upper">Shop by Category</h4>
@@ -95,12 +276,16 @@
                       <a href="collection.html">Tops</a>
                       <a href="collection.html">Hoodies</a>
                       <a href="collection.html">Bottoms</a>
-                      <a href="collection.html">Accessories</a>
+                      <a href="collection.html?category=hats">Hats</a>
                     </div>
                   </div>
                   <div>
                     <h4 class="upper">Shop by Collection</h4>
                     <div class="links">
+                      <a
+                        href="collection.html?collection=journeys-x-leyos-collection"
+                        >Journeys X Leyos Collection</a
+                      >
                       <a href="collection.html">AeroLite</a>
                       <a href="collection.html">Journey</a>
                       <a href="collection.html">Core365</a>
@@ -110,10 +295,18 @@
                 </div>
               </div>
             </a>
-            <a href="collection.html" class="header-item">Collections</a>
-            <a href="collection.html" class="header-item">New In</a>
-            <a href="collection.html" class="header-item"
-              >Sale<span class="badge">-20%</span></a
+            <a
+              href="collection.html?collection=best-sellers"
+              class="header-item"
+              >Best Sellers</a
+            >
+            <a href="collection.html?section=new-arrivals" class="header-item"
+              >New Arrivals</a
+            >
+            <a
+              href="collection.html?collection=journeys-x-leyos-collection"
+              class="header-item"
+              >Journeys X Leyos</a
             >
           </nav>
         </div>
@@ -185,88 +378,6 @@
           </form>
         </div>
 
-        <!-- Cart Drawer -->
-        <div
-          id="cart-overlay"
-          style="
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 1000;
-            display: none;
-          "
-        ></div>
-        <aside
-          id="cart-drawer"
-          style="
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            width: 88%;
-            max-width: 420px;
-            background: #fff;
-            box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
-            transform: translateX(100%);
-            transition: transform 0.25s ease;
-            z-index: 1001;
-            display: flex;
-            flex-direction: column;
-          "
-        >
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              padding: 12px 16px;
-              border-bottom: 1px solid #eee;
-            "
-          >
-            <div style="font-weight: 800">Your Cart</div>
-            <button
-              id="cart-close"
-              style="
-                border: 0;
-                background: none;
-                font-size: 24px;
-                cursor: pointer;
-              "
-            >
-              ×
-            </button>
-          </div>
-          <div
-            id="cart-items"
-            style="flex: 1; overflow: auto; padding: 12px 16px"
-          ></div>
-          <div style="border-top: 1px solid #eee; padding: 12px 16px">
-            <div
-              style="
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 8px;
-              "
-            >
-              <span>Subtotal</span><span id="cart-subtotal">$0.00</span>
-            </div>
-            <button
-              id="checkout-btn"
-              style="
-                width: 100%;
-                padding: 12px;
-                border-radius: 8px;
-                background: #000;
-                color: #fff;
-                font-weight: 600;
-                cursor: pointer;
-              "
-            >
-              Checkout
-            </button>
-          </div>
-        </aside>
-
         <div class="nav-right">
           <button class="icon-btn" aria-label="Account" style="order: 1">
             👤
@@ -309,8 +420,7 @@
           <a href="collection.html?category=tees">Tees</a>
           <a href="collection.html?category=hoodies">Hoodies</a>
           <a href="collection.html?category=shorts">Shorts</a>
-          <a href="collection.html?category=pants">Pants</a>
-          <a href="collection.html?category=accessories">Accessories</a>
+          <a href="collection.html?category=hats">Hats</a>
         </div>
 
         <button class="row-item accordion" data-accordion aria-expanded="false">
@@ -318,6 +428,9 @@
         </button>
         <div class="sub">
           <a href="collection.html?collection=best-sellers">Best Sellers</a>
+          <a href="collection.html?collection=journeys-x-leyos-collection"
+            >Journeys X Leyos Collection</a
+          >
         </div>
 
         <a href="#" class="row-item">Journey Sign Up</a>

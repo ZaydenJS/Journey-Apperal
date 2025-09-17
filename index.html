@@ -59,6 +59,55 @@
           height: clamp(380px, 36vw, 620px) !important;
         }
 
+        /* Desktop: stabilize header layering and layout */
+        header.header {
+          background: #fff !important;
+          position: sticky !important;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 500 !important;
+          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+        }
+        header.header .header-inner {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        header.header .nav-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        header.header .menu-toggle {
+          display: none !important;
+        }
+        header.header .nav {
+          display: flex !important;
+          gap: 14px;
+          overflow: visible !important;
+        }
+        header.header .nav .header-item {
+          padding: 8px 6px !important;
+          color: #111 !important;
+          text-decoration: none !important;
+        }
+        header.header .nav .header-item .mega {
+          z-index: 600 !important;
+          top: calc(100% + 12px) !important;
+        }
+        header.header .nav .header-item .shop-hamburger {
+          display: inline-flex !important;
+        }
+
+        /* Desktop: premium mega menu: show on hover/focus, desktop-only */
+        header.header .nav .header-item:hover .mega,
+        header.header .nav .header-item:focus-within .mega {
+          display: block !important;
+        }
+
         /* Back in Stock: show split images on desktop, hide mobile video block */
         #back-in-stock-promo .split-desktop {
           display: grid !important;
@@ -94,7 +143,7 @@
         style="
           max-width: none;
           width: 100%;
-          padding-left: 8px;
+          padding-left: 0;
           padding-right: 16px;
         "
       >
@@ -149,16 +198,22 @@
             <a
               href="#"
               class="header-item"
-              onclick="if(window.innerWidth>=1024){event.preventDefault();var m=this.querySelector('.mega');if(!m)return false;var open=m.style.display==='block';m.style.display=open?'':'block';this.setAttribute('aria-expanded',open?'false':'true');return false;}"
               aria-haspopup="true"
               aria-expanded="false"
-              style="position: relative"
+              style="
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+              "
               >Shop
               <span
                 class="shop-hamburger"
+                onclick="if(window.innerWidth>=1024){event.preventDefault();event.stopPropagation();var t=document.querySelector('.menu-toggle');if(t)t.click();}"
                 style="
                   display: none;
-                  margin-left: 8px;
+                  order: -1;
+                  margin-right: 14px;
+                  margin-left: 0;
                   vertical-align: middle;
                   cursor: pointer;
                   user-select: none;
@@ -168,7 +223,6 @@
                   justify-content: space-between;
                   flex-direction: column;
                 "
-                onclick="if(window.innerWidth>=1024){event.preventDefault();event.stopPropagation();var m=this.parentElement.querySelector('.mega');if(!m)return false;var o=m.style.display==='block';m.style.display=o?'':'block';this.parentElement.setAttribute('aria-expanded',o?'false':'true');return false;}"
               >
                 <span
                   style="
@@ -2441,7 +2495,7 @@
                 rgba(0, 0, 0, 0.15),
                 rgba(0, 0, 0, 0.45)
               ),
-              url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80')
+              url('Pop%20up%20ad%20photo/Panther%20Can_t%20Catch%20Us%20-%20Cream%20-%20Trainer%20Hoodie%20Ultra%20Heavy%20Weight%20-%201.png')
                 center/cover no-repeat;
           "
         >

@@ -12,6 +12,34 @@
         }
       }
     </style>
+    <style id="desktop-overrides">
+      @media (min-width: 1024px) {
+        header.header .menu-toggle {
+          display: none !important;
+        }
+        header.header .nav {
+          display: flex !important;
+          gap: 14px;
+          overflow: visible !important;
+        }
+        header.header .nav .header-item {
+          padding: 8px 6px !important;
+          color: #111 !important;
+          text-decoration: none !important;
+        }
+        header.header .nav .header-item .mega {
+          z-index: 600 !important;
+          top: calc(100% + 12px) !important;
+        }
+        header.header .nav .header-item .shop-hamburger {
+          display: inline-flex !important;
+        }
+        header.header .nav .header-item:hover .mega,
+        header.header .nav .header-item:focus-within .mega {
+          display: block !important;
+        }
+      }
+    </style>
   </head>
   <body style="margin: 0; overflow-x: hidden">
     <div
@@ -26,7 +54,7 @@
         style="
           max-width: none;
           width: 100%;
-          padding-left: 8px;
+          padding-left: 0;
           padding-right: 16px;
         "
       >
@@ -78,17 +106,86 @@
             ></span>
           </button>
           <nav class="nav" aria-label="Primary">
-            <a href="#" class="header-item"
+            <a
+              href="#"
+              class="header-item"
+              aria-haspopup="true"
+              aria-expanded="false"
+              style="
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+              "
               >Shop
-              <div class="mega" role="dialog" aria-label="Mega menu">
+              <span
+                class="shop-hamburger"
+                onclick="if(window.innerWidth>=1024){event.preventDefault();event.stopPropagation();var t=document.querySelector('.menu-toggle');if(t)t.click();}"
+                style="
+                  display: none;
+                  order: -1;
+                  margin-right: 14px;
+                  margin-left: 0;
+                  vertical-align: middle;
+                  cursor: pointer;
+                  user-select: none;
+                  width: 18px;
+                  height: 12px;
+                  align-items: center;
+                  justify-content: space-between;
+                  flex-direction: column;
+                "
+                ><span
+                  style="
+                    display: block;
+                    width: 18px;
+                    height: 2px;
+                    background: #000;
+                  "
+                ></span
+                ><span
+                  style="
+                    display: block;
+                    width: 18px;
+                    height: 2px;
+                    background: #000;
+                  "
+                ></span
+                ><span
+                  style="
+                    display: block;
+                    width: 18px;
+                    height: 2px;
+                    background: #000;
+                  "
+                ></span
+              ></span>
+              <div
+                class="mega"
+                role="dialog"
+                aria-label="Mega menu"
+                style="
+                  display: none;
+                  position: absolute;
+                  left: 0;
+                  top: calc(100% + 8px);
+                  background: #fff;
+                  border: 1px solid rgba(0, 0, 0, 0.08);
+                  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+                  padding: 18px 22px;
+                  border-radius: 8px;
+                  width: max-content;
+                  min-width: 560px;
+                  z-index: 200;
+                "
+              >
                 <div class="mega-grid container">
                   <div>
                     <h4 class="upper">Shop by Category</h4>
                     <div class="links">
-                      <a href="collection.html?category=tops">Tops</a>
-                      <a href="collection.html?category=hoodies">Hoodies</a>
-                      <a href="collection.html?category=bottoms">Bottoms</a>
-                      <a href="collection.html?category=hats">Hats</a>
+                      <a href="collection.html">Tops</a
+                      ><a href="collection.html">Hoodies</a
+                      ><a href="collection.html">Bottoms</a
+                      ><a href="collection.html?category=hats">Hats</a>
                     </div>
                   </div>
                   <div>
@@ -97,36 +194,104 @@
                       <a
                         href="collection.html?collection=journeys-x-leyos-collection"
                         >Journeys X Leyos Collection</a
-                      >
-                      <a href="collection.html">AeroLite</a>
-                      <a href="collection.html">Journey</a>
-                      <a href="collection.html">Core365</a>
-                      <a href="collection.html">Black Label</a>
+                      ><a href="collection.html">AeroLite</a
+                      ><a href="collection.html">Journey</a
+                      ><a href="collection.html">Core365</a
+                      ><a href="collection.html">Black Label</a>
                     </div>
                   </div>
                 </div>
               </div>
             </a>
-            <a href="collection.html" class="header-item">Collections</a>
-            <a href="collection.html" class="header-item">New In</a>
-            <a href="collection.html" class="header-item"
-              >Sale<span class="badge">-20%</span></a
+            <a
+              href="collection.html?collection=best-sellers"
+              class="header-item"
+              >Best Sellers</a
+            >
+            <a href="collection.html?section=new-arrivals" class="header-item"
+              >New Arrivals</a
+            >
+            <a
+              href="collection.html?collection=journeys-x-leyos-collection"
+              class="header-item"
+              >Journeys X Leyos</a
             >
           </nav>
         </div>
         <h1 class="logo">
-          <a href="index.html" style="font-size: 0.94em; letter-spacing: 1.8px"
+          <a
+            href="index.html"
+            aria-label="Journeys Apparel Home"
+            style="font-size: 0.94em; letter-spacing: 1.8px"
             >JOURNEYS</a
           >
         </h1>
+        <div
+          id="site-search"
+          style="
+            position: fixed;
+            inset: 0 0 auto 0;
+            top: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+            display: none;
+            padding: 12px 16px;
+          "
+        >
+          <form
+            id="site-search-form"
+            style="max-width: 800px; margin: 0 auto; display: flex; gap: 8px"
+          >
+            <input
+              id="site-search-input"
+              type="search"
+              placeholder="Search pages or sections (e.g., New Arrivals, Best Sellers, Pair It With, Cart)"
+              style="
+                flex: 1;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                font-size: 16px;
+                background: #fff;
+              "
+            />
+            <button
+              type="submit"
+              style="
+                padding: 12px 16px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                background: #fff;
+                font-weight: 600;
+                cursor: pointer;
+              "
+            >
+              Go
+            </button>
+            <button
+              type="button"
+              id="site-search-close"
+              style="
+                padding: 12px 14px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                background: #fff;
+                cursor: pointer;
+              "
+            >
+              ×
+            </button>
+          </form>
+        </div>
         <div class="nav-right">
           <button class="icon-btn" aria-label="Account" style="order: 1">
-            👤
-          </button>
-          <button class="icon-btn" aria-label="Search" style="order: 2">
-            🔍
-          </button>
-          <a class="icon-btn" aria-label="Cart" href="#" style="order: 3">🛒</a>
+            👤</button
+          ><button class="icon-btn" aria-label="Search" style="order: 2">
+            🔍</button
+          ><a class="icon-btn" aria-label="Cart" href="#" style="order: 3"
+            >🛒</a
+          >
         </div>
       </div>
     </header>
