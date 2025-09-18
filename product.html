@@ -423,9 +423,14 @@
         </div>
 
         <div class="nav-right">
-          <button class="icon-btn" aria-label="Account" style="order: 1">
-            👤
-          </button>
+          <a
+            id="headerProfileLink"
+            class="icon-btn"
+            aria-label="Account"
+            href="/account/login.html"
+            style="order: 1"
+            >👤</a
+          >
           <button class="icon-btn" aria-label="Search" style="order: 2">
             🔍
           </button>
@@ -523,7 +528,9 @@
       </nav>
 
       <div class="drawer-bottom">
-        <a href="#" class="row-item">👤 Log in / Create Account</a>
+        <a href="/account/login.html" class="row-item"
+          >👤 Log in / Create Account</a
+        >
       </div>
     </aside>
 
@@ -1812,6 +1819,19 @@
           </div>
         </div>
 
+        <!-- Join Journey CTA breakpoint-specific styles to ensure mobile unaffected -->
+        <style>
+          @media (min-width: 1024px) {
+            /* Desktop: rounded card and button as per design */
+            section[aria-label="Join Journey"] {
+              border-radius: 12px !important;
+            }
+            section[aria-label="Join Journey"] a {
+              border-radius: 6px !important;
+            }
+          }
+        </style>
+
         <!-- Join Journey CTA (replaces background hero) -->
         <section
           aria-label="Join Journey"
@@ -2233,6 +2253,8 @@
               <span style="color: #000; font-size: 14px"
                 >© 2025 Journey Apparel. All rights reserved. Prices in
                 AUD.</span
+    <script src="/assets/account.js" defer></script>
+
               >
             </div>
           </div>
@@ -2240,6 +2262,7 @@
       </div>
     </footer>
 
+    <script src="assets/account.js" defer></script>
     <script src="script.js" defer></script>
     <!-- Premium Size Guide Modal -->
     <div

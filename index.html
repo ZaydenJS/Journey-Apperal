@@ -378,9 +378,14 @@
         </div>
 
         <div class="nav-right">
-          <button class="icon-btn" aria-label="Account" style="order: 1">
-            👤
-          </button>
+          <a
+            id="headerProfileLink"
+            class="icon-btn"
+            aria-label="Account"
+            href="/account/login.html"
+            style="order: 1"
+            >👤</a
+          >
           <button class="icon-btn" aria-label="Search" style="order: 2">
             🔍
           </button>
@@ -447,7 +452,9 @@
       </nav>
 
       <div class="drawer-bottom">
-        <a href="#" class="row-item">👤 Log in / Create Account</a>
+        <a href="/account/login.html" class="row-item"
+          >👤 Log in / Create Account</a
+        >
       </div>
     </aside>
 
@@ -2039,7 +2046,19 @@
           >
             Earn points, early access and member-only perks.
           </p>
+          <style>
+            @media (min-width: 1024px) {
+              #join-club-cta {
+                width: min(320px, 26%) !important;
+                max-width: 320px !important;
+                display: block !important;
+                align-self: center !important;
+              }
+            }
+          </style>
+
           <a
+            id="join-club-cta"
             href="#"
             style="
               display: inline-block;
@@ -2063,15 +2082,20 @@
               gap: 16px;
               justify-content: center;
               align-items: center;
-              margin-top: 14px;
-
+              margin: 14px auto 0;
+              width: min(120px, 40%);
               color: #fff;
             "
           >
             <a
               href="https://www.instagram.com/journeysapparel/"
               aria-label="Instagram"
-              style="color: #fff; text-decoration: none; font-weight: 600"
+              style="
+                color: #fff;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 13px;
+              "
               >Instagram</a
             >
           </div>
@@ -2100,17 +2124,17 @@
             }
           });
 
-          // Desktop-only: shrink Join the Club banner; keep mobile full-width
+          // Ensure Join the Club banner is full-width on desktop and mobile
           (function () {
             var banner = document.querySelector("[data-rewards-banner]");
             if (!banner) return;
             var img = banner.querySelector("img");
             if (isDesktop) {
-              banner.style.width = "min(560px, 92%)";
-              banner.style.maxWidth = "560px";
-              banner.style.margin = "0 auto";
-              banner.style.borderRadius = "12px";
-              if (img) img.style.height = "clamp(260px, 40vh, 380px)";
+              banner.style.width = "100%";
+              banner.style.maxWidth = "none";
+              banner.style.margin = "0";
+              banner.style.borderRadius = "0px";
+              if (img) img.style.height = "clamp(360px, 56vh, 620px)";
             } else {
               banner.style.width = "100%";
               banner.style.maxWidth = "none";
@@ -2761,6 +2785,8 @@
           }
           var until = parseInt(localStorage.getItem(KEY) || "0", 10);
           if (!(until > now)) setTimeout(openM, 2500);
+    <script src="/assets/account.js" defer></script>
+
         }
         if (document.readyState === "loading")
           document.addEventListener("DOMContentLoaded", init);
@@ -2768,6 +2794,7 @@
       })();
     </script>
 
+    <script src="assets/account.js" defer></script>
     <script src="script.js" defer></script>
   </body>
 </html>

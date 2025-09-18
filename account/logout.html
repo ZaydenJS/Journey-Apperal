@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign out — Journey Apparel</title>
+    <meta name="description" content="Sign out of your Journey Apparel account (UI-only)." />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body style="margin:0;overflow-x:hidden;background:#fff;color:#111;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+    <div class="announcement upper" style="position:sticky;top:0;left:0;right:0;text-align:center">Free Shipping On Orders Over $100</div>
+    <header class="header" style="top:0;left:0;right:0">
+      <div class="container header-inner" style="max-width:none;width:100%;padding-left:0;padding-right:16px;">
+        <div class="nav-left row">
+          <button class="menu-toggle" aria-label="Open menu" style="background:transparent;border:none;padding:8px;display:inline-flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;width:36px;height:36px;border-radius:0;box-shadow:none;">
+            <span style="display:block;width:22px;height:2px;background:#000;border-radius:1px"></span>
+            <span style="display:block;width:22px;height:2px;background:#000;border-radius:1px"></span>
+            <span style="display:block;width:22px;height:2px;background:#000;border-radius:1px"></span>
+          </button>
+          <nav class="nav" aria-label="Primary">
+            <a href="#" class="header-item" aria-haspopup="true" aria-expanded="false" style="position:relative;display:inline-flex;align-items:center;">Shop
+              <span class="shop-hamburger" onclick="if(window.innerWidth>=1024){event.preventDefault();event.stopPropagation();var t=document.querySelector('.menu-toggle');if(t)t.click();}" style="display:none;order:-1;margin-right:14px;margin-left:0;vertical-align:middle;cursor:pointer;user-select:none;width:18px;height:12px;align-items:center;justify-content:space-between;flex-direction:column;">
+                <span style="display:block;width:18px;height:2px;background:#000"></span>
+                <span style="display:block;width:18px;height:2px;background:#000"></span>
+                <span style="display:block;width:18px;height:2px;background:#000"></span>
+              </span>
+              <div class="mega" role="dialog" aria-label="Mega menu" style="display:none;position:absolute;left:0;top:calc(100% + 8px);background:#fff;border:1px solid rgba(0,0,0,0.08);box-shadow:0 12px 30px rgba(0,0,0,0.12);padding:18px 22px;border-radius:8px;width:max-content;min-width:560px;z-index:200;">
+                <div class="mega-grid container">
+                  <div>
+                    <h4 class="upper">Shop by Category</h4>
+                    <div class="links"><a href="/collection.html">Tops</a><a href="/collection.html">Hoodies</a><a href="/collection.html">Bottoms</a><a href="/collection.html?category=hats">Hats</a></div>
+                  </div>
+                  <div>
+                    <h4 class="upper">Shop by Collection</h4>
+                    <div class="links"><a href="/collection.html?collection=journeys-x-leyos-collection">Journeys X Leyos Collection</a><a href="/collection.html">AeroLite</a><a href="/collection.html">Journey</a><a href="/collection.html">Core365</a><a href="/collection.html">Black Label</a></div>
+                  </div>
+                </div>
+              </div>
+            </a>
+            <a href="/collection.html?collection=best-sellers" class="header-item">Best Sellers</a>
+            <a href="/collection.html?section=new-arrivals" class="header-item">New Arrivals</a>
+            <a href="/collection.html?collection=journeys-x-leyos-collection" class="header-item">Journeys X Leyos</a>
+          </nav>
+        </div>
+        <h1 class="logo"><a href="/index.html" aria-label="Journeys Apparel Home" style="font-size:0.94em;letter-spacing:1.8px">JOURNEYS</a></h1>
+        <div id="site-search" style="position:fixed;inset:0 0 auto 0;top:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(2px);z-index:1000;display:none;padding:12px 16px;">
+          <form id="site-search-form" style="max-width:800px;margin:0 auto;display:flex;gap:8px">
+            <input id="site-search-input" type="search" placeholder="Search pages or sections (e.g., New Arrivals, Best Sellers, Pair It With, Cart)" style="flex:1;padding:12px;border-radius:8px;border:1px solid #ddd;font-size:16px;background:#fff" />
+            <button type="submit" style="padding:12px 16px;border-radius:8px;border:1px solid #ddd;background:#fff;font-weight:600;cursor:pointer">Go</button>
+            <button type="button" id="site-search-close" style="padding:12px 14px;border-radius:8px;border:1px solid #ddd;background:#fff;cursor:pointer">×</button>
+          </form>
+        </div>
+        <div class="nav-right">
+          <a id="headerProfileLink" class="icon-btn" aria-label="Account" href="#" style="order:1">👤</a>
+          <button class="icon-btn" aria-label="Search" style="order:2">🔍</button>
+          <a class="icon-btn" aria-label="Cart" href="#" style="order:3">🛒</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container section" style="max-width:960px;margin:0 auto;padding:24px 16px 64px 16px;text-align:center">
+      <section aria-label="Logout" style="margin:0 auto;border:1px solid #e5e5e5;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.06);padding:24px;max-width:720px;width:100%;">
+        <h1 class="upper" style="margin:0 0 8px 0;font-size:26px;font-weight:900;letter-spacing:.5px;">Signing you out…</h1>
+        <p id="logout-msg" style="margin:0;color:#666;font-size:14px">Please wait</p>
+      </section>
+    </main>
+
+    <footer style="background:#fff;color:#111;margin-top:0">
+      <div style="padding:48px 0 32px 0"><div style="max-width:1200px;margin:0 auto;padding:0 16px"><div id="footer-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:40px;margin-bottom:40px;"><div style="text-align:center;display:flex;flex-direction:column;align-items:center;"><img src="/LOGO/1.png" alt="Journey Apparel Logo" style="height:120px;margin:0 auto 20px auto;display:block" /><p style="color:#000;font-size:14px;line-height:1.6;margin:0 0 20px 0;max-width:280px;text-align:center">Premium athletic apparel designed for modern performance. Minimal design, maximum impact.</p><div style="display:flex;justify-content:center;gap:12px"><a href="https://www.instagram.com/journeysapparel/" style="width:40px;height:40px;background:#f1f1f1;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#111;text-decoration:none;">📸</a></div></div><div style="text-align:center"><h4 style="font-size:16px;font-weight:700;margin:0 0 12px 0;color:#000">Customer Care</h4><div style="display:flex;flex-direction:column;gap:8px"><a href="/contact.html" style="color:#000;text-decoration:none;font-size:14px">Contact Us</a><a href="/shipping.html" style="color:#000;text-decoration:none;font-size:14px">Shipping Info</a><a href="/returns.html" style="color:#000;text-decoration:none;font-size:14px">Returns & Exchanges</a><a href="/product.html#size-guide" style="color:#000;text-decoration:none;font-size:14px">Size Guide</a><a href="/policies.html" style="color:#000;text-decoration:none;font-size:14px">Policies</a></div></div><div style="text-align:center"><h4 style="font-size:16px;font-weight:700;margin:0 0 12px 0;color:#000">Company</h4><div style="display:flex;flex-direction:column;gap:8px"><a href="/about.html" style="color:#000;text-decoration:none;font-size:14px">About</a></div></div><div style="text-align:center"><h4 style="font-size:16px;font-weight:700;margin:0 0 12px 0;color:#000">Stay Connected</h4><p style="color:#000;font-size:14px;margin:0 0 16px 0">Get exclusive access to new drops and member rewards.</p><form style="display:flex;gap:8px;max-width:280px;margin:0 auto"><input type="email" placeholder="Enter your email" required style="flex:1;padding:12px 16px;border:1px solid #444;border-radius:8px;background:#fff;color:#000;font-size:14px" /><button type="submit" style="padding:12px 16px;border-radius:8px;background:#fff;color:#000;border:none;font-weight:600;cursor:pointer;white-space:nowrap">Subscribe</button></form><p style="color:#000;font-size:12px;margin:12px 0 0 0">By subscribing, you agree to our Privacy Policy.</p></div></div></div></div>
+      <div style="border-top:1px solid #333;padding:24px 0"><div style="max-width:1200px;margin:0 auto;padding:0 16px"><div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;"><div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:24px;"><span style="color:#000;font-size:14px">© 2025 Journey Apparel. All rights reserved. Prices in AUD.</span></div></div></div></div>
+    </footer>
+
+    <script src="/assets/account.js" defer></script>
+    <script>
+      (function(){
+        // UI-only sign out
+        try{ JAAccount.setAuthed(false); }catch(_){}
+        var msg=document.getElementById('logout-msg');
+        if(msg){ msg.textContent='Signed out. Redirecting…'; }
+        setTimeout(function(){ location.href='/account/login.html'; }, 900);
+      })();
+    </script>
+    <script src="/script.js" defer></script>
+  </body>
+</html>
+
