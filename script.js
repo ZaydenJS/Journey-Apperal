@@ -792,18 +792,26 @@
         alt.style.inset = "0";
         alt.style.width = "100%";
         alt.style.height = "100%";
+        alt.style.zIndex = alt.style.zIndex || "1";
         if (!alt.style.objectFit) alt.style.objectFit = "cover";
         if (!alt.style.transition) alt.style.transition = "opacity 160ms ease";
         alt.style.pointerEvents = "none";
         if (!alt.style.opacity) alt.style.opacity = "0";
 
-        // Hover/touch behaviors
+        // Use the full card as the hover/touch target to avoid overlay intercepts
+        const target = wrap.closest("article.card") || wrap;
         const show = () => (alt.style.opacity = "1");
         const hide = () => (alt.style.opacity = "0");
-        wrap.addEventListener("mouseenter", show);
-        wrap.addEventListener("mouseleave", hide);
-        wrap.addEventListener("touchstart", show, { passive: true });
-        wrap.addEventListener("touchend", hide);
+        // Pointer events (covers mouse, pen)
+        target.addEventListener("pointerenter", show);
+        target.addEventListener("pointerleave", hide);
+        // Fallback mouse events
+        target.addEventListener("mouseenter", show);
+        target.addEventListener("mouseleave", hide);
+        // Touch devices
+        target.addEventListener("touchstart", show, { passive: true });
+        target.addEventListener("touchend", hide);
+        target.addEventListener("touchcancel", hide);
       });
     } catch (_) {}
   }
@@ -2899,6 +2907,31 @@
       window.openCart && window.openCart();
     });
   }
+})();
+
+// Robust global fallback: ensure cart opens even if setupCart hasn't run yet
+(function () {
+  document.addEventListener("click", function (e) {
+    var trg =
+      e.target &&
+      e.target.closest &&
+      e.target.closest("a[aria-label='Cart'], .cart-link, [data-open-cart]");
+    if (!trg) return;
+    e.preventDefault();
+    try {
+      if (
+        typeof window.openCart !== "function" &&
+        typeof setupCart === "function"
+      ) {
+        setupCart();
+      }
+    } catch (_) {}
+    if (typeof window.openCart === "function") {
+      try {
+        window.openCart();
+      } catch (_) {}
+    }
+  });
 })();
 
 // Mobile CTA popup inspired by Frontrunners (first-visit, short delay)

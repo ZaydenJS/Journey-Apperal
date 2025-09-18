@@ -122,10 +122,10 @@
         /* Side-by-side product layout: images left, details right */
         main.container.section.product {
           display: grid !important;
-          grid-template-columns: 1.1fr 0.9fr !important;
+          grid-template-columns: 1fr 1fr !important;
           align-items: start !important;
-          gap: 24px !important;
-          padding-top: 16px !important;
+          gap: 32px !important;
+          padding-top: 0 !important;
           /* Ensure full-bleed main container on desktop */
           max-width: none !important;
           width: 100% !important;
@@ -140,8 +140,11 @@
         .p-details {
           background: transparent !important;
           border: 0 !important;
-          padding: 0 48px !important; /* further increase equal gutters to narrow column */
-          margin-right: 0 !important; /* ensure symmetry; no extra right-only margin */
+          padding: 0 32px !important; /* equal gutters for even spacing */
+          width: 80% !important; /* set right panel to 80% of its column width */
+          box-sizing: border-box !important; /* include padding within width */
+          margin-left: auto !important;
+          margin-right: auto !important; /* center inside the right column for equal whitespace */
         }
         /* Desktop: place price under product title */
         .p-details > .row:first-child {
@@ -153,6 +156,12 @@
         .p-details > .row:first-child .p-price {
           align-self: flex-start !important;
           margin-top: 2px !important;
+        }
+        /* Desktop: make product title much larger */
+        .p-details h1#product-title {
+          font-size: 28px !important;
+          line-height: 1.2 !important;
+          letter-spacing: 0.2px !important;
         }
 
         /* Hide the inline (right-column) versions of these sections on desktop */
@@ -513,7 +522,7 @@
           >
         </div>
 
-        <a href="#" class="row-item">Journey Sign Up</a>
+        <a href="account/register.html" class="row-item">Journey Sign Up</a>
 
         <button class="row-item accordion" data-accordion aria-expanded="false">
           Support & Contact <span class="chev">›</span>
@@ -840,8 +849,8 @@
             id="product-title"
             style="
               margin: 0;
-              font-size: 16px;
-              font-weight: 600;
+              font-size: 28px;
+              font-weight: 400;
               letter-spacing: 0.2px;
               color: #111;
               overflow: hidden;
@@ -2253,8 +2262,6 @@
               <span style="color: #000; font-size: 14px"
                 >© 2025 Journey Apparel. All rights reserved. Prices in
                 AUD.</span
-    <script src="/assets/account.js" defer></script>
-
               >
             </div>
           </div>
@@ -3022,6 +3029,38 @@
             tab = b.getAttribute("data-sg-tab");
             renderChart();
           });
+        });
+      })();
+    </script>
+    <script>
+      (function () {
+        function centerDetails() {
+          try {
+            var isDesktop = window.innerWidth >= 1024;
+            var details = document.querySelector(".p-details");
+            var gallery =
+              document.querySelector(".p-gallery") ||
+              document.querySelector(".gallery");
+            if (!details) {
+              return;
+            }
+            if (!isDesktop) {
+              details.style.marginTop = "0";
+              return;
+            }
+            var gh = gallery ? gallery.getBoundingClientRect().height : 0;
+            var dh = details.getBoundingClientRect().height;
+            var offset = Math.max(0, Math.round((gh - dh) / 2) - 120);
+            details.style.marginTop = offset + "px";
+          } catch (err) {}
+        }
+        window.addEventListener("load", centerDetails);
+        window.addEventListener("resize", function () {
+          requestAnimationFrame(centerDetails);
+        });
+        // In case images load after DOMContentLoaded
+        document.addEventListener("DOMContentLoaded", function () {
+          setTimeout(centerDetails, 100);
         });
       })();
     </script>

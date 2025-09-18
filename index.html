@@ -125,6 +125,32 @@
         }
       }
     </style>
+    <style id="hover-swap-index">
+      /* Ensure hover swap shows the alternate image on cards (index only) */
+      #new-arrivals .card .img-wrap,
+      #best-sellers .card .img-wrap {
+        position: relative !important;
+        overflow: hidden !important;
+      }
+      #new-arrivals .card .img-wrap img.alt,
+      #best-sellers .card .img-wrap img.alt {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        pointer-events: none !important;
+        opacity: 0 !important;
+        transition: opacity 180ms ease !important;
+        z-index: 1 !important;
+      }
+      @media (hover: hover) {
+        #new-arrivals .card:hover .img-wrap img.alt,
+        #best-sellers .card:hover .img-wrap img.alt {
+          opacity: 1 !important;
+        }
+      }
+    </style>
   </head>
   <body style="margin: 0; overflow-x: hidden">
     <!-- Announcement + countdown -->
@@ -437,7 +463,7 @@
           >
         </div>
 
-        <a href="#" class="row-item">Journey Sign Up</a>
+        <a href="account/register.html" class="row-item">Journey Sign Up</a>
 
         <button class="row-item accordion" data-accordion aria-expanded="false">
           Support & Contact <span class="chev">›</span>
@@ -2785,8 +2811,6 @@
           }
           var until = parseInt(localStorage.getItem(KEY) || "0", 10);
           if (!(until > now)) setTimeout(openM, 2500);
-    <script src="/assets/account.js" defer></script>
-
         }
         if (document.readyState === "loading")
           document.addEventListener("DOMContentLoaded", init);
