@@ -1910,19 +1910,80 @@
         gridEl.style.columnGap =
           viewMode === "1" ? "0px" : gridEl.dataset.defaultGap;
         const wraps = gridEl.querySelectorAll(".img-wrap");
-        wraps.forEach((w) => {
-          w.style.aspectRatio = viewMode === "1" ? "1 / 1" : "1 / 1.7";
-        });
+        const cards = gridEl.querySelectorAll("article.card");
+        if (viewMode === "1") {
+          const desktop = window.innerWidth >= 1024;
+          if (desktop) {
+            // Center and constrain the single card width on PC only
+            gridEl.style.justifyItems = "center";
+            cards.forEach((c) => {
+              c.style.justifySelf = "center";
+              c.style.maxWidth = "1680px"; // overall larger width (2x)
+              c.style.width = "100%";
+            });
+            wraps.forEach((w) => {
+              // Force a shallower image on PC single-view only
+              w.style.setProperty("aspect-ratio", "16 / 9", "important");
+              w.style.width = "100%";
+              w.style.maxWidth = "1680px";
+            });
+          } else {
+            // Mobile single view: keep square, full width
+            gridEl.style.justifyItems = "";
+            cards.forEach((c) => {
+              c.style.justifySelf = "";
+              c.style.removeProperty("max-width");
+              c.style.removeProperty("width");
+            });
+            wraps.forEach((w) => {
+              w.style.setProperty("aspect-ratio", "1 / 1");
+              w.style.removeProperty("max-width");
+              w.style.width = "100%";
+            });
+          }
+        } else {
+          // 2x2 grid view
+          gridEl.style.justifyItems = "";
+          cards.forEach((c) => {
+            c.style.justifySelf = "";
+            c.style.removeProperty("max-width");
+            c.style.removeProperty("width");
+          });
+          wraps.forEach((w) => {
+            // Restore defaults: let desktop CSS control, keep mobile portrait
+            if (window.innerWidth >= 1024) {
+              w.style.removeProperty("aspect-ratio");
+              w.style.removeProperty("max-width");
+              w.style.width = "100%";
+            } else {
+              w.style.setProperty("aspect-ratio", "1 / 1.7");
+              w.style.removeProperty("max-width");
+              w.style.width = "100%";
+            }
+          });
+        }
         // Ensure items layout changes visibly even if external CSS interferes
         const items = gridEl.querySelectorAll(
           "article.card, .grid.products > *"
         );
         items.forEach((it) => {
           it.style.gridColumn = viewMode === "1" ? "1 / -1" : "auto";
+          if (viewMode === "1" && window.innerWidth >= 1024) {
+            it.style.justifySelf = "center";
+            it.style.maxWidth = "1680px";
+            it.style.width = "100%";
+          } else {
+            it.style.justifySelf = "";
+            it.style.removeProperty("max-width");
+            it.style.removeProperty("width");
+          }
         });
       }
       // Expose for UI buttons
       window.__setCollectionView = function (mode) {
+        // Keep view sizing in sync with breakpoint changes
+        window.addEventListener("resize", updateView);
+
         viewMode = mode === "1" ? "1" : "4";
         updateView();
       };
@@ -2047,6 +2108,21 @@
 
       // View toggle (2x2 vs 1x1)
       (function () {
+        // Hide the PC view toggles; keep them visible on mobile only
+        (function () {
+          const wrap = document.getElementById("view-toggle");
+          const applyVisibility = () => {
+            if (!wrap) return;
+            if (window.innerWidth >= 1024) {
+              wrap.style.display = "none"; // desktop: hidden
+            } else {
+              wrap.style.display = "flex"; // mobile: visible, stacked
+            }
+          };
+          applyVisibility();
+          window.addEventListener("resize", applyVisibility);
+        })();
+
         const v4 = document.getElementById("view-4");
         const v1 = document.getElementById("view-1");
         if (!v4 || !v1) return;
@@ -2555,14 +2631,14 @@
         overlay.style.backdropFilter = "blur(2px)";
       }
       if (drawer) {
-        // Desktop-only width: narrow panel (PC change only). Mobile keeps 88% with 420px max.
+        // Drawer width: Desktop 420px; Mobile full-screen (covers entire viewport)
         const applyCartDrawerWidth = () => {
           if (window.innerWidth >= 1024) {
             drawer.style.width = "420px";
             drawer.style.maxWidth = "420px";
           } else {
-            drawer.style.width = "88%";
-            drawer.style.maxWidth = "420px";
+            drawer.style.width = "100%";
+            drawer.style.maxWidth = "none";
           }
         };
         applyCartDrawerWidth();
@@ -2718,9 +2794,18 @@
           if (!a.style.position || a.style.position === "") {
             a.style.position = "relative"; // anchor for absolute badge
           }
-          // stabilize layout for consistent badge position
+          // stabilize layout for consistent badge position and clickability
           a.style.display = "inline-block";
           a.style.lineHeight = "1";
+          a.style.zIndex = "1005";
+          a.style.pointerEvents = "auto";
+          const parent = a.closest(".nav-right") || a.parentElement;
+          if (parent && parent.style) {
+            if (!parent.style.position || parent.style.position === "") {
+              parent.style.position = "relative";
+            }
+            parent.style.zIndex = "1005";
+          }
           let badge = a.querySelector("[data-cart-badge]");
           if (!badge) {
             badge = document.createElement("span");
@@ -2876,6 +2961,8 @@
     // expose helpers for other modules
     window.__cart = { getCart, setCart, updateCartCount, renderCart };
   }
+  // Make setupCart globally available immediately after declaration
+  window.setupCart = setupCart;
 
   function setupAddToCart() {
     const btn = Array.from(document.querySelectorAll(".p-details .btn")).find(
@@ -2921,9 +3008,9 @@
     try {
       if (
         typeof window.openCart !== "function" &&
-        typeof setupCart === "function"
+        typeof window.setupCart === "function"
       ) {
-        setupCart();
+        window.setupCart();
       }
     } catch (_) {}
     if (typeof window.openCart === "function") {
@@ -2933,6 +3020,39 @@
     }
   });
 })();
+
+// Ultra-robust cart click: capture clicks in the visual cart area even if covered by overlays
+try {
+  document.addEventListener(
+    "click",
+    function (e) {
+      var hdr = document.querySelector("header.header");
+      if (!hdr) return;
+      var a = hdr.querySelector("a[aria-label='Cart']");
+      if (!a) return;
+      var r = a.getBoundingClientRect();
+      var x = e.clientX,
+        y = e.clientY;
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        e.preventDefault();
+        try {
+          if (
+            typeof window.openCart !== "function" &&
+            typeof window.setupCart === "function"
+          ) {
+            window.setupCart();
+          }
+        } catch (_) {}
+        if (typeof window.openCart === "function") {
+          try {
+            window.openCart();
+          } catch (_) {}
+        }
+      }
+    },
+    true // capture phase to run even if other handlers stop propagation
+  );
+} catch (_) {}
 
 // Mobile CTA popup inspired by Frontrunners (first-visit, short delay)
 function setupMobileCTA() {

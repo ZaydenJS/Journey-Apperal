@@ -400,7 +400,19 @@
           <button class="icon-btn" aria-label="Search" style="order: 2">
             🔍
           </button>
-          <a class="icon-btn" aria-label="Cart" href="#" style="order: 3">🛒</a>
+          <a
+            class="icon-btn"
+            aria-label="Cart"
+            href="#"
+            style="
+              order: 3;
+              position: relative;
+              z-index: 21;
+              pointer-events: auto;
+            "
+            onclick="event.preventDefault(); if(window.openCart){ window.openCart(); }"
+            >🛒</a
+          >
         </div>
       </div>
     </header>
