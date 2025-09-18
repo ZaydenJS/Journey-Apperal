@@ -34,7 +34,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding-left: 16px;
+        padding-left: 16px !important;
         padding-right: 16px;
       }
       header.header .nav {
@@ -58,7 +58,7 @@
     @media (min-width: 1024px) {
       header.header .nav .header-item:hover .mega,
       header.header .nav .header-item:focus-within .mega {
-        display: none !important;
+        display: block !important;
       }
     }
   </style>
@@ -842,29 +842,25 @@
             mega.style.display === "block" ? closeMega() : openMega();
           }
           function onResize() {
-            // Uniform behavior: clicking "Shop" opens the drawer under the header on all viewports
-            if (burger) {
-              burger.style.display =
-                window.innerWidth >= 1024 ? "inline-flex" : "none";
+            if (window.innerWidth >= 1024) {
+              // Desktop: show burger next to Shop and use mega dropdown (no drawer)
+              if (burger) burger.style.display = "inline-flex";
+              closeMega();
+              shop.onclick = function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleMega();
+              };
+            } else {
+              // Mobile: hide desktop burger and open the drawer on click
+              if (burger) burger.style.display = "none";
+              closeMega();
+              shop.onclick = function (e) {
+                e.preventDefault();
+                var t = doc.querySelector(".menu-toggle");
+                if (t) t.click();
+              };
             }
-            if (mega) {
-              mega.style.display = "none";
-            }
-            // Bind a capturing listener once to suppress other click handlers (e.g., mega togglers)
-            if (!shop.__drawerClickBound) {
-              shop.addEventListener(
-                "click",
-                function (e) {
-                  e.preventDefault();
-                  e.stopImmediatePropagation();
-                  var t = doc.querySelector(".menu-toggle");
-                  if (t) t.click();
-                },
-                true
-              );
-              shop.__drawerClickBound = true;
-            }
-            shop.onclick = null;
           }
           window.addEventListener("resize", onResize);
           doc.addEventListener("click", function (e) {

@@ -176,6 +176,7 @@
 
     // New: sitewide search and cart
     __safe("setupSearch", setupSearch);
+    __safe("setupSearchHover", setupSearchHover);
     __safe("setupCart", setupCart);
     __safe("setupAddToCart", setupAddToCart);
 
@@ -2429,6 +2430,61 @@
         location.href = dest;
       }
     });
+
+    // --- PC hover styling for Search icon ---
+    function setupSearchHover() {
+      try {
+        var btns = Array.from(
+          document.querySelectorAll("[aria-label='Search']")
+        );
+        if (!btns.length) return;
+        var isDesktop = function () {
+          return (
+            window.innerWidth >= 1024 &&
+            !window.matchMedia("(hover: none)").matches
+          );
+        };
+        var applyBase = function (b) {
+          b.style.borderRadius = "999px";
+          if (!b.style.padding || parseInt(b.style.padding) < 6)
+            b.style.padding = "6px";
+          b.style.transition = "background-color 160ms ease";
+          b.style.display = "inline-flex";
+          b.style.alignItems = "center";
+          b.style.justifyContent = "center";
+        };
+        var hoverOn = function (e) {
+          if (!isDesktop()) return;
+          e.currentTarget.style.background = "rgba(0,0,0,.08)";
+        };
+        var hoverOff = function (e) {
+          e.currentTarget.style.background = "transparent";
+        };
+        var down = function (e) {
+          if (!isDesktop()) return;
+          e.currentTarget.style.background = "rgba(0,0,0,.15)";
+        };
+        var up = function (e) {
+          if (!isDesktop()) return;
+          e.currentTarget.style.background = "rgba(0,0,0,.08)";
+        };
+        var update = function () {
+          btns.forEach(function (b) {
+            applyBase(b);
+            if (!isDesktop()) b.style.background = "transparent";
+          });
+        };
+        btns.forEach(function (b) {
+          applyBase(b);
+          b.addEventListener("mouseenter", hoverOn);
+          b.addEventListener("mouseleave", hoverOff);
+          b.addEventListener("mousedown", down);
+          b.addEventListener("mouseup", up);
+        });
+        window.addEventListener("resize", update);
+        update();
+      } catch (_) {}
+    }
   }
 
   // --- Cart / Mini-cart ---
@@ -2491,8 +2547,19 @@
         overlay.style.backdropFilter = "blur(2px)";
       }
       if (drawer) {
-        drawer.style.width = "100%";
-        drawer.style.maxWidth = "none";
+        // Desktop-only width: narrow panel (PC change only). Mobile keeps 88% with 420px max.
+        const applyCartDrawerWidth = () => {
+          if (window.innerWidth >= 1024) {
+            drawer.style.width = "420px";
+            drawer.style.maxWidth = "420px";
+          } else {
+            drawer.style.width = "88%";
+            drawer.style.maxWidth = "420px";
+          }
+        };
+        applyCartDrawerWidth();
+        window.addEventListener("resize", applyCartDrawerWidth);
+
         drawer.style.boxShadow = "-12px 0 40px rgba(0,0,0,.18)";
         drawer.style.borderLeft = "0";
         drawer.style.transition =

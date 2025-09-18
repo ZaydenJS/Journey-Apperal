@@ -31,7 +31,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding-left: 16px;
+        padding-left: 16px !important;
         padding-right: 16px;
       }
       header.header .nav {
@@ -54,7 +54,7 @@
     @media (min-width: 1024px) {
       header.header .nav .header-item:hover .mega,
       header.header .nav .header-item:focus-within .mega {
-        display: none !important;
+        display: block !important;
       }
     }
   </style>
@@ -873,28 +873,25 @@
             mega.style.display === "block" ? closeMega() : openMega();
           }
           function onResize() {
-            // Uniform: open drawer on click (desktop and mobile)
-            if (burger) {
-              burger.style.display =
-                window.innerWidth >= 1024 ? "inline-flex" : "none";
+            if (window.innerWidth >= 1024) {
+              // Desktop: mega dropdown behavior
+              if (burger) burger.style.display = "inline-flex";
+              closeMega();
+              shop.onclick = function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleMega();
+              };
+            } else {
+              // Mobile: open the drawer
+              if (burger) burger.style.display = "none";
+              closeMega();
+              shop.onclick = function (e) {
+                e.preventDefault();
+                var t = doc.querySelector(".menu-toggle");
+                if (t) t.click();
+              };
             }
-            if (mega) {
-              mega.style.display = "none";
-            }
-            if (!shop.__drawerClickBound) {
-              shop.addEventListener(
-                "click",
-                function (e) {
-                  e.preventDefault();
-                  e.stopImmediatePropagation();
-                  var t = doc.querySelector(".menu-toggle");
-                  if (t) t.click();
-                },
-                true
-              );
-              shop.__drawerClickBound = true;
-            }
-            shop.onclick = null;
           }
           window.addEventListener("resize", onResize);
           doc.addEventListener("click", function (e) {
