@@ -188,6 +188,9 @@
     __safe("normalizeCarouselMedia", normalizeCarouselMedia);
     __safe("setupMobileCTA", setupMobileCTA);
     __safe("enforcePointerCursor", enforcePointerCursor);
+    __safe("applyDesktopHeaderZIndexFix", applyDesktopHeaderZIndexFix);
+    __safe("ensureShopClickToggle", ensureShopClickToggle);
+    __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
   });
 
   function setupSizeSelection() {
@@ -904,6 +907,104 @@
           subtree: true,
         });
       }
+    } catch (_) {}
+  }
+
+  // Desktop-only: ensure header/nav z-index allows Shop to be clickable across pages
+  function applyDesktopHeaderZIndexFix() {
+    try {
+      if (document.getElementById("pc-header-fixes")) return;
+      var css = [
+        "@media (min-width:1024px){",
+        "header.header{position:sticky;top:0;z-index:600 !important;}",
+        "header.header .nav{position:relative !important;z-index:601 !important;overflow:visible !important;}",
+        "header.header .nav .header-item{position:relative !important;}",
+        "header.header .nav .header-item .mega{z-index:700 !important;}",
+        "header.header .logo{z-index:1 !important;}",
+        "}",
+      ].join("");
+      var el = document.createElement("style");
+      el.id = "pc-header-fixes";
+      el.textContent = css;
+      document.head && document.head.appendChild(el);
+    } catch (_) {}
+  }
+
+  // Desktop-only: bind click-to-toggle for the Shop mega menu (idempotent)
+  function ensureShopClickToggle() {
+    try {
+      var header = document.querySelector("header.header");
+      if (!header) return;
+      var mega = header.querySelector(".nav .header-item .mega");
+      if (!mega) return;
+      var trigger = mega.parentElement;
+      if (!trigger || trigger.__shopBound) return;
+      trigger.__shopBound = true;
+
+      var isDesktop = function () {
+        return window.innerWidth >= 1024;
+      };
+      var open = function () {
+        mega.style.display = "block";
+        trigger.setAttribute("aria-expanded", "true");
+      };
+      var close = function () {
+        mega.style.display = "";
+        trigger.setAttribute("aria-expanded", "false");
+      };
+
+      var burger = trigger.querySelector(".shop-hamburger");
+      trigger.addEventListener("click", function (e) {
+        if (!isDesktop()) return;
+        if (!e.target.closest(".shop-hamburger")) return; // allow Shop text to navigate
+        e.preventDefault();
+        e.stopPropagation();
+        var isOpen = mega.style.display === "block";
+        if (isOpen) close();
+        else open();
+      });
+
+      document.addEventListener("click", function (e) {
+        if (!isDesktop()) return;
+        if (!trigger.contains(e.target)) close();
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") close();
+      });
+
+      window.addEventListener("resize", function () {
+        if (!isDesktop()) close();
+      });
+    } catch (_) {}
+  }
+
+  // Desktop-only: subtle hover effect for all primary buttons site-wide
+  function applyDesktopButtonHoverStyles() {
+    try {
+      if (document.getElementById("pc-button-hover")) return;
+      var css = [
+        "@media (min-width:1024px){",
+        // Cursor: guarantee pointer on all clickable UI (desktop only)
+        "a[href],button,[role=button],[onclick],.icon-btn,.header-item,.card,.filter-chip,.size,.accordion button,.menu-toggle{cursor:pointer !important;}",
+        // Base transitions for typical buttons and clickable chips
+        "button:not(.ctrl),[role=button]:not(.ctrl),a.btn,.btn,input[type=button],input[type=submit],.icon-btn,.size,.filter-chip,.menu-toggle{",
+        "transition: background-color .16s ease,border-color .16s ease,box-shadow .16s ease,filter .16s ease;",
+        "}",
+        // Hover: subtle visual feedback without shifting position
+        "button:not(.ctrl):hover,[role=button]:not(.ctrl):hover,a.btn:hover,.btn:hover,input[type=button]:hover,input[type=submit]:hover,.size:hover,.filter-chip:hover,.menu-toggle:hover{",
+        "filter: brightness(0.96);",
+        "}",
+        // Icon buttons: gentle circular hover background
+        ".icon-btn:hover{background:rgba(0,0,0,.06);border-radius:9999px;}",
+        // Ensure carousel arrows keep their current design without unintended effects
+        ".carousel .ctrl:hover{filter:none !important;}",
+        "}",
+      ].join("");
+      var el = document.createElement("style");
+      el.id = "pc-button-hover";
+      el.textContent = css;
+      document.head && document.head.appendChild(el);
     } catch (_) {}
   }
 
