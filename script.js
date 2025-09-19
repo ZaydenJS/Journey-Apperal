@@ -1757,6 +1757,43 @@
       closeOpenChipMenu();
     });
 
+    // Ensure chip labels only show a count when selections exist
+    const refreshChipLabel = (key) => {
+      try {
+        const chip = document.querySelector(
+          `.filter-chip[data-filter="${key}"]`
+        );
+        if (!chip) return;
+        const nameSpan = chip.querySelector("span");
+        if (!nameSpan) return;
+        const base =
+          chip.getAttribute("data-label-base") ||
+          (nameSpan.textContent || "").split("•")[0].trim();
+        chip.setAttribute("data-label-base", base);
+        // Prefer actual checked options in the chip menu to determine count
+        const menu = document.querySelector(`[data-chip-panel="${key}"]`);
+        let count = 0;
+        if (menu) {
+          try {
+            count = menu.querySelectorAll(
+              'input[type="checkbox"]:checked'
+            ).length;
+          } catch (_) {
+            count = (chipState[key] && chipState[key].size) || 0;
+          }
+        } else {
+          count = (chipState[key] && chipState[key].size) || 0;
+        }
+        nameSpan.textContent = count ? `${base} • ${count}` : base;
+        chip.style.border = count ? "1px solid #000" : "1px solid #ddd";
+      } catch (_) {}
+    };
+    const refreshAllChipLabels = () => {
+      Object.keys(chipMenus).forEach((k) => refreshChipLabel(k));
+    };
+    // Run once on init to clear any stale counts
+    refreshAllChipLabels();
+
     // ---- Collection: Data, render, filter, sort ----
     (function () {
       // Robust init by presence
@@ -2089,16 +2126,22 @@
               '.filter-chip[data-filter="type"]'
             );
             if (chip) {
-              const nameSpan = chip.querySelector("span");
-              if (nameSpan) {
-                const base =
-                  chip.getAttribute("data-label-base") ||
-                  nameSpan.textContent.split("•")[0].trim();
-                chip.setAttribute("data-label-base", base);
-                const count = chipState.type.size;
-                nameSpan.textContent = count ? base + " • " + count : base;
-                chip.style.border = count ? "1px solid #000" : "1px solid #ddd";
-              }
+              // Sync the corresponding checkbox state in the menu
+              try {
+                const menu = document.querySelector('[data-chip-panel="type"]');
+                if (menu) {
+                  menu
+                    .querySelectorAll('input[type="checkbox"]')
+                    .forEach((cb) => {
+                      const labelEl = cb.nextElementSibling;
+                      if (labelEl && labelEl.textContent.trim() === t)
+                        cb.checked = true;
+                    });
+                }
+              } catch (_) {}
+              // Refresh the label to reflect actual selections
+              if (typeof refreshChipLabel === "function")
+                refreshChipLabel("type");
             }
           }
         }

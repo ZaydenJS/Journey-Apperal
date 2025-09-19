@@ -1270,6 +1270,24 @@
           border-radius: 6px !important;
         }
       }
+      @media (max-width: 1023px) {
+        /* Mobile: match product page width and button treatment */
+        section[aria-label="Join Journey"] {
+          max-width: none !important;
+          width: calc(100% - 32px) !important;
+          margin: 32px 16px 40px 16px !important;
+          padding: 24px 16px !important;
+          border: 1px solid #e5e5e5 !important;
+          border-radius: 12px !important;
+          background: #fff !important;
+          text-align: center !important;
+        }
+        section[aria-label="Join Journey"] a {
+          width: 100% !important;
+          display: inline-block !important;
+          border-radius: 9999px !important;
+        }
+      }
     </style>
 
     <!-- Join Journey CTA (exact match to product.html) -->
