@@ -108,9 +108,9 @@
           display: block !important;
         }
 
-        /* Back in Stock: show split images on desktop, hide mobile video block */
+        /* Back in Stock (desktop): use video block, hide split images */
         #back-in-stock-promo .split-desktop {
-          display: grid !important;
+          display: none !important;
           grid-template-columns: 1fr 1fr;
           gap: 0;
           position: relative;
@@ -118,7 +118,7 @@
           overflow: hidden !important;
         }
         #back-in-stock-promo .video-mobile {
-          display: none !important;
+          display: block !important;
         }
         .shop-hamburger {
           display: inline-flex !important;
@@ -475,7 +475,7 @@
           >
         </div>
 
-        <a href="account/register.html" class="row-item">Journey Sign Up</a>
+        <a href="register.html" class="row-item">Journey Sign Up</a>
 
         <button class="row-item accordion" data-accordion aria-expanded="false">
           Support & Contact <span class="chev">›</span>
@@ -510,7 +510,7 @@
         loop
         playsinline
         preload="auto"
-        poster="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1400&auto=format&fit=crop"
+        poster="CTA%20Image/Stacker%20-%20Pistachio%20Tee%20-%203.jpg"
         aria-hidden="true"
         style="
           position: absolute;
@@ -1206,7 +1206,7 @@
           position: relative;
           width: 100%;
           min-height: calc(76vh - 15px);
-          background-image: url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80');
+          background-image: url('CTA%20Image/Stacker%20-%20Pistachio%20Tee%20-%203.jpg');
           background-size: cover;
           background-position: center;
           background-color: #0a0a0a;
@@ -1222,7 +1222,7 @@
           autoplay
           loop
           preload="metadata"
-          src="journey%20summer%20set%20video/10.mp4"
+          src="Journey%20Summer%20Set%20Video/10.mp4"
           style="
             position: absolute;
             inset: 0;
@@ -1234,7 +1234,7 @@
           "
         >
           <source
-            src="journey%20summer%20set%20video/10.mp4"
+            src="Journey%20Summer%20Set%20Video/10.mp4"
             type="video/mp4"
           />
         </video>
@@ -1264,7 +1264,8 @@
               font-size: clamp(28px, 6.5vw, 64px);
             "
           >
-            Journeys Summer Set
+            Journeys Summer
+            <span class="pc-break" style="display: none"><br /></span> Set
           </div>
           <a
             href="collection.html?section=back-in-stock"
@@ -2019,7 +2020,7 @@
       >
         <img
           data-no-fallback
-          src="https://images.unsplash.com/photo-1544022613-e87cdf0dfaa7?q=80&w=1920&auto=format&fit=crop"
+          src="CTA%20Image/Stacker%20-%20Pistachio%20Tee%20-%203.jpg"
           alt="Join the Club background"
           loading="eager"
           decoding="async"
@@ -2097,7 +2098,7 @@
 
           <a
             id="join-club-cta"
-            href="#"
+            href="register.html"
             style="
               display: inline-block;
               width: min(360px, 90%);
@@ -2186,7 +2187,7 @@
             "#back-in-stock-promo .video-mobile"
           );
           if (summer) {
-            summer.style.minHeight = isDesktop ? "24vh" : "calc(76vh - 15px)";
+            summer.style.minHeight = isDesktop ? "" : "calc(76vh - 15px)";
           }
           var burger = document.querySelector(".menu-toggle");
           if (burger) {
@@ -2213,13 +2214,33 @@
       }
     </style>
     <style>
-      /* Desktop-only: make Journeys Summer Set block much shorter */
+      /* Desktop-only: Summer Set sizing + video offset + forced line break */
       @media (min-width: 1024px) {
         #back-in-stock-promo .video-mobile {
-          min-height: 28vh !important;
+          min-height: calc(
+            76vh - 15px
+          ) !important; /* keep desktop height similar to mobile */
+        }
+        #back-in-stock-promo .video-mobile > video {
+          object-position: 50% 35% !important; /* nudge down ~15% from current */
+        }
+        #back-in-stock-promo .pc-break {
+          display: inline !important;
+        }
+        #back-in-stock-promo .upper {
+          line-height: 1.1 !important;
         }
       }
     </style>
+    <style>
+      /* Desktop-only: adjust Join the Club banner crop (move image up ~30%) */
+      @media (min-width: 1024px) {
+        [data-rewards-banner] > img {
+          object-position: 50% 35% !important;
+        }
+      }
+    </style>
+
     <style>
       /* Desktop-only: center the JOURNEYS logo perfectly and ensure mega can overflow */
       @media (min-width: 1024px) {
@@ -2291,7 +2312,7 @@
               "
             >
               <img
-                src="LOGO/1.png"
+                src="LOGO/f5080f92-7640-4d30-8808-36a64695a5ff.png"
                 alt="Journey Apparel Logo"
                 style="height: 120px; margin: 0 auto 20px auto; display: block"
               />
@@ -2572,7 +2593,7 @@
                 rgba(0, 0, 0, 0.15),
                 rgba(0, 0, 0, 0.45)
               ),
-              url('Pop%20up%20ad%20photo/Panther%20Can_t%20Catch%20Us%20-%20Cream%20-%20Trainer%20Hoodie%20Ultra%20Heavy%20Weight%20-%201.png')
+              url('CTA%20Image/Stacker%20-%20Pistachio%20Tee%20-%203.jpg')
                 center/cover no-repeat;
           "
         >
@@ -2727,6 +2748,60 @@
           VER = "3",
           VKEY = "jrny_promo_ver";
         var now = Date.now();
+        function applyPromoLayout() {
+          try {
+            var shell = document.querySelector("#promo-modal > div");
+            var form = document.getElementById("promo-form");
+            var btn = document.getElementById("promo-cta");
+            var content = document.getElementById("promo-content");
+            var visual = shell && shell.children && shell.children[0];
+
+            // PC-only adjustments (>=1024px). Keep mobile as-is.
+            if (window.innerWidth >= 1024) {
+              if (shell) shell.style.flexDirection = "column"; // move right-side area below image
+
+              // Make image area larger and remove extra white space growth
+              if (visual) {
+                visual.style.height = "min(70vh, 640px)"; // bigger hero image on desktop
+                visual.style.flex = "0 0 auto";
+              }
+              if (content) content.style.flex = "0 0 auto"; // prevent content from stretching to leave blank space
+
+              // Place CTA button directly under the email input (like mobile)
+              if (form) {
+                form.style.flexDirection = "column";
+                form.style.gap = "8px";
+                if (btn) btn.style.width = "100%";
+              }
+            } else if (window.innerWidth <= 600) {
+              // Preserve mobile stack (unchanged visually)
+              if (shell) shell.style.removeProperty("flex-direction");
+              if (visual) {
+                visual.style.removeProperty("height");
+                visual.style.removeProperty("flex");
+              }
+              if (content) content.style.removeProperty("flex");
+              if (form) {
+                form.style.flexDirection = "column";
+                form.style.gap = "8px";
+                if (btn) btn.style.width = "100%";
+              }
+            } else {
+              // Tablet defaults
+              if (shell) shell.style.removeProperty("flex-direction");
+              if (visual) {
+                visual.style.removeProperty("height");
+                visual.style.removeProperty("flex");
+              }
+              if (content) content.style.removeProperty("flex");
+              if (form) {
+                form.style.flexDirection = "row";
+                if (btn) btn.style.removeProperty("width");
+              }
+            }
+          } catch (e) {}
+        }
+
         function qs(id) {
           return document.getElementById(id);
         }
@@ -2747,6 +2822,7 @@
               try {
                 c.focus();
               } catch (e) {}
+            applyPromoLayout();
           }, 0);
           window.__openPromo = openM;
           window.__closePromo = closeM;
@@ -2787,6 +2863,10 @@
               localStorage.setItem(VKEY, VER);
             }
           } catch (e) {}
+          // Apply responsive modal layout now and on resize
+          applyPromoLayout();
+          window.addEventListener("resize", applyPromoLayout);
+
           var cta = qs("promo-cta"),
             no = qs("promo-no"),
             x = qs("promo-close"),
