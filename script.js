@@ -187,6 +187,7 @@
     __safe("setupThematicImages", setupThematicImages);
     __safe("normalizeCarouselMedia", normalizeCarouselMedia);
     __safe("setupMobileCTA", setupMobileCTA);
+    __safe("enforcePointerCursor", enforcePointerCursor);
   });
 
   function setupSizeSelection() {
@@ -859,6 +860,50 @@
           if (h) h.style.opacity = "0";
         };
       });
+    } catch (_) {}
+  }
+
+  // Site-wide: show pointer cursor on all clickable elements (icons, chips, arrows, links)
+  function enforcePointerCursor(root) {
+    try {
+      var scope = root || document;
+      var selectors = [
+        "a[href]",
+        "button",
+        '[role="button"]',
+        "[onclick]",
+        ".icon-btn",
+        ".ctrl",
+        ".filter-chip",
+        ".row-item",
+        ".accordion",
+        ".drawer-close",
+        ".menu-toggle",
+        ".header-item",
+        "nav a",
+        ".card",
+        ".card .img-wrap",
+        ".carousel .ctrl",
+      ].join(",");
+      scope.querySelectorAll(selectors).forEach(function (el) {
+        try {
+          el.style.cursor = "pointer";
+        } catch (_) {}
+      });
+      if (!window.__cursorObs && document.body) {
+        window.__cursorObs = new MutationObserver(function (muts) {
+          muts.forEach(function (m) {
+            m.addedNodes &&
+              m.addedNodes.forEach(function (n) {
+                if (n.nodeType === 1) enforcePointerCursor(n);
+              });
+          });
+        });
+        window.__cursorObs.observe(document.body, {
+          childList: true,
+          subtree: true,
+        });
+      }
     } catch (_) {}
   }
 
