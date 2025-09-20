@@ -191,6 +191,7 @@
     __safe("applyDesktopHeaderZIndexFix", applyDesktopHeaderZIndexFix);
     __safe("ensureShopClickToggle", ensureShopClickToggle);
     __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
+    __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
   });
 
   function setupSizeSelection() {
@@ -866,9 +867,10 @@
     } catch (_) {}
   }
 
-  // Site-wide: show pointer cursor on all clickable elements (icons, chips, arrows, links)
+  // Desktop-only: show pointer cursor on all clickable elements (icons, chips, arrows, links)
   function enforcePointerCursor(root) {
     try {
+      if (window.innerWidth < 1024) return; // desktop only
       var scope = root || document;
       var selectors = [
         "a[href]",
@@ -876,17 +878,17 @@
         '[role="button"]',
         "[onclick]",
         ".icon-btn",
-        ".ctrl",
-        ".filter-chip",
-        ".row-item",
-        ".accordion",
-        ".drawer-close",
-        ".menu-toggle",
         ".header-item",
         "nav a",
         ".card",
-        ".card .img-wrap",
-        ".carousel .ctrl",
+        "[data-href]",
+        ".filter-chip",
+        ".size",
+        ".accordion button",
+        ".menu-toggle",
+        ".ctrl",
+        ".carousel .panel",
+        "label[for]",
       ].join(",");
       scope.querySelectorAll(selectors).forEach(function (el) {
         try {
@@ -905,6 +907,9 @@
         window.__cursorObs.observe(document.body, {
           childList: true,
           subtree: true,
+        });
+        window.addEventListener("resize", function () {
+          if (window.innerWidth >= 1024) enforcePointerCursor();
         });
       }
     } catch (_) {}
@@ -997,6 +1002,7 @@
         "}",
         // Icon buttons: gentle circular hover background
         ".icon-btn:hover{background:rgba(0,0,0,.06);border-radius:9999px;}",
+
         // Ensure carousel arrows keep their current design without unintended effects
         ".carousel .ctrl:hover{filter:none !important;}",
         "}",
@@ -1022,6 +1028,24 @@
         }
       });
     });
+  }
+
+  // Desktop-only: CSS baseline to force pointer cursor on common clickable elements
+  function applyDesktopPointerCursorCSS() {
+    try {
+      if (document.getElementById("pc-pointer-cursor")) return;
+      var css = [
+        "@media (min-width:1024px){",
+        "a[href],button,[role=button],[onclick],input[type=submit],input[type=button],",
+        ".icon-btn,.header-item,nav a,.card,[data-href],.filter-chip,.size,.accordion button,",
+        ".menu-toggle,.ctrl,.carousel .panel,label[for]{cursor:pointer !important;}",
+        "}",
+      ].join("");
+      var el = document.createElement("style");
+      el.id = "pc-pointer-cursor";
+      el.textContent = css;
+      document.head && document.head.appendChild(el);
+    } catch (_) {}
   }
 
   function setupDrawerAccordions() {
@@ -1683,6 +1707,14 @@
           const filterBtn = document.getElementById("filter-toggle");
           if (filters) filters.style.display = "none";
           if (filterBtn) filterBtn.setAttribute("aria-expanded", "false");
+          // Also close any open filter chip dropdowns (Size/Color/Type/Availability)
+          try {
+            document
+              .querySelectorAll("[data-chip-panel]")
+              .forEach(function (m) {
+                m.style.display = "none";
+              });
+          } catch (_) {}
         }
         show(open);
         syncToggleColumn();
