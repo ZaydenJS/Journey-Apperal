@@ -103,7 +103,7 @@
       <a href="collection.html?collection=womens-activewear">Women’s Activewear</a>
     </div>
     <a href="#" class="row-item">Gift Cards</a>
-    <a href="#" class="row-item">Members Sign Up</a>
+    <a href="/account/register.html" class="row-item">Journey Sign Up</a>
     <button class="row-item accordion" data-accordion aria-expanded="false">Customer Care <span class="chev">›</span></button>
     <div class="sub">
       <a href="#">Exchanges & Returns</a>
@@ -1781,7 +1781,8 @@
     const chipMenus = {
       size: ["XS", "S", "M", "L", "XL"],
       color: ["Black", "White", "Gray", "Blue", "Green"],
-      type: ["Tees", "Hoodies", "Shorts", "Pants", "Accessories"],
+      // Align product type categories with collection page spec
+      type: ["Tops", "Bottoms", "Outerwear", "Accessories"],
 
       availability: ["In stock"],
     };
@@ -3197,6 +3198,13 @@
       );
       if (!selected) return; // guard will have alerted
 
+      // Ensure cart is initialized before adding
+      if (!window.__cart || typeof window.__cart.setCart !== "function") {
+        try {
+          if (typeof window.setupCart === "function") window.setupCart();
+        } catch (_) {}
+      }
+
       const name =
         document.querySelector(".p-details h1")?.textContent?.trim() ||
         "Product";
@@ -3212,6 +3220,15 @@
       if (existing) existing.qty = (existing.qty || 1) + 1;
       else items.push({ name, price, size, image, qty: 1 });
       window.__cart?.setCart && window.__cart.setCart(items);
+      // Open cart (initialize on-demand if still missing)
+      try {
+        if (
+          typeof window.openCart !== "function" &&
+          typeof window.setupCart === "function"
+        ) {
+          window.setupCart();
+        }
+      } catch (_) {}
       window.openCart && window.openCart();
     });
   }

@@ -1388,6 +1388,18 @@
       "
     >
       <h2 style="text-align: center; margin: 20px 0 22px">Shop by Category</h2>
+      <style>
+        /* Desktop-only: add white outer space at the left and right edges equal to the inter-card gap */
+        @media (min-width: 1024px) {
+          .category-carousel .carousel-track.panels > a.panel:first-child {
+            margin-left: 2.666%;
+          }
+          .category-carousel .carousel-track.panels > a.panel:last-child {
+            margin-right: 2.666%;
+          }
+        }
+      </style>
+
       <div
         class="carousel category-carousel"
         style="
@@ -2791,11 +2803,15 @@
                 if (btn) btn.style.width = "100%";
               }
             } else if (window.innerWidth <= 600) {
-              // Preserve mobile stack (unchanged visually)
-              if (shell) shell.style.removeProperty("flex-direction");
+              // Mobile: stacked layout with full-width visual and equal gutters
+              if (shell) {
+                shell.style.flexDirection = "column";
+                shell.style.alignItems = "stretch";
+              }
               if (visual) {
-                visual.style.removeProperty("height");
-                visual.style.removeProperty("flex");
+                visual.style.height = "clamp(240px, 46vh, 420px)"; // ensure image area shows on mobile
+                visual.style.flex = "0 0 auto"; // prevent collapse
+                visual.style.width = "100%";
               }
               if (content) content.style.removeProperty("flex");
               if (form) {
