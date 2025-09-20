@@ -205,7 +205,7 @@
           </button>
           <nav class="nav" aria-label="Primary">
             <a
-              href="#"
+              href="/collection.html?section=shop-all"
               class="header-item"
               aria-haspopup="true"
               aria-expanded="false"
@@ -937,22 +937,15 @@
               // Desktop: mega dropdown behavior
               if (burger) burger.style.display = "inline-flex";
               closeMega();
-              shop.onclick = function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleMega();
-              };
-              // Also open/close on hover to be safe on desktop
-              shop.addEventListener("mouseenter", function () {
-                if (window.innerWidth >= 1024) openMega();
-              });
-              shop.addEventListener("mouseleave", function (ev) {
-                if (
-                  window.innerWidth >= 1024 &&
-                  !shop.contains(ev.relatedTarget)
-                )
-                  closeMega();
-              });
+              shop.onclick = null;
+              try {
+                if (shop && shop.tagName === "A")
+                  shop.setAttribute(
+                    "href",
+                    "/collection.html?section=shop-all"
+                  );
+              } catch (e) {}
+              // Keep mega closed by default; hover handled by CSS. Burger remains the dropdown trigger on desktop.
             } else {
               // Mobile: open the drawer
               if (burger) burger.style.display = "none";
