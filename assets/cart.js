@@ -2,9 +2,9 @@
 class CartManager {
   constructor() {
     this.cart = null;
-    this.cartId = localStorage.getItem('shopify_cart_id');
+    this.cartId = localStorage.getItem("shopify_cart_id");
     this.listeners = [];
-    
+
     // Initialize cart on page load
     this.init();
   }
@@ -19,7 +19,7 @@ class CartManager {
         await this.createCart();
       }
     } catch (error) {
-      console.error('Failed to initialize cart:', error);
+      console.error("Failed to initialize cart:", error);
       await this.createCart();
     }
   }
@@ -29,11 +29,11 @@ class CartManager {
       const response = await window.shopifyAPI.createCart();
       this.cart = response.cart;
       this.cartId = this.cart.id;
-      localStorage.setItem('shopify_cart_id', this.cartId);
+      localStorage.setItem("shopify_cart_id", this.cartId);
       this.notifyListeners();
       return this.cart;
     } catch (error) {
-      console.error('Failed to create cart:', error);
+      console.error("Failed to create cart:", error);
       throw error;
     }
   }
@@ -44,26 +44,49 @@ class CartManager {
         await this.createCart();
       }
 
-      const lines = [{
-        merchandiseId: variantId,
-        quantity: quantity,
-        attributes: Object.entries(properties).map(([key, value]) => ({
-          key,
-          value: String(value)
-        }))
-      }];
+      const lines = [
+        {
+          merchandiseId: variantId,
+          quantity: quantity,
+          attributes: Object.entries(properties).map(([key, value]) => ({
+            key,
+            value: String(value),
+          })),
+        },
+      ];
 
       const response = await window.shopifyAPI.addToCart(this.cartId, lines);
       this.cart = response.cart;
       this.notifyListeners();
-      
+
       // Show success message
-      this.showCartMessage(`Added to cart successfully!`, 'success');
-      
+      this.showCartMessage(`Added to cart successfully!`, "success");
+
       return this.cart;
     } catch (error) {
-      console.error('Failed to add to cart:', error);
-      this.showCartMessage(`Failed to add to cart: ${error.message}`, 'error');
+      console.error("Failed to add to cart:", error);
+
+      // Handle different error types gracefully
+      let errorMessage = "Failed to add to cart";
+
+      if (error.message.includes("API not available")) {
+        errorMessage = "Cart functionality requires deployment to work";
+      } else if (error.message.includes("Network")) {
+        errorMessage = "Network error - please check your connection";
+      } else if (error.originalError) {
+        errorMessage = `Failed to add to cart: ${error.originalError.message}`;
+      } else {
+        errorMessage = `Failed to add to cart: ${error.message}`;
+      }
+
+      this.showCartMessage(errorMessage, "error");
+
+      // Don't throw error for graceful degradation
+      if (error.message.includes("API not available")) {
+        console.warn("Cart functionality disabled in local development");
+        return null;
+      }
+
       throw error;
     }
   }
@@ -71,22 +94,24 @@ class CartManager {
   async updateCartLine(lineId, quantity) {
     try {
       if (!this.cartId) {
-        throw new Error('No cart found');
+        throw new Error("No cart found");
       }
 
-      const lines = [{
-        id: lineId,
-        quantity: quantity
-      }];
+      const lines = [
+        {
+          id: lineId,
+          quantity: quantity,
+        },
+      ];
 
       const response = await window.shopifyAPI.updateCart(this.cartId, lines);
       this.cart = response.cart;
       this.notifyListeners();
-      
+
       return this.cart;
     } catch (error) {
-      console.error('Failed to update cart:', error);
-      this.showCartMessage(`Failed to update cart: ${error.message}`, 'error');
+      console.error("Failed to update cart:", error);
+      this.showCartMessage(`Failed to update cart: ${error.message}`, "error");
       throw error;
     }
   }
@@ -104,14 +129,16 @@ class CartManager {
   }
 
   getCartTotal() {
-    return this.cart ? this.cart.cost.totalAmount : { amount: '0.00', currencyCode: 'AUD' };
+    return this.cart
+      ? this.cart.cost.totalAmount
+      : { amount: "0.00", currencyCode: "AUD" };
   }
 
   goToCheckout() {
     if (this.cart && this.cart.checkoutUrl) {
       window.location.href = this.cart.checkoutUrl;
     } else {
-      this.showCartMessage('Cart is empty', 'error');
+      this.showCartMessage("Cart is empty", "error");
     }
   }
 
@@ -121,20 +148,20 @@ class CartManager {
   }
 
   removeListener(callback) {
-    this.listeners = this.listeners.filter(listener => listener !== callback);
+    this.listeners = this.listeners.filter((listener) => listener !== callback);
   }
 
   notifyListeners() {
-    this.listeners.forEach(callback => callback(this.cart));
+    this.listeners.forEach((callback) => callback(this.cart));
   }
 
   // UI Helper methods
-  showCartMessage(message, type = 'info') {
+  showCartMessage(message, type = "info") {
     // Create or update cart message element
-    let messageEl = document.getElementById('cart-message');
+    let messageEl = document.getElementById("cart-message");
     if (!messageEl) {
-      messageEl = document.createElement('div');
-      messageEl.id = 'cart-message';
+      messageEl = document.createElement("div");
+      messageEl.id = "cart-message";
       messageEl.style.cssText = `
         position: fixed;
         top: 20px;
@@ -153,38 +180,44 @@ class CartManager {
     // Set message and style based on type
     messageEl.textContent = message;
     messageEl.className = `cart-message cart-message-${type}`;
-    
+
     const colors = {
-      success: '#10B981',
-      error: '#EF4444',
-      info: '#3B82F6'
+      success: "#10B981",
+      error: "#EF4444",
+      info: "#3B82F6",
     };
-    
+
     messageEl.style.backgroundColor = colors[type] || colors.info;
-    messageEl.style.transform = 'translateX(0)';
+    messageEl.style.transform = "translateX(0)";
 
     // Auto hide after 3 seconds
     setTimeout(() => {
-      messageEl.style.transform = 'translateX(100%)';
+      messageEl.style.transform = "translateX(100%)";
     }, 3000);
   }
 
   updateCartUI() {
     // Update cart count in header
-    const cartCountElements = document.querySelectorAll('.cart-count, [data-cart-count]');
+    const cartCountElements = document.querySelectorAll(
+      ".cart-count, [data-cart-count]"
+    );
     const count = this.getCartCount();
-    
-    cartCountElements.forEach(el => {
+
+    cartCountElements.forEach((el) => {
       el.textContent = count;
-      el.style.display = count > 0 ? 'inline' : 'none';
+      el.style.display = count > 0 ? "inline" : "none";
     });
 
     // Update cart total
-    const cartTotalElements = document.querySelectorAll('.cart-total, [data-cart-total]');
+    const cartTotalElements = document.querySelectorAll(
+      ".cart-total, [data-cart-total]"
+    );
     const total = this.getCartTotal();
-    
-    cartTotalElements.forEach(el => {
-      el.textContent = `$${parseFloat(total.amount).toFixed(2)} ${total.currencyCode}`;
+
+    cartTotalElements.forEach((el) => {
+      el.textContent = `$${parseFloat(total.amount).toFixed(2)} ${
+        total.currencyCode
+      }`;
     });
   }
 }
@@ -198,24 +231,24 @@ window.cartManager.addListener(() => {
 });
 
 // Helper function for product pages
-window.addToCartFromForm = async function(form) {
+window.addToCartFromForm = async function (form) {
   const formData = new FormData(form);
-  const variantId = formData.get('variant_id');
-  const quantity = parseInt(formData.get('quantity') || '1');
-  
+  const variantId = formData.get("variant_id");
+  const quantity = parseInt(formData.get("quantity") || "1");
+
   if (!variantId) {
-    window.cartManager.showCartMessage('Please select a variant', 'error');
+    window.cartManager.showCartMessage("Please select a variant", "error");
     return;
   }
 
   try {
     await window.cartManager.addToCart(variantId, quantity);
   } catch (error) {
-    console.error('Add to cart failed:', error);
+    console.error("Add to cart failed:", error);
   }
 };
 
 // Initialize cart UI on page load
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   window.cartManager.updateCartUI();
 });

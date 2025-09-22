@@ -232,89 +232,106 @@
     if (!slug) return;
 
     try {
-      // Load product from Shopify
-      const response = await window.shopifyAPI.getProduct(slug);
-      const p = response.product;
+      // Load product from Shopify (if available)
+      if (window.shopifyAPI) {
+        const response = await window.shopifyAPI.getProduct(slug);
+        const p = response.product;
 
-      if (!p) {
-        console.error('Product not found:', slug);
-        return;
-      }
-
-      // Update page title
-      document.title = `${p.title} – Journey Apparel`;
-
-      const titleEl = document.querySelector(".p-details h1");
-      const priceEl = document.querySelector(".p-details .p-price");
-      const descriptionEl = document.querySelector(".p-details .p-description");
-
-      // New gallery (preferred)
-      const mainGalleryImg = document.querySelector(".gallery-main img");
-      const galleryThumbs = Array.from(document.querySelectorAll(".thumbs img"));
-
-      // Legacy edge-peek gallery (if present)
-      const mainImg = document.querySelector(".edge-gallery .main");
-      const leftImg = document.querySelector(".edge-gallery .left");
-      const rightImg = document.querySelector(".edge-gallery .right");
-
-      if (titleEl) titleEl.textContent = p.title;
-      if (priceEl) {
-        const price = parseFloat(p.priceRange.minVariantPrice.amount);
-        priceEl.textContent = `$${price.toFixed(2)} ${p.priceRange.minVariantPrice.currencyCode}`;
-      }
-      if (descriptionEl) {
-        descriptionEl.innerHTML = p.description || '';
-      }
-
-      // Use Shopify images
-      const images = p.images || [];
-      const mainImage = images[0]?.url || "";
-      const altImage = images[1]?.url || "";
-
-      if (mainGalleryImg && mainImage) {
-        mainGalleryImg.src = mainImage;
-        mainGalleryImg.alt = p.title;
-        if (galleryThumbs[0]) {
-          galleryThumbs[0].src = mainImage;
-          galleryThumbs[0].alt = p.title;
+        if (!p) {
+          console.error("Product not found:", slug);
+          return;
         }
-        if (galleryThumbs[1] && altImage) {
-          galleryThumbs[1].src = altImage;
-          galleryThumbs[1].alt = p.title + " alt";
+
+        // Update page title
+        document.title = `${p.title} – Journey Apparel`;
+
+        const titleEl = document.querySelector(".p-details h1");
+        const priceEl = document.querySelector(".p-details .p-price");
+        const descriptionEl = document.querySelector(
+          ".p-details .p-description"
+        );
+
+        // New gallery (preferred)
+        const mainGalleryImg = document.querySelector(".gallery-main img");
+        const galleryThumbs = Array.from(
+          document.querySelectorAll(".thumbs img")
+        );
+
+        // Legacy edge-peek gallery (if present)
+        const mainImg = document.querySelector(".edge-gallery .main");
+        const leftImg = document.querySelector(".edge-gallery .left");
+        const rightImg = document.querySelector(".edge-gallery .right");
+
+        if (titleEl) titleEl.textContent = p.title;
+        if (priceEl) {
+          const price = parseFloat(p.priceRange.minVariantPrice.amount);
+          priceEl.textContent = `$${price.toFixed(2)} ${
+            p.priceRange.minVariantPrice.currencyCode
+          }`;
         }
-      }
+        if (descriptionEl) {
+          descriptionEl.innerHTML = p.description || "";
+        }
 
-      if (mainImg && mainImage) {
-        mainImg.src = mainImage;
-        mainImg.alt = p.title;
-      }
-      if (rightImg && altImage) {
-        rightImg.src = altImage;
-        rightImg.alt = p.title + " alt";
-      }
+        // Use Shopify images
+        const images = p.images || [];
+        const mainImage = images[0]?.url || "";
+        const altImage = images[1]?.url || "";
 
-      // Setup product variants and add to cart functionality
-      setupProductVariants(p);
+        if (mainGalleryImg && mainImage) {
+          mainGalleryImg.src = mainImage;
+          mainGalleryImg.alt = p.title;
+          if (galleryThumbs[0]) {
+            galleryThumbs[0].src = mainImage;
+            galleryThumbs[0].alt = p.title;
+          }
+          if (galleryThumbs[1] && altImage) {
+            galleryThumbs[1].src = altImage;
+            galleryThumbs[1].alt = p.title + " alt";
+          }
+        }
 
+        if (mainImg && mainImage) {
+          mainImg.src = mainImage;
+          mainImg.alt = p.title;
+        }
+        if (rightImg && altImage) {
+          rightImg.src = altImage;
+          rightImg.alt = p.title + " alt";
+        }
+
+        // Setup product variants and add to cart functionality
+        setupProductVariants(p);
+      } else {
+        // Fallback to original product loading logic if Shopify not available
+        console.log(
+          "Shopify API not available, using fallback product loading"
+        );
+      }
     } catch (error) {
-      console.error('Failed to load product:', error);
+      console.error("Failed to load product:", error);
     }
   }
 
   function setupProductVariants(product) {
     // Create variant selector if product has options
     if (product.options && product.options.length > 0) {
-      const variantContainer = document.querySelector('.p-variants') ||
-                              document.querySelector('.p-details');
+      const variantContainer =
+        document.querySelector(".p-variants") ||
+        document.querySelector(".p-details");
 
-      if (variantContainer && !variantContainer.querySelector('.variant-selectors')) {
+      if (
+        variantContainer &&
+        !variantContainer.querySelector(".variant-selectors")
+      ) {
         const variantHTML = createVariantSelectors(product);
-        const variantDiv = document.createElement('div');
-        variantDiv.className = 'variant-selectors';
+        const variantDiv = document.createElement("div");
+        variantDiv.className = "variant-selectors";
         variantDiv.innerHTML = variantHTML;
 
         // Insert before add to cart button
-        const addToCartBtn = variantContainer.querySelector('.add-to-cart, .btn');
+        const addToCartBtn =
+          variantContainer.querySelector(".add-to-cart, .btn");
         if (addToCartBtn) {
           variantContainer.insertBefore(variantDiv, addToCartBtn);
         } else {
@@ -328,14 +345,18 @@
   }
 
   function createVariantSelectors(product) {
-    let html = '';
+    let html = "";
 
-    product.options.forEach(option => {
+    product.options.forEach((option) => {
       html += `
         <div class="variant-option" style="margin-bottom: 16px;">
-          <label style="display: block; font-weight: 500; margin-bottom: 8px;">${option.name}</label>
+          <label style="display: block; font-weight: 500; margin-bottom: 8px;">${
+            option.name
+          }</label>
           <select name="option_${option.name.toLowerCase()}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            ${option.values.map(value => `<option value="${value}">${value}</option>`).join('')}
+            ${option.values
+              .map((value) => `<option value="${value}">${value}</option>`)
+              .join("")}
           </select>
         </div>
       `;
@@ -345,9 +366,11 @@
   }
 
   function setupAddToCart(product) {
-    const addToCartBtns = document.querySelectorAll('.add-to-cart, .btn[data-action="add-to-cart"]');
+    const addToCartBtns = document.querySelectorAll(
+      '.add-to-cart, .btn[data-action="add-to-cart"]'
+    );
 
-    addToCartBtns.forEach(btn => {
+    addToCartBtns.forEach((btn) => {
       btn.onclick = async (e) => {
         e.preventDefault();
 
@@ -355,76 +378,79 @@
         const selectedVariant = getSelectedVariant(product);
 
         if (!selectedVariant) {
-          alert('Please select all options');
+          alert("Please select all options");
           return;
         }
 
         if (!selectedVariant.availableForSale) {
-          alert('This variant is out of stock');
+          alert("This variant is out of stock");
           return;
         }
 
         try {
           btn.disabled = true;
-          btn.textContent = 'Adding...';
+          btn.textContent = "Adding...";
 
-          await window.cartManager.addToCart(selectedVariant.id, 1);
+          // Check if cart manager is available
+          if (!window.cartManager) {
+            throw new Error("Cart functionality not available");
+          }
 
-          btn.textContent = 'Added!';
-          setTimeout(() => {
-            btn.disabled = false;
-            btn.textContent = 'Add to Cart';
-          }, 2000);
+          const result = await window.cartManager.addToCart(
+            selectedVariant.id,
+            1
+          );
 
+          if (result === null) {
+            // Graceful degradation - API not available
+            btn.textContent = "Cart unavailable locally";
+            setTimeout(() => {
+              btn.disabled = false;
+              btn.textContent = "Add to Cart";
+            }, 3000);
+          } else {
+            btn.textContent = "Added!";
+            setTimeout(() => {
+              btn.disabled = false;
+              btn.textContent = "Add to Cart";
+            }, 2000);
+          }
         } catch (error) {
           btn.disabled = false;
-          btn.textContent = 'Add to Cart';
-          console.error('Add to cart failed:', error);
+          btn.textContent = "Add to Cart";
+          console.error("Add to cart failed:", error);
+
+          // Show user-friendly error message
+          if (error.message.includes("not available")) {
+            alert(
+              "Cart functionality requires the site to be deployed to work properly."
+            );
+          } else {
+            alert("Failed to add item to cart. Please try again.");
+          }
         }
       };
     });
   }
 
   function getSelectedVariant(product) {
-    const selectors = document.querySelectorAll('.variant-option select');
+    const selectors = document.querySelectorAll(".variant-option select");
     const selectedOptions = {};
 
-    selectors.forEach(select => {
-      const optionName = select.name.replace('option_', '');
+    selectors.forEach((select) => {
+      const optionName = select.name.replace("option_", "");
       selectedOptions[optionName] = select.value;
     });
 
     // Find matching variant
-    return product.variants.find(variant => {
-      return variant.selectedOptions.every(option => {
-        const optionName = option.name.toLowerCase();
-        return selectedOptions[optionName] === option.value;
-      });
-    }) || product.variants[0]; // Fallback to first variant
-  }
-    if (leftImg && altImage) {
-      leftImg.src = altImage;
-      leftImg.alt = p.name + " alt 2";
-    }
-
-    document.title = p.name + " — Journey Apparel";
-
-    // Record this product into Recently Viewed (localStorage)
-    try {
-      const key = "recentlyViewedV1";
-      const current = JSON.parse(localStorage.getItem(key) || "[]");
-      const item = {
-        slug,
-        name: p.name,
-        price: `$${p.price}`,
-        main: p.main || (p.images && p.images[0]) || "",
-        alt: p.hover || (p.images && p.images[1]) || "",
-        href: "product.html?slug=" + slug,
-      };
-      const filtered = (current || []).filter((x) => x && x.slug !== slug);
-      filtered.unshift(item);
-      localStorage.setItem(key, JSON.stringify(filtered.slice(0, 20)));
-    } catch (_) {}
+    return (
+      product.variants.find((variant) => {
+        return variant.selectedOptions.every((option) => {
+          const optionName = option.name.toLowerCase();
+          return selectedOptions[optionName] === option.value;
+        });
+      }) || product.variants[0]
+    ); // Fallback to first variant
   }
 
   function setupRecentlyViewedAndBestSellers() {
@@ -1691,7 +1717,7 @@
     } else if (params.get("collection")) {
       const collection = params.get("collection");
       label = toTitle(collection);
-      collectionHandle = collection.toLowerCase().replace(/\s+/g, '-');
+      collectionHandle = collection.toLowerCase().replace(/\s+/g, "-");
     } else {
       label = "Shop All";
       collectionHandle = "all";
@@ -1702,64 +1728,97 @@
 
     // Load and render products
     try {
-      await loadAndRenderProducts(collectionHandle, tag, productsGrid, productCount);
+      await loadAndRenderProducts(
+        collectionHandle,
+        tag,
+        productsGrid,
+        productCount
+      );
     } catch (error) {
-      console.error('Failed to load collection products:', error);
-      showEmptyState(productsGrid, 'Failed to load products. Please try again.');
+      console.error("Failed to load collection products:", error);
+      showEmptyState(
+        productsGrid,
+        "Failed to load products. Please try again."
+      );
     }
   }
 
-  async function loadAndRenderProducts(collectionHandle, tag, container, countElement) {
+  async function loadAndRenderProducts(
+    collectionHandle,
+    tag,
+    container,
+    countElement
+  ) {
     // Show loading state
-    container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">Loading products...</div>';
+    container.innerHTML =
+      '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">Loading products...</div>';
 
     try {
       let products = [];
 
-      if (collectionHandle === "all") {
-        // Load all products from all collections
-        const collections = await window.shopifyAPI.getCollections();
-        for (const collection of collections.collections) {
-          const collectionData = await window.shopifyAPI.getCollection(collection.handle, tag);
-          products.push(...(collectionData.products || []));
+      if (window.shopifyAPI) {
+        if (collectionHandle === "all") {
+          // Load all products from all collections
+          const collections = await window.shopifyAPI.getCollections();
+          for (const collection of collections.collections) {
+            const collectionData = await window.shopifyAPI.getCollection(
+              collection.handle,
+              tag
+            );
+            products.push(...(collectionData.products || []));
+          }
+        } else {
+          // Load specific collection
+          const data = await window.shopifyAPI.getCollection(
+            collectionHandle,
+            tag
+          );
+          products = data.products || [];
         }
       } else {
-        // Load specific collection
-        const data = await window.shopifyAPI.getCollection(collectionHandle, tag);
-        products = data.products || [];
+        console.log(
+          "Shopify API not available, using fallback product loading"
+        );
+        products = [];
       }
 
       // Update product count
       if (countElement) {
-        countElement.textContent = `${products.length} product${products.length !== 1 ? 's' : ''}`;
+        countElement.textContent = `${products.length} product${
+          products.length !== 1 ? "s" : ""
+        }`;
       }
 
       if (products.length === 0) {
-        showEmptyState(container, 'No products found in this collection.');
+        showEmptyState(container, "No products found in this collection.");
         return;
       }
 
       // Render products
-      container.innerHTML = products.map(product => renderProductCard(product)).join('');
+      container.innerHTML = products
+        .map((product) => renderProductCard(product))
+        .join("");
 
       // Setup card interactions
       setupCardLinks();
-
     } catch (error) {
-      console.error('Error loading products:', error);
-      showEmptyState(container, 'Failed to load products. Please try again.');
+      console.error("Error loading products:", error);
+      showEmptyState(container, "Failed to load products. Please try again.");
     }
   }
 
   function renderProductCard(product) {
     const price = parseFloat(product.priceRange.minVariantPrice.amount);
     const compareAtPrice = product.compareAtPriceRange?.minVariantPrice?.amount;
-    const hasComparePrice = compareAtPrice && parseFloat(compareAtPrice) > price;
-    const mainImage = product.images[0]?.url || '';
+    const hasComparePrice =
+      compareAtPrice && parseFloat(compareAtPrice) > price;
+    const mainImage = product.images[0]?.url || "";
     const hoverImage = product.images[1]?.url || mainImage;
 
     return `
-      <article class="card" data-href="product.html?slug=${product.handle}" style="cursor: pointer">
+      <article class="card" data-href="product.html?slug=${
+        product.handle
+      }" style="cursor: pointer">
         <div class="img-wrap"
              onmouseenter="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='1'}"
              onmouseleave="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='0'}"
@@ -1767,20 +1826,34 @@
           <img src="${mainImage}"
                alt="${product.title}"
                style="width: 100%; height: 100%; object-fit: cover" />
-          ${hoverImage !== mainImage ? `
+          ${
+            hoverImage !== mainImage
+              ? `
             <img class="hover-img"
                  src="${hoverImage}"
                  alt="${product.title} - alternate"
                  style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 180ms ease; pointer-events: none;" />
-          ` : ''}
+          `
+              : ""
+          }
         </div>
         <div class="row mt-8" style="display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 8px; font-size: 14px; text-align: center;">
-          <span style="font-weight: 400; text-transform: uppercase; font-size: 12px;">${product.title}</span>
+          <span style="font-weight: 400; text-transform: uppercase; font-size: 12px;">${
+            product.title
+          }</span>
           <div class="price-container">
-            ${hasComparePrice ? `
-              <span class="price compare-at" style="font-weight: 400; text-decoration: line-through; color: #999; margin-right: 8px;">$${parseFloat(compareAtPrice).toFixed(2)}</span>
-            ` : ''}
-            <span class="price" style="font-weight: 400;">$${price.toFixed(2)} ${product.priceRange.minVariantPrice.currencyCode}</span>
+            ${
+              hasComparePrice
+                ? `
+              <span class="price compare-at" style="font-weight: 400; text-decoration: line-through; color: #999; margin-right: 8px;">$${parseFloat(
+                compareAtPrice
+              ).toFixed(2)}</span>
+            `
+                : ""
+            }
+            <span class="price" style="font-weight: 400;">$${price.toFixed(
+              2
+            )} ${product.priceRange.minVariantPrice.currencyCode}</span>
           </div>
         </div>
       </article>
@@ -1803,59 +1876,76 @@
 
   async function setupHomepageProducts() {
     // Only run on homepage
-    const isHomepage = location.pathname === '/' || location.pathname.endsWith('index.html') || location.pathname === '';
+    const isHomepage =
+      location.pathname === "/" ||
+      location.pathname.endsWith("index.html") ||
+      location.pathname === "";
     if (!isHomepage) return;
 
     // Load New Arrivals
-    const newArrivalsContainer = document.querySelector('#new-arrivals .carousel-track');
+    const newArrivalsContainer = document.querySelector(
+      "#new-arrivals .carousel-track"
+    );
     if (newArrivalsContainer) {
-      await loadHomepageSection(newArrivalsContainer, 'new-arrivals', 8);
+      await loadHomepageSection(newArrivalsContainer, "new-arrivals", 8);
     }
 
     // Load Best Sellers
-    const bestSellersContainer = document.querySelector('#best-sellers .carousel-track');
+    const bestSellersContainer = document.querySelector(
+      "#best-sellers .carousel-track"
+    );
     if (bestSellersContainer) {
-      await loadHomepageSection(bestSellersContainer, 'best-sellers', 4);
+      await loadHomepageSection(bestSellersContainer, "best-sellers", 4);
     }
   }
 
   async function loadHomepageSection(container, section, limit = 8) {
     try {
       // Show loading state
-      container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #666;">Loading...</div>';
+      container.innerHTML =
+        '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #666;">Loading...</div>';
 
       let products = [];
 
-      // Load products from all collections
-      const collections = await window.shopifyAPI.getCollections();
+      // Load products from all collections (if Shopify API available)
+      if (window.shopifyAPI) {
+        const collections = await window.shopifyAPI.getCollections();
 
-      for (const collection of collections.collections) {
-        const collectionData = await window.shopifyAPI.getCollection(collection.handle);
-        products.push(...(collectionData.products || []));
+        for (const collection of collections.collections) {
+          const collectionData = await window.shopifyAPI.getCollection(
+            collection.handle
+          );
+          products.push(...(collectionData.products || []));
+        }
+      } else {
+        console.log("Shopify API not available for homepage products");
       }
 
       // Filter and sort products based on section
-      if (section === 'new-arrivals') {
+      if (section === "new-arrivals") {
         // Sort by creation date (newest first)
         products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      } else if (section === 'best-sellers') {
+      } else if (section === "best-sellers") {
         // For now, just take random products. In a real implementation,
         // you'd sort by sales data or use a specific collection
-        products = products.filter(p => p.availableForSale);
+        products = products.filter((p) => p.availableForSale);
       }
 
       // Limit products
       products = products.slice(0, limit);
 
       if (products.length === 0) {
-        const message = section === 'new-arrivals'
-          ? 'No new arrivals available at the moment.'
-          : 'No best sellers available at the moment.';
+        const message =
+          section === "new-arrivals"
+            ? "No new arrivals available at the moment."
+            : "No best sellers available at the moment.";
         container.innerHTML = `
           <div style="display: flex; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; color: #666; font-size: 16px; width: 100%; grid-column: 1 / -1;">
             <div>
               <p style="margin: 0 0 8px 0;">${message}</p>
-              <p style="margin: 0; font-size: 14px;">Check back soon for ${section === 'new-arrivals' ? 'new' : 'popular'} products!</p>
+              <p style="margin: 0; font-size: 14px;">Check back soon for ${
+                section === "new-arrivals" ? "new" : "popular"
+              } products!</p>
             </div>
           </div>
         `;
@@ -1863,11 +1953,12 @@
       }
 
       // Render products
-      container.innerHTML = products.map(product => renderHomepageProductCard(product)).join('');
+      container.innerHTML = products
+        .map((product) => renderHomepageProductCard(product))
+        .join("");
 
       // Setup card interactions
       setupCardLinks();
-
     } catch (error) {
       console.error(`Error loading ${section}:`, error);
       container.innerHTML = `
@@ -1883,12 +1974,15 @@
   function renderHomepageProductCard(product) {
     const price = parseFloat(product.priceRange.minVariantPrice.amount);
     const compareAtPrice = product.compareAtPriceRange?.minVariantPrice?.amount;
-    const hasComparePrice = compareAtPrice && parseFloat(compareAtPrice) > price;
-    const mainImage = product.images[0]?.url || '';
+    const hasComparePrice =
+      compareAtPrice && parseFloat(compareAtPrice) > price;
+    const mainImage = product.images[0]?.url || "";
     const hoverImage = product.images[1]?.url || mainImage;
 
     return `
-      <article class="card" data-href="product.html?slug=${product.handle}" style="cursor: pointer">
+      <article class="card" data-href="product.html?slug=${
+        product.handle
+      }" style="cursor: pointer">
         <div class="img-wrap"
              onmouseenter="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='1'}"
              onmouseleave="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='0'}"
@@ -1896,20 +1990,34 @@
           <img src="${mainImage}"
                alt="${product.title}"
                style="width: 100%; height: 100%; object-fit: cover" />
-          ${hoverImage !== mainImage ? `
+          ${
+            hoverImage !== mainImage
+              ? `
             <img class="hover-img"
                  src="${hoverImage}"
                  alt="${product.title} - alternate"
                  style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 180ms ease; pointer-events: none;" />
-          ` : ''}
+          `
+              : ""
+          }
         </div>
         <div class="details" style="padding: 12px 0; text-align: center;">
-          <h3 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px;">${product.title}</h3>
+          <h3 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px;">${
+            product.title
+          }</h3>
           <div class="price-container">
-            ${hasComparePrice ? `
-              <span class="price compare-at" style="font-weight: 400; text-decoration: line-through; color: #999; margin-right: 8px; font-size: 13px;">$${parseFloat(compareAtPrice).toFixed(2)}</span>
-            ` : ''}
-            <span class="price" style="font-weight: 500; font-size: 14px;">$${price.toFixed(2)} ${product.priceRange.minVariantPrice.currencyCode}</span>
+            ${
+              hasComparePrice
+                ? `
+              <span class="price compare-at" style="font-weight: 400; text-decoration: line-through; color: #999; margin-right: 8px; font-size: 13px;">$${parseFloat(
+                compareAtPrice
+              ).toFixed(2)}</span>
+            `
+                : ""
+            }
+            <span class="price" style="font-weight: 500; font-size: 14px;">$${price.toFixed(
+              2
+            )} ${product.priceRange.minVariantPrice.currencyCode}</span>
           </div>
         </div>
       </article>
@@ -3647,3 +3755,71 @@ function setupMobileCTA() {
     console.warn("setupMobileCTA error", err);
   }
 }
+
+// Development mode utilities
+function showDevelopmentNotice() {
+  // Only show in local development
+  if (
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1" ||
+    location.protocol === "file:"
+  ) {
+    const notice = document.createElement("div");
+    notice.id = "dev-notice";
+    notice.innerHTML = `
+      <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 16px;
+        text-align: center;
+        font-size: 14px;
+        z-index: 10000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      ">
+        <strong>🚧 Development Mode</strong> -
+        Shopify features require deployment to work.
+        <a href="#" onclick="this.parentElement.parentElement.remove()" style="color: #fff; text-decoration: underline; margin-left: 8px;">Dismiss</a>
+      </div>
+    `;
+
+    // Remove existing notice
+    const existing = document.getElementById("dev-notice");
+    if (existing) existing.remove();
+
+    document.body.appendChild(notice);
+
+    // Auto-dismiss after 10 seconds
+    setTimeout(() => {
+      if (document.getElementById("dev-notice")) {
+        document.getElementById("dev-notice").remove();
+      }
+    }, 10000);
+  }
+}
+
+// Check for development mode on page load
+document.addEventListener("DOMContentLoaded", () => {
+  // Show development notice if running locally and Shopify API not available
+  setTimeout(() => {
+    if (
+      !window.shopifyAPI ||
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1" ||
+      location.protocol === "file:"
+    ) {
+      const isLocalhost =
+        location.hostname === "localhost" ||
+        location.hostname === "127.0.0.1" ||
+        location.protocol === "file:";
+      if (isLocalhost) {
+        console.log(
+          "🚧 Running in development mode - Shopify features limited"
+        );
+      }
+    }
+  }, 1000);
+});

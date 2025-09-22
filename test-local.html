@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Test - Journey Apparel</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { background: #111; color: white; border: none; padding: 10px 20px; margin: 10px; cursor: pointer; }
+        button:hover { background: #333; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+        .error { background: #ffebee; color: #d32f2f; }
+    </style>
+</head>
+<body>
+    <h1>Journey Apparel - Local JavaScript Test</h1>
+    
+    <h2>Basic Functionality Test</h2>
+    <button onclick="testBasicJS()">Test Basic JavaScript</button>
+    <button onclick="testMenuToggle()">Test Menu Toggle</button>
+    <button onclick="testProductCard()">Test Product Card Click</button>
+    
+    <div id="test-results"></div>
+
+    <!-- Include your scripts -->
+    <script src="data/products.js"></script>
+    <script src="assets/cart.js"></script>
+    <script src="assets/account.js"></script>
+    <script src="script.js"></script>
+
+    <script>
+        function showResult(message, isSuccess = true) {
+            const div = document.createElement('div');
+            div.className = `result ${isSuccess ? 'success' : 'error'}`;
+            div.innerHTML = message;
+            document.getElementById('test-results').appendChild(div);
+        }
+
+        function testBasicJS() {
+            try {
+                // Test if scripts loaded
+                const scriptsLoaded = {
+                    shopifyAPI: !!window.shopifyAPI,
+                    cartManager: !!window.cartManager,
+                    JourneyAuth: !!window.JourneyAuth,
+                    catalog: !!window.__CATALOG
+                };
+                
+                showResult(`✅ Scripts loaded: ${JSON.stringify(scriptsLoaded, null, 2)}`);
+                
+                // Test basic DOM manipulation
+                const testDiv = document.createElement('div');
+                testDiv.textContent = 'Test element created successfully';
+                showResult('✅ DOM manipulation working');
+                
+                // Test event listeners
+                const testBtn = document.createElement('button');
+                testBtn.textContent = 'Test Button';
+                testBtn.onclick = () => showResult('✅ Event listeners working');
+                document.body.appendChild(testBtn);
+                
+            } catch (error) {
+                showResult(`❌ JavaScript Error: ${error.message}`, false);
+            }
+        }
+
+        function testMenuToggle() {
+            try {
+                // Look for menu toggle
+                const menuToggle = document.querySelector('.menu-toggle');
+                if (menuToggle) {
+                    showResult('✅ Menu toggle found');
+                    // Try to click it
+                    menuToggle.click();
+                    showResult('✅ Menu toggle clicked successfully');
+                } else {
+                    showResult('❌ Menu toggle not found - this is normal for test page', false);
+                }
+            } catch (error) {
+                showResult(`❌ Menu Toggle Error: ${error.message}`, false);
+            }
+        }
+
+        function testProductCard() {
+            try {
+                // Create a test product card
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <img src="https://via.placeholder.com/200" alt="Test Product">
+                    <h3>Test Product</h3>
+                    <p>$29.99</p>
+                `;
+                
+                card.onclick = () => {
+                    showResult('✅ Product card click working');
+                };
+                
+                document.body.appendChild(card);
+                showResult('✅ Test product card created - click it to test');
+                
+            } catch (error) {
+                showResult(`❌ Product Card Error: ${error.message}`, false);
+            }
+        }
+
+        // Auto-run basic test on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            showResult('✅ Page loaded successfully');
+            setTimeout(testBasicJS, 500);
+        });
+    </script>
+</body>
+</html>

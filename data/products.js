@@ -46,8 +46,56 @@ class ShopifyAPI {
       return data;
     } catch (error) {
       console.error(`API Error (${endpoint}):`, error);
-      throw error;
+
+      // Return graceful fallback for different error types
+      if (error.name === "TypeError" && error.message.includes("fetch")) {
+        // Network error - likely local development or offline
+        console.warn(
+          "Network error detected - likely running locally or offline"
+        );
+        return this.getGracefulFallback(endpoint);
+      }
+
+      // For other errors, still throw but with better context
+      const enhancedError = new Error(`Shopify API Error: ${error.message}`);
+      enhancedError.originalError = error;
+      enhancedError.endpoint = endpoint;
+      throw enhancedError;
     }
+  }
+
+  // Graceful fallback for when API is unavailable (local development)
+  getGracefulFallback(endpoint) {
+    console.log(`Providing fallback response for ${endpoint}`);
+
+    if (endpoint.includes("listCollections")) {
+      return { collections: [] };
+    }
+
+    if (endpoint.includes("getCollection") || endpoint.includes("getProduct")) {
+      return { products: [], product: null };
+    }
+
+    if (endpoint.includes("createCart")) {
+      return {
+        cart: {
+          id: "local-cart-" + Date.now(),
+          checkoutUrl: "#",
+          totalQuantity: 0,
+          cost: { totalAmount: { amount: "0.00", currencyCode: "USD" } },
+        },
+      };
+    }
+
+    if (endpoint.includes("customer")) {
+      return {
+        customer: null,
+        accessToken: null,
+        errors: ["API not available in local development"],
+      };
+    }
+
+    return { error: "API not available", fallback: true };
   }
 
   // Collections
