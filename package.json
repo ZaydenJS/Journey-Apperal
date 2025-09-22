@@ -1,0 +1,20 @@
+{
+  "name": "journey-apparel-storefront",
+  "version": "1.0.0",
+  "description": "Headless Shopify storefront for Journey Apparel",
+  "main": "index.js",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build step required'",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@shopify/storefront-api-client": "^1.0.1"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "keywords": ["shopify", "headless", "storefront", "netlify"],
+  "author": "Journey Apparel",
+  "license": "MIT"
+}

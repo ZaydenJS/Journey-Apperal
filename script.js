@@ -167,6 +167,7 @@
     __safe("setupCollectionFromQuery", setupCollectionFromQuery);
     __safe("setupCollectionUI", setupCollectionUI);
     __safe("setupProductFromSlug", setupProductFromSlug);
+    __safe("setupHomepageProducts", setupHomepageProducts);
     __safe(
       "setupRecentlyViewedAndBestSellers",
       setupRecentlyViewedAndBestSellers
@@ -225,134 +226,184 @@
     });
   }
 
-  function setupProductFromSlug() {
+  async function setupProductFromSlug() {
     const params = new URLSearchParams(window.location.search);
     const slug = params.get("slug");
     if (!slug) return;
 
-    const products = {
-      "tech-tee": {
-        name: "Tech Tee",
-        price: "$48",
-        main: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
-      },
-      "front-runner-vest": {
-        name: "City Hoodie",
-        price: "$98",
-        main: "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-      },
-      "run-jacket": {
-        name: "Aero Tee",
-        price: "$48",
-        main: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
-      },
-      "city-hoodie": {
-        name: "City Hoodie",
-        price: "$98",
-        main: "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-      },
-      "aero-jogger": {
-        name: "Aero Jogger",
-        price: "$78",
-        main: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
-      },
-      "ultra-short": {
-        name: "Ultra Short",
-        price: "$58",
-        main: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop",
-      },
-      "studio-tank": {
-        name: "Studio Tank",
-        price: "$44",
-        main: "https://images.unsplash.com/photo-1542296332-2e4473faf563?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1521572163474-611481863552?q=80&w=800&auto=format&fit=crop",
-      },
-      "everyday-cap": {
-        name: "Everyday Cap",
-        price: "$28",
-        main: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop",
-      },
-      "zip-jacket": {
-        name: "Everyday Cap",
-        price: "$28",
-        main: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?q=80&w=800&auto=format&fit=crop",
-      },
-      "run-shell": {
-        name: "Aero Jogger",
-        price: "$78",
-        main: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
-      },
-      "aero-tee": {
-        name: "Aero Tee",
-        price: "$48",
-        main: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
-      },
-      "train-tank": {
-        name: "Train Tank",
-        price: "$44",
-        main: "https://images.unsplash.com/photo-1542296332-2e4473faf563?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1560243563-062b4b6eb650?q=80&w=800&auto=format&fit=crop",
-      },
-      "core-legging": {
-        name: "Core Legging",
-        price: "$88",
-        main: "https://images.unsplash.com/photo-1560243563-062b4b6eb650?q=80&w=1200&auto=format&fit=crop",
-        alt: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
-      },
-    };
+    try {
+      // Load product from Shopify
+      const response = await window.shopifyAPI.getProduct(slug);
+      const p = response.product;
 
-    const p = products[slug];
-    if (!p) return;
-
-    const titleEl = document.querySelector(".p-details h1");
-    const priceEl = document.querySelector(".p-details .p-price");
-
-    // New gallery (preferred)
-    const mainGalleryImg = document.querySelector(".gallery-main img");
-    const galleryThumbs = Array.from(document.querySelectorAll(".thumbs img"));
-
-    // Legacy edge-peek gallery (if present)
-    const mainImg = document.querySelector(".edge-gallery .main");
-    const leftImg = document.querySelector(".edge-gallery .left");
-    const rightImg = document.querySelector(".edge-gallery .right");
-
-    if (titleEl) titleEl.textContent = p.name;
-    if (priceEl) priceEl.textContent = p.price;
-
-    const pair = getImagesForLabel(p.name, 1200, 800);
-    if (mainGalleryImg) {
-      mainGalleryImg.src = pair.main;
-      mainGalleryImg.alt = p.name;
-      if (galleryThumbs[0]) {
-        galleryThumbs[0].src = pair.main;
-        galleryThumbs[0].alt = p.name;
+      if (!p) {
+        console.error('Product not found:', slug);
+        return;
       }
-      if (galleryThumbs[1]) {
-        galleryThumbs[1].src = pair.alt;
-        galleryThumbs[1].alt = p.name + " alt";
+
+      // Update page title
+      document.title = `${p.title} – Journey Apparel`;
+
+      const titleEl = document.querySelector(".p-details h1");
+      const priceEl = document.querySelector(".p-details .p-price");
+      const descriptionEl = document.querySelector(".p-details .p-description");
+
+      // New gallery (preferred)
+      const mainGalleryImg = document.querySelector(".gallery-main img");
+      const galleryThumbs = Array.from(document.querySelectorAll(".thumbs img"));
+
+      // Legacy edge-peek gallery (if present)
+      const mainImg = document.querySelector(".edge-gallery .main");
+      const leftImg = document.querySelector(".edge-gallery .left");
+      const rightImg = document.querySelector(".edge-gallery .right");
+
+      if (titleEl) titleEl.textContent = p.title;
+      if (priceEl) {
+        const price = parseFloat(p.priceRange.minVariantPrice.amount);
+        priceEl.textContent = `$${price.toFixed(2)} ${p.priceRange.minVariantPrice.currencyCode}`;
+      }
+      if (descriptionEl) {
+        descriptionEl.innerHTML = p.description || '';
+      }
+
+      // Use Shopify images
+      const images = p.images || [];
+      const mainImage = images[0]?.url || "";
+      const altImage = images[1]?.url || "";
+
+      if (mainGalleryImg && mainImage) {
+        mainGalleryImg.src = mainImage;
+        mainGalleryImg.alt = p.title;
+        if (galleryThumbs[0]) {
+          galleryThumbs[0].src = mainImage;
+          galleryThumbs[0].alt = p.title;
+        }
+        if (galleryThumbs[1] && altImage) {
+          galleryThumbs[1].src = altImage;
+          galleryThumbs[1].alt = p.title + " alt";
+        }
+      }
+
+      if (mainImg && mainImage) {
+        mainImg.src = mainImage;
+        mainImg.alt = p.title;
+      }
+      if (rightImg && altImage) {
+        rightImg.src = altImage;
+        rightImg.alt = p.title + " alt";
+      }
+
+      // Setup product variants and add to cart functionality
+      setupProductVariants(p);
+
+    } catch (error) {
+      console.error('Failed to load product:', error);
+    }
+  }
+
+  function setupProductVariants(product) {
+    // Create variant selector if product has options
+    if (product.options && product.options.length > 0) {
+      const variantContainer = document.querySelector('.p-variants') ||
+                              document.querySelector('.p-details');
+
+      if (variantContainer && !variantContainer.querySelector('.variant-selectors')) {
+        const variantHTML = createVariantSelectors(product);
+        const variantDiv = document.createElement('div');
+        variantDiv.className = 'variant-selectors';
+        variantDiv.innerHTML = variantHTML;
+
+        // Insert before add to cart button
+        const addToCartBtn = variantContainer.querySelector('.add-to-cart, .btn');
+        if (addToCartBtn) {
+          variantContainer.insertBefore(variantDiv, addToCartBtn);
+        } else {
+          variantContainer.appendChild(variantDiv);
+        }
       }
     }
 
-    if (mainImg) {
-      mainImg.src = pair.main;
-      mainImg.alt = p.name;
-    }
-    if (rightImg) {
-      rightImg.src = pair.alt;
-      rightImg.alt = p.name + " alt";
-    }
-    if (leftImg) {
-      leftImg.src = pair.alt;
+    // Setup add to cart functionality
+    setupAddToCart(product);
+  }
+
+  function createVariantSelectors(product) {
+    let html = '';
+
+    product.options.forEach(option => {
+      html += `
+        <div class="variant-option" style="margin-bottom: 16px;">
+          <label style="display: block; font-weight: 500; margin-bottom: 8px;">${option.name}</label>
+          <select name="option_${option.name.toLowerCase()}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            ${option.values.map(value => `<option value="${value}">${value}</option>`).join('')}
+          </select>
+        </div>
+      `;
+    });
+
+    return html;
+  }
+
+  function setupAddToCart(product) {
+    const addToCartBtns = document.querySelectorAll('.add-to-cart, .btn[data-action="add-to-cart"]');
+
+    addToCartBtns.forEach(btn => {
+      btn.onclick = async (e) => {
+        e.preventDefault();
+
+        // Get selected variant
+        const selectedVariant = getSelectedVariant(product);
+
+        if (!selectedVariant) {
+          alert('Please select all options');
+          return;
+        }
+
+        if (!selectedVariant.availableForSale) {
+          alert('This variant is out of stock');
+          return;
+        }
+
+        try {
+          btn.disabled = true;
+          btn.textContent = 'Adding...';
+
+          await window.cartManager.addToCart(selectedVariant.id, 1);
+
+          btn.textContent = 'Added!';
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = 'Add to Cart';
+          }, 2000);
+
+        } catch (error) {
+          btn.disabled = false;
+          btn.textContent = 'Add to Cart';
+          console.error('Add to cart failed:', error);
+        }
+      };
+    });
+  }
+
+  function getSelectedVariant(product) {
+    const selectors = document.querySelectorAll('.variant-option select');
+    const selectedOptions = {};
+
+    selectors.forEach(select => {
+      const optionName = select.name.replace('option_', '');
+      selectedOptions[optionName] = select.value;
+    });
+
+    // Find matching variant
+    return product.variants.find(variant => {
+      return variant.selectedOptions.every(option => {
+        const optionName = option.name.toLowerCase();
+        return selectedOptions[optionName] === option.value;
+      });
+    }) || product.variants[0]; // Fallback to first variant
+  }
+    if (leftImg && altImage) {
+      leftImg.src = altImage;
       leftImg.alt = p.name + " alt 2";
     }
 
@@ -365,9 +416,9 @@
       const item = {
         slug,
         name: p.name,
-        price: p.price,
-        main: p.main,
-        alt: p.alt,
+        price: `$${p.price}`,
+        main: p.main || (p.images && p.images[0]) || "",
+        alt: p.hover || (p.images && p.images[1]) || "",
         href: "product.html?slug=" + slug,
       };
       const filtered = (current || []).filter((x) => x && x.slug !== slug);
@@ -1604,16 +1655,25 @@
     window.addEventListener("resize", () => show(false));
   }
 
-  function setupCollectionFromQuery() {
+  async function setupCollectionFromQuery() {
     const here = (location.pathname.split("/").pop() || "").toLowerCase();
     if (!here.endsWith("collection.html")) return;
+
     const params = new URLSearchParams(location.search);
     const header = document.querySelector("main .mt-0 .upper");
-    if (!header) return;
+    const productsGrid = document.querySelector(".grid.products");
+    const productCount = document.querySelector(".product-count");
+
+    if (!header || !productsGrid) return;
 
     const toTitle = (s) =>
       s.replace(/[-_]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+
     let label = "";
+    let collectionHandle = null;
+    let tag = null;
+
+    // Determine collection and tag from URL parameters
     if (params.get("section")) {
       const v = params.get("section");
       const map = {
@@ -1622,17 +1682,238 @@
         "shop-all": "Shop All",
       };
       label = map[v] || toTitle(v);
+      collectionHandle = "all"; // Default collection
     } else if (params.get("category")) {
-      label = toTitle(params.get("category"));
+      const category = params.get("category");
+      label = toTitle(category);
+      collectionHandle = "all";
+      tag = category; // Use category as tag filter
     } else if (params.get("collection")) {
-      label = toTitle(params.get("collection"));
+      const collection = params.get("collection");
+      label = toTitle(collection);
+      collectionHandle = collection.toLowerCase().replace(/\s+/g, '-');
     } else {
       label = "Shop All";
+      collectionHandle = "all";
     }
+
     header.textContent = label.toUpperCase();
+    document.title = `${label} – Journey Apparel`;
+
+    // Load and render products
     try {
-      document.title = `${label} – Journey Apparel`;
-    } catch {}
+      await loadAndRenderProducts(collectionHandle, tag, productsGrid, productCount);
+    } catch (error) {
+      console.error('Failed to load collection products:', error);
+      showEmptyState(productsGrid, 'Failed to load products. Please try again.');
+    }
+  }
+
+  async function loadAndRenderProducts(collectionHandle, tag, container, countElement) {
+    // Show loading state
+    container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">Loading products...</div>';
+
+    try {
+      let products = [];
+
+      if (collectionHandle === "all") {
+        // Load all products from all collections
+        const collections = await window.shopifyAPI.getCollections();
+        for (const collection of collections.collections) {
+          const collectionData = await window.shopifyAPI.getCollection(collection.handle, tag);
+          products.push(...(collectionData.products || []));
+        }
+      } else {
+        // Load specific collection
+        const data = await window.shopifyAPI.getCollection(collectionHandle, tag);
+        products = data.products || [];
+      }
+
+      // Update product count
+      if (countElement) {
+        countElement.textContent = `${products.length} product${products.length !== 1 ? 's' : ''}`;
+      }
+
+      if (products.length === 0) {
+        showEmptyState(container, 'No products found in this collection.');
+        return;
+      }
+
+      // Render products
+      container.innerHTML = products.map(product => renderProductCard(product)).join('');
+
+      // Setup card interactions
+      setupCardLinks();
+
+    } catch (error) {
+      console.error('Error loading products:', error);
+      showEmptyState(container, 'Failed to load products. Please try again.');
+    }
+  }
+
+  function renderProductCard(product) {
+    const price = parseFloat(product.priceRange.minVariantPrice.amount);
+    const compareAtPrice = product.compareAtPriceRange?.minVariantPrice?.amount;
+    const hasComparePrice = compareAtPrice && parseFloat(compareAtPrice) > price;
+    const mainImage = product.images[0]?.url || '';
+    const hoverImage = product.images[1]?.url || mainImage;
+
+    return `
+      <article class="card" data-href="product.html?slug=${product.handle}" style="cursor: pointer">
+        <div class="img-wrap"
+             onmouseenter="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='1'}"
+             onmouseleave="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='0'}"
+             style="aspect-ratio: 3/4; overflow: hidden; position: relative; border-radius: 0;">
+          <img src="${mainImage}"
+               alt="${product.title}"
+               style="width: 100%; height: 100%; object-fit: cover" />
+          ${hoverImage !== mainImage ? `
+            <img class="hover-img"
+                 src="${hoverImage}"
+                 alt="${product.title} - alternate"
+                 style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 180ms ease; pointer-events: none;" />
+          ` : ''}
+        </div>
+        <div class="row mt-8" style="display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 8px; font-size: 14px; text-align: center;">
+          <span style="font-weight: 400; text-transform: uppercase; font-size: 12px;">${product.title}</span>
+          <div class="price-container">
+            ${hasComparePrice ? `
+              <span class="price compare-at" style="font-weight: 400; text-decoration: line-through; color: #999; margin-right: 8px;">$${parseFloat(compareAtPrice).toFixed(2)}</span>
+            ` : ''}
+            <span class="price" style="font-weight: 400;">$${price.toFixed(2)} ${product.priceRange.minVariantPrice.currencyCode}</span>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  function showEmptyState(container, message) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; text-align: center; color: #666;">
+        <div style="max-width: 400px;">
+          <h3 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 600; color: #333;">No Products Found</h3>
+          <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.5;">${message}</p>
+          <div style="margin-top: 24px;">
+            <a href="index.html" style="display: inline-block; padding: 12px 24px; background: #111; color: #fff; text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: 500; transition: background 0.2s ease;">Back to Home</a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function setupHomepageProducts() {
+    // Only run on homepage
+    const isHomepage = location.pathname === '/' || location.pathname.endsWith('index.html') || location.pathname === '';
+    if (!isHomepage) return;
+
+    // Load New Arrivals
+    const newArrivalsContainer = document.querySelector('#new-arrivals .carousel-track');
+    if (newArrivalsContainer) {
+      await loadHomepageSection(newArrivalsContainer, 'new-arrivals', 8);
+    }
+
+    // Load Best Sellers
+    const bestSellersContainer = document.querySelector('#best-sellers .carousel-track');
+    if (bestSellersContainer) {
+      await loadHomepageSection(bestSellersContainer, 'best-sellers', 4);
+    }
+  }
+
+  async function loadHomepageSection(container, section, limit = 8) {
+    try {
+      // Show loading state
+      container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #666;">Loading...</div>';
+
+      let products = [];
+
+      // Load products from all collections
+      const collections = await window.shopifyAPI.getCollections();
+
+      for (const collection of collections.collections) {
+        const collectionData = await window.shopifyAPI.getCollection(collection.handle);
+        products.push(...(collectionData.products || []));
+      }
+
+      // Filter and sort products based on section
+      if (section === 'new-arrivals') {
+        // Sort by creation date (newest first)
+        products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      } else if (section === 'best-sellers') {
+        // For now, just take random products. In a real implementation,
+        // you'd sort by sales data or use a specific collection
+        products = products.filter(p => p.availableForSale);
+      }
+
+      // Limit products
+      products = products.slice(0, limit);
+
+      if (products.length === 0) {
+        const message = section === 'new-arrivals'
+          ? 'No new arrivals available at the moment.'
+          : 'No best sellers available at the moment.';
+        container.innerHTML = `
+          <div style="display: flex; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; color: #666; font-size: 16px; width: 100%; grid-column: 1 / -1;">
+            <div>
+              <p style="margin: 0 0 8px 0;">${message}</p>
+              <p style="margin: 0; font-size: 14px;">Check back soon for ${section === 'new-arrivals' ? 'new' : 'popular'} products!</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Render products
+      container.innerHTML = products.map(product => renderHomepageProductCard(product)).join('');
+
+      // Setup card interactions
+      setupCardLinks();
+
+    } catch (error) {
+      console.error(`Error loading ${section}:`, error);
+      container.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; color: #666; font-size: 16px; width: 100%; grid-column: 1 / -1;">
+          <div>
+            <p style="margin: 0;">Failed to load products.</p>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function renderHomepageProductCard(product) {
+    const price = parseFloat(product.priceRange.minVariantPrice.amount);
+    const compareAtPrice = product.compareAtPriceRange?.minVariantPrice?.amount;
+    const hasComparePrice = compareAtPrice && parseFloat(compareAtPrice) > price;
+    const mainImage = product.images[0]?.url || '';
+    const hoverImage = product.images[1]?.url || mainImage;
+
+    return `
+      <article class="card" data-href="product.html?slug=${product.handle}" style="cursor: pointer">
+        <div class="img-wrap"
+             onmouseenter="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='1'}"
+             onmouseleave="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='0'}"
+             style="aspect-ratio: 1 / 1.7; overflow: hidden; position: relative; border-radius: 0;">
+          <img src="${mainImage}"
+               alt="${product.title}"
+               style="width: 100%; height: 100%; object-fit: cover" />
+          ${hoverImage !== mainImage ? `
+            <img class="hover-img"
+                 src="${hoverImage}"
+                 alt="${product.title} - alternate"
+                 style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 180ms ease; pointer-events: none;" />
+          ` : ''}
+        </div>
+        <div class="details" style="padding: 12px 0; text-align: center;">
+          <h3 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px;">${product.title}</h3>
+          <div class="price-container">
+            ${hasComparePrice ? `
+              <span class="price compare-at" style="font-weight: 400; text-decoration: line-through; color: #999; margin-right: 8px; font-size: 13px;">$${parseFloat(compareAtPrice).toFixed(2)}</span>
+            ` : ''}
+            <span class="price" style="font-weight: 500; font-size: 14px;">$${price.toFixed(2)} ${product.priceRange.minVariantPrice.currencyCode}</span>
+          </div>
+        </div>
+      </article>
+    `;
   }
 
   function setupCollectionUI() {
@@ -1980,123 +2261,31 @@
       const countEl = document.querySelector("main .muted");
       if (!grid) return;
 
-      // Build 50 demo products (adds 27 more to reach 50 total)
-      const base = [
-        {
-          name: "Tech Tee",
-          type: "Tees",
-          image:
-            "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-          hover:
-            "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop",
-          price: 48,
-          color: "Black",
-          sizes: ["XS", "S", "M", "L", "XL"],
-        },
-        {
-          name: "Aero Jogger",
-          type: "Pants",
-          image:
-            "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop",
-          hover:
-            "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
-          price: 78,
-          color: "Gray",
-          sizes: ["XS", "S", "M", "L", "XL"],
-        },
-        {
-          name: "City Hoodie",
-          type: "Hoodies",
-          image:
-            "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop",
-          hover:
-            "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-          price: 98,
-          color: "Blue",
-          sizes: ["S", "M", "L", "XL"],
-        },
-        {
-          name: "Ultra Short",
-          type: "Shorts",
-          image:
-            "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
-          hover:
-            "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop",
-          price: 58,
-          color: "Green",
-          sizes: ["XS", "S", "M", "L", "XL"],
-        },
-        {
-          name: "Aero Tee",
-          type: "Tees",
-          image:
-            "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-          hover:
-            "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
-          price: 48,
-          color: "Black",
-          sizes: ["S", "M", "L", "XL"],
-        },
-        {
-          name: "Studio Tank",
-          type: "Tees",
-          image:
-            "https://images.unsplash.com/photo-1542296332-2e4473faf563?q=80&w=800&auto=format&fit=crop",
-          hover:
-            "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop",
-          price: 44,
-          color: "White",
-          sizes: ["XS", "S", "M", "L", "XL"],
-        },
-        {
-          name: "City Hoodie",
-          type: "Hoodies",
-          image:
-            "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop",
-          hover:
-            "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-          price: 98,
-          color: "Gray",
-          sizes: ["XS", "S", "M", "L", "XL"],
-        },
-        {
-          name: "Everyday Cap",
-          type: "Accessories",
-          image:
-            "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
-          hover:
-            "https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?q=80&w=800&auto=format&fit=crop",
-          price: 28,
-          color: "Black",
-          sizes: [],
-        },
-      ];
-
-      const typeCounts = {};
-      const allProducts = Array.from({ length: 50 }).map((_, i) => {
-        const b = base[i % base.length];
-        const t = b.type;
-        const n = (typeCounts[t] = (typeCounts[t] || 0) + 1);
-        const name = `${t} ${n}`;
-        const date = new Date(2025, 0, 1 + i); // staggered
-        const pop = (i * 7) % 50; // pseudo popularity
-        const priceVar = b.price + ((i % 5) - 2) * 2; // slight variance
-        return {
-          id: i + 1,
-          name,
-          type: b.type,
-          collection: "Best Sellers",
-          image: b.image,
-          hover: b.hover,
-          price: Math.max(10, priceVar),
-          color: ["Black", "White", "Gray", "Blue", "Green"][i % 5],
-          sizes: b.sizes.length ? b.sizes : ["OS"],
-          available: true,
-          date,
-          pop,
-          index: i,
-        };
-      });
+      // Use products from catalog
+      const allProducts =
+        window.__CATALOG && window.__CATALOG.products
+          ? window.__CATALOG.products.map((product, i) => ({
+              id: i + 1,
+              name: product.name,
+              type: product.category,
+              collection:
+                product.collections && product.collections.length > 0
+                  ? product.collections[0]
+                  : "General",
+              image:
+                product.main || (product.images && product.images[0]) || "",
+              hover:
+                product.hover || (product.images && product.images[1]) || "",
+              price: product.price,
+              color: product.color || "Black",
+              sizes: product.sizes || ["OS"],
+              available: true,
+              date: new Date(product.date || Date.now()),
+              pop: product.pop || 0,
+              index: i,
+              slug: product.slug,
+            }))
+          : [];
 
       let currentSort = "featured";
       // Allow external controls (sort panel) to set sort mode directly
@@ -2214,7 +2403,9 @@
           }" data-sizes="${p.sizes.join(",")}" data-price="${
             p.price
           }" data-date="${+p.date}" data-pop="${p.pop}" data-index="${p.index}">
-            <a href="product.html" class="img-wrap" style="position:relative; display:block; aspect-ratio:1 / 1.7; overflow:hidden" onmouseenter="var a=this.querySelector('.alt'); if(a){a.style.opacity='1'}" onmouseleave="var a=this.querySelector('.alt'); if(a){a.style.opacity='0'}">
+            <a href="product.html${
+              p.slug ? "?slug=" + p.slug : ""
+            }" class="img-wrap" style="position:relative; display:block; aspect-ratio:1 / 1.7; overflow:hidden" onmouseenter="var a=this.querySelector('.alt'); if(a){a.style.opacity='1'}" onmouseleave="var a=this.querySelector('.alt'); if(a){a.style.opacity='0'}">
               <img src="${p.image}" alt="${
             p.name
           }" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block" />

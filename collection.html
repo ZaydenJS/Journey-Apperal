@@ -474,7 +474,7 @@
     <main class="container section">
       <header class="mt-0" style="padding-left: 0; text-align: center">
         <div class="upper" style="font-weight: 800">Journey / New Arrivals</div>
-        <div class="muted">23 products</div>
+        <div class="muted">0 products</div>
       </header>
 
       <!-- Divider under product count -->
@@ -845,415 +845,58 @@
         class="grid products mt-16"
         style="row-gap: 80px; margin-top: 24px"
       >
-        <!-- Product cards -->
-        <article class="card">
-          <a
-            href="product.html?slug=tech-tee"
-            class="img-wrap"
-            style="
-              display: block;
-              aspect-ratio: 1 / 2.2;
-              overflow: hidden;
-              border-radius: 0;
-            "
-            ><img
-              src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop"
-              alt="Tech Tee"
-              loading="lazy"
+        <!-- Products will be loaded dynamically from catalog -->
+        <div
+          style="
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            text-align: center;
+            color: #666;
+          "
+        >
+          <div style="max-width: 400px">
+            <h3
               style="
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-                border-radius: 0;
+                margin: 0 0 12px 0;
+                font-size: 20px;
+                font-weight: 600;
+                color: #333;
               "
-          /></a>
-          <div
-            class="row mt-8"
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 6px;
-              margin-top: 14px;
-              text-align: center;
-            "
-          >
-            <span
-              style="
-                max-width: 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 15px;
-                color: #222;
-              "
-              >Tech Tee</span
             >
-            <span
-              class="price"
-              style="font-size: 14px; color: #111; font-weight: 400"
-              >$48</span
-            >
+              No Products Found
+            </h3>
+            <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.5">
+              We don't have any products in this collection yet.
+            </p>
+            <p style="margin: 0; font-size: 14px; color: #888">
+              Check back soon for new arrivals, or browse our other collections.
+            </p>
+            <div style="margin-top: 24px">
+              <a
+                href="index.html"
+                style="
+                  display: inline-block;
+                  padding: 12px 24px;
+                  background: #111;
+                  color: #fff;
+                  text-decoration: none;
+                  border-radius: 4px;
+                  font-size: 14px;
+                  font-weight: 500;
+                  transition: background 0.2s ease;
+                "
+                onmouseover="this.style.background='#333'"
+                onmouseout="this.style.background='#111'"
+              >
+                Back to Home
+              </a>
+            </div>
           </div>
-        </article>
-        <article class="card">
-          <a
-            href="product.html?slug=aero-jogger"
-            class="img-wrap"
-            style="
-              display: block;
-              aspect-ratio: 1 / 2.2;
-              overflow: hidden;
-              border-radius: 0;
-            "
-            ><img
-              src="https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop"
-              alt="Aero Jogger"
-              loading="lazy"
-              style="
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-                border-radius: 0;
-              "
-          /></a>
-          <div
-            class="row mt-8"
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 6px;
-              margin-top: 14px;
-              text-align: center;
-            "
-          >
-            <span
-              style="
-                max-width: 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 15px;
-                color: #222;
-              "
-              >Aero Jogger</span
-            >
-            <span
-              class="price"
-              style="font-size: 14px; color: #111; font-weight: 400"
-              >$78</span
-            >
-          </div>
-        </article>
-        <article class="card">
-          <a
-            href="product.html?slug=city-hoodie"
-            class="img-wrap"
-            style="
-              display: block;
-              aspect-ratio: 1 / 2.2;
-              overflow: hidden;
-              border-radius: 0;
-            "
-            ><img
-              src="https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop"
-              alt="City Hoodie"
-              loading="lazy"
-              style="
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-                border-radius: 0;
-              "
-          /></a>
-          <div
-            class="row mt-8"
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 6px;
-              margin-top: 14px;
-              text-align: center;
-            "
-          >
-            <span
-              style="
-                max-width: 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 15px;
-                color: #222;
-              "
-              >City Hoodie</span
-            >
-            <span
-              class="price"
-              style="font-size: 14px; color: #111; font-weight: 400"
-              >$98</span
-            >
-          </div>
-        </article>
-        <article class="card">
-          <a
-            href="product.html?slug=ultra-short"
-            class="img-wrap"
-            style="
-              display: block;
-              aspect-ratio: 1 / 2.2;
-              overflow: hidden;
-              border-radius: 0;
-            "
-            ><img
-              src="https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop"
-              alt="Ultra Short"
-              loading="lazy"
-              style="
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-                border-radius: 0;
-              "
-          /></a>
-          <div
-            class="row mt-8"
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 6px;
-              margin-top: 14px;
-              text-align: center;
-            "
-          >
-            <span
-              style="
-                max-width: 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 15px;
-                color: #222;
-              "
-              >Ultra Short</span
-            >
-            <span
-              class="price"
-              style="font-size: 14px; color: #111; font-weight: 400"
-              >$58</span
-            >
-          </div>
-        </article>
-        <article class="card">
-          <a
-            href="product.html?slug=ultra-short"
-            class="img-wrap"
-            style="
-              display: block;
-              aspect-ratio: 1 / 2.2;
-              overflow: hidden;
-              border-radius: 0;
-            "
-            ><img
-              src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop"
-              alt="Ultra Short"
-              loading="lazy"
-              style="
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-                border-radius: 0;
-              "
-          /></a>
-          <div
-            class="row mt-8"
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 6px;
-              margin-top: 14px;
-              text-align: center;
-            "
-          >
-            <span
-              style="
-                max-width: 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 15px;
-                color: #222;
-              "
-              >Ultra Short</span
-            >
-            <span
-              class="price"
-              style="font-size: 14px; color: #111; font-weight: 400"
-              >$128</span
-            >
-          </div>
-        </article>
-        <article class="card">
-          <a
-            href="product.html?slug=studio-tank"
-            class="img-wrap"
-            style="
-              display: block;
-              aspect-ratio: 1 / 2.2;
-              overflow: hidden;
-              border-radius: 0;
-            "
-            ><img
-              src="https://images.unsplash.com/photo-1542296332-2e4473faf563?q=80&w=800&auto=format&fit=crop"
-              alt="Studio Tank"
-              loading="lazy"
-              style="
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-                border-radius: 0;
-              "
-          /></a>
-          <div
-            class="row mt-8"
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 6px;
-              margin-top: 14px;
-              text-align: center;
-            "
-          >
-            <span
-              style="
-                max-width: 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 15px;
-                color: #222;
-              "
-              >Studio Tank</span
-            >
-            <span
-              class="price"
-              style="font-size: 14px; color: #111; font-weight: 400"
-              >$44</span
-            >
-          </div>
-        </article>
-        <article class="card">
-          <a
-            href="product.html?slug=city-hoodie"
-            class="img-wrap"
-            style="
-              display: block;
-              aspect-ratio: 1 / 2.2;
-              overflow: hidden;
-              border-radius: 0;
-            "
-            ><img
-              src="https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop"
-              alt="City Hoodie"
-              loading="lazy"
-              style="
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-                border-radius: 0;
-              "
-          /></a>
-          <div
-            class="row mt-8"
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 6px;
-              margin-top: 14px;
-              text-align: center;
-            "
-          >
-            <span
-              style="
-                max-width: 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 15px;
-                color: #222;
-              "
-              >City Hoodie</span
-            >
-            <span
-              class="price"
-              style="font-size: 14px; color: #111; font-weight: 400"
-              >$98</span
-            >
-          </div>
-        </article>
-        <article class="card">
-          <a
-            href="product.html?slug=everyday-cap"
-            class="img-wrap"
-            style="
-              display: block;
-              aspect-ratio: 1 / 2.2;
-              overflow: hidden;
-              border-radius: 0;
-            "
-            ><img
-              src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop"
-              alt="Everyday Cap"
-              loading="lazy"
-              style="
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-                border-radius: 0;
-              "
-          /></a>
-          <div
-            class="row mt-8"
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 6px;
-              margin-top: 14px;
-              text-align: center;
-            "
-          >
-            <span
-              style="
-                max-width: 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 15px;
-                color: #222;
-              "
-              >Everyday Cap</span
-            >
-            <span
-              class="price"
-              style="font-size: 14px; color: #111; font-weight: 400"
-              >$28</span
-            >
-          </div>
-        </article>
+        </div>
       </section>
     </main>
 
@@ -1667,6 +1310,8 @@
       })();
     </script>
 
+    <script src="data/products.js" defer></script>
+    <script src="assets/cart.js" defer></script>
     <script src="assets/account.js" defer></script>
     <script src="script.js" defer></script>
   </body>
