@@ -300,6 +300,64 @@
           rightImg.alt = p.title + " alt";
         }
 
+        // Populate hero carousel (#hero-track) with Shopify images
+        try {
+          const heroTrack = document.getElementById("hero-track");
+          if (heroTrack && images && images.length) {
+            const trackImgs = Array.from(heroTrack.querySelectorAll("img"));
+            // Update existing placeholders
+            if (trackImgs[0] && images[0]) {
+              trackImgs[0].src = images[0].url;
+              trackImgs[0].alt = p.title;
+            }
+            if (trackImgs[1] && images[1]) {
+              trackImgs[1].src = images[1].url;
+              trackImgs[1].alt = p.title + " alt 1";
+            }
+            if (trackImgs[2] && images[2]) {
+              trackImgs[2].src = images[2].url;
+              trackImgs[2].alt = p.title + " alt 2";
+            }
+            // Append any remaining images so the next/prev controls can scroll to them
+            for (let i = trackImgs.length; i < images.length; i++) {
+              const img = document.createElement("img");
+              img.src = images[i].url;
+              img.alt = `${p.title} alt ${i}`;
+              img.style.width = "100%";
+              img.style.height = "100%";
+              img.style.borderRadius = "0";
+              img.style.objectFit = "cover";
+              img.style.scrollSnapAlign = "center";
+              img.style.pointerEvents = "none";
+              img.style.transition = "none";
+              heroTrack.appendChild(img);
+            }
+            // Rebuild dots to match new image count
+            const dotsWrap = document.getElementById("hero-dots");
+            if (dotsWrap) {
+              dotsWrap.innerHTML = "";
+              const imgsNow = Array.from(heroTrack.querySelectorAll("img"));
+              imgsNow.forEach((_, i) => {
+                const dot = document.createElement("span");
+                dot.setAttribute("data-idx", String(i));
+                dot.style.cssText =
+                  "width:8px;height:8px;border-radius:50%;background:#c7c7c7;display:inline-block;transition:background .2s;";
+                dot.addEventListener("click", function () {
+                  const el = imgsNow[i];
+                  if (el)
+                    heroTrack.scrollTo({
+                      left: el.offsetLeft,
+                      behavior: "smooth",
+                    });
+                });
+                dotsWrap.appendChild(dot);
+              });
+            }
+          }
+        } catch (e) {
+          console.warn("hero-track population failed", e);
+        }
+
         // Setup product variants and add to cart functionality
         setupProductVariants(p);
       } else {
