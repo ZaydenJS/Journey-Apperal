@@ -358,6 +358,46 @@
           console.warn("hero-track population failed", e);
         }
 
+        // Wire prev/next controls to navigate images reliably
+        try {
+          const prev = document.querySelector(".hero-carousel .ctrl.prev");
+          const next = document.querySelector(".hero-carousel .ctrl.next");
+          const getImgs = () => Array.from(heroTrack.querySelectorAll("img"));
+          const current = () => {
+            const imgs = getImgs();
+            const mid = heroTrack.scrollLeft + heroTrack.clientWidth / 2;
+            let near = 0,
+              dist = Infinity;
+            imgs.forEach((img, i) => {
+              const center = img.offsetLeft + img.offsetWidth / 2;
+              const d = Math.abs(center - mid);
+              if (d < dist) {
+                dist = d;
+                near = i;
+              }
+            });
+            return near;
+          };
+          const goTo = (i) => {
+            const imgs = getImgs();
+            if (!imgs.length) return;
+            const n = imgs.length;
+            const idx = ((i % n) + n) % n;
+            const el = imgs[idx];
+            heroTrack.scrollTo({ left: el.offsetLeft, behavior: "smooth" });
+          };
+          prev &&
+            prev.addEventListener("click", (e) => {
+              e.preventDefault();
+              goTo(current() - 1);
+            });
+          next &&
+            next.addEventListener("click", (e) => {
+              e.preventDefault();
+              goTo(current() + 1);
+            });
+        } catch (_) {}
+
         // Setup product variants and add to cart functionality
         setupProductVariants(p);
       } else {
