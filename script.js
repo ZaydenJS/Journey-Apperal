@@ -360,8 +360,21 @@
 
         // Wire prev/next controls to navigate images reliably
         try {
-          const prev = document.querySelector(".hero-carousel .ctrl.prev");
-          const next = document.querySelector(".hero-carousel .ctrl.next");
+          let prev = document.querySelector(".hero-carousel .ctrl.prev");
+          let next = document.querySelector(".hero-carousel .ctrl.next");
+
+          // Remove any existing click listeners added by generic carousel wiring
+          if (prev) {
+            const clone = prev.cloneNode(true);
+            prev.parentNode.replaceChild(clone, prev);
+            prev = clone;
+          }
+          if (next) {
+            const clone = next.cloneNode(true);
+            next.parentNode.replaceChild(clone, next);
+            next = clone;
+          }
+
           const getImgs = () => Array.from(heroTrack.querySelectorAll("img"));
           const current = () => {
             const imgs = getImgs();
@@ -386,14 +399,17 @@
             const el = imgs[idx];
             heroTrack.scrollTo({ left: el.offsetLeft, behavior: "smooth" });
           };
+
           prev &&
             prev.addEventListener("click", (e) => {
               e.preventDefault();
+              e.stopPropagation();
               goTo(current() - 1);
             });
           next &&
             next.addEventListener("click", (e) => {
               e.preventDefault();
+              e.stopPropagation();
               goTo(current() + 1);
             });
         } catch (_) {}
