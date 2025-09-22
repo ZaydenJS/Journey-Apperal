@@ -1726,7 +1726,7 @@
       collectionHandle = "all";
     }
 
-    header.textContent = label.toUpperCase();
+    header.textContent = `Journey / ${label}`;
     document.title = `${label} – Journey Apparel`;
 
     // Load and render products
