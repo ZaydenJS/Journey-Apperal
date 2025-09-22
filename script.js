@@ -25,10 +25,10 @@
               <div>
                 <h4 class="upper">Shop by Category</h4>
                 <div class="links">
-                  <a href="collection.html">Tops</a>
-                  <a href="collection.html">Hoodies</a>
-                  <a href="collection.html">Bottoms</a>
-                  <a href="collection.html">Accessories</a>
+                  <a href="collection.html?collection=tops">Tees</a>
+                  <a href="collection.html?collection=hoodies">Hoodies</a>
+                  <a href="collection.html?collection=bottoms">Bottoms</a>
+                  <a href="collection.html?collection=accessories">Accessories</a>
                 </div>
               </div>
               <div>
@@ -88,11 +88,11 @@
     <a href="collection.html?section=shop-all" class="row-item">Shop All</a>
     <button class="row-item accordion" data-accordion aria-expanded="false">Shop by Category <span class="chev">›</span></button>
     <div class="sub">
-      <a href="collection.html?category=tees">Tees</a>
-      <a href="collection.html?category=hoodies">Hoodies</a>
-      <a href="collection.html?category=shorts">Shorts</a>
-      <a href="collection.html?category=pants">Pants</a>
-      <a href="collection.html?category=accessories">Accessories</a>
+      <a href="collection.html?collection=tops">Tees</a>
+      <a href="collection.html?collection=hoodies">Hoodies</a>
+      <a href="collection.html?collection=shorts">Shorts</a>
+      <a href="collection.html?collection=pants">Pants</a>
+      <a href="collection.html?collection=accessories">Accessories</a>
     </div>
     <button class="row-item accordion" data-accordion aria-expanded="false">Shop by Collection <span class="chev">›</span></button>
     <div class="sub">
@@ -1710,10 +1710,13 @@
       label = map[v] || toTitle(v);
       collectionHandle = "all"; // Default collection
     } else if (params.get("category")) {
-      const category = params.get("category");
-      label = toTitle(category);
+      const categoryRaw = params.get("category");
+      const isPrefixed = /^category-/i.test(categoryRaw);
+      const base = categoryRaw.replace(/^category-/i, "");
+      label = toTitle(base);
       collectionHandle = "all";
-      tag = category; // Use category as tag filter
+      // Preserve your capitalization (e.g., category-Tees) for tags
+      tag = isPrefixed ? categoryRaw : `category-${toTitle(base)}`;
     } else if (params.get("collection")) {
       const collection = params.get("collection");
       label = toTitle(collection);
@@ -2171,7 +2174,7 @@
       size: ["XS", "S", "M", "L", "XL"],
       color: ["Black", "White", "Gray", "Blue", "Green"],
       // Align product type categories with collection page spec
-      type: ["Tops", "Bottoms", "Outerwear", "Accessories"],
+      type: ["Tees", "Bottoms", "Outerwear", "Accessories"],
 
       availability: ["In stock"],
     };
@@ -2767,10 +2770,10 @@
 
       // Categories (align to user’s taxonomy)
       [
-        ["Tops", "collection.html?category=tees"],
-        ["Hoodies", "collection.html?category=hoodies"],
-        ["Bottoms", "collection.html?category=pants"],
-        ["Accessories", "collection.html?category=accessories"],
+        ["Tees", "collection.html?collection=tops"],
+        ["Hoodies", "collection.html?collection=hoodies"],
+        ["Bottoms", "collection.html?collection=bottoms"],
+        ["Accessories", "collection.html?collection=accessories"],
       ].forEach(([label, url]) => add(label, url, "Category"));
 
       // Products visible on the page (cards)
