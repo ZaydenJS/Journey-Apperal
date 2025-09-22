@@ -360,6 +360,9 @@
 
         // Wire prev/next controls to navigate images reliably
         try {
+          const heroTrack = document.getElementById("hero-track");
+          if (!heroTrack) throw new Error("heroTrack missing");
+
           let prev = document.querySelector(".hero-carousel .ctrl.prev");
           let next = document.querySelector(".hero-carousel .ctrl.next");
 
