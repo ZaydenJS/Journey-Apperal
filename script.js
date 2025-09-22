@@ -1683,7 +1683,9 @@
 
   async function setupCollectionFromQuery() {
     const here = (location.pathname.split("/").pop() || "").toLowerCase();
-    if (!here.endsWith("collection.html")) return;
+    const isCollectionPage =
+      here === "collection" || here.endsWith("collection.html");
+    if (!isCollectionPage) return;
 
     const params = new URLSearchParams(location.search);
     const header = document.querySelector("main .mt-0 .upper");
