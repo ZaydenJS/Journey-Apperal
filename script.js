@@ -363,58 +363,40 @@
           const heroTrack = document.getElementById("hero-track");
           if (!heroTrack) throw new Error("heroTrack missing");
 
-          let prev = document.querySelector(".hero-carousel .ctrl.prev");
-          let next = document.querySelector(".hero-carousel .ctrl.next");
+          const prev = document.querySelector(".hero-carousel .ctrl.prev");
+          const next = document.querySelector(".hero-carousel .ctrl.next");
 
-          // Remove any existing click listeners added by generic carousel wiring
+          const slides = () => Array.from(heroTrack.querySelectorAll("img"));
+          const slideW = () => heroTrack.clientWidth;
+          const count = () => slides().length;
+          const idx = () =>
+            Math.round(heroTrack.scrollLeft / Math.max(1, slideW()));
+          const clamp = (i) => Math.max(0, Math.min(count() - 1, i));
+          const goTo = (i) => {
+            const target = clamp(i);
+            heroTrack.scrollTo({ left: target * slideW(), behavior: "smooth" });
+          };
+
           if (prev) {
-            const clone = prev.cloneNode(true);
-            prev.parentNode.replaceChild(clone, prev);
-            prev = clone;
+            prev.addEventListener(
+              "click",
+              (e) => {
+                e.preventDefault();
+                goTo(idx() - 1);
+              },
+              { passive: false }
+            );
           }
           if (next) {
-            const clone = next.cloneNode(true);
-            next.parentNode.replaceChild(clone, next);
-            next = clone;
+            next.addEventListener(
+              "click",
+              (e) => {
+                e.preventDefault();
+                goTo(idx() + 1);
+              },
+              { passive: false }
+            );
           }
-
-          const getImgs = () => Array.from(heroTrack.querySelectorAll("img"));
-          const current = () => {
-            const imgs = getImgs();
-            const mid = heroTrack.scrollLeft + heroTrack.clientWidth / 2;
-            let near = 0,
-              dist = Infinity;
-            imgs.forEach((img, i) => {
-              const center = img.offsetLeft + img.offsetWidth / 2;
-              const d = Math.abs(center - mid);
-              if (d < dist) {
-                dist = d;
-                near = i;
-              }
-            });
-            return near;
-          };
-          const goTo = (i) => {
-            const imgs = getImgs();
-            if (!imgs.length) return;
-            const n = imgs.length;
-            const idx = ((i % n) + n) % n;
-            const el = imgs[idx];
-            heroTrack.scrollTo({ left: el.offsetLeft, behavior: "smooth" });
-          };
-
-          prev &&
-            prev.addEventListener("click", (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              goTo(current() - 1);
-            });
-          next &&
-            next.addEventListener("click", (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              goTo(current() + 1);
-            });
         } catch (_) {}
 
         // Setup product variants and add to cart functionality
@@ -1834,8 +1816,8 @@
       const base = categoryRaw.replace(/^category-/i, "");
       label = toTitle(base);
       collectionHandle = "all";
-      // Preserve your capitalization (e.g., category-Tees) for tags
-      tag = isPrefixed ? categoryRaw : `category-${toTitle(base)}`;
+      // Normalize tag to lowercase to match Shopify tags
+      tag = isPrefixed ? categoryRaw.toLowerCase() : base.toLowerCase();
     } else if (params.get("collection")) {
       const collection = params.get("collection");
       label = toTitle(collection);
