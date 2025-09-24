@@ -22,7 +22,7 @@ exports.handler = async function (event) {
 
   try {
     const { email, tags } = JSON.parse(event.body || "{}");
-    const tagValue = Array.isArray(tags) ? tags.join(",") : (tags || "");
+    const tagValue = Array.isArray(tags) ? tags.join(",") : tags || "";
 
     if (!email || !/^([^\s@]+)@([^\s@]+)\.([^\s@]+)$/.test(String(email))) {
       return {
@@ -62,7 +62,10 @@ exports.handler = async function (event) {
       return {
         statusCode: 502,
         headers: { "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify({ ok: false, error: "Unexpected response from Mailchimp" }),
+        body: JSON.stringify({
+          ok: false,
+          error: "Unexpected response from Mailchimp",
+        }),
       };
     }
 
@@ -74,12 +77,23 @@ exports.handler = async function (event) {
       return {
         statusCode: 502,
         headers: { "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify({ ok: false, error: "Failed to parse Mailchimp response" }),
+        body: JSON.stringify({
+          ok: false,
+          error: "Failed to parse Mailchimp response",
+        }),
       };
     }
 
     const ok = data && String(data.result).toLowerCase() === "success";
-    const message = data && data.msg ? String(data.msg).replace(/<[^>]+>/g, "").trim() : "";
+    let message =
+      data && data.msg
+        ? String(data.msg)
+            .replace(/<[^>]+>/g, "")
+            .trim()
+        : "";
+    if (!ok && /already\s+subscribed/i.test(message)) {
+      message = "You're already subscribed.";
+    }
 
     return {
       statusCode: 200,
@@ -94,4 +108,3 @@ exports.handler = async function (event) {
     };
   }
 };
-
