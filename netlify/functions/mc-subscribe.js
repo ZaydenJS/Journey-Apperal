@@ -52,34 +52,41 @@ exports.handler = async function (event) {
     const url = `${base}?${params.toString()}`;
 
     // Native fetch is available in Netlify functions runtime (Node 18+)
-    const res = await fetch(url, { method: "GET" });
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        Accept: "application/javascript,text/javascript;q=0.9,*/*;q=0.8",
+      },
+    });
     const text = await res.text();
 
-    // Expect something like: mc_fn_cb({...});
-    const start = text.indexOf(`${cb}(`);
-    const end = text.lastIndexOf(")");
-    if (start === -1 || end === -1) {
+    // Parse JSONP robustly: prefer callback wrapper, otherwise extract first {...}
+    let data;
+    try {
+      const start = text.indexOf(`${cb}(`);
+      const end = text.lastIndexOf(")");
+      if (start !== -1 && end !== -1 && end > start) {
+        const jsonStr = text.slice(start + cb.length + 1, end);
+        data = JSON.parse(jsonStr);
+      } else {
+        const b1 = text.indexOf("{");
+        const b2 = text.lastIndexOf("}");
+        if (b1 !== -1 && b2 !== -1 && b2 > b1) {
+          const jsonOnly = text.slice(b1, b2 + 1);
+          data = JSON.parse(jsonOnly);
+        }
+      }
+    } catch (e) {
+      // ignore and handle below
+    }
+
+    if (!data) {
       return {
         statusCode: 502,
         headers: { "Access-Control-Allow-Origin": "*" },
         body: JSON.stringify({
           ok: false,
           error: "Unexpected response from Mailchimp",
-        }),
-      };
-    }
-
-    const jsonStr = text.slice(start + cb.length + 1, end);
-    let data;
-    try {
-      data = JSON.parse(jsonStr);
-    } catch (e) {
-      return {
-        statusCode: 502,
-        headers: { "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify({
-          ok: false,
-          error: "Failed to parse Mailchimp response",
         }),
       };
     }
