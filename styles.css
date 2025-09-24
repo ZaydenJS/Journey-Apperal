@@ -58,7 +58,7 @@ input {
 }
 .header {
   position: sticky;
-  top: 24px;
+  top: 32px;
   z-index: 60;
   background: #fff;
   border-bottom: 1px solid var(--border);
@@ -84,6 +84,9 @@ input {
   display: inline-block;
   padding: 8px 10px;
 }
+/* Site logo image sizing */
+.logo img { height: 56px !important; display: block; }
+
 .icon-btn {
   background: none;
   border: 0;

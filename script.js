@@ -48,7 +48,7 @@
         <a href="collection.html" class="header-item">Sale<span class="badge">-20%</span></a>
       </nav>
     </div>
-    <h1 class="logo"><a href="index.html" aria-label="Journey Apparel Home">JOURNEY</a></h1>
+    <h1 class="logo"><a href="index.html" aria-label="Journeys Apparel Home" style="display:inline-block;"><img src="LOGO/Header.png" alt="Journeys Apparel" style="height:56px; display:block;"/></a></h1>
     <div id="site-search" style="position: fixed; inset: 0 0 auto 0; top: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(2px); z-index: 1000; display: none; padding: 12px 16px;">
       <form id="site-search-form" style="max-width: 800px; margin: 0 auto; display: flex; gap: 8px">
         <input id="site-search-input" type="search" placeholder="Search pages or sections (e.g., New Arrivals, Best Sellers, Pair It With, Cart)" style="flex:1; padding:12px; border-radius:8px; border:1px solid #ddd; font-size:16px; background:#fff" />
