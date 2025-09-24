@@ -2364,25 +2364,130 @@
             });
           if (form)
             form.addEventListener("submit", function (e) {
-              // Do not prevent default; let Mailchimp handle submission in a new tab
+              // AJAX/JSONP submit to Mailchimp without redirect
+              e.preventDefault();
+              var btn = qs("promo-cta");
+              var input = qs("promo-email");
+              var msg = document.getElementById("promo-msg");
+              function showMsg(text, ok) {
+                if (!msg) return;
+                msg.textContent = text;
+                msg.style.display = "block";
+                msg.style.color = ok ? "#0a0" : "#b00020";
+              }
               try {
-                var btn = qs("promo-cta");
+                var email = ((input && input.value) || "").trim();
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                  showMsg("Please enter a valid email address.", false);
+                  if (input) input.focus();
+                  return;
+                }
                 if (btn) {
                   btn.disabled = true;
                   btn.style.opacity = "0.7";
                   btn.style.cursor = "not-allowed";
-                  setTimeout(function () {
+                }
+                // Build Mailchimp post-json endpoint from form action
+                var base = (form.getAttribute("action") || "").replace(
+                  "/post?",
+                  "/post-json?"
+                );
+                // JSONP callback
+                var cbName =
+                  "mc_cb_" + Date.now() + "_" + Math.floor(Math.random() * 1e6);
+                var hpName = "b_de14f9e1de5e70d726b870a4e_49f5f16177"; // honeypot must remain empty
+                var src =
+                  base +
+                  "&c=" +
+                  encodeURIComponent(cbName) +
+                  "&EMAIL=" +
+                  encodeURIComponent(email) +
+                  "&tags=popup" +
+                  "&" +
+                  hpName +
+                  "=";
+                var done = false;
+                window[cbName] = function (data) {
+                  if (done) return;
+                  done = true;
+                  try {
+                    script.parentNode && script.parentNode.removeChild(script);
+                  } catch (e) {}
+                  try {
+                    delete window[cbName];
+                  } catch (e) {
+                    window[cbName] = undefined;
+                  }
+                  var ok =
+                    data && String(data.result).toLowerCase() === "success";
+                  if (ok) {
+                    showMsg("Thanks! Check your inbox for your code.", true);
+                  } else {
+                    var m =
+                      data && data.msg
+                        ? String(data.msg)
+                        : "Something went wrong. Please try again.";
+                    // Strip HTML from Mailchimp error
+                    m = m.replace(/<[^>]+>/g, "").trim();
+                    // Common already subscribed message normalization
+                    if (/already\s+subscribed/i.test(m))
+                      m = "You're already subscribed.";
+                    showMsg(m, false);
+                  }
+                  if (btn) {
+                    setTimeout(function () {
+                      btn.disabled = false;
+                      btn.style.opacity = "";
+                      btn.style.cursor = "";
+                    }, 3000);
+                  }
+                };
+                var script = document.createElement("script");
+                script.src = src;
+                script.async = true;
+                script.onerror = function () {
+                  if (done) return;
+                  done = true;
+                  showMsg("Network error. Please try again.", false);
+                  if (btn) {
                     btn.disabled = false;
                     btn.style.opacity = "";
                     btn.style.cursor = "";
-                  }, 6000);
+                  }
+                  try {
+                    delete window[cbName];
+                  } catch (e) {
+                    window[cbName] = undefined;
+                  }
+                };
+                document.body.appendChild(script);
+                // Fallback timeout
+                setTimeout(function () {
+                  if (done) return;
+                  done = true;
+                  showMsg("Timed out. Please try again.", false);
+                  if (btn) {
+                    btn.disabled = false;
+                    btn.style.opacity = "";
+                    btn.style.cursor = "";
+                  }
+                  try {
+                    script.parentNode && script.parentNode.removeChild(script);
+                  } catch (e) {}
+                  try {
+                    delete window[cbName];
+                  } catch (e) {
+                    window[cbName] = undefined;
+                  }
+                }, 10000);
+              } catch (_) {
+                showMsg("Something went wrong. Please try again.", false);
+                if (btn) {
+                  btn.disabled = false;
+                  btn.style.opacity = "";
+                  btn.style.cursor = "";
                 }
-                var msg = document.getElementById("promo-msg");
-                if (msg) {
-                  msg.textContent = "Thanks! Check your inbox for your code.";
-                  msg.style.display = "block";
-                }
-              } catch (_) {}
+              }
             });
           if (no)
             no.addEventListener("click", function () {
