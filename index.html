@@ -2387,6 +2387,10 @@
                   btn.style.opacity = "0.7";
                   btn.style.cursor = "not-allowed";
                 }
+                // Prefer serverless proxy (reliable on Netlify)
+                tryServer();
+                return;
+
                 // Build Mailchimp post-json endpoint from form action
                 var base = (form.getAttribute("action") || "").replace(
                   "/post?",
@@ -2407,6 +2411,53 @@
                   hpName +
                   "=";
                 var done = false;
+                function tryServer() {
+                  // Cleanup JSONP script/callback if present
+                  try {
+                    script &&
+                      script.parentNode &&
+                      script.parentNode.removeChild(script);
+                  } catch (e) {}
+                  try {
+                    delete window[cbName];
+                  } catch (e) {
+                    window[cbName] = undefined;
+                  }
+                  fetch("/.netlify/functions/mc-subscribe", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: email, tags: ["popup"] }),
+                  })
+                    .then(function (r) {
+                      return r.json();
+                    })
+                    .then(function (res) {
+                      if (res && res.ok) {
+                        showMsg(
+                          "Thanks! Check your inbox for your code.",
+                          true
+                        );
+                      } else {
+                        var m =
+                          (res && (res.message || res.error)) ||
+                          "Something went wrong. Please try again.";
+                        showMsg(String(m), false);
+                      }
+                    })
+                    .catch(function () {
+                      showMsg("Network error. Please try again.", false);
+                    })
+                    .finally(function () {
+                      if (btn) {
+                        setTimeout(function () {
+                          btn.disabled = false;
+                          btn.style.opacity = "";
+                          btn.style.cursor = "";
+                        }, 3000);
+                      }
+                    });
+                }
+
                 window[cbName] = function (data) {
                   if (done) return;
                   done = true;
@@ -2448,38 +2499,15 @@
                 script.onerror = function () {
                   if (done) return;
                   done = true;
-                  showMsg("Network error. Please try again.", false);
-                  if (btn) {
-                    btn.disabled = false;
-                    btn.style.opacity = "";
-                    btn.style.cursor = "";
-                  }
-                  try {
-                    delete window[cbName];
-                  } catch (e) {
-                    window[cbName] = undefined;
-                  }
+                  tryServer();
                 };
                 document.body.appendChild(script);
-                // Fallback timeout
+                // Fallback timeout -> try serverless proxy
                 setTimeout(function () {
                   if (done) return;
                   done = true;
-                  showMsg("Timed out. Please try again.", false);
-                  if (btn) {
-                    btn.disabled = false;
-                    btn.style.opacity = "";
-                    btn.style.cursor = "";
-                  }
-                  try {
-                    script.parentNode && script.parentNode.removeChild(script);
-                  } catch (e) {}
-                  try {
-                    delete window[cbName];
-                  } catch (e) {
-                    window[cbName] = undefined;
-                  }
-                }, 10000);
+                  tryServer();
+                }, 7000);
               } catch (_) {
                 showMsg("Something went wrong. Please try again.", false);
                 if (btn) {
