@@ -2102,12 +2102,18 @@
         >
           <form
             id="promo-form"
+            action="https://journeysapparel.us5.list-manage.com/subscribe/post?u=de14f9e1de5e70d726b870a4e&amp;id=49f5f16177&amp;f_id=0071cae1f0"
+            method="post"
+            target="_blank"
             style="display: flex; gap: 8px; width: 100%; margin-top: 6px"
           >
             <input
               id="promo-email"
+              name="EMAIL"
               type="email"
               inputmode="email"
+              autocomplete="email"
+              aria-label="Email address"
               placeholder="Enter your email"
               required
               style="
@@ -2120,6 +2126,17 @@
                 background: #fff;
               "
             />
+            <div style="position: absolute; left: -5000px" aria-hidden="true">
+              <input
+                type="text"
+                name="b_de14f9e1de5e70d726b870a4e_49f5f16177"
+                tabindex="-1"
+                value=""
+                autocomplete="off"
+              />
+            </div>
+            <input type="hidden" name="tags" value="popup" />
+
             <button
               id="promo-cta"
               type="submit"
@@ -2138,6 +2155,19 @@
               I'll Take It
             </button>
           </form>
+          <div
+            id="promo-msg"
+            role="status"
+            aria-live="polite"
+            style="
+              font-size: 12px;
+              color: #0a0;
+              text-align: center;
+              margin-top: 4px;
+              display: none;
+            "
+          ></div>
+
           <div
             style="
               font-size: 11px;
@@ -2330,13 +2360,29 @@
             form = document.getElementById("promo-form");
           if (cta)
             cta.addEventListener("click", function (e) {
-              e.preventDefault();
-              closeM(true);
+              // allow form submit to proceed (no preventDefault)
             });
           if (form)
             form.addEventListener("submit", function (e) {
-              e.preventDefault();
-              closeM(true);
+              // Do not prevent default; let Mailchimp handle submission in a new tab
+              try {
+                var btn = qs("promo-cta");
+                if (btn) {
+                  btn.disabled = true;
+                  btn.style.opacity = "0.7";
+                  btn.style.cursor = "not-allowed";
+                  setTimeout(function () {
+                    btn.disabled = false;
+                    btn.style.opacity = "";
+                    btn.style.cursor = "";
+                  }, 6000);
+                }
+                var msg = document.getElementById("promo-msg");
+                if (msg) {
+                  msg.textContent = "Thanks! Check your inbox for your code.";
+                  msg.style.display = "block";
+                }
+              } catch (_) {}
             });
           if (no)
             no.addEventListener("click", function () {
