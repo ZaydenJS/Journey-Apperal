@@ -151,6 +151,13 @@ class ShopifyAPI {
     });
   }
 
+  async customerRecover(email) {
+    return this.request("customerRecover", {
+      method: "POST",
+      body: { email },
+    });
+  }
+
   async getCustomer(accessToken) {
     return this.request(`getCustomer?accessToken=${accessToken}`);
   }

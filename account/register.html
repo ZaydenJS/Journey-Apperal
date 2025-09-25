@@ -509,7 +509,7 @@
             text-align: center;
           "
         >
-          UI-only registration. No external services.
+          Create your Journey account.
         </p>
         <form
           id="register-form"
@@ -890,21 +890,55 @@
       </div>
     </footer>
 
+    <script src="../data/products.js" defer></script>
     <script src="../assets/account.js" defer></script>
     <script>
-            (function(){
-              JAAccount.attachFormHandler('register-form', function(ctx){
-                var first = ctx.get('first'), last = ctx.get('last'), email = ctx.get('email'), pwd = ctx.get('password');
-                if(!first || !last || !email || !pwd){ ctx.setMessage('Please complete all fields.', '#c00'); return; }
-
-                JAAccount.setUser({firstName:first,lastName:last,email:email});
-                JAAccount.setAuthed(true);
-                ctx.setMessage('Account created. Redirecting
-
-      ', '#0a0');
-                JAAccount.redirectAfterAuth('/account/index.html');
+      (function () {
+        document.addEventListener("DOMContentLoaded", function () {
+          JAAccount.attachFormHandler("register-form", async function (ctx) {
+            var first = ctx.get("first"),
+              last = ctx.get("last"),
+              email = ctx.get("email"),
+              pwd = ctx.get("password");
+            if (!first || !last || !email || !pwd) {
+              ctx.setMessage("Please complete all fields.", "#c00");
+              return;
+            }
+            ctx.setMessage("Creating your account…", "#666");
+            try {
+              var res = await JourneyAuth.register({
+                firstName: first,
+                lastName: last,
+                email: email,
+                password: pwd,
+                acceptsMarketing: false,
               });
-            })();
+              try {
+                var c =
+                  (res && res.customer) ||
+                  (JourneyAuth.getUser && JourneyAuth.getUser());
+                if (c) {
+                  window.yotpoLoyalty = window.yotpoLoyalty || {};
+                  window.yotpoLoyalty.customer = {
+                    email: c.email || "",
+                    firstName: c.firstName || "",
+                    lastName: c.lastName || "",
+                  };
+                }
+              } catch (_) {}
+              ctx.setMessage("Account created. Redirecting…", "#0a0");
+              JourneyAuth.redirectAfterAuth("/account/index.html");
+            } catch (e) {
+              ctx.setMessage(
+                e && e.message
+                  ? e.message
+                  : "Registration failed. Please try again.",
+                "#c00"
+              );
+            }
+          });
+        });
+      })();
     </script>
     <script>
       (function () {

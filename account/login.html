@@ -513,7 +513,7 @@
             text-align: center;
           "
         >
-          UI-only authentication. No external services.
+          Sign in with your Journey account.
         </p>
         <form
           id="login-form"
@@ -854,26 +854,46 @@
       </div>
     </footer>
 
+    <script src="../data/products.js" defer></script>
     <script src="../assets/account.js" defer></script>
     <script>
-            (function(){
-              JAAccount.setAuthed(false); // no session until successful submit
-              JAAccount.setHeaderProfileLink();
-              JAAccount.attachFormHandler('login-form', function(ctx){
-                var email = ctx.get('email');
-                var pwd = ctx.get('password');
-                if(!email || !pwd){ ctx.setMessage('Please enter your email and password.', '#c00'); return; }
-                // UI-only: accept any credentials
-                JAAccount.setAuthed(true);
-                var user = JAAccount.getUser()||{}; if(!user.email){ user.email = email; }
-                if(!user.firstName){ try { user.firstName = (email.split('@')[0]||'').split('.')[0] || 'Member'; } catch(_) { user.firstName = 'Member'; } }
-                JAAccount.setUser(user);
-                ctx.setMessage('Signed in. Redirecting
-
-      ', '#0a0');
-                JAAccount.redirectAfterAuth('/account/index.html');
-              });
-            })();
+      (function () {
+        document.addEventListener("DOMContentLoaded", function () {
+          JAAccount.setHeaderProfileLink();
+          JAAccount.attachFormHandler("login-form", async function (ctx) {
+            var email = ctx.get("email");
+            var pwd = ctx.get("password");
+            if (!email || !pwd) {
+              ctx.setMessage("Please enter your email and password.", "#c00");
+              return;
+            }
+            ctx.setMessage("Signing in…", "#666");
+            try {
+              var res = await JourneyAuth.login(email, pwd);
+              try {
+                var c =
+                  (res && res.customer) ||
+                  (JourneyAuth.getUser && JourneyAuth.getUser());
+                if (c) {
+                  window.yotpoLoyalty = window.yotpoLoyalty || {};
+                  window.yotpoLoyalty.customer = {
+                    email: c.email || "",
+                    firstName: c.firstName || "",
+                    lastName: c.lastName || "",
+                  };
+                }
+              } catch (_) {}
+              ctx.setMessage("Signed in. Redirecting…", "#0a0");
+              JourneyAuth.redirectAfterAuth("/account/index.html");
+            } catch (e) {
+              ctx.setMessage(
+                e && e.message ? e.message : "Login failed. Please try again.",
+                "#c00"
+              );
+            }
+          });
+        });
+      })();
     </script>
     <script>
       (function () {

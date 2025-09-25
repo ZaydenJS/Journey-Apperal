@@ -519,17 +519,13 @@
     <script src="/assets/account.js" defer></script>
     <script>
       (function () {
-        // UI-only sign out
-        try {
-          JAAccount.setAuthed(false);
-        } catch (_) {}
-        var msg = document.getElementById("logout-msg");
-        if (msg) {
-          msg.textContent = "Signed out. Redirecting…";
-        }
-        setTimeout(function () {
-          location.href = "/account/login.html";
-        }, 900);
+        document.addEventListener("DOMContentLoaded", function () {
+          try {
+            JourneyAuth.logout();
+          } catch (_) {
+            location.replace("/account/login.html");
+          }
+        });
       })();
     </script>
     <script src="/script.js" defer></script>

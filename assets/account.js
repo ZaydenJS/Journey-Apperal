@@ -38,6 +38,18 @@
     } catch (_) {}
   }
 
+  function setUser(user) {
+    try {
+      localStorage.setItem(USER_KEY, JSON.stringify(user || {}));
+    } catch (_) {}
+  }
+
+  function setAuthed(val) {
+    if (!val) {
+      clearAuth();
+    }
+  }
+
   function getAccessToken() {
     try {
       return isAuthed() ? localStorage.getItem(AUTH_KEY) : null;
@@ -76,6 +88,16 @@
       return response;
     } catch (error) {
       console.error("Registration failed:", error);
+      throw error;
+    }
+  }
+
+  async function recover(email) {
+    try {
+      const response = await window.shopifyAPI.customerRecover(email);
+      return response;
+    } catch (error) {
+      console.error("Password recovery failed:", error);
       throw error;
     }
   }
@@ -202,6 +224,7 @@
     isAuthed: isAuthed,
     login: login,
     register: register,
+    recover: recover,
     logout: logout,
     getUser: getUser,
     getAccessToken: getAccessToken,

@@ -4,10 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Forgot Password — Journey Apparel</title>
-    <meta
-      name="description"
-      content="Reset your Journey Apparel password (UI-only)."
-    />
+    <meta name="description" content="Reset your Journey Apparel password." />
     <link rel="stylesheet" href="../styles.css" />
   </head>
   <style>
@@ -511,7 +508,7 @@
             text-align: center;
           "
         >
-          UI-only. Enter your email to receive reset instructions (mock).
+          Enter your email to receive a password reset link.
         </p>
         <form
           id="forgot-form"
@@ -828,25 +825,39 @@
       </div>
     </footer>
 
+    <script src="../data/products.js" defer></script>
     <script src="../assets/account.js" defer></script>
     <script>
       (function () {
-        JAAccount.setHeaderProfileLink();
-        JAAccount.attachFormHandler("forgot-form", function (ctx) {
-          var email = ctx.get("email");
-          if (!email) {
-            ctx.setMessage("Please enter your email.", "#c00");
-            return;
-          }
-          ctx.setMessage(
-            "If an account exists for " +
-              email +
-              ", a reset link has been sent. This is a UI-only demo.",
-            "#0a0"
-          );
-          setTimeout(function () {
-            location.href = "/account/login.html";
-          }, 1200);
+        document.addEventListener("DOMContentLoaded", function () {
+          JAAccount.setHeaderProfileLink();
+          JAAccount.attachFormHandler("forgot-form", async function (ctx) {
+            var email = ctx.get("email");
+            if (!email) {
+              ctx.setMessage("Please enter your email.", "#c00");
+              return;
+            }
+            ctx.setMessage("Sending reset link…", "#666");
+            try {
+              await JourneyAuth.recover(email);
+              ctx.setMessage(
+                "If an account exists for " +
+                  email +
+                  ", a reset link has been sent.",
+                "#0a0"
+              );
+              setTimeout(function () {
+                location.replace("/account/login.html");
+              }, 1500);
+            } catch (e) {
+              ctx.setMessage(
+                e && e.message
+                  ? e.message
+                  : "Could not send reset link. Please try again.",
+                "#c00"
+              );
+            }
+          });
         });
       })();
     </script>
