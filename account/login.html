@@ -513,7 +513,8 @@
             text-align: center;
           "
         >
-          UI-only authentication. No external services.
+          Sign in to your Journey account. Your login is securely handled by
+          Shopify.
         </p>
         <form
           id="login-form"
@@ -854,26 +855,34 @@
       </div>
     </footer>
 
+    <script src="../assets/shopify.js" defer></script>
+
     <script src="../assets/account.js" defer></script>
     <script>
-            (function(){
-              JAAccount.setAuthed(false); // no session until successful submit
-              JAAccount.setHeaderProfileLink();
-              JAAccount.attachFormHandler('login-form', function(ctx){
-                var email = ctx.get('email');
-                var pwd = ctx.get('password');
-                if(!email || !pwd){ ctx.setMessage('Please enter your email and password.', '#c00'); return; }
-                // UI-only: accept any credentials
-                JAAccount.setAuthed(true);
-                var user = JAAccount.getUser()||{}; if(!user.email){ user.email = email; }
-                if(!user.firstName){ try { user.firstName = (email.split('@')[0]||'').split('.')[0] || 'Member'; } catch(_) { user.firstName = 'Member'; } }
-                JAAccount.setUser(user);
-                ctx.setMessage('Signed in. Redirecting
-
-      ', '#0a0');
-                JAAccount.redirectAfterAuth('/account/index.html');
-              });
-            })();
+      (function () {
+        JAAccount.setHeaderProfileLink();
+        JAAccount.attachFormHandler("login-form", async function (ctx) {
+          var email = ctx.get("email");
+          var pwd = ctx.get("password");
+          if (!email || !pwd) {
+            ctx.setMessage("Please enter your email and password.", "#c00");
+            return;
+          }
+          try {
+            ctx.setMessage("Signing in...");
+            await JourneyAuth.login(email, pwd);
+            ctx.setMessage("Signed in. Redirecting...", "#0a0");
+            JourneyAuth.redirectAfterAuth("/account/index.html");
+          } catch (err) {
+            console.error(err);
+            var msg =
+              err && err.message
+                ? String(err.message)
+                : "Login failed. Please try again.";
+            ctx.setMessage(msg, "#c00");
+          }
+        });
+      })();
     </script>
     <script>
       (function () {

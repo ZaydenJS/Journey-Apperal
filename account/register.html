@@ -509,7 +509,7 @@
             text-align: center;
           "
         >
-          UI-only registration. No external services.
+          Create your Journey account. Accounts are created securely in Shopify.
         </p>
         <form
           id="register-form"
@@ -890,21 +890,40 @@
       </div>
     </footer>
 
+    <script src="../assets/shopify.js" defer></script>
+
     <script src="../assets/account.js" defer></script>
     <script>
-            (function(){
-              JAAccount.attachFormHandler('register-form', function(ctx){
-                var first = ctx.get('first'), last = ctx.get('last'), email = ctx.get('email'), pwd = ctx.get('password');
-                if(!first || !last || !email || !pwd){ ctx.setMessage('Please complete all fields.', '#c00'); return; }
-
-                JAAccount.setUser({firstName:first,lastName:last,email:email});
-                JAAccount.setAuthed(true);
-                ctx.setMessage('Account created. Redirecting
-
-      ', '#0a0');
-                JAAccount.redirectAfterAuth('/account/index.html');
-              });
-            })();
+      (function () {
+        JAAccount.attachFormHandler("register-form", async function (ctx) {
+          var first = ctx.get("first"),
+            last = ctx.get("last"),
+            email = ctx.get("email"),
+            pwd = ctx.get("password");
+          if (!first || !last || !email || !pwd) {
+            ctx.setMessage("Please complete all fields.", "#c00");
+            return;
+          }
+          try {
+            ctx.setMessage("Creating your account...");
+            await JourneyAuth.register({
+              firstName: first,
+              lastName: last,
+              email: email,
+              password: pwd,
+            });
+            ctx.setMessage("Account created. Redirecting...", "#0a0");
+            JourneyAuth.redirectAfterAuth("/account/index.html");
+          } catch (err) {
+            console.error(err);
+            var msg =
+              err && err.message
+                ? String(err.message)
+                : "Registration failed. Please try again.";
+            ctx.setMessage(msg, "#c00");
+          }
+        });
+      })();
     </script>
     <script>
       (function () {
