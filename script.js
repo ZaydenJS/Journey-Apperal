@@ -193,8 +193,8 @@
     __safe("ensureShopClickToggle", ensureShopClickToggle);
     __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
-    __safe("loadYotpoLoyalty", loadYotpoLoyalty);
     __safe("syncYotpoCustomer", syncYotpoCustomer);
+    __safe("loadYotpoLoyalty", loadYotpoLoyalty);
   });
 
   // Yotpo Loyalty (Rewards only): global loader and customer sync
