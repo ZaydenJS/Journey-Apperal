@@ -1137,3 +1137,9 @@ input {
     transition: none !important;
   }
 }
+
+/* Yotpo Loyalty widgets inherit site theme */
+.yotpo-loyalty-widget, .yotpo-loyalty-widget * { font-family: inherit; color: var(--text); }
+.yotpo-loyalty-widget button { background: var(--primary); color: var(--secondary); border-radius: var(--radius); }
+.yotpo-loyalty-widget a { color: var(--text); }
+

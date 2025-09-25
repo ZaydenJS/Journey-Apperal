@@ -284,6 +284,23 @@
       class="container section"
       style="max-width: 960px; margin: 0 auto; padding: 24px 16px 64px 16px"
     >
+      <h1
+        class="upper"
+        style="
+          margin: 0 0 8px 0;
+          font-size: 26px;
+          font-weight: 900;
+          letter-spacing: 0.5px;
+          text-align: center;
+        "
+      >
+        Rewards
+      </h1>
+      <div class="yotpo-loyalty-widget" data-widget-type="balance"></div>
+      <div class="yotpo-loyalty-widget" data-widget-type="redeem"></div>
+      <div class="yotpo-loyalty-widget" data-widget-type="history"></div>
+      <div class="yotpo-loyalty-widget" data-widget-type="referrals"></div>
+
       <section
         aria-label="Rewards"
         style="
@@ -693,5 +710,14 @@
       })();
     </script>
     <script src="/script.js" defer></script>
+
+    <!-- Yotpo Loyalty loader -->
+    <script src="https://cdn.yotpo.com/loyalty-widget.js" async></script>
+
+    <!-- Site-wide helper -->
+    <script src="/assets/loyalty.js" defer></script>
+
+    <!-- Floating launcher -->
+    <div class="yotpo-loyalty-widget" data-widget-type="launcher"></div>
   </body>
 </html>

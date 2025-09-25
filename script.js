@@ -125,22 +125,6 @@
       console.error("[init] ensureStandardHeader failed:", e);
     }
 
-    // Judge.me: load widget preloader once per page
-    try {
-      if (
-        !document.querySelector(
-          'script[src*="cdn.judge.me/widget_preloader.js"]'
-        )
-      ) {
-        const jdgm = document.createElement("script");
-        jdgm.src = "https://cdn.judge.me/widget_preloader.js";
-        jdgm.async = true;
-        document.body.appendChild(jdgm);
-      }
-    } catch (e) {
-      console.warn("[jdgm] Failed to load Judge.me preloader", e);
-    }
-
     // De-duplicate any auto-injected header/announcement if a page header exists
     try {
       const headers = document.querySelectorAll("header.header");
@@ -287,32 +271,6 @@
         }
         if (descriptionEl) {
           descriptionEl.innerHTML = p.description || "";
-        }
-
-        // Judge.me: Inject star badge under title and full review widget
-        try {
-          const gid = p.id || "";
-          const numericIdMatch = gid.match(/\d+$/);
-          const numericId = numericIdMatch ? numericIdMatch[0] : null;
-          if (numericId) {
-            const badgeHost = document.getElementById(
-              "jdgm-preview-badge-container"
-            );
-            if (badgeHost && !badgeHost.querySelector(".jdgm-preview-badge")) {
-              badgeHost.innerHTML = `<div class="jdgm-widget jdgm-preview-badge" data-id="${numericId}"></div>`;
-            }
-            const reviewsHost = document.getElementById(
-              "jdgm-review-widget-container"
-            );
-            if (
-              reviewsHost &&
-              !reviewsHost.querySelector(".jdgm-review-widget")
-            ) {
-              reviewsHost.innerHTML = `<div class="jdgm-widget jdgm-review-widget" data-product-id="${numericId}"></div>`;
-            }
-          }
-        } catch (e) {
-          console.warn("[jdgm] Failed to inject widgets", e);
         }
 
         // Use Shopify images

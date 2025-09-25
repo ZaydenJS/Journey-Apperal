@@ -136,7 +136,21 @@ class CartManager {
 
   goToCheckout() {
     if (this.cart && this.cart.checkoutUrl) {
-      window.location.href = this.cart.checkoutUrl;
+      let url = this.cart.checkoutUrl;
+      try {
+        const code =
+          localStorage.getItem("yotpo_discount_code") ||
+          localStorage.getItem("yotpo_discount") ||
+          localStorage.getItem("yotpo_coupon") ||
+          localStorage.getItem("yotpo_coupon_code");
+        if (code && !/[?&]discount=/.test(url)) {
+          url +=
+            (url.includes("?") ? "&" : "?") +
+            "discount=" +
+            encodeURIComponent(code);
+        }
+      } catch (_) {}
+      window.location.href = url;
     } else {
       this.showCartMessage("Cart is empty", "error");
     }

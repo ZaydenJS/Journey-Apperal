@@ -60,6 +60,16 @@
     try {
       const response = await window.shopifyAPI.customerLogin(email, password);
       setAuth(response.accessToken, response.expiresAt, response.customer);
+      // Yotpo Loyalty: identify on successful login
+      try {
+        localStorage.setItem(
+          "ja_email",
+          String(email || response.customer?.email || "")
+        );
+        if (typeof window.setYotpoCustomerEmail === "function") {
+          window.setYotpoCustomerEmail(email || response.customer?.email || "");
+        }
+      } catch (_) {}
       return response;
     } catch (error) {
       console.error("Login failed:", error);
@@ -72,6 +82,17 @@
       const response = await window.shopifyAPI.customerRegister(customerData);
       if (response.accessToken) {
         setAuth(response.accessToken, response.expiresAt, response.customer);
+        // Yotpo Loyalty: identify newly registered user
+        try {
+          var em =
+            (customerData && customerData.email) ||
+            response.customer?.email ||
+            "";
+          if (em) localStorage.setItem("ja_email", String(em));
+          if (typeof window.setYotpoCustomerEmail === "function") {
+            window.setYotpoCustomerEmail(em);
+          }
+        } catch (_) {}
       }
       return response;
     } catch (error) {
@@ -97,6 +118,12 @@
 
   function logout() {
     clearAuth();
+    // Yotpo Loyalty: clear identity on logout
+    try {
+      if (typeof window.clearYotpoCustomer === "function")
+        window.clearYotpoCustomer();
+      localStorage.removeItem("ja_email");
+    } catch (_) {}
     location.replace("/account/login.html");
   }
 

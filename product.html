@@ -882,11 +882,12 @@
           >
             $98
           </div>
+          <!-- Yotpo Loyalty: earn points on this product -->
+          <div
+            class="yotpo-loyalty-widget"
+            data-widget-type="earn-product"
+          ></div>
         </div>
-
-        <!-- Judge.me: Star rating badge under product title -->
-        <div id="jdgm-preview-badge-container" style="margin-top: 6px"></div>
-
         <div
           class="installments"
           style="margin-top: 6px; font-size: 13px; color: #666"
@@ -2567,19 +2568,19 @@
       })();
     </script>
 
-    <!-- Judge.me: Full review widget at bottom of product page -->
-    <section
-      id="product-reviews"
-      class="section container"
-      style="padding: 16px 16px 24px; max-width: 1000px; margin: 24px auto"
-    >
-      <div id="jdgm-review-widget-container"></div>
-    </section>
-
     <!-- Shopify integration with error handling -->
     <script src="data/products.js" defer></script>
     <script src="assets/cart.js" defer></script>
     <script src="assets/account.js" defer></script>
     <script src="script.js" defer></script>
+
+    <!-- Yotpo Loyalty loader -->
+    <script src="https://cdn.yotpo.com/loyalty-widget.js" async></script>
+
+    <!-- Site-wide helper -->
+    <script src="/assets/loyalty.js" defer></script>
+
+    <!-- Floating launcher -->
+    <div class="yotpo-loyalty-widget" data-widget-type="launcher"></div>
   </body>
 </html>
