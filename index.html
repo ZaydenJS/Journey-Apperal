@@ -353,14 +353,9 @@
           <a
             href="index.html"
             aria-label="Journeys Apparel Home"
-            style="display: inline-block"
+            style="font-size: 0.94em; letter-spacing: 1.8px"
+            >JOURNEYS</a
           >
-            <img
-              src="LOGO/Header.png"
-              alt="Journeys Apparel"
-              style="height: 56px; display: block"
-            />
-          </a>
         </h1>
         <!-- Search Overlay -->
         <div
@@ -2107,17 +2102,12 @@
         >
           <form
             id="promo-form"
-            action="#"
-            method="post"
             style="display: flex; gap: 8px; width: 100%; margin-top: 6px"
           >
             <input
               id="promo-email"
-              name="EMAIL"
               type="email"
               inputmode="email"
-              autocomplete="email"
-              aria-label="Email address"
               placeholder="Enter your email"
               required
               style="
@@ -2130,17 +2120,6 @@
                 background: #fff;
               "
             />
-            <div style="position: absolute; left: -5000px" aria-hidden="true">
-              <input
-                type="text"
-                name="b_de14f9e1de5e70d726b870a4e_49f5f16177"
-                tabindex="-1"
-                value=""
-                autocomplete="off"
-              />
-            </div>
-            <input type="hidden" name="tags" value="popup" />
-
             <button
               id="promo-cta"
               type="submit"
@@ -2159,19 +2138,6 @@
               I'll Take It
             </button>
           </form>
-          <div
-            id="promo-msg"
-            role="status"
-            aria-live="polite"
-            style="
-              font-size: 12px;
-              color: #0a0;
-              text-align: center;
-              margin-top: 4px;
-              display: none;
-            "
-          ></div>
-
           <div
             style="
               font-size: 11px;
@@ -2364,162 +2330,13 @@
             form = document.getElementById("promo-form");
           if (cta)
             cta.addEventListener("click", function (e) {
-              // allow form submit to proceed (no preventDefault)
+              e.preventDefault();
+              closeM(true);
             });
           if (form)
             form.addEventListener("submit", function (e) {
-              // AJAX/JSONP submit to Mailchimp without redirect
               e.preventDefault();
-              var btn = qs("promo-cta");
-              var input = qs("promo-email");
-              var msg = document.getElementById("promo-msg");
-              function showMsg(text, ok) {
-                if (!msg) return;
-                msg.textContent = text;
-                msg.style.display = "block";
-                msg.style.color = ok ? "#0a0" : "#b00020";
-              }
-              try {
-                var email = ((input && input.value) || "").trim();
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                  showMsg("Please enter a valid email address.", false);
-                  if (input) input.focus();
-                  return;
-                }
-                if (btn) {
-                  btn.disabled = true;
-                  btn.style.opacity = "0.7";
-                  btn.style.cursor = "not-allowed";
-                }
-                // Prefer serverless proxy (reliable on Netlify)
-                tryServer();
-                return;
-
-                // Build Mailchimp post-json endpoint from form action
-                var base = (form.getAttribute("action") || "").replace(
-                  "/post?",
-                  "/post-json?"
-                );
-                // JSONP callback
-                var cbName =
-                  "mc_cb_" + Date.now() + "_" + Math.floor(Math.random() * 1e6);
-                var hpName = "b_de14f9e1de5e70d726b870a4e_49f5f16177"; // honeypot must remain empty
-                var src =
-                  base +
-                  "&c=" +
-                  encodeURIComponent(cbName) +
-                  "&EMAIL=" +
-                  encodeURIComponent(email) +
-                  "&tags=popup" +
-                  "&" +
-                  hpName +
-                  "=";
-                var done = false;
-                function tryServer() {
-                  // Cleanup JSONP script/callback if present
-                  try {
-                    script &&
-                      script.parentNode &&
-                      script.parentNode.removeChild(script);
-                  } catch (e) {}
-                  try {
-                    delete window[cbName];
-                  } catch (e) {
-                    window[cbName] = undefined;
-                  }
-                  fetch("/.netlify/functions/mc-subscribe", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email: email, tags: ["popup"] }),
-                  })
-                    .then(function (r) {
-                      return r.json();
-                    })
-                    .then(function (res) {
-                      if (res && res.ok) {
-                        showMsg(
-                          "Thanks! Check your inbox for your code.",
-                          true
-                        );
-                      } else {
-                        var m =
-                          (res && (res.message || res.error)) ||
-                          "Something went wrong. Please try again.";
-                        showMsg(String(m), false);
-                      }
-                    })
-                    .catch(function () {
-                      showMsg("Network error. Please try again.", false);
-                    })
-                    .finally(function () {
-                      if (btn) {
-                        setTimeout(function () {
-                          btn.disabled = false;
-                          btn.style.opacity = "";
-                          btn.style.cursor = "";
-                        }, 3000);
-                      }
-                    });
-                }
-
-                window[cbName] = function (data) {
-                  if (done) return;
-                  done = true;
-                  try {
-                    script.parentNode && script.parentNode.removeChild(script);
-                  } catch (e) {}
-                  try {
-                    delete window[cbName];
-                  } catch (e) {
-                    window[cbName] = undefined;
-                  }
-                  var ok =
-                    data && String(data.result).toLowerCase() === "success";
-                  if (ok) {
-                    showMsg("Thanks! Check your inbox for your code.", true);
-                  } else {
-                    var m =
-                      data && data.msg
-                        ? String(data.msg)
-                        : "Something went wrong. Please try again.";
-                    // Strip HTML from Mailchimp error
-                    m = m.replace(/<[^>]+>/g, "").trim();
-                    // Common already subscribed message normalization
-                    if (/already\s+subscribed/i.test(m))
-                      m = "You're already subscribed.";
-                    showMsg(m, false);
-                  }
-                  if (btn) {
-                    setTimeout(function () {
-                      btn.disabled = false;
-                      btn.style.opacity = "";
-                      btn.style.cursor = "";
-                    }, 3000);
-                  }
-                };
-                var script = document.createElement("script");
-                script.src = src;
-                script.async = true;
-                script.onerror = function () {
-                  if (done) return;
-                  done = true;
-                  tryServer();
-                };
-                document.body.appendChild(script);
-                // Fallback timeout -> try serverless proxy
-                setTimeout(function () {
-                  if (done) return;
-                  done = true;
-                  tryServer();
-                }, 7000);
-              } catch (_) {
-                showMsg("Something went wrong. Please try again.", false);
-                if (btn) {
-                  btn.disabled = false;
-                  btn.style.opacity = "";
-                  btn.style.cursor = "";
-                }
-              }
+              closeM(true);
             });
           if (no)
             no.addEventListener("click", function () {

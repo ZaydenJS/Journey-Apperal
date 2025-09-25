@@ -367,14 +367,9 @@
           <a
             href="index.html"
             aria-label="Journeys Apparel Home"
-            style="display: inline-block"
+            style="font-size: 0.94em; letter-spacing: 1.8px"
+            >JOURNEYS</a
           >
-            <img
-              src="LOGO/Header.png"
-              alt="Journeys Apparel"
-              style="height: 56px; display: block"
-            />
-          </a>
         </h1>
         <!-- Search Overlay -->
         <div
@@ -888,6 +883,10 @@
             $98
           </div>
         </div>
+
+        <!-- Judge.me: Star rating badge under product title -->
+        <div id="jdgm-preview-badge-container" style="margin-top: 6px"></div>
+
         <div
           class="installments"
           style="margin-top: 6px; font-size: 13px; color: #666"
@@ -2567,6 +2566,15 @@
         });
       })();
     </script>
+
+    <!-- Judge.me: Full review widget at bottom of product page -->
+    <section
+      id="product-reviews"
+      class="section container"
+      style="padding: 16px 16px 24px; max-width: 1000px; margin: 24px auto"
+    >
+      <div id="jdgm-review-widget-container"></div>
+    </section>
 
     <!-- Shopify integration with error handling -->
     <script src="data/products.js" defer></script>
