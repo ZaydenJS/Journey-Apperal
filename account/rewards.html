@@ -284,23 +284,6 @@
       class="container section"
       style="max-width: 960px; margin: 0 auto; padding: 24px 16px 64px 16px"
     >
-      <h1
-        class="upper"
-        style="
-          margin: 0 0 8px 0;
-          font-size: 26px;
-          font-weight: 900;
-          letter-spacing: 0.5px;
-          text-align: center;
-        "
-      >
-        Rewards
-      </h1>
-      <div class="yotpo-loyalty-widget" data-widget-type="balance"></div>
-      <div class="yotpo-loyalty-widget" data-widget-type="redeem"></div>
-      <div class="yotpo-loyalty-widget" data-widget-type="history"></div>
-      <div class="yotpo-loyalty-widget" data-widget-type="referrals"></div>
-
       <section
         aria-label="Rewards"
         style="
@@ -326,148 +309,12 @@
           Journey Rewards
         </h1>
         <p style="margin: 0 0 14px 0; color: #666; font-size: 14px">
-          UI-only demo. Earn points on purchases and redeem for rewards.
+          View and redeem your points.
         </p>
         <div
-          style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-          "
-        >
-          <div
-            aria-live="polite"
-            id="points"
-            style="font-size: 28px; font-weight: 800; letter-spacing: 0.5px"
-          >
-            120 pts
-          </div>
-          <div
-            style="
-              width: min(560px, 100%);
-              height: 10px;
-              border: 1px solid #e5e5e5;
-              border-radius: 999px;
-              position: relative;
-              background: #fff;
-            "
-          >
-            <div
-              id="bar"
-              style="
-                position: absolute;
-                left: 0;
-                top: 0;
-                bottom: 0;
-                width: 24%;
-                background: #111;
-                border-radius: 999px;
-              "
-            ></div>
-          </div>
-          <div style="color: #444; font-size: 13px">
-            Next reward at <strong style="font-weight: 700">500 pts</strong>
-          </div>
-          <div
-            style="
-              display: flex;
-              gap: 8px;
-              flex-wrap: wrap;
-              justify-content: center;
-            "
-          >
-            <button
-              id="earn"
-              style="
-                padding: 10px 12px;
-                border-radius: 8px;
-                border: 1px solid #111;
-                background: #111;
-                color: #fff;
-                font-weight: 700;
-                cursor: pointer;
-              "
-            >
-              Earn +10 pts (demo)
-            </button>
-            <button
-              id="redeem"
-              style="
-                padding: 10px 12px;
-                border-radius: 8px;
-                border: 1px solid #e5e5e5;
-                background: #fff;
-                color: #111;
-                font-weight: 700;
-                cursor: pointer;
-              "
-            >
-              Redeem 50 pts
-            </button>
-          </div>
-        </div>
-        <div
-          style="
-            height: 1px;
-            background: #e5e5e5;
-            margin: 20px auto;
-            width: min(560px, 100%);
-          "
+          class="yotpo-widget-instance"
+          data-yotpo-instance-id="1218367"
         ></div>
-        <div
-          style="
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 10px;
-            text-align: left;
-          "
-        >
-          <div
-            style="
-              border: 1px solid #e5e5e5;
-              border-radius: 10px;
-              padding: 12px;
-            "
-          >
-            <div style="font-weight: 700; margin: 0 0 6px 0">Member Perks</div>
-            <ul
-              style="
-                margin: 0;
-                padding-left: 18px;
-                color: #444;
-                font-size: 14px;
-                line-height: 1.6;
-              "
-            >
-              <li>Early access to drops</li>
-              <li>Birthday bonus</li>
-              <li>Exclusive promos</li>
-            </ul>
-          </div>
-          <div
-            style="
-              border: 1px solid #e5e5e5;
-              border-radius: 10px;
-              padding: 12px;
-            "
-          >
-            <div style="font-weight: 700; margin: 0 0 6px 0">Tiers</div>
-            <ul
-              style="
-                margin: 0;
-                padding-left: 18px;
-                color: #444;
-                font-size: 14px;
-                line-height: 1.6;
-              "
-            >
-              <li>Explorer: 0249 pts</li>
-              <li>Voyager: 250499 pts</li>
-              <li>Legend: 500+ pts</li>
-            </ul>
-          </div>
-        </div>
       </section>
     </main>
 
@@ -672,55 +519,26 @@
     <script src="/assets/account.js" defer></script>
     <script>
       (function () {
-        JAAccount.guardAuthenticated();
-        var KEY = "ja_points";
-        function get() {
-          try {
-            return parseInt(localStorage.getItem(KEY) || "120", 10) || 120;
-          } catch (_) {
-            return 120;
+        try {
+          if (window.JAAccount && JAAccount.guardAuthenticated) {
+            JAAccount.guardAuthenticated();
           }
-        }
-        function set(v) {
-          try {
-            localStorage.setItem(KEY, String(Math.max(0, v | 0)));
-          } catch (_) {}
-        }
-        function paint() {
-          var v = get();
-          var el = document.getElementById("points");
-          if (el) el.textContent = v + " pts";
-          var bar = document.getElementById("bar");
-          if (bar) {
-            var pct = Math.max(0, Math.min(100, (v / 500) * 100));
-            bar.style.width = pct + "%";
+        } catch (_) {}
+        // Provide customer identification to Yotpo Loyalty if available
+        try {
+          var u =
+            window.JAAccount && JAAccount.getUser ? JAAccount.getUser() : null;
+          if (u) {
+            window.yotpoLoyalty = window.yotpoLoyalty || {};
+            window.yotpoLoyalty.customer = {
+              email: u.email || "",
+              firstName: u.firstName || u.first || "",
+              lastName: u.lastName || u.last || "",
+            };
           }
-        }
-        document.getElementById("earn").addEventListener("click", function () {
-          set(get() + 10);
-          paint();
-        });
-        document
-          .getElementById("redeem")
-          .addEventListener("click", function () {
-            set(get() - 50);
-            paint();
-          });
-        paint();
+        } catch (_) {}
       })();
     </script>
     <script src="/script.js" defer></script>
-
-    <!-- Yotpo Loyalty loader -->
-    <script
-      src="https://cdn-widgetsrepository.yotpo.com/v1/loader/ayCQoNgVgsMXREbYl_jUOQ"
-      async
-    ></script>
-
-    <!-- Site-wide helper -->
-    <script src="/assets/loyalty.js" defer></script>
-
-    <!-- Floating launcher -->
-    <div class="yotpo-widget-instance" data-yotpo-instance-id="1218367"></div>
   </body>
 </html>

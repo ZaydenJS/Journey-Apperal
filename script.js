@@ -193,7 +193,35 @@
     __safe("ensureShopClickToggle", ensureShopClickToggle);
     __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
+    __safe("loadYotpoLoyalty", loadYotpoLoyalty);
+    __safe("syncYotpoCustomer", syncYotpoCustomer);
   });
+
+  // Yotpo Loyalty (Rewards only): global loader and customer sync
+  function loadYotpoLoyalty() {
+    try {
+      if (document.getElementById("yotpo-loyalty-loader")) return;
+      var s = document.createElement("script");
+      s.id = "yotpo-loyalty-loader";
+      s.async = true;
+      s.src =
+        "https://cdn-widgetsrepository.yotpo.com/v1/loader/ayCQoNgVgsMXREbYl_jUOQ";
+      if (document.head) document.head.appendChild(s);
+    } catch (_) {}
+  }
+  function syncYotpoCustomer() {
+    try {
+      var user =
+        (window.JAAccount && JAAccount.getUser && JAAccount.getUser()) || null;
+      if (!user) return;
+      window.yotpoLoyalty = window.yotpoLoyalty || {};
+      window.yotpoLoyalty.customer = {
+        email: user.email || "",
+        firstName: user.firstName || user.first || "",
+        lastName: user.lastName || user.last || "",
+      };
+    } catch (_) {}
+  }
 
   function setupSizeSelection() {
     const grid = document.getElementById("size-grid");
