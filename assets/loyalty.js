@@ -3,7 +3,7 @@
  * the current user by email (if known), exposes helpers, and never breaks the site.
  */
 (function () {
-  var API_KEY = "ayCQoNgVgsMXREbYl_jUOQ";
+  var API_KEY = "E6xIQzHz5VFAmpzWirYAZAtt";
   var EMAIL_KEY = "ja_email"; // persisted customer email
   var DISCOUNT_KEY = "yotpo_discount_code"; // latest generated discount code
   var INIT_TRIES = 0;
