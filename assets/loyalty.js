@@ -8,6 +8,13 @@
   var POLL_MS = 50;
   var MAX_ATTEMPTS = Math.ceil(20000 / POLL_MS); // ~20s
   var didLog = false;
+  var DEBUG = (function () {
+    try {
+      return location.search.indexOf("yotpo-debug=1") !== -1;
+    } catch (_) {
+      return false;
+    }
+  })();
 
   function logOnce() {
     if (didLog) return;
@@ -91,12 +98,25 @@
     try {
       setEmail(email);
     } catch (_) {}
+    if (DEBUG) {
+      try {
+        console.log("[Yotpo] identified as:", email);
+      } catch (_) {}
+    }
     tryIdentify() || pollIdentify();
   };
   window.clearYotpoCustomer = function () {
     try {
       setEmail("");
     } catch (_) {}
+    if (DEBUG) {
+      try {
+        console.log("[Yotpo] cleared (guest)");
+      } catch (_) {}
+    }
+    tryIdentify() || pollIdentify();
+  };
+  window.reloadYotpo = function () {
     tryIdentify() || pollIdentify();
   };
 
