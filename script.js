@@ -262,7 +262,7 @@
       wrap.style.textAlign = "center";
       var div = document.createElement("div");
       div.className = "yotpo-widget-instance";
-      div.setAttribute("data-yotpo-instance-id", "1218367");
+      div.setAttribute("data-yotpo-instance-id", "1218368");
       wrap.appendChild(div);
       if (target) {
         target.appendChild(wrap);
