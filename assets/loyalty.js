@@ -124,10 +124,15 @@
   var LOGIN_URL = "/account/login.html";
   var INTERCEPT_TERMS = [
     "join now",
+    "join",
     "log in",
     "login",
+    "sign in",
     "sign up",
     "create account",
+    "create an account",
+    "continue",
+    "continue with",
   ];
   var __BOUND = new WeakSet();
   var __UPDATED = new WeakSet();
@@ -182,7 +187,9 @@
     if (!root) return;
     var scope = root.querySelector ? root : document;
     var list = scope.querySelectorAll
-      ? scope.querySelectorAll('a,button,[role="button"]')
+      ? scope.querySelectorAll(
+          'a,button,[role="button"],div[role="button"],div[data-automation*="button"]'
+        )
       : [];
     list.forEach(function (el) {
       if (__BOUND.has(el)) return;
@@ -193,25 +200,24 @@
         var container = el.closest('[class*="yotpo"], [id*="yotpo"]');
         updateGuestCopy(container);
       } catch (_) {}
-      el.addEventListener(
-        "click",
-        function (e) {
-          if (currentEmail()) return; // already identified
+      function interceptToShopify(e) {
+        if (currentEmail()) return; // already identified
+        try {
+          e.preventDefault();
+          e.stopPropagation();
+        } catch (_) {}
+        if (DEBUG) {
           try {
-            e.preventDefault();
-            e.stopPropagation();
+            console.log("[Yotpo] intercepted guest CTA →", LOGIN_URL);
           } catch (_) {}
-          if (DEBUG) {
-            try {
-              console.log("[Yotpo] intercepted guest CTA →", LOGIN_URL);
-            } catch (_) {}
-          }
-          try {
-            location.href = LOGIN_URL;
-          } catch (_) {}
-        },
-        true
-      );
+        }
+        try {
+          location.href = LOGIN_URL;
+        } catch (_) {}
+      }
+      el.addEventListener("click", interceptToShopify, true);
+      el.addEventListener("mousedown", interceptToShopify, true);
+      el.addEventListener("touchstart", interceptToShopify, true);
     });
   }
   function enforceSingleAccountUI(root) {
@@ -234,6 +240,8 @@
               n.setAttribute("aria-disabled", "true");
             }
             n.textContent = msg;
+
+            // Single-account message only; no inline auto-join here
           }
         }
       });
@@ -241,24 +249,28 @@
   }
 
   function ensureGuestInterception() {
-    // Only intercept/modify when guest (no email identified)
-    if (currentEmail()) return;
+    // Intercept guest CTAs and auto-join when logged-in
     try {
-      bindInterceptors(document);
-    } catch (_) {}
-    try {
-      updateGuestCopy(document.body);
+      if (!currentEmail()) {
+        bindInterceptors(document);
+        updateGuestCopy(document.body);
+      } else {
+        autoJoinIfPrompted(document);
+      }
     } catch (_) {}
     if (window.__yotpoObserver) return;
     try {
       window.__yotpoObserver = new MutationObserver(function (muts) {
-        if (currentEmail()) return;
         muts.forEach(function (m) {
           if (m.addedNodes)
             m.addedNodes.forEach(function (node) {
               if (node && node.querySelector) {
-                bindInterceptors(node);
-                updateGuestCopy(node);
+                if (!currentEmail()) {
+                  bindInterceptors(node);
+                  updateGuestCopy(node);
+                } else {
+                  autoJoinIfPrompted(node);
+                }
               }
             });
         });
@@ -267,6 +279,34 @@
         childList: true,
         subtree: true,
       });
+
+      // Auto-enroll helper: if logged-in and drawer shows a Join CTA, click it once
+      var __AUTO_JOINED_ONCE = false;
+      function autoJoinIfPrompted(root) {
+        if (__AUTO_JOINED_ONCE) return;
+        if (!currentEmail()) return;
+        try {
+          var scope = root && root.querySelector ? root : document;
+          var list = scope.querySelectorAll(
+            'a,button,[role="button"],div[role="button"],div[data-automation*="button"]'
+          );
+          for (var i = 0; i < list.length; i++) {
+            var el = list[i];
+            if (!withinYotpo(el)) continue;
+            if (!matchesJoinText(el)) continue;
+            __AUTO_JOINED_ONCE = true;
+            if (DEBUG) {
+              try {
+                console.log("[Yotpo] auto-joining program (single account)");
+              } catch (_) {}
+            }
+            try {
+              el.click();
+            } catch (_) {}
+            break;
+          }
+        } catch (_) {}
+      }
     } catch (_) {}
   }
 
