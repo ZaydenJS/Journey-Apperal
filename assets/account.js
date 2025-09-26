@@ -28,6 +28,14 @@
       localStorage.setItem(TOKEN_EXPIRY_KEY, expiresAt);
       localStorage.setItem(USER_KEY, JSON.stringify(customer));
     } catch (_) {}
+    // Yotpo Loyalty: persist and identify by email (free plan)
+    try {
+      var email =
+        (customer && (customer.email || customer?.defaultAddress?.email)) || "";
+      if (email && window.setYotpoCustomerEmail) {
+        window.setYotpoCustomerEmail(email);
+      }
+    } catch (e) {}
   }
 
   function clearAuth() {
@@ -118,6 +126,9 @@
   }
 
   function logout() {
+    try {
+      if (window.clearYotpoCustomer) window.clearYotpoCustomer();
+    } catch (e) {}
     clearAuth();
     location.replace("/account/login.html");
   }

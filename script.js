@@ -193,85 +193,8 @@
     __safe("ensureShopClickToggle", ensureShopClickToggle);
     __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
-    __safe("syncYotpoCustomer", syncYotpoCustomer);
-    __safe("loadYotpoLoyalty", loadYotpoLoyalty);
-    __safe("ensureRewardsContainer", ensureRewardsContainer);
-
-    __safe("ensureYotpoRendered", ensureYotpoRendered);
+    // Yotpo Loyalty functions removed per free-plan sticky bar setup
   });
-
-  // Yotpo Loyalty (Rewards only): global loader and customer sync
-  function loadYotpoLoyalty() {
-    try {
-      if (document.getElementById("yotpo-loyalty-loader")) return;
-      var s = document.createElement("script");
-      s.id = "yotpo-loyalty-loader";
-      s.async = true;
-      s.src =
-        "https://cdn-widgetsrepository.yotpo.com/v1/loader/ayCQoNgVgsMXREbYl_jUOQ";
-      if (document.head) document.head.appendChild(s);
-    } catch (_) {}
-  }
-  function syncYotpoCustomer() {
-    try {
-      var user =
-        (window.JAAccount && JAAccount.getUser && JAAccount.getUser()) || null;
-      if (!user) return;
-      window.yotpoLoyalty = window.yotpoLoyalty || {};
-      window.yotpoLoyalty.customer = {
-        email: user.email || "",
-        firstName: user.firstName || user.first || "",
-        lastName: user.lastName || user.last || "",
-      };
-    } catch (_) {}
-  }
-
-  function ensureYotpoRendered() {
-    try {
-      var attempts = 0;
-      function tick() {
-        attempts++;
-        var inst = document.querySelector(".yotpo-widget-instance");
-        var loaded = !!(inst && inst.childElementCount > 0);
-        if (loaded || attempts > 8) return;
-        // Re-sync identity and (re)load the loader in case of a race or blocker
-        try {
-          syncYotpoCustomer();
-        } catch (_) {}
-        try {
-          loadYotpoLoyalty();
-        } catch (_) {}
-        setTimeout(tick, 600);
-      }
-      setTimeout(tick, 400);
-    } catch (_) {}
-  }
-
-  function ensureRewardsContainer() {
-    try {
-      var here = (location.pathname || "").toLowerCase();
-      if (here.indexOf("/account/rewards.html") === -1) return;
-      var inst = document.querySelector(".yotpo-widget-instance");
-      if (inst) return;
-      var target = document.querySelector("main .section, main section, main");
-      var wrap = document.createElement("section");
-      wrap.setAttribute("aria-label", "Rewards");
-      wrap.style.margin = "0 auto";
-      wrap.style.maxWidth = "880px";
-      wrap.style.width = "100%";
-      wrap.style.textAlign = "center";
-      var div = document.createElement("div");
-      div.className = "yotpo-widget-instance";
-      div.setAttribute("data-yotpo-instance-id", "1218368");
-      wrap.appendChild(div);
-      if (target) {
-        target.appendChild(wrap);
-      }
-      try {
-        loadYotpoLoyalty();
-      } catch (_) {}
-    } catch (_) {}
-  }
 
   function setupSizeSelection() {
     const grid = document.getElementById("size-grid");
