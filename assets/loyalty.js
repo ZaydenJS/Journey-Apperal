@@ -241,19 +241,24 @@
   }
 
   function ensureGuestInterception() {
+    // Only intercept/modify when guest (no email identified)
+    if (currentEmail()) return;
     try {
       bindInterceptors(document);
     } catch (_) {}
-    enforceSingleAccountUI(document);
+    try {
+      updateGuestCopy(document.body);
+    } catch (_) {}
     if (window.__yotpoObserver) return;
     try {
       window.__yotpoObserver = new MutationObserver(function (muts) {
+        if (currentEmail()) return;
         muts.forEach(function (m) {
           if (m.addedNodes)
             m.addedNodes.forEach(function (node) {
               if (node && node.querySelector) {
                 bindInterceptors(node);
-                enforceSingleAccountUI(node);
+                updateGuestCopy(node);
               }
             });
         });
