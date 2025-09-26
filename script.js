@@ -195,6 +195,8 @@
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
     __safe("syncYotpoCustomer", syncYotpoCustomer);
     __safe("loadYotpoLoyalty", loadYotpoLoyalty);
+    __safe("ensureRewardsContainer", ensureRewardsContainer);
+
     __safe("ensureYotpoRendered", ensureYotpoRendered);
   });
 
@@ -242,6 +244,32 @@
         setTimeout(tick, 600);
       }
       setTimeout(tick, 400);
+    } catch (_) {}
+  }
+
+  function ensureRewardsContainer() {
+    try {
+      var here = (location.pathname || "").toLowerCase();
+      if (here.indexOf("/account/rewards.html") === -1) return;
+      var inst = document.querySelector(".yotpo-widget-instance");
+      if (inst) return;
+      var target = document.querySelector("main .section, main section, main");
+      var wrap = document.createElement("section");
+      wrap.setAttribute("aria-label", "Rewards");
+      wrap.style.margin = "0 auto";
+      wrap.style.maxWidth = "880px";
+      wrap.style.width = "100%";
+      wrap.style.textAlign = "center";
+      var div = document.createElement("div");
+      div.className = "yotpo-widget-instance";
+      div.setAttribute("data-yotpo-instance-id", "1218367");
+      wrap.appendChild(div);
+      if (target) {
+        target.appendChild(wrap);
+      }
+      try {
+        loadYotpoLoyalty();
+      } catch (_) {}
     } catch (_) {}
   }
 
