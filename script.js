@@ -195,6 +195,7 @@
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
     __safe("syncYotpoCustomer", syncYotpoCustomer);
     __safe("loadYotpoLoyalty", loadYotpoLoyalty);
+    __safe("ensureYotpoRendered", ensureYotpoRendered);
   });
 
   // Yotpo Loyalty (Rewards only): global loader and customer sync
@@ -220,6 +221,27 @@
         firstName: user.firstName || user.first || "",
         lastName: user.lastName || user.last || "",
       };
+    } catch (_) {}
+  }
+
+  function ensureYotpoRendered() {
+    try {
+      var attempts = 0;
+      function tick() {
+        attempts++;
+        var inst = document.querySelector(".yotpo-widget-instance");
+        var loaded = !!(inst && inst.childElementCount > 0);
+        if (loaded || attempts > 8) return;
+        // Re-sync identity and (re)load the loader in case of a race or blocker
+        try {
+          syncYotpoCustomer();
+        } catch (_) {}
+        try {
+          loadYotpoLoyalty();
+        } catch (_) {}
+        setTimeout(tick, 600);
+      }
+      setTimeout(tick, 400);
     } catch (_) {}
   }
 
