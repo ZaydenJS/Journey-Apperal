@@ -214,19 +214,47 @@
       );
     });
   }
+  function enforceSingleAccountUI(root) {
+    // Hide/replace join prompts even if identified (defensive UI)
+    try {
+      var scope = root && root.querySelector ? root : document;
+      var nodes = scope.querySelectorAll('a,button,[role="button"],p,div,span');
+      nodes.forEach(function (n) {
+        var t = (n.textContent || "").trim().toLowerCase();
+        if (!t) return;
+        if (
+          INTERCEPT_TERMS.some(function (term) {
+            return t.indexOf(term) !== -1;
+          })
+        ) {
+          if (currentEmail()) {
+            var msg = "You are signed in. Your rewards sync automatically.";
+            if (n.tagName === "A" || n.tagName === "BUTTON") {
+              n.style.pointerEvents = "none";
+              n.setAttribute("aria-disabled", "true");
+            }
+            n.textContent = msg;
+          }
+        }
+      });
+    } catch (_) {}
+  }
+
   function ensureGuestInterception() {
-    if (currentEmail()) return; // only when guest
     try {
       bindInterceptors(document);
     } catch (_) {}
+    enforceSingleAccountUI(document);
     if (window.__yotpoObserver) return;
     try {
       window.__yotpoObserver = new MutationObserver(function (muts) {
-        if (currentEmail()) return;
         muts.forEach(function (m) {
           if (m.addedNodes)
             m.addedNodes.forEach(function (node) {
-              if (node && node.querySelector) bindInterceptors(node);
+              if (node && node.querySelector) {
+                bindInterceptors(node);
+                enforceSingleAccountUI(node);
+              }
             });
         });
       });

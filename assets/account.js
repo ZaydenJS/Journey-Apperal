@@ -34,6 +34,9 @@
         (customer && (customer.email || customer?.defaultAddress?.email)) || "";
       if (email && window.setYotpoCustomerEmail) {
         window.setYotpoCustomerEmail(email);
+        try {
+          window.reloadYotpo && window.reloadYotpo();
+        } catch (_) {}
       }
     } catch (e) {}
   }
