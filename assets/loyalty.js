@@ -1,7 +1,7 @@
 (function () {
-  // Minimal Yotpo Loyalty helper for Free plan (sticky bar only)
-  // - Identifies customer by email via localStorage("ja_email")
-  // - Exposes helpers to set/clear email and re-identify
+  // Yotpo Loyalty helper (sticky bar + rewards page)
+  // - Identifies customer by Shopify profile (prefers email)
+  // - Exposes helpers to set/clear profile and re-identify
   // - Fails silently; polls up to ~20s for identify()
 
   var EMAIL_KEY = "ja_email";
@@ -17,10 +17,10 @@
         'script[src*="cdn-widgetsrepository.yotpo.com/v1/loader"]'
       );
       var stickyOk = !!document.querySelector(
-        '[data-yotpo-instance-id="1218367"]'
+        '[data-yotpo-instance-id="1218368"]'
       );
       console.log("[Yotpo] loader present:", loaderOk);
-      console.log("[Yotpo] sticky instance present:", stickyOk);
+      console.log("[Yotpo] loyalty instance present (1218368):", stickyOk);
     } catch (_) {}
   }
 
@@ -66,6 +66,24 @@
     } catch (_) {}
   }
 
+  function getShopifyProfile() {
+    try {
+      if (window.JAAccount && typeof JAAccount.getUser === "function") {
+        var u = JAAccount.getUser() || null;
+        if (u && (u.email || (u.defaultAddress && u.defaultAddress.email))) {
+          return {
+            email:
+              u.email || (u.defaultAddress && u.defaultAddress.email) || "",
+            firstName: u.firstName || "",
+            lastName: u.lastName || "",
+            id: u.id || "",
+          };
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
   function tryIdentify() {
     var email = currentEmail();
     var identify = getIdentify();
@@ -86,27 +104,46 @@
     })();
   }
 
-  // Expose helpers
-  window.setYotpoCustomerEmail = function (email) {
+  function setCustomerProfile(profile) {
     try {
-      setEmail(email);
+      if (profile && profile.email) {
+        setEmail(profile.email);
+        // Best-effort hint for Yotpo loader
+        window.yotpoLoyalty = window.yotpoLoyalty || {};
+        window.yotpoLoyalty.customer = {
+          email: profile.email,
+          firstName: profile.firstName || "",
+          lastName: profile.lastName || "",
+          externalId: profile.id || profile.externalId || "",
+        };
+      } else {
+        setEmail("");
+        if (window.yotpoLoyalty && window.yotpoLoyalty.customer) {
+          try {
+            delete window.yotpoLoyalty.customer;
+          } catch (_) {}
+        }
+      }
     } catch (_) {}
     tryIdentify() || pollIdentify();
+  }
+
+  // Expose helpers
+  window.setYotpoCustomerProfile = function (profile) {
+    setCustomerProfile(profile || null);
+  };
+  window.setYotpoCustomerEmail = function (email) {
+    setCustomerProfile(email ? { email: email } : null);
   };
   window.clearYotpoCustomer = function () {
-    try {
-      setEmail("");
-    } catch (_) {}
-    tryIdentify() || pollIdentify();
+    setCustomerProfile(null);
   };
 
   // Kick off on load
-  // Seed email from existing session if available
+  // Seed from existing Shopify session if available
   try {
-    if (!currentEmail() && window.JAAccount && JAAccount.getUser) {
-      var u = JAAccount.getUser();
-      if (u && u.email) setEmail(u.email);
-    }
+    var prof = getShopifyProfile();
+    if (prof && !currentEmail()) setCustomerProfile(prof);
   } catch (_) {}
   logOnce();
   pollIdentify();
