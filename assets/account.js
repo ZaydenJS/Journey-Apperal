@@ -28,26 +28,12 @@
       localStorage.setItem(TOKEN_EXPIRY_KEY, expiresAt);
       localStorage.setItem(USER_KEY, JSON.stringify(customer));
     } catch (_) {}
-    // Yotpo Loyalty SSO: persist identifiers and mount SSO
+    // Yotpo Loyalty: persist and identify by email (free plan)
     try {
       var email =
         (customer && (customer.email || customer?.defaultAddress?.email)) || "";
-      var cid =
-        (customer &&
-          (customer.id || customer?.customerId || customer?.shopifyId)) ||
-        "";
-      if (email) {
-        try {
-          localStorage.setItem("ja_email", email);
-        } catch (_) {}
-        try {
-          localStorage.setItem("ja_customer_id", String(cid || ""));
-        } catch (_) {}
-        try {
-          import("/assets/loyalty.js").then((m) =>
-            m.mountYotpoWithShopifySession()
-          );
-        } catch (_) {}
+      if (email && window.setYotpoCustomerEmail) {
+        window.setYotpoCustomerEmail(email);
       }
     } catch (e) {}
   }
@@ -141,16 +127,8 @@
 
   function logout() {
     try {
-      localStorage.removeItem("ja_email");
-    } catch (_) {}
-    try {
-      localStorage.removeItem("ja_customer_id");
-    } catch (_) {}
-    try {
-      import("/assets/loyalty.js").then((m) =>
-        m.mountYotpoWithShopifySession()
-      );
-    } catch (_) {}
+      if (window.clearYotpoCustomer) window.clearYotpoCustomer();
+    } catch (e) {}
     clearAuth();
     location.replace("/account/login.html");
   }
