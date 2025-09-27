@@ -111,7 +111,7 @@
       <a href="#">Policies</a>
       <a href="#">Contact</a>
     </div>
-    <a href="#" class="row-item">Rewards</a>
+    <a href="/rewards.html" class="row-item">Rewards</a>
   </nav>
   <div class="drawer-bottom"><a href="#" class="row-item">👤 Log in / Create Account</a></div>
 </aside>`;
