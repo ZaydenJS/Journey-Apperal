@@ -35,9 +35,8 @@ export const handler = async (event) => {
       return err("Missing YOTPO_API_KEY env var", 500);
     }
 
-    const message = [String(email).trim(), String(apiKey).trim()]
-      .sort()
-      .join("");
+    // Most Yotpo Loyalty sites expect token = sha256(email + apiKey)
+    const message = String(email).trim() + String(apiKey).trim();
     const token = crypto.createHash("sha256").update(message).digest("hex");
 
     return ok({
