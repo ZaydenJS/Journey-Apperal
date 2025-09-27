@@ -103,11 +103,17 @@
         console.log("[Yotpo] identified as:", email);
       } catch (_) {}
     }
-    tryIdentify() || pollIdentify();
+    // Rebuild SSO div with signed token and ensure loader order
+    try {
+      setupSSOFromSession();
+    } catch (_) {}
   };
   window.clearYotpoCustomer = function () {
     try {
       setEmail("");
+    } catch (_) {}
+    try {
+      removeSwellDiv();
     } catch (_) {}
     if (DEBUG) {
       try {
@@ -119,6 +125,86 @@
   window.reloadYotpo = function () {
     tryIdentify() || pollIdentify();
   };
+
+  // --- SSO via Swell/Yotpo identification div + controlled loader injection ---
+  var LOADER_URL =
+    "https://cdn-widgetsrepository.yotpo.com/v1/loader/ayCQoNgVgsMXREbYl_jUOQ";
+  var LOADER_INSERTED = false;
+
+  function injectLoaderOnce() {
+    if (LOADER_INSERTED) return;
+    try {
+      if (
+        document.querySelector(
+          'script[src*="cdn-widgetsrepository.yotpo.com/v1/loader"]'
+        )
+      ) {
+        LOADER_INSERTED = true;
+        return;
+      }
+      var s = document.createElement("script");
+      s.src = LOADER_URL;
+      s.async = true;
+      document.body.appendChild(s);
+      LOADER_INSERTED = true;
+    } catch (_) {}
+  }
+
+  function ensureSwellDiv(data) {
+    try {
+      var el = document.getElementById("swell-customer-identification");
+      if (!el) {
+        el = document.createElement("div");
+        el.id = "swell-customer-identification";
+        document.body.insertBefore(el, document.body.firstChild || null);
+      }
+      if (data && data.email) el.setAttribute("data-email", data.email);
+      if (data && data.id) el.setAttribute("data-id", data.id);
+      if (data && data.token) el.setAttribute("data-token", data.token);
+    } catch (_) {}
+  }
+  function removeSwellDiv() {
+    try {
+      var el = document.getElementById("swell-customer-identification");
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    } catch (_) {}
+  }
+
+  async function setupSSOFromSession() {
+    // Build the SSO div (if we have an email), then inject loader to avoid races
+    var email = "";
+    var id = "";
+    try {
+      var u = window.JAAccount && JAAccount.getUser && JAAccount.getUser();
+      email =
+        (u && (u.email || u?.defaultAddress?.email)) || currentEmail() || "";
+      id = (u && (u.id || u?.customerId || u?.shopifyId)) || "";
+    } catch (_) {}
+
+    if (email) {
+      try {
+        var res = await fetch("/.netlify/functions/yotpo-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email }),
+          credentials: "omit",
+          cache: "no-store",
+        });
+        if (res && res.ok) {
+          var json = await res.json();
+          ensureSwellDiv({ email: email, id: id, token: json && json.token });
+        } else {
+          // Fallback: still set div with email only
+          ensureSwellDiv({ email: email });
+        }
+      } catch (_) {
+        ensureSwellDiv({ email: email });
+      }
+    }
+
+    injectLoaderOnce();
+    tryIdentify() || pollIdentify();
+  }
 
   // --- Guest CTA interception (route to Shopify login) ---
   var LOGIN_URL = "/account/login.html";
@@ -310,20 +396,28 @@
     } catch (_) {}
   }
 
-  // Kick off on load
-  // Seed email from existing session if available (and reconcile with localStorage)
-  try {
-    var sessionEmail =
-      (window.JAAccount &&
-        JAAccount.getUser &&
-        JAAccount.getUser() &&
-        JAAccount.getUser().email) ||
-      "";
-    if (sessionEmail && sessionEmail !== currentEmail()) {
-      setEmail(sessionEmail);
-    }
-  } catch (_) {}
-  logOnce();
-  pollIdentify();
-  ensureGuestInterception();
+  // Kick off on load (build SSO div first, then load Yotpo, then bind interceptors)
+  (function init() {
+    // Reconcile stored email from session if needed
+    try {
+      var u = window.JAAccount && JAAccount.getUser && JAAccount.getUser();
+      var sessionEmail = (u && (u.email || u?.defaultAddress?.email)) || "";
+      if (sessionEmail && sessionEmail !== currentEmail())
+        setEmail(sessionEmail);
+    } catch (_) {}
+
+    setupSSOFromSession()
+      .then(function () {
+        if (DEBUG)
+          try {
+            console.log("[Yotpo] SSO setup complete");
+          } catch (_) {}
+        ensureGuestInterception();
+        logOnce();
+      })
+      .catch(function () {
+        ensureGuestInterception();
+        logOnce();
+      });
+  })();
 })();
