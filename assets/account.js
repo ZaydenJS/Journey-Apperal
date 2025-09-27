@@ -247,6 +247,20 @@
 
   onReady(function () {
     setHeaderProfileLink();
+    try {
+      if (isAuthed()) {
+        var u = getUser() || {};
+        var email =
+          (u && (u.email || (u.defaultAddress && u.defaultAddress.email))) ||
+          "";
+        if (email && window.setYotpoCustomerEmail) {
+          window.setYotpoCustomerEmail(email, {
+            firstName: u.firstName || "",
+            lastName: u.lastName || "",
+          });
+        }
+      }
+    } catch (_) {}
     // Update header link if auth changes in another tab
     window.addEventListener("storage", function (e) {
       if (e && e.key === AUTH_KEY) setHeaderProfileLink();

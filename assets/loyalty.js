@@ -43,6 +43,15 @@
     } catch (_) {}
     try {
       if (
+        window.yotpoModules &&
+        window.yotpoModules.loyalty &&
+        window.yotpoModules.loyalty.api &&
+        typeof window.yotpoModules.loyalty.api.identify === "function"
+      )
+        return window.yotpoModules.loyalty.api.identify;
+    } catch (_) {}
+    try {
+      if (
         window.yotpoLoyalty &&
         typeof window.yotpoLoyalty.identify === "function"
       )
@@ -87,9 +96,17 @@
   }
 
   // Expose helpers
-  window.setYotpoCustomerEmail = function (email) {
+  window.setYotpoCustomerEmail = function (email, meta) {
     try {
       setEmail(email);
+    } catch (_) {}
+    try {
+      window.yotpoLoyalty = window.yotpoLoyalty || {};
+      window.yotpoLoyalty.customer = {
+        email: email || "",
+        firstName: (meta && meta.firstName) || "",
+        lastName: (meta && meta.lastName) || "",
+      };
     } catch (_) {}
     tryIdentify() || pollIdentify();
   };
@@ -97,15 +114,32 @@
     try {
       setEmail("");
     } catch (_) {}
+    try {
+      window.yotpoLoyalty = window.yotpoLoyalty || {};
+      window.yotpoLoyalty.customer = {};
+    } catch (_) {}
     tryIdentify() || pollIdentify();
   };
 
   // Kick off on load
-  // Seed email from existing session if available
+  // Seed from existing Shopify session, and push to Yotpo data layer
   try {
-    if (!currentEmail() && window.JAAccount && JAAccount.getUser) {
-      var u = JAAccount.getUser();
-      if (u && u.email) setEmail(u.email);
+    if (
+      window.JAAccount &&
+      typeof JAAccount.getUser === "function" &&
+      typeof JAAccount.isAuthed === "function" &&
+      JAAccount.isAuthed()
+    ) {
+      var u = JAAccount.getUser() || {};
+      var email = u.email || (u.defaultAddress && u.defaultAddress.email) || "";
+      if (email)
+        window.setYotpoCustomerEmail(email, {
+          firstName: u.firstName || "",
+          lastName: u.lastName || "",
+        });
+    } else if (!currentEmail()) {
+      // ensure guest identify still tries
+      setEmail("");
     }
   } catch (_) {}
   logOnce();
