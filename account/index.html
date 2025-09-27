@@ -696,13 +696,27 @@
     <script src="/script.js" defer></script>
 
     <script>
-      try {
-        var e = localStorage.getItem("ja_email");
-        if (e) {
-          window.yotpoLoyalty = window.yotpoLoyalty || {};
-          window.yotpoLoyalty.customer = { email: e };
-        }
-      } catch (_) {}
+      (function () {
+        try {
+          var e = localStorage.getItem("ja_email");
+          var t = localStorage.getItem("yotpo_token");
+          var u =
+            window.JAAccount && typeof JAAccount.getUser === "function"
+              ? JAAccount.getUser() || {}
+              : {};
+          var id = u && (u.id || u.customerId || "");
+          var div = document.createElement("div");
+          div.id = "swell-customer-identification";
+          if (e) div.setAttribute("data-email", e);
+          if (id) div.setAttribute("data-id", String(id));
+          if (t) {
+            div.setAttribute("data-token", t);
+            div.setAttribute("data-authenticated", "true");
+          }
+          div.style.display = "none";
+          document.head.appendChild(div);
+        } catch (_) {}
+      })();
     </script>
     <script
       src="https://cdn-widgetsrepository.yotpo.com/v1/loader/ayCQoNgVgsMXREbYl_jUOQ"
