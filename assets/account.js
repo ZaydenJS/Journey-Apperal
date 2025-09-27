@@ -28,14 +28,25 @@
       localStorage.setItem(TOKEN_EXPIRY_KEY, expiresAt);
       localStorage.setItem(USER_KEY, JSON.stringify(customer));
     } catch (_) {}
-    // Yotpo Loyalty: persist and identify by email (free plan)
+    // Yotpo Loyalty SSO: persist identifiers and mount SSO
     try {
       var email =
         (customer && (customer.email || customer?.defaultAddress?.email)) || "";
-      if (email && window.setYotpoCustomerEmail) {
-        window.setYotpoCustomerEmail(email);
+      var cid =
+        (customer &&
+          (customer.id || customer?.customerId || customer?.shopifyId)) ||
+        "";
+      if (email) {
         try {
-          window.reloadYotpo && window.reloadYotpo();
+          localStorage.setItem("ja_email", email);
+        } catch (_) {}
+        try {
+          localStorage.setItem("ja_customer_id", String(cid || ""));
+        } catch (_) {}
+        try {
+          import("/assets/loyalty.js").then((m) =>
+            m.mountYotpoWithShopifySession()
+          );
         } catch (_) {}
       }
     } catch (e) {}
@@ -130,8 +141,16 @@
 
   function logout() {
     try {
-      if (window.clearYotpoCustomer) window.clearYotpoCustomer();
-    } catch (e) {}
+      localStorage.removeItem("ja_email");
+    } catch (_) {}
+    try {
+      localStorage.removeItem("ja_customer_id");
+    } catch (_) {}
+    try {
+      import("/assets/loyalty.js").then((m) =>
+        m.mountYotpoWithShopifySession()
+      );
+    } catch (_) {}
     clearAuth();
     location.replace("/account/login.html");
   }

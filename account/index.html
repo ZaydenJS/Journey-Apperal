@@ -695,6 +695,10 @@
     </script>
     <script src="/script.js" defer></script>
 
-    <script src="/assets/loyalty.js" defer></script>
+    <script type="module">
+      import("/assets/loyalty.js").then((m) =>
+        m.mountYotpoWithShopifySession()
+      );
+    </script>
   </body>
 </html>
