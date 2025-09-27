@@ -1004,103 +1004,10 @@
     </script>
     <script src="../script.js" defer></script>
 
-    <script>
-      (function () {
-        try {
-          var e = localStorage.getItem("ja_email");
-          var t = localStorage.getItem("yotpo_token");
-          var u =
-            window.JAAccount && typeof JAAccount.getUser === "function"
-              ? JAAccount.getUser() || {}
-              : {};
-          var id = u && (u.id || u.customerId || "");
-          var div = document.createElement("div");
-          div.id = "swell-customer-identification";
-          if (e) div.setAttribute("data-email", e);
-          if (id) div.setAttribute("data-id", String(id));
-          if (t) {
-            div.setAttribute("data-token", t);
-            div.setAttribute("data-authenticated", "true");
-          }
-          div.style.display = "none";
-          document.head.appendChild(div);
-        } catch (_) {}
-      })();
-    </script>
-
-    <script>
-      (function () {
-        try {
-          var e = localStorage.getItem("ja_email") || "";
-          var t = localStorage.getItem("yotpo_token") || "";
-          var u =
-            window.JAAccount && typeof JAAccount.getUser === "function"
-              ? JAAccount.getUser() || {}
-              : {};
-          var id = u && (u.id || u.customerId || "");
-          var div =
-            document.getElementById("swell-customer-identification") ||
-            (function () {
-              var d = document.createElement("div");
-              d.id = "swell-customer-identification";
-              d.style.display = "none";
-              document.head.appendChild(d);
-              return d;
-            })();
-          if (e) div.setAttribute("data-email", e);
-          if (id) div.setAttribute("data-id", String(id));
-          if (t) {
-            div.setAttribute("data-token", t);
-            div.setAttribute("data-authenticated", "true");
-          }
-
-          function loadYotpo() {
-            var s = document.createElement("script");
-            s.src =
-              "https://cdn-widgetsrepository.yotpo.com/v1/loader/ayCQoNgVgsMXREbYl_jUOQ";
-            s.async = true;
-            document.head.appendChild(s);
-            var h = document.createElement("script");
-            h.src = "/assets/loyalty.js";
-            h.defer = true;
-            document.head.appendChild(h);
-          }
-
-          if (!t && e) {
-            fetch("/.netlify/functions/yotpoToken", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email: String(e).trim() }),
-            })
-              .then(function (r) {
-                return r.ok ? r.json() : Promise.reject();
-              })
-              .then(function (data) {
-                if (data && data.token) {
-                  try {
-                    localStorage.setItem("yotpo_token", data.token);
-                  } catch (_) {}
-                  div.setAttribute("data-token", data.token);
-                  div.setAttribute("data-authenticated", "true");
-                }
-              })
-              .catch(function () {})
-              .finally(loadYotpo);
-          } else {
-            loadYotpo();
-          }
-        } catch (_) {
-          var s = document.createElement("script");
-          s.src =
-            "https://cdn-widgetsrepository.yotpo.com/v1/loader/ayCQoNgVgsMXREbYl_jUOQ";
-          s.async = true;
-          document.head.appendChild(s);
-          var h = document.createElement("script");
-          h.src = "/assets/loyalty.js";
-          h.defer = true;
-          document.head.appendChild(h);
-        }
-      })();
-    </script>
+    <script
+      src="https://cdn-widgetsrepository.yotpo.com/v1/loader/ayCQoNgVgsMXREbYl_jUOQ"
+      async
+    ></script>
+    <script src="/assets/loyalty.js" defer></script>
   </body>
 </html>

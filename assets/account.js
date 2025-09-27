@@ -22,48 +22,18 @@
     }
   }
 
-  function requestYotpoToken(email) {
-    try {
-      if (!email) return;
-      fetch("/.netlify/functions/yotpoToken", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: String(email).trim() }),
-      })
-        .then(function (r) {
-          return r.ok
-            ? r.json()
-            : Promise.reject(new Error("Token request failed"));
-        })
-        .then(function (data) {
-          if (data && data.token) {
-            try {
-              localStorage.setItem("yotpo_token", data.token);
-            } catch (_) {}
-          }
-        })
-        .catch(function (_) {});
-    } catch (_) {}
-  }
-
   function setAuth(accessToken, expiresAt, customer) {
     try {
       localStorage.setItem(AUTH_KEY, accessToken);
       localStorage.setItem(TOKEN_EXPIRY_KEY, expiresAt);
       localStorage.setItem(USER_KEY, JSON.stringify(customer));
     } catch (_) {}
-    // Yotpo Loyalty: persist email, generate token, and identify
+    // Yotpo Loyalty: persist and identify by email (free plan)
     try {
       var email =
         (customer && (customer.email || customer?.defaultAddress?.email)) || "";
-      if (email) {
-        try {
-          localStorage.setItem("ja_email", email);
-        } catch (_) {}
-        requestYotpoToken(email);
-        if (window.setYotpoCustomerEmail) {
-          window.setYotpoCustomerEmail(email);
-        }
+      if (email && window.setYotpoCustomerEmail) {
+        window.setYotpoCustomerEmail(email);
       }
     } catch (e) {}
   }
@@ -159,12 +129,6 @@
     try {
       if (window.clearYotpoCustomer) window.clearYotpoCustomer();
     } catch (e) {}
-    try {
-      localStorage.removeItem("ja_email");
-    } catch (_) {}
-    try {
-      localStorage.removeItem("yotpo_token");
-    } catch (_) {}
     clearAuth();
     location.replace("/account/login.html");
   }
@@ -283,27 +247,6 @@
 
   onReady(function () {
     setHeaderProfileLink();
-    try {
-      if (isAuthed()) {
-        var u = getUser() || {};
-        var email =
-          (u && (u.email || (u.defaultAddress && u.defaultAddress.email))) ||
-          "";
-        if (email) {
-          // Ensure token exists in case user reloaded directly into a page
-          try {
-            var t = localStorage.getItem("yotpo_token");
-            if (!t) requestYotpoToken(email);
-          } catch (_) {}
-          if (window.setYotpoCustomerEmail) {
-            window.setYotpoCustomerEmail(email, {
-              firstName: u.firstName || "",
-              lastName: u.lastName || "",
-            });
-          }
-        }
-      }
-    } catch (_) {}
     // Update header link if auth changes in another tab
     window.addEventListener("storage", function (e) {
       if (e && e.key === AUTH_KEY) setHeaderProfileLink();

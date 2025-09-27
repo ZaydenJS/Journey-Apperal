@@ -15,9 +15,3 @@
 [dev]
   functions = "netlify/functions"
   publish = "."
-
-
-[[redirects]]
-  from = "/rewards.html"
-  to = "/"
-  status = 301
