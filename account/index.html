@@ -695,6 +695,15 @@
     </script>
     <script src="/script.js" defer></script>
 
+    <script>
+      try {
+        var e = localStorage.getItem("ja_email");
+        if (e) {
+          window.yotpoLoyalty = window.yotpoLoyalty || {};
+          window.yotpoLoyalty.customer = { email: e };
+        }
+      } catch (_) {}
+    </script>
     <script
       src="https://cdn-widgetsrepository.yotpo.com/v1/loader/ayCQoNgVgsMXREbYl_jUOQ"
       async
