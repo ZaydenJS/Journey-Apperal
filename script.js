@@ -439,7 +439,7 @@
     }
 
     // Setup add to cart functionality
-    setupAddToCart(product);
+    setupAddToCartV2(product);
   }
 
   function createVariantSelectors(product) {
@@ -463,7 +463,7 @@
     return html;
   }
 
-  function setupAddToCart(product) {
+  function setupAddToCartV2(product) {
     const addToCartBtns = document.querySelectorAll(
       '.add-to-cart, .btn[data-action="add-to-cart"]'
     );
