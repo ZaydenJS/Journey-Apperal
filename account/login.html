@@ -143,6 +143,21 @@
   </style>
 
   <body style="margin: 0; overflow-x: hidden; background: #fff; color: #111">
+    <script>
+      // Redirect this legacy route to Shopify's passwordless login
+      try {
+        window.location.replace(
+          "https://shopify.com/94836293942/account/login"
+        );
+      } catch (e) {}
+    </script>
+    <noscript>
+      <meta
+        http-equiv="refresh"
+        content="0; url=https://shopify.com/94836293942/account/login"
+      />
+    </noscript>
+
     <div
       class="announcement upper"
       style="position: sticky; top: 0; left: 0; right: 0; text-align: center"
@@ -393,7 +408,7 @@
             id="headerProfileLink"
             class="icon-btn"
             aria-label="Account"
-            href="/account/login.html"
+            href="https://shopify.com/94836293942/account/login"
             style="order: 1"
             >👤</a
           >
@@ -458,7 +473,9 @@
             >Journeys X Leyos Collection</a
           >
         </div>
-        <a href="/account/register.html" class="row-item">Journey Sign Up</a>
+        <a href="https://shopify.com/94836293942/account/login" class="row-item"
+          >Journey Sign Up</a
+        >
         <button class="row-item accordion" data-accordion aria-expanded="false">
           Support & Contact <span class="chev">›</span>
         </button>
@@ -471,8 +488,8 @@
         </div>
       </nav>
       <div class="drawer-bottom">
-        <a href="/account/login.html" class="row-item"
-          >👤 Log in / Create Account</a
+        <a href="https://shopify.com/94836293942/account/login" class="row-item"
+          >👤 Sign in or Join</a
         >
       </div>
     </aside>

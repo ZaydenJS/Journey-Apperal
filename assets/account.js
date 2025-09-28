@@ -4,6 +4,11 @@
   var USER_KEY = "shopify_customer";
   var TOKEN_EXPIRY_KEY = "shopify_token_expiry";
 
+  // Shopify New Customer Accounts URLs (passwordless)
+  var SHOPIFY_LOGIN_URL = "https://shopify.com/94836293942/account/login";
+  var SHOPIFY_ACCOUNT_URL = "https://shopify.com/94836293942/account";
+  var SHOPIFY_LOGOUT_URL = "https://shopify.com/94836293942/account/logout";
+
   function isAuthed() {
     try {
       var token = localStorage.getItem(AUTH_KEY);
@@ -119,35 +124,32 @@
 
   function logout() {
     clearAuth();
-    location.replace("/account/login.html");
+    try {
+      window.location.href = SHOPIFY_LOGOUT_URL;
+    } catch (e) {
+      location.href = SHOPIFY_LOGOUT_URL;
+    }
   }
 
   // Update header profile icon link to login or account dashboard
   function setHeaderProfileLink() {
     var el = document.getElementById("headerProfileLink");
     if (!el) return;
-    el.setAttribute(
-      "href",
-      isAuthed() ? "/account/index.html" : "/account/login.html"
-    );
-    el.addEventListener("click", function (e) {
-      // ensure correct navigation on dynamic state
-      el.setAttribute(
-        "href",
-        isAuthed() ? "/account/index.html" : "/account/login.html"
-      );
-    });
+    // Always send users to Shopify's passwordless login; if they're already logged in,
+    // Shopify will show the account area automatically.
+    el.setAttribute("href", SHOPIFY_LOGIN_URL);
+    el.setAttribute("title", "Sign in or Join");
   }
 
   // Route guard: redirect unauthenticated users to login
   function guardAuthenticated() {
-    if (!isAuthed()) {
-      var from = location.pathname + location.search + location.hash;
-      try {
-        sessionStorage.setItem("ja_redirect_after_login", from);
-      } catch (_) {}
-      location.replace("/account/login.html");
-    }
+    // For New Customer Accounts, we can't validate session client-side.
+    // Send users to Shopify's login; after logging in, they can access the account there.
+    var from = location.pathname + location.search + location.hash;
+    try {
+      sessionStorage.setItem("ja_redirect_after_login", from);
+    } catch (_) {}
+    location.replace(SHOPIFY_LOGIN_URL);
   }
 
   // After successful login/registration, redirect back if a prior page saved
