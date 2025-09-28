@@ -142,16 +142,11 @@
     <script>
       // Redirect legacy reset route to Shopify's passwordless login
       try {
-        window.location.replace(
-          "https://shopify.com/94836293942/account/login?return_url=https%3A%2F%2Fjourneysapparel.com%2Faccount.html"
-        );
+        window.location.replace("/account.html");
       } catch (e) {}
     </script>
     <noscript>
-      <meta
-        http-equiv="refresh"
-        content="0; url=https://shopify.com/94836293942/account/login?return_url=https%3A%2F%2Fjourneysapparel.com%2Faccount.html"
-      />
+      <meta http-equiv="refresh" content="0; url=/account.html" />
     </noscript>
 
     <div
@@ -403,7 +398,7 @@
             id="headerProfileLink"
             class="icon-btn"
             aria-label="Account"
-            href="https://shopify.com/94836293942/account/login?return_url=https%3A%2F%2Fjourneysapparel.com%2Faccount.html"
+            href="/account.html"
             style="order: 1"
             >👤</a
           >

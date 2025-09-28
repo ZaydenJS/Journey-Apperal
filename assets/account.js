@@ -165,6 +165,11 @@
   function setHeaderProfileLink() {
     var el = document.getElementById("headerProfileLink");
     if (!el) return;
+    // Force all profile icon clicks to route to local account page
+    el.setAttribute("href", "/account.html");
+    el.setAttribute("title", "Account");
+    el.onclick = null;
+    return;
 
     // Ensure a profile menu exists (created once) for the signed-in state
     var menuId = "ja-profile-menu";
@@ -244,7 +249,7 @@
     try {
       sessionStorage.setItem("ja_redirect_after_login", from);
     } catch (_) {}
-    location.replace(SHOPIFY_LOGIN_URL);
+    location.replace("/account.html");
   }
 
   // After successful login/registration, redirect back if a prior page saved

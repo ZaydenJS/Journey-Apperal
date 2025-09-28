@@ -7,66 +7,164 @@
     <meta name="description" content="Your Journey Apparel account." />
     <link rel="stylesheet" href="styles.css" />
     <style>
-      body { margin: 0; background:#fff; color:#111; }
-      header.header { position: sticky; top:0; left:0; right:0; background:#fff; z-index:500; box-shadow: 0 1px 0 rgba(0,0,0,0.06); }
-      header .header-inner { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; }
-      .logo a { text-decoration:none; color:#111; letter-spacing:1.8px; font-weight:900; }
-      .icon-btn { text-decoration:none; color:#111; font-size:18px; }
-      main.container { max-width:960px; margin:0 auto; padding:24px 16px 64px; }
-      .card { border:1px solid #e5e5e5; border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,0.06); padding:24px; background:#fff; }
-      .btn { display:inline-block; padding:12px 16px; border-radius:8px; border:1px solid #111; background:#111; color:#fff; font-weight:700; text-decoration:none; }
-      .btn.secondary { background:#fff; color:#111; }
-      .actions { display:flex; gap:10px; flex-wrap:wrap; }
-      footer { background:#fff; color:#111; border-top:1px solid #333; padding:24px 0; text-align:center; }
+      body {
+        margin: 0;
+        background: #fff;
+        color: #111;
+      }
+      header.header {
+        position: sticky;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        z-index: 500;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+      }
+      header .header-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+      }
+      .logo a {
+        text-decoration: none;
+        color: #111;
+        letter-spacing: 1.8px;
+        font-weight: 900;
+      }
+      .icon-btn {
+        text-decoration: none;
+        color: #111;
+        font-size: 18px;
+      }
+      main.container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px 16px 64px;
+      }
+      .card {
+        border: 1px solid #e5e5e5;
+        border-radius: 12px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+        padding: 24px;
+        background: #fff;
+      }
+      .btn {
+        display: inline-block;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid #111;
+        background: #111;
+        color: #fff;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .btn.secondary {
+        background: #fff;
+        color: #111;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      footer {
+        background: #fff;
+        color: #111;
+        border-top: 1px solid #333;
+        padding: 24px 0;
+        text-align: center;
+      }
     </style>
   </head>
   <body>
     <header class="header">
       <div class="header-inner">
         <div class="nav-left">
-          <a href="/index.html" class="logo" aria-label="Journeys Apparel Home"><span>JOURNEYS</span></a>
+          <a href="/index.html" class="logo" aria-label="Journeys Apparel Home"
+            ><span>JOURNEYS</span></a
+          >
         </div>
         <div class="nav-right">
-          <a id="headerProfileLink" class="icon-btn" aria-label="Account" href="https://shopify.com/94836293942/account/login?return_url=https%3A%2F%2Fjourneysapparel.com%2Faccount.html">👤</a>
+          <a
+            id="headerProfileLink"
+            class="icon-btn"
+            aria-label="Account"
+            href="/account.html"
+            >👤</a
+          >
         </div>
       </div>
     </header>
 
     <main class="container">
-      <section class="card" aria-label="Account">
-        <h1 class="upper" style="margin:0 0 8px; font-size:26px; font-weight:900; letter-spacing:0.5px;">Account</h1>
-        <p style="margin:0 0 16px; color:#666;">You're signed in.</p>
-        <div class="actions">
-          <a class="btn secondary" href="/rewards.html">Rewards</a>
-          <a id="signOutLink" class="btn" href="https://shopify.com/94836293942/account/logout?return_url=https%3A%2F%2Fjourneysapparel.com%2F">Sign out</a>
-        </div>
-      </section>
+      <section id="account-card" class="card" aria-label="Account"></section>
     </main>
 
     <footer>
-      <div style="max-width:1200px; margin:0 auto; padding:0 16px;">
-        <span style="font-size:14px">© 2025 Journey Apparel. All rights reserved.</span>
+      <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px">
+        <span style="font-size: 14px"
+          >© 2025 Journey Apparel. All rights reserved.</span
+        >
       </div>
     </footer>
 
     <script src="data/products.js" defer></script>
     <script src="assets/account.js" defer></script>
     <script>
-      (function(){
-        function onReady(fn){ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',fn);} else { fn(); } }
-        onReady(function(){
-          // Mark signed-in on arrival to /account.html (best-effort flag)
-          if (window.JAAccount && typeof JAAccount.markSignedIn === 'function') {
-            JAAccount.markSignedIn();
+      (function () {
+        function onReady(fn) {
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", fn);
+          } else {
+            fn();
           }
-          // Ensure sign-out clears local flag before navigating
-          var out = document.getElementById('signOutLink');
-          if (out) { out.addEventListener('click', function(){ if (window.JAAccount && JAAccount.clearSignedIn) JAAccount.clearSignedIn(); }); }
-          // Refresh header logic
-          if (window.JAAccount && JAAccount.setHeaderProfileLink) JAAccount.setHeaderProfileLink();
-        });
+        }
+        function render() {
+          var url = new URL(window.location.href);
+          var fromShopify =
+            document.referrer &&
+            document.referrer.indexOf("accounts.shopify.com") !== -1;
+          if (url.searchParams.get("logged_in") === "1" || fromShopify) {
+            try {
+              localStorage.setItem("ja_logged_in", "true");
+            } catch (e) {}
+          }
+          var signedIn = false;
+          try {
+            signedIn = localStorage.getItem("ja_logged_in") === "true";
+          } catch (e) {}
+          var card = document.getElementById("account-card");
+          if (!card) return;
+          if (signedIn) {
+            card.innerHTML = `
+              <h1 class="upper" style="margin:0 0 8px; font-size:26px; font-weight:900; letter-spacing:0.5px;">Account</h1>
+              <p style="margin:0 0 16px; color:#666;">You're signed in.</p>
+              <div class="actions">
+                <a class="btn secondary" href="/rewards.html">Rewards</a>
+                <a id="signOutLink" class="btn" href="https://shopify.com/94836293942/account/logout?return_url=https://journeysapparel.com/">Sign out</a>
+              </div>`;
+            var out = card.querySelector("#signOutLink");
+            if (out)
+              out.addEventListener("click", function () {
+                try {
+                  localStorage.removeItem("ja_logged_in");
+                } catch (e) {}
+              });
+          } else {
+            card.innerHTML = `
+              <h1 class="upper" style="margin:0 0 8px; font-size:26px; font-weight:900; letter-spacing:0.5px;">Account</h1>
+              <p style="margin:0 0 16px; color:#666;">Sign in to access your account and rewards.</p>
+              <div class="actions">
+                <a class="btn" href="https://shopify.com/94836293942/account/login?return_url=https://journeysapparel.com/account.html?logged_in=1">Sign in / Join</a>
+              </div>`;
+          }
+          if (window.JAAccount && JAAccount.setHeaderProfileLink)
+            JAAccount.setHeaderProfileLink();
+        }
+        onReady(render);
       })();
     </script>
   </body>
 </html>
-
