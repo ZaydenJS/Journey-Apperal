@@ -111,7 +111,6 @@
       <a href="#">Policies</a>
       <a href="#">Contact</a>
     </div>
-    <a href="rewards.html" class="row-item">Rewards</a>
   </nav>
   <div class="drawer-bottom"><a href="#" class="row-item">👤 Log in / Create Account</a></div>
 </aside>`;
@@ -193,7 +192,6 @@
     __safe("ensureShopClickToggle", ensureShopClickToggle);
     __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
-    // Yotpo Loyalty functions removed per free-plan sticky bar setup
   });
 
   function setupSizeSelection() {

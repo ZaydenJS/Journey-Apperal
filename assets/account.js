@@ -28,23 +28,6 @@
       localStorage.setItem(TOKEN_EXPIRY_KEY, expiresAt);
       localStorage.setItem(USER_KEY, JSON.stringify(customer));
     } catch (_) {}
-    // Yotpo Loyalty SSO: identify using full profile when possible
-    try {
-      var c = customer || {};
-      var profile = {
-        email: c.email || c?.defaultAddress?.email || "",
-        firstName: c.firstName || "",
-        lastName: c.lastName || "",
-        id: c.id || "",
-      };
-      if (profile.email) {
-        if (window.setYotpoCustomerProfile) {
-          window.setYotpoCustomerProfile(profile);
-        } else if (window.setYotpoCustomerEmail) {
-          window.setYotpoCustomerEmail(profile.email);
-        }
-      }
-    } catch (e) {}
   }
 
   function clearAuth() {
@@ -135,9 +118,6 @@
   }
 
   function logout() {
-    try {
-      if (window.clearYotpoCustomer) window.clearYotpoCustomer();
-    } catch (e) {}
     clearAuth();
     location.replace("/account/login.html");
   }

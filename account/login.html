@@ -870,19 +870,6 @@
             ctx.setMessage("Signing in…", "#666");
             try {
               var res = await JourneyAuth.login(email, pwd);
-              try {
-                var c =
-                  (res && res.customer) ||
-                  (JourneyAuth.getUser && JourneyAuth.getUser());
-                if (c) {
-                  window.yotpoLoyalty = window.yotpoLoyalty || {};
-                  window.yotpoLoyalty.customer = {
-                    email: c.email || "",
-                    firstName: c.firstName || "",
-                    lastName: c.lastName || "",
-                  };
-                }
-              } catch (_) {}
               ctx.setMessage("Signed in. Redirecting…", "#0a0");
               JourneyAuth.redirectAfterAuth("/account/index.html");
             } catch (e) {
@@ -958,11 +945,5 @@
       })();
     </script>
     <script src="../script.js" defer></script>
-
-    <script
-      src="https://cdn-widgetsrepository.yotpo.com/v1/loader/ayCQoNgVgsMXREbYl_jUOQ"
-      async
-    ></script>
-    <script src="/assets/loyalty.js" defer></script>
   </body>
 </html>
