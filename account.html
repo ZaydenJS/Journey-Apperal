@@ -138,14 +138,142 @@
           var card = document.getElementById("account-card");
           if (!card) return;
           if (signedIn) {
+            var user = null;
+            try {
+              if (window.JAAccount && JAAccount.getUser)
+                user = JAAccount.getUser();
+            } catch (e) {}
+            var email = user && user.email ? user.email : "";
             card.innerHTML = `
               <h1 class="upper" style="margin:0 0 8px; font-size:26px; font-weight:900; letter-spacing:0.5px;">Account</h1>
-              <p style="margin:0 0 16px; color:#666;">You're signed in.</p>
-              <div class="actions">
+              <p data-email-line style="margin:0 16px 20px 0; color:#666;">You're signed in${
+                email
+                  ? ' as <strong style="color:#111"\>' + email + "</strong>"
+                  : "."
+              }</p>
+              <div class="actions" style="margin-bottom:8px">
                 <a class="btn secondary" href="/rewards.html">Rewards</a>
+                <a class="btn secondary" target="_blank" rel="noopener" href="https://shopify.com/94836293942/account/orders">Orders</a>
                 <a id="signOutLink" class="btn" href="https://shopify.com/94836293942/account/logout?return_url=https://journeysapparel.com/">Sign out</a>
+              </div>
+              <p id="pointsLine" style="margin:0 0 16px; color:#666;">Points: <strong id="pointsBalance">—</strong></p>
+              <div class="card" style="border-radius:8px; padding:16px; border:1px solid #eee; margin-bottom:12px;">
+                <h2 class="upper" style="margin:0 0 8px; font-size:18px; font-weight:800; letter-spacing:0.5px;">Recent orders</h2>
+                <div id="ordersPreview" style="color:#666;">Loading your recent orders…</div>
+                <div style="margin-top:12px"><a class="btn secondary" target="_blank" rel="noopener" href="https://shopify.com/94836293942/account/orders">View all orders</a></div>
+              </div>
+              <div class="card" style="border-radius:8px; padding:16px; border:1px solid #eee;">
+                <h2 class="upper" style="margin:0 0 8px; font-size:18px; font-weight:800; letter-spacing:0.5px;">Settings</h2>
+                <p id="settingsLine" style="margin:0; color:#666;">Manage your account details from your Shopify account.${
+                  email
+                    ? ' Current email: <strong style="color:#111"\>' +
+                      email +
+                      "</strong>."
+                    : ""
+                }</p>
               </div>`;
             var out = card.querySelector("#signOutLink");
+            // Fetch profile email (if backend is configured or in mock mode)
+            try {
+              fetch("/.netlify/functions/account-me", {
+                credentials: "include",
+              })
+                .then(function (r) {
+                  return r.json().then(function (j) {
+                    return { ok: r.ok, status: r.status, body: j };
+                  });
+                })
+                .then(function (res) {
+                  if (!res.ok) return;
+                  var em =
+                    res.body &&
+                    (res.body.email || (res.body.data && res.body.data.email));
+                  if (em) {
+                    var p = card.querySelector("[data-email-line]");
+                    if (p)
+                      p.innerHTML =
+                        'You\'re signed in as <strong style="color:#111">' +
+                        em +
+                        "</strong>";
+                    var s = card.querySelector("#settingsLine");
+                    if (s)
+                      s.innerHTML =
+                        'Manage your account details from your Shopify account. Current email: <strong style="color:#111">' +
+                        em +
+                        "</strong>.";
+                  }
+                })
+                .catch(function () {});
+            } catch (e) {}
+
+            // Fetch recent orders (mock or live)
+            try {
+              fetch("/.netlify/functions/account-orders?limit=5", {
+                credentials: "include",
+              })
+                .then(function (r) {
+                  return r.json().then(function (j) {
+                    return { ok: r.ok, status: r.status, body: j };
+                  });
+                })
+                .then(function (res) {
+                  var box = card.querySelector("#ordersPreview");
+                  if (!box) return;
+                  if (
+                    !res.ok ||
+                    !res.body ||
+                    !Array.isArray(res.body.orders) ||
+                    res.body.orders.length === 0
+                  ) {
+                    box.innerHTML = "No recent orders found.";
+                    return;
+                  }
+                  var html =
+                    '<ul style="list-style:none; padding:0; margin:0">' +
+                    res.body.orders
+                      .map(function (o) {
+                        var date = (o.processedAt || "").split("T")[0];
+                        var total = o.totalPrice
+                          ? o.totalPrice.amount +
+                            " " +
+                            o.totalPrice.currencyCode
+                          : "";
+                        return (
+                          '<li style="padding:8px 0; border-bottom:1px solid #eee">' +
+                          "<strong>" +
+                          (o.name || "Order") +
+                          "</strong> · " +
+                          date +
+                          (total ? " · " + total : "") +
+                          (o.statusUrl
+                            ? ' · <a target="_blank" rel="noopener" href="' +
+                              o.statusUrl +
+                              '">View</a>'
+                            : "") +
+                          "</li>"
+                        );
+                      })
+                      .join("") +
+                    "</ul>";
+                  box.innerHTML = html;
+                })
+                .catch(function () {});
+            } catch (e) {}
+
+            // Fetch rewards points (placeholder)
+            try {
+              fetch("/.netlify/functions/loyalty-points")
+                .then(function (r) {
+                  return r.json();
+                })
+                .then(function (j) {
+                  var el = card.querySelector("#pointsBalance");
+                  if (el && j && typeof j.balance !== "undefined")
+                    el.textContent = j.balance;
+                })
+                .catch(function () {});
+            } catch (e) {}
+
             if (out)
               out.addEventListener("click", function () {
                 try {
@@ -155,9 +283,9 @@
           } else {
             card.innerHTML = `
               <h1 class="upper" style="margin:0 0 8px; font-size:26px; font-weight:900; letter-spacing:0.5px;">Account</h1>
-              <p style="margin:0 0 16px; color:#666;">Sign in to access your account and rewards.</p>
+              <p style="margin:0 0 16px; color:#666;">Sign in to view your orders and rewards.</p>
               <div class="actions">
-                <a class="btn" href="https://shopify.com/94836293942/account/login?return_url=https://journeysapparel.com/account.html?logged_in=1">Sign in / Join</a>
+                <a class="btn" href="https://shopify.com/94836293942/account/login?return_url=https://journeysapparel.com/?logged_in=1">Sign in / Join</a>
               </div>`;
           }
           if (window.JAAccount && JAAccount.setHeaderProfileLink)

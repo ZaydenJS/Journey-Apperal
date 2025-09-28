@@ -9,9 +9,9 @@
   var RETURN_TO_HOME = "https://journeysapparel.com/";
   var SHOPIFY_LOGIN_URL =
     "https://shopify.com/94836293942/account/login?return_url=" +
-    encodeURIComponent(RETURN_TO_ACCOUNT);
-  // Local account landing page (after login)
-  var SHOPIFY_ACCOUNT_URL = RETURN_TO_ACCOUNT;
+    encodeURIComponent(RETURN_TO_HOME + "?logged_in=1");
+  // Local account landing page (when signed in)
+  var SHOPIFY_ACCOUNT_URL = "/account.html";
   var SHOPIFY_LOGOUT_URL =
     "https://shopify.com/94836293942/account/logout?return_url=" +
     encodeURIComponent(RETURN_TO_HOME);
@@ -155,6 +155,9 @@
     clearAuth();
     clearLoginFlag();
     try {
+      localStorage.removeItem("ja_logged_in");
+    } catch (_) {}
+    try {
       window.location.href = SHOPIFY_LOGOUT_URL;
     } catch (e) {
       location.href = SHOPIFY_LOGOUT_URL;
@@ -165,9 +168,18 @@
   function setHeaderProfileLink() {
     var el = document.getElementById("headerProfileLink");
     if (!el) return;
-    // Force all profile icon clicks to route to local account page
-    el.setAttribute("href", "/account.html");
-    el.setAttribute("title", "Account");
+    // Set header link based on signed-in flag
+    var signed = false;
+    try {
+      signed = localStorage.getItem("ja_logged_in") === "true";
+    } catch (_) {}
+    if (signed) {
+      el.setAttribute("href", "/account.html");
+      el.setAttribute("title", "Account");
+    } else {
+      el.setAttribute("href", SHOPIFY_LOGIN_URL);
+      el.setAttribute("title", "Sign in or Join");
+    }
     el.onclick = null;
     return;
 
@@ -340,10 +352,34 @@
   };
 
   onReady(function () {
+    // Mark signed-in if we just returned from Shopify or URL has logged_in=1
+    try {
+      var ref = document.referrer || "";
+      var fromShopify = ref.indexOf("accounts.shopify.com") !== -1;
+      var url = new URL(window.location.href);
+      if (fromShopify || url.searchParams.get("logged_in") === "1") {
+        localStorage.setItem("ja_logged_in", "true");
+        // Clean ?logged_in=1 on home page only
+        if (
+          url.searchParams.get("logged_in") === "1" &&
+          (location.pathname === "/" || location.pathname === "/index.html")
+        ) {
+          url.searchParams.delete("logged_in");
+          history.replaceState(
+            {},
+            document.title,
+            url.pathname + (url.search ? "?" + url.search : "") + url.hash
+          );
+        }
+      }
+    } catch (_) {}
+
     setHeaderProfileLink();
-    // Update header link if auth changes in another tab
+    // Update header link if signed-in flag changes in another tab
     window.addEventListener("storage", function (e) {
-      if (e && e.key === AUTH_KEY) setHeaderProfileLink();
+      if (!e) return;
+      if (e.key === "ja_logged_in" || e.key === AUTH_KEY)
+        setHeaderProfileLink();
     });
   });
 })();
