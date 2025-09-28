@@ -1,0 +1,6 @@
+{
+  "orders": { "id": null, "address": null },
+  "refunds": { "id": null, "address": null },
+  "note": "Invoke /.netlify/functions/register-webhooks and copy the returned IDs here for reference."
+}
+
