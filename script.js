@@ -1532,7 +1532,7 @@
 
   function setupImageFallbacks() {
     try {
-      const FALLBACK = "LOGO/1.png";
+      const FALLBACK = "/LOGO/Header.png";
       const attach = (img) => {
         if (!img || img.__fallbackBound) return;
         // Opt-out: do not apply fallback on Rewards banner or any element marked no-fallback
