@@ -502,12 +502,54 @@
           );
 
           if (result === null) {
-            // Graceful degradation - API not available
-            btn.textContent = "Cart unavailable locally";
+            // API path unavailable: add current selection to the local mini-cart
+            try {
+              if (
+                window.__cart &&
+                typeof window.__cart.setCart === "function"
+              ) {
+                const items =
+                  (window.__cart.getCart && window.__cart.getCart()) || [];
+                const sizeOpt = (selectedVariant.selectedOptions || []).find(
+                  (o) => (o.name || "").toLowerCase() === "size"
+                );
+                const size = sizeOpt
+                  ? sizeOpt.value
+                  : (selectedVariant.selectedOptions || [])[0]?.value || "";
+                const priceAmount =
+                  (selectedVariant.price && selectedVariant.price.amount) ||
+                  (product.priceRange &&
+                    product.priceRange.minVariantPrice &&
+                    product.priceRange.minVariantPrice.amount) ||
+                  "0.00";
+                const imageUrl =
+                  (selectedVariant.image && selectedVariant.image.url) ||
+                  (product.images &&
+                    product.images[0] &&
+                    product.images[0].url) ||
+                  "";
+                const existing = items.find(
+                  (it) => it.name === product.title && it.size === size
+                );
+                if (existing) existing.qty = (existing.qty || 1) + 1;
+                else
+                  items.push({
+                    name: product.title,
+                    price: `$${parseFloat(priceAmount).toFixed(2)}`,
+                    size,
+                    image: imageUrl,
+                    qty: 1,
+                  });
+                window.__cart.setCart(items);
+                if (typeof window.openCart === "function") window.openCart();
+              }
+            } catch (_) {}
+
+            btn.textContent = "Added!";
             setTimeout(() => {
               btn.disabled = false;
               btn.textContent = "Add to Cart";
-            }, 3000);
+            }, 1500);
           } else {
             // Sync mini-cart drawer with Shopify cart lines for consistent UI
             try {
