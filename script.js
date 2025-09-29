@@ -3545,8 +3545,25 @@
                   window.cartManager.getCart() &&
                   window.cartManager.getCart().checkoutUrl
                 ) {
-                  window.location.href =
-                    window.cartManager.getCart().checkoutUrl;
+                  try {
+                    const raw = window.cartManager.getCart().checkoutUrl;
+                    const dest =
+                      typeof window.cartManager.resolveCheckoutUrl ===
+                      "function"
+                        ? window.cartManager.resolveCheckoutUrl(raw)
+                        : (function () {
+                            try {
+                              const u = new URL(raw);
+                              u.host = "7196su-vk.myshopify.com"; // hard fallback host
+                              return u.href;
+                            } catch (_) {
+                              return raw;
+                            }
+                          })();
+                    window.location.href = dest;
+                  } catch (_) {
+                    window.location.href = "/cart";
+                  }
                 } else {
                   // Fallback to native cart page if Shopify API is not available locally
                   window.location.href = "/cart";
