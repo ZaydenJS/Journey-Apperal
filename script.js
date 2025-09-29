@@ -599,12 +599,18 @@
 
   function setupAddToCart(product) {
     const addToCartBtns = document.querySelectorAll(
-      '.add-to-cart, .btn[data-action="add-to-cart"]'
+      '.add-to-cart, .btn[data-action="add-to-cart"], .p-details .btn'
     );
 
     addToCartBtns.forEach((btn) => {
+      // Avoid duplicate bindings from legacy handler
+      if (btn.dataset.addHandlerAttached === "1") return;
+      btn.dataset.addHandlerAttached = "1";
+
       btn.onclick = async (e) => {
         e.preventDefault();
+        if (btn.dataset.isAdding === "1") return;
+        btn.dataset.isAdding = "1";
 
         // Get selected variant (prefer hidden variantId set by Size picker)
         const hiddenInput = document.querySelector(
@@ -623,6 +629,7 @@
 
         if (!selectedVariant || !selectedVariant.id) {
           alert("Please choose a size.");
+          btn.dataset.isAdding = "0";
           return;
         }
 
@@ -634,6 +641,7 @@
           selectedVariant.availableForSale === false
         ) {
           alert("This variant is out of stock");
+          btn.dataset.isAdding = "0";
           return;
         }
 
@@ -657,17 +665,20 @@
             setTimeout(() => {
               btn.disabled = false;
               btn.textContent = "Add to Cart";
+              btn.dataset.isAdding = "0";
             }, 3000);
           } else {
             btn.textContent = "Added!";
             setTimeout(() => {
               btn.disabled = false;
               btn.textContent = "Add to Cart";
+              btn.dataset.isAdding = "0";
             }, 2000);
           }
         } catch (error) {
           btn.disabled = false;
           btn.textContent = "Add to Cart";
+          btn.dataset.isAdding = "0";
           console.error("Add to cart failed:", error);
 
           // Show user-friendly error message
