@@ -436,6 +436,10 @@
         const variantHTML = createVariantSelectors(product);
         const variantDiv = document.createElement("div");
 
+        // Build variant selectors markup before wiring events
+        variantDiv.className = "variant-selectors";
+        variantDiv.innerHTML = variantHTML;
+
         // Hide legacy size grid to avoid conflicting with dropdowns
         try {
           const grid = document.getElementById("size-grid");
@@ -496,9 +500,6 @@
           );
         // Initial sync
         updatePriceForVariant();
-
-        variantDiv.className = "variant-selectors";
-        variantDiv.innerHTML = variantHTML;
 
         // Insert before add to cart button
         const addToCartBtn =
