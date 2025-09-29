@@ -448,7 +448,7 @@
     }
 
     // Setup add to cart functionality
-    setupAddToCart(product);
+    bindShopifyAddToCart(product);
   }
 
   function createVariantSelectors(product) {
@@ -597,7 +597,7 @@
     }
   }
 
-  function setupAddToCart(product) {
+  function bindShopifyAddToCart(product) {
     let addToCartBtns = Array.from(
       document.querySelectorAll('.add-to-cart, .btn[data-action="add-to-cart"]')
     );
@@ -609,8 +609,8 @@
     }
 
     addToCartBtns.forEach((btn) => {
-      if (btn.getAttribute("data-atc-bound") === "1") return;
-      btn.setAttribute("data-atc-bound", "1");
+      if (btn.hasAttribute("data-atc-bound")) return;
+      btn.setAttribute("data-atc-bound", "shopify");
       btn.addEventListener(
         "click",
         async (e) => {
@@ -3760,8 +3760,8 @@
       document.querySelectorAll(".p-details .btn, button.btn")
     ).find((b) => /add\s*to\s*cart/i.test(b.textContent || ""));
     if (!btn) return;
-    // If modern Shopify handler already bound this button, skip legacy to avoid double-add
-    if (btn.getAttribute("data-atc-bound") === "1") return;
+    // If any handler already bound this button, skip legacy to avoid double-add
+    if (btn.hasAttribute("data-atc-bound")) return;
     // Otherwise, allow legacy local-cart fallback even if cartManager exists (e.g., API unavailable)
     btn.setAttribute("data-atc-bound", "legacy");
     btn.addEventListener("click", (e) => {
