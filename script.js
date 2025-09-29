@@ -3,6 +3,7 @@
 window.SHOPIFY_CHECKOUT_HOST = "shop.journeysapparel.com";
 window.SHOPIFY_CHECKOUT_FALLBACK_HOST = "7196su-vk.myshopify.com";
 window.FORCE_MYSHOPIFY_CHECKOUT = true; // force myshopify.com checkout host (reliable)
+window.ALWAYS_USE_MYSHOPIFY = true; // hard override: always send checkout to myshopify
 
 (function () {
   const $ = (s, ctx = document) => ctx.querySelector(s);

@@ -150,7 +150,12 @@ class CartManager {
         window.SHOPIFY_CHECKOUT_FALLBACK_HOST || "7196su-vk.myshopify.com"
       ).replace(/^https?:\/\//, "");
       const forceMyShopify = window.FORCE_MYSHOPIFY_CHECKOUT !== false; // default true
-      u.host = forceMyShopify ? fallbackHost : preferredHost;
+      const always = window.ALWAYS_USE_MYSHOPIFY === true;
+      u.host = always
+        ? fallbackHost
+        : forceMyShopify
+        ? fallbackHost
+        : preferredHost;
       return u.href;
     } catch (_) {
       return url;
