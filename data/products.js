@@ -115,11 +115,17 @@ class ShopifyAPI {
   }
 
   // Cart
-  async createCart(lines = []) {
+  async createCart(lines = [], buyerIdentity = null) {
+    const body = { lines };
+    if (buyerIdentity) body.buyerIdentity = buyerIdentity;
     return this.request("createCart", {
       method: "POST",
-      body: { lines },
+      body,
     });
+  }
+
+  async getCart(cartId) {
+    return this.request(`getCart?id=${encodeURIComponent(cartId)}`);
   }
 
   async addToCart(cartId, lines) {

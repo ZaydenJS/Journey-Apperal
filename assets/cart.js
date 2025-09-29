@@ -3,6 +3,8 @@ class CartManager {
   constructor() {
     this.cart = null;
     this.cartId = localStorage.getItem("shopify_cart_id");
+    this.checkoutUrl = localStorage.getItem("shopify_checkout_url") || null;
+    this.snapshotKey = "shopify_cart_snapshot";
     this.listeners = [];
 
     // Initialize cart on page load
@@ -12,11 +14,32 @@ class CartManager {
   async init() {
     try {
       if (this.cartId) {
-        // Try to load existing cart (we'll need to implement getCart function)
-        // For now, create a new cart if we don't have one
-        await this.createCart();
+        // Try to load existing cart from Shopify
+        try {
+          const response = await window.shopifyAPI.getCart(this.cartId);
+          this.cart = response.cart;
+          this.checkoutUrl = this.cart.checkoutUrl || null;
+          localStorage.setItem("shopify_cart_id", this.cart.id);
+          if (this.checkoutUrl) {
+            localStorage.setItem("shopify_checkout_url", this.checkoutUrl);
+          }
+        } catch (e) {
+          // If cart is invalid/expired, try to recreate from snapshot
+          const snapshot = this.getSnapshot();
+          if (snapshot && snapshot.length > 0) {
+            await this.createCart(snapshot);
+          } else {
+            await this.createCart();
+          }
+        }
       } else {
-        await this.createCart();
+        // No cart yet, create from snapshot if available
+        const snapshot = this.getSnapshot();
+        if (snapshot && snapshot.length > 0) {
+          await this.createCart(snapshot);
+        } else {
+          await this.createCart();
+        }
       }
     } catch (error) {
       console.error("Failed to initialize cart:", error);
@@ -24,12 +47,18 @@ class CartManager {
     }
   }
 
-  async createCart() {
+  async createCart(lines = []) {
     try {
-      const response = await window.shopifyAPI.createCart();
+      const response = await window.shopifyAPI.createCart(lines);
       this.cart = response.cart;
       this.cartId = this.cart.id;
+      this.checkoutUrl = this.cart.checkoutUrl || null;
       localStorage.setItem("shopify_cart_id", this.cartId);
+      if (this.checkoutUrl) {
+        localStorage.setItem("shopify_checkout_url", this.checkoutUrl);
+      }
+      // Persist lightweight snapshot of lines
+      this.persistSnapshotFromCart();
       this.notifyListeners();
       return this.cart;
     } catch (error) {
@@ -40,10 +69,6 @@ class CartManager {
 
   async addToCart(variantId, quantity = 1, properties = {}) {
     try {
-      if (!this.cartId) {
-        await this.createCart();
-      }
-
       const lines = [
         {
           merchandiseId: variantId,
@@ -55,8 +80,19 @@ class CartManager {
         },
       ];
 
-      const response = await window.shopifyAPI.addToCart(this.cartId, lines);
-      this.cart = response.cart;
+      if (!this.cartId) {
+        // Create cart with initial line
+        await this.createCart(lines);
+      } else {
+        const response = await window.shopifyAPI.addToCart(this.cartId, lines);
+        this.cart = response.cart;
+      }
+
+      this.checkoutUrl = this.cart.checkoutUrl || null;
+      if (this.checkoutUrl) {
+        localStorage.setItem("shopify_checkout_url", this.checkoutUrl);
+      }
+      this.persistSnapshotFromCart();
       this.notifyListeners();
 
       // Show success message
@@ -106,6 +142,11 @@ class CartManager {
 
       const response = await window.shopifyAPI.updateCart(this.cartId, lines);
       this.cart = response.cart;
+      this.checkoutUrl = this.cart.checkoutUrl || null;
+      if (this.checkoutUrl) {
+        localStorage.setItem("shopify_checkout_url", this.checkoutUrl);
+      }
+      this.persistSnapshotFromCart();
       this.notifyListeners();
 
       return this.cart;
@@ -134,12 +175,30 @@ class CartManager {
       : { amount: "0.00", currencyCode: "AUD" };
   }
 
-  goToCheckout() {
+  async goToCheckout() {
     if (this.cart && this.cart.checkoutUrl) {
       window.location.href = this.cart.checkoutUrl;
-    } else {
-      this.showCartMessage("Cart is empty", "error");
+      return;
     }
+
+    // Try localStorage checkout URL first
+    const storedUrl = localStorage.getItem("shopify_checkout_url");
+    if (storedUrl) {
+      window.location.href = storedUrl;
+      return;
+    }
+
+    // As a last resort, recreate from snapshot then redirect
+    const snapshot = this.getSnapshot();
+    try {
+      await this.createCart(snapshot || []);
+      if (this.cart && this.cart.checkoutUrl) {
+        window.location.href = this.cart.checkoutUrl;
+        return;
+      }
+    } catch (e) {}
+
+    this.showCartMessage("Cart is empty", "error");
   }
 
   // Event listeners for cart updates
@@ -153,6 +212,39 @@ class CartManager {
 
   notifyListeners() {
     this.listeners.forEach((callback) => callback(this.cart));
+  }
+
+  // Lightweight snapshot helpers
+  getSnapshot() {
+    try {
+      const raw = localStorage.getItem(this.snapshotKey);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  persistSnapshotFromCart() {
+    try {
+      if (!this.cart || !this.cart.lines) return;
+      const lines = (this.cart.lines || [])
+        .map((l) => ({
+          merchandiseId: l.merchandise?.id,
+          quantity: l.quantity,
+        }))
+        .filter((x) => x.merchandiseId && x.quantity > 0);
+      localStorage.setItem(this.snapshotKey, JSON.stringify(lines));
+    } catch {}
+  }
+
+  clearCart() {
+    this.cart = null;
+    this.cartId = null;
+    this.checkoutUrl = null;
+    localStorage.removeItem("shopify_cart_id");
+    localStorage.removeItem("shopify_checkout_url");
+    localStorage.removeItem(this.snapshotKey);
+    this.notifyListeners();
   }
 
   // UI Helper methods

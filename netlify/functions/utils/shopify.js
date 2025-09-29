@@ -1,17 +1,21 @@
-import { createStorefrontApiClient } from '@shopify/storefront-api-client';
+import { createStorefrontApiClient } from "@shopify/storefront-api-client";
 
 // Initialize Shopify Storefront API client
 export const createShopifyClient = () => {
-  const storeDomain = process.env.SHOPIFY_STORE_DOMAIN;
-  const storefrontToken = process.env.SHOPIFY_STOREFRONT_TOKEN;
+  const storeDomain =
+    process.env.SHOPIFY_STOREFRONT_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
+  const storefrontToken =
+    process.env.SHOPIFY_STOREFRONT_API_TOKEN ||
+    process.env.SHOPIFY_STOREFRONT_TOKEN;
+  const apiVersion = process.env.SHOPIFY_API_VERSION || "2024-07";
 
   if (!storeDomain || !storefrontToken) {
-    throw new Error('Missing required Shopify environment variables');
+    throw new Error("Missing required Shopify environment variables");
   }
 
   return createStorefrontApiClient({
     storeDomain,
-    apiVersion: '2024-01',
+    apiVersion,
     publicAccessToken: storefrontToken,
   });
 };
@@ -210,7 +214,7 @@ export const CART_FRAGMENT = `
 // Helper function to handle GraphQL errors
 export const handleGraphQLResponse = (response) => {
   if (response.errors && response.errors.length > 0) {
-    console.error('GraphQL Errors:', response.errors);
+    console.error("GraphQL Errors:", response.errors);
     throw new Error(`GraphQL Error: ${response.errors[0].message}`);
   }
   return response.data;
@@ -221,10 +225,10 @@ export const createApiResponse = (data, status = 200) => {
   return {
     statusCode: status,
     headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     },
     body: JSON.stringify(data),
   };
@@ -232,6 +236,6 @@ export const createApiResponse = (data, status = 200) => {
 
 // Helper function to handle API errors
 export const createErrorResponse = (message, status = 500) => {
-  console.error('API Error:', message);
+  console.error("API Error:", message);
   return createApiResponse({ error: message }, status);
 };
