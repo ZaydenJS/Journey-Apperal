@@ -447,8 +447,8 @@
       }
     }
 
-    // Setup add to cart functionality (Shopify)
-    bindShopifyAddToCart(product);
+    // Setup add to cart functionality
+    setupAddToCart(product);
   }
 
   function createVariantSelectors(product) {
@@ -596,61 +596,14 @@
       console.warn("Failed to load product-variants", e);
     }
   }
-  // Sync legacy drawer with Shopify cart data
-  function syncLocalCartFromShopify(cart) {
-    try {
-      if (
-        !cart ||
-        !window.__cart ||
-        typeof window.__cart.setCart !== "function"
-      )
-        return;
-      const edges = (cart.lines && cart.lines.edges) || [];
-      const items = edges.map(({ node }) => {
-        const merch = node.merchandise || {};
-        const product = merch.product || {};
-        const img =
-          (merch.image && merch.image.url) ||
-          (product.images &&
-            product.images.edges &&
-            product.images.edges[0] &&
-            product.images.edges[0].node &&
-            product.images.edges[0].node.url) ||
-          "";
-        const sizeOpt = (merch.selectedOptions || []).find((o) =>
-          /size/i.test(o.name || "")
-        );
-        const priceAmt =
-          merch.price && merch.price.amount ? Number(merch.price.amount) : 0;
-        return {
-          name: product.title || merch.title || "Item",
-          price: `$${priceAmt.toFixed(2)}`,
-          size: sizeOpt ? sizeOpt.value : undefined,
-          image: img,
-          qty: node.quantity || 1,
-        };
-      });
-      window.__cart.setCart(items);
-    } catch (e) {
-      console.warn("Failed to sync legacy cart drawer from Shopify cart", e);
-    }
-  }
 
-  function bindShopifyAddToCart(product) {
-    let addToCartBtns = Array.from(
-      document.querySelectorAll('.add-to-cart, .btn[data-action="add-to-cart"]')
+  function setupAddToCart(product) {
+    const addToCartBtns = document.querySelectorAll(
+      '.add-to-cart, .btn[data-action="add-to-cart"]'
     );
-    if (!addToCartBtns.length) {
-      const textBtn = Array.from(
-        document.querySelectorAll(".p-details .btn, button.btn")
-      ).find((b) => /add\s*to\s*cart/i.test(b.textContent || ""));
-      if (textBtn) addToCartBtns = [textBtn];
-    }
 
     addToCartBtns.forEach((btn) => {
-      if (btn.getAttribute("data-atc-bound") === "shopify") return;
-      btn.setAttribute("data-atc-bound", "shopify");
-      btn.addEventListener("click", async (e) => {
+      btn.onclick = async (e) => {
         e.preventDefault();
 
         // Get selected variant (prefer hidden variantId set by Size picker)
@@ -688,21 +641,6 @@
           btn.disabled = true;
           btn.textContent = "Adding...";
 
-          // Open the cart drawer immediately for UX
-          try {
-            if (
-              typeof window.openCart !== "function" &&
-              typeof window.setupCart === "function"
-            ) {
-              window.setupCart();
-            }
-          } catch (_) {}
-          if (typeof window.openCart === "function") {
-            try {
-              window.openCart();
-            } catch (_) {}
-          }
-
           // Check if cart manager is available
           if (!window.cartManager) {
             throw new Error("Cart functionality not available");
@@ -721,10 +659,6 @@
               btn.textContent = "Add to Cart";
             }, 3000);
           } else {
-            // Sync the legacy drawer with the real Shopify cart and confirm UI
-            try {
-              syncLocalCartFromShopify(result);
-            } catch (_) {}
             btn.textContent = "Added!";
             setTimeout(() => {
               btn.disabled = false;
@@ -745,7 +679,7 @@
             alert("Failed to add item to cart. Please try again.");
           }
         }
-      });
+      };
     });
   }
 
@@ -3807,28 +3741,16 @@
   window.setupCart = setupCart;
 
   function setupAddToCart() {
-    const btn = Array.from(
-      document.querySelectorAll(".p-details .btn, button.btn")
-    ).find((b) => /add\s*to\s*cart/i.test(b.textContent || ""));
+    const btn = Array.from(document.querySelectorAll(".p-details .btn")).find(
+      (b) => /add\s*to\s*cart/i.test(b.textContent || "")
+    );
     if (!btn) return;
-    // If this button is already bound by the legacy handler, skip; otherwise bind legacy too
-    if (btn.getAttribute("data-atc-bound") === "legacy") return;
-    // Allow legacy local-cart fallback alongside Shopify to open drawer, but not add
-    btn.setAttribute("data-atc-bound", "legacy");
     btn.addEventListener("click", (e) => {
       // allow guard to run; if size not selected it will alert
       const selected = document.querySelector(
         '#size-grid .size[aria-pressed="true"]'
       );
       if (!selected) return; // guard will have alerted
-
-      // If Shopify cart exists, just open the cart UI and do not add locally
-      if (window && window.cartManager) {
-        try {
-          if (typeof window.openCart === "function") window.openCart();
-        } catch (_) {}
-        return;
-      }
 
       // Ensure cart is initialized before adding
       if (!window.__cart || typeof window.__cart.setCart !== "function") {
