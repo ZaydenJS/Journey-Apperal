@@ -263,21 +263,10 @@
 
         if (titleEl) titleEl.textContent = p.title;
         if (priceEl) {
-          const currency = p.priceRange.minVariantPrice.currencyCode;
           const price = parseFloat(p.priceRange.minVariantPrice.amount);
-          const compareAt = parseFloat(
-            (p.compareAtPriceRange &&
-              p.compareAtPriceRange.minVariantPrice &&
-              p.compareAtPriceRange.minVariantPrice.amount) ||
-              "0"
-          );
-          const hasCompare = compareAt && compareAt > price;
-          priceEl.innerHTML = hasCompare
-            ? `<span class="price compare-at" style="text-decoration: line-through; color:#999; margin-right:8px;">$${compareAt.toFixed(
-                2
-              )}</span>` +
-              `<span class="price">$${price.toFixed(2)} ${currency}</span>`
-            : `<span class="price">$${price.toFixed(2)} ${currency}</span>`;
+          priceEl.textContent = `$${price.toFixed(2)} ${
+            p.priceRange.minVariantPrice.currencyCode
+          }`;
         }
         if (descriptionEl) {
           descriptionEl.innerHTML = p.description || "";
@@ -411,12 +400,6 @@
 
         // Setup product variants and add to cart functionality
         setupProductVariants(p);
-        // Live Size picker from Netlify function (derives availability)
-        try {
-          await setupLiveSizePicker(p);
-        } catch (e) {
-          console.warn("size picker failed", e);
-        }
       } else {
         // Fallback to original product loading logic if Shopify not available
         console.log(
@@ -441,74 +424,8 @@
       ) {
         const variantHTML = createVariantSelectors(product);
         const variantDiv = document.createElement("div");
-
-        // Build variant selectors markup before wiring events
         variantDiv.className = "variant-selectors";
         variantDiv.innerHTML = variantHTML;
-
-        // Only hide legacy size grid if we actually rendered selectors
-        const hasSelectors = (variantHTML || "").trim().length > 0;
-        if (hasSelectors) {
-          try {
-            const grid = document.getElementById("size-grid");
-            if (grid) grid.style.display = "none";
-          } catch (_) {}
-        }
-
-        // Preselect first available variant values in the dropdowns
-        try {
-          const firstAvail =
-            product.variants.find((v) => v.availableForSale) ||
-            product.variants[0];
-          if (firstAvail && firstAvail.selectedOptions) {
-            const selectors = Array.from(
-              variantDiv.querySelectorAll(".variant-option select")
-            );
-            firstAvail.selectedOptions.forEach((opt) => {
-              const sel = selectors.find(
-                (s) => s.name.replace("option_", "") === opt.name.toLowerCase()
-              );
-              if (sel) sel.value = opt.value;
-            });
-          }
-        } catch (_) {}
-
-        // Update price and button state on option change
-        const priceElLive = document.querySelector(".p-details .p-price");
-        const updatePriceForVariant = () => {
-          const v = getSelectedVariant(product);
-          if (!v) return;
-          const currency =
-            (v.price && v.price.currencyCode) ||
-            (product.priceRange &&
-              product.priceRange.minVariantPrice &&
-              product.priceRange.minVariantPrice.currencyCode) ||
-            "USD";
-          const price = parseFloat((v.price && v.price.amount) || "0");
-          const compareAt = parseFloat(
-            (v.compareAtPrice && v.compareAtPrice.amount) || "0"
-          );
-          const hasCompare = compareAt && compareAt > price;
-          if (priceElLive) {
-            priceElLive.innerHTML = hasCompare
-              ? `<span class="price compare-at" style="text-decoration: line-through; color:#999; margin-right:8px;">$${compareAt.toFixed(
-                  2
-                )}</span>` +
-                `<span class="price">$${price.toFixed(2)} ${currency}</span>`
-              : `<span class="price">$${price.toFixed(2)} ${currency}</span>`;
-          }
-          const btn = document.querySelector(
-            ".p-details .btn, .add-to-cart, .btn[data-action='add-to-cart']"
-          );
-          if (btn) btn.disabled = !v.availableForSale;
-        };
-        variantDiv
-          .querySelectorAll(".variant-option select")
-          .forEach((sel) =>
-            sel.addEventListener("change", updatePriceForVariant)
-          );
-        // Initial sync
-        updatePriceForVariant();
 
         // Insert before add to cart button
         const addToCartBtn =
@@ -522,48 +439,20 @@
     }
 
     // Setup add to cart functionality
-    setupAddToCartV2(product);
+    setupAddToCart(product);
   }
 
   function createVariantSelectors(product) {
     let html = "";
 
-    // Build a robust options list: prefer product.options; derive from variants if missing
-    const deriveFromVariants = () => {
-      const map = new Map();
-      (product.variants || []).forEach((v) => {
-        (v.selectedOptions || []).forEach((opt) => {
-          const key = (opt.name || "").trim();
-          if (!key) return;
-          const arr = map.get(key) || [];
-          if (!arr.includes(opt.value)) arr.push(opt.value);
-          map.set(key, arr);
-        });
-      });
-      return Array.from(map.entries()).map(([name, values]) => ({
-        name,
-        values,
-      }));
-    };
-
-    const optionsList =
-      Array.isArray(product.options) &&
-      product.options.length > 0 &&
-      product.options.every(
-        (o) => Array.isArray(o.values) && o.values.length > 0
-      )
-        ? product.options
-        : deriveFromVariants();
-
-    optionsList.forEach((option) => {
-      const name = option.name || "Option";
-      const values = Array.isArray(option.values) ? option.values : [];
-      if (!values.length) return;
+    product.options.forEach((option) => {
       html += `
         <div class="variant-option" style="margin-bottom: 16px;">
-          <label style="display: block; font-weight: 500; margin-bottom: 8px;">${name}</label>
-          <select name="option_${name.toLowerCase()}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            ${values
+          <label style="display: block; font-weight: 500; margin-bottom: 8px;">${
+            option.name
+          }</label>
+          <select name="option_${option.name.toLowerCase()}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            ${option.values
               .map((value) => `<option value="${value}">${value}</option>`)
               .join("")}
           </select>
@@ -574,129 +463,24 @@
     return html;
   }
 
-  // Live Size picker using Netlify function product-variants
-  async function setupLiveSizePicker(product) {
-    const here = (location.pathname.split('/').pop() || '').toLowerCase();
-    if (!here.endsWith('product.html')) return; // only on PDP
-
-    // Derive handle from ?slug, path last segment, or data attribute
-    const deriveHandle = () => {
-      const p = new URLSearchParams(location.search).get('slug');
-      if (p) return p;
-      const last = location.pathname.split('/').filter(Boolean).pop();
-      if (last && last !== 'product.html') return last;
-      const el = document.querySelector('[data-product-handle]');
-      return el?.getAttribute('data-product-handle') || null;
-    };
-
-    const handle = deriveHandle();
-    if (!handle) return;
-
-    // Target container: reuse legacy #size-grid if present
-    const grid = document.getElementById('size-grid');
-    if (!grid) return;
-
-    try {
-      const resp = await fetch(`/.netlify/functions/product-variants?handle=${encodeURIComponent(handle)}`);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      if (!data || !data.variants) throw new Error('No variant data');
-
-      // Build a map from Size value -> variant meta
-      const bySize = new Map();
-      (data.variants || []).forEach((v) => {
-        const so = (v.selectedOptions || []).find((o) => (o.name || '').toLowerCase() === 'size');
-        if (so) bySize.set(so.value, { id: v.id, available: !!v.availableForSale, qty: v.quantityAvailable ?? null });
-      });
-
-      const values = (data.options || []).find((o) => (o.name || '').toLowerCase() === 'size')?.values || Array.from(bySize.keys());
-      if (!values || !values.length) return;
-
-      // Ensure hidden input exists for variantId
-      let hidden = document.querySelector('input[name="variantId"], input[name="variant_id"]') as HTMLInputElement | null;
-      if (!hidden) {
-        hidden = document.createElement('input');
-        hidden.type = 'hidden';
-        hidden.name = 'variantId';
-        const ctaRow = document.querySelector('.p-details .cta-row') || document.querySelector('.p-details');
-        ctaRow && ctaRow.insertAdjacentElement('afterbegin', hidden);
-      }
-
-      // Render buttons
-      grid.innerHTML = '';
-      values.forEach((val) => {
-        const meta = bySize.get(val) || {};
-        const btn = document.createElement('button');
-        btn.className = 'size';
-        btn.textContent = val;
-        const disabled = meta.available === false || (typeof meta.qty === 'number' && meta.qty <= 0);
-        if (disabled) {
-          btn.setAttribute('disabled', 'true');
-          btn.style.opacity = '0.5';
-          btn.style.cursor = 'not-allowed';
-        }
-        if (!disabled && typeof meta.qty === 'number' && meta.qty <= 3) {
-          const low = document.createElement('span');
-          low.textContent = '  Low stock';
-          low.style.fontSize = '11px';
-          low.style.color = '#c20';
-          btn.appendChild(low);
-        }
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          if ((btn as HTMLButtonElement).disabled) return;
-          // toggle selected state
-          grid.querySelectorAll('.size[aria-pressed="true"]').forEach((b) => b.setAttribute('aria-pressed', 'false'));
-          btn.setAttribute('aria-pressed', 'true');
-          // persist + store variant id
-          const variantId = (bySize.get(val) || {}).id;
-          if (variantId && hidden) {
-            hidden.value = variantId;
-            try { localStorage.setItem(`pdp:lastSize:${handle}`, val); } catch {}
-            // enable Add to Cart
-            const addBtn = Array.from(document.querySelectorAll('.p-details .btn, .add-to-cart')).find((b:any)=>/add\s*to\s*cart/i.test(b.textContent||'')) as HTMLButtonElement | undefined;
-            if (addBtn) addBtn.disabled = false;
-          }
-        });
-        grid.appendChild(btn);
-      });
-
-      // Default preselect first available
-      const firstAvail = grid.querySelector('.size:not([disabled])') as HTMLButtonElement | null;
-      if (firstAvail) firstAvail.click();
-    } catch (e) {
-      console.warn('Failed to load product-variants', e);
-    }
-  }
-
-
-  function setupAddToCartV2(product) {
-    const addToCartBtns = Array.from(
-      document.querySelectorAll(
-        ".p-details .btn, .add-to-cart, .btn[data-action='add-to-cart']"
-      )
-    ).filter((b) => /add\s*to\s*cart/i.test(b.textContent || ""));
+  function setupAddToCart(product) {
+    const addToCartBtns = document.querySelectorAll(
+      '.add-to-cart, .btn[data-action="add-to-cart"]'
+    );
 
     addToCartBtns.forEach((btn) => {
       btn.onclick = async (e) => {
         e.preventDefault();
 
-        // Get selected variant (prefer hidden variantId set by Size picker)
-        const hiddenInput = document.querySelector("input[name='variantId'], input[name='variant_id']") as HTMLInputElement | null;
-        const chosenId = hiddenInput?.value || "";
-        let selectedVariant = null as any;
-        if (chosenId) {
-          selectedVariant = (product.variants || []).find((v) => v.id === chosenId) || { id: chosenId };
-        } else {
-          selectedVariant = getSelectedVariant(product);
-        }
+        // Get selected variant
+        const selectedVariant = getSelectedVariant(product);
 
-        if (!selectedVariant || !selectedVariant.id) {
-          alert("Please choose a size.");
+        if (!selectedVariant) {
+          alert("Please select all options");
           return;
         }
 
-        if (selectedVariant.hasOwnProperty('availableForSale') && selectedVariant.availableForSale === false) {
+        if (!selectedVariant.availableForSale) {
           alert("This variant is out of stock");
           return;
         }
@@ -716,93 +500,13 @@
           );
 
           if (result === null) {
-            // API path unavailable: add current selection to the local mini-cart
-            try {
-              if (
-                window.__cart &&
-                typeof window.__cart.setCart === "function"
-              ) {
-                const items =
-                  (window.__cart.getCart && window.__cart.getCart()) || [];
-                const sizeOpt = (selectedVariant.selectedOptions || []).find(
-                  (o) => (o.name || "").toLowerCase() === "size"
-                );
-                const size = sizeOpt
-                  ? sizeOpt.value
-                  : (selectedVariant.selectedOptions || [])[0]?.value || "";
-                const priceAmount =
-                  (selectedVariant.price && selectedVariant.price.amount) ||
-                  (product.priceRange &&
-                    product.priceRange.minVariantPrice &&
-                    product.priceRange.minVariantPrice.amount) ||
-                  "0.00";
-                const imageUrl =
-                  (selectedVariant.image && selectedVariant.image.url) ||
-                  (product.images &&
-                    product.images[0] &&
-                    product.images[0].url) ||
-                  "";
-                const existing = items.find(
-                  (it) => it.name === product.title && it.size === size
-                );
-                if (existing) existing.qty = (existing.qty || 1) + 1;
-                else
-                  items.push({
-                    name: product.title,
-                    price: `$${parseFloat(priceAmount).toFixed(2)}`,
-                    size,
-                    image: imageUrl,
-                    qty: 1,
-                  });
-                window.__cart.setCart(items);
-                if (typeof window.openCart === "function") window.openCart();
-              }
-            } catch (_) {}
-
-            btn.textContent = "Added!";
+            // Graceful degradation - API not available
+            btn.textContent = "Cart unavailable locally";
             setTimeout(() => {
               btn.disabled = false;
               btn.textContent = "Add to Cart";
-            }, 1500);
+            }, 3000);
           } else {
-            // Sync mini-cart drawer with Shopify cart lines for consistent UI
-            try {
-              if (
-                result &&
-                result.lines &&
-                window.__cart &&
-                typeof window.__cart.setCart === "function"
-              ) {
-                const items = result.lines.map((line) => {
-                  const merch = line.merchandise || {};
-                  const product = merch.product || {};
-                  const title = product.title || merch.title || "Item";
-                  const sizeOpt = (merch.selectedOptions || []).find(
-                    (o) => (o.name || "").toLowerCase() === "size"
-                  );
-                  const size = sizeOpt
-                    ? sizeOpt.value
-                    : (merch.selectedOptions || [])[0]?.value || "";
-                  const priceAmount =
-                    (line.cost &&
-                      line.cost.totalAmount &&
-                      line.cost.totalAmount.amount) ||
-                    (merch.price && merch.price.amount) ||
-                    "0.00";
-                  const imageUrl = (merch.image && merch.image.url) || "";
-                  return {
-                    name: title,
-                    price: `$${parseFloat(priceAmount).toFixed(2)}`,
-                    size,
-                    image: imageUrl,
-                    qty: line.quantity || 1,
-                  };
-                });
-                window.__cart.setCart(items);
-                if (typeof window.openCart === "function") window.openCart();
-              }
-            } catch (_) {}
-
             btn.textContent = "Added!";
             setTimeout(() => {
               btn.disabled = false;
@@ -829,33 +533,22 @@
 
   function getSelectedVariant(product) {
     const selectors = document.querySelectorAll(".variant-option select");
-
-    // If no selectors exist yet, fall back to first available variant
-    if (!selectors.length) {
-      return (
-        (product.variants || []).find((v) => v.availableForSale) ||
-        (product.variants || [])[0]
-      );
-    }
-
     const selectedOptions = {};
+
     selectors.forEach((select) => {
       const optionName = select.name.replace("option_", "");
       selectedOptions[optionName] = select.value;
     });
 
-    // Find matching variant; if none, fall back to first available
-    const match = (product.variants || []).find((variant) => {
-      return (variant.selectedOptions || []).every((option) => {
-        const optionName = (option.name || "").toLowerCase();
-        return selectedOptions[optionName] === option.value;
-      });
-    });
+    // Find matching variant
     return (
-      match ||
-      (product.variants || []).find((v) => v.availableForSale) ||
-      (product.variants || [])[0]
-    );
+      product.variants.find((variant) => {
+        return variant.selectedOptions.every((option) => {
+          const optionName = option.name.toLowerCase();
+          return selectedOptions[optionName] === option.value;
+        });
+      }) || product.variants[0]
+    ); // Fallback to first variant
   }
 
   function setupRecentlyViewedAndBestSellers() {
@@ -3896,8 +3589,6 @@
   window.setupCart = setupCart;
 
   function setupAddToCart() {
-    // Prefer Shopify cart flow when available to avoid double-binding
-    if (window.cartManager) return;
     const btn = Array.from(document.querySelectorAll(".p-details .btn")).find(
       (b) => /add\s*to\s*cart/i.test(b.textContent || "")
     );

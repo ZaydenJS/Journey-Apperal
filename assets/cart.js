@@ -56,14 +56,6 @@ class CartManager {
       ];
 
       const response = await window.shopifyAPI.addToCart(this.cartId, lines);
-      // If API responded without a cart (fallback/local), signal caller to handle locally
-      if (!response || !response.cart) {
-        console.warn(
-          "Add to cart returned no cart. Falling back to local cart UI."
-        );
-        this.showCartMessage("Added to local cart (API offline)", "info");
-        return null;
-      }
       this.cart = response.cart;
       this.notifyListeners();
 
