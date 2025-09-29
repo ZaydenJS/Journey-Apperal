@@ -448,7 +448,7 @@
     }
 
     // Setup add to cart functionality
-    bindShopifyAddToCart(product);
+    setupAddToCart(product);
   }
 
   function createVariantSelectors(product) {
@@ -597,7 +597,7 @@
     }
   }
 
-  function bindShopifyAddToCart(product) {
+  function setupAddToCart(product) {
     let addToCartBtns = Array.from(
       document.querySelectorAll('.add-to-cart, .btn[data-action="add-to-cart"]')
     );
@@ -609,92 +609,85 @@
     }
 
     addToCartBtns.forEach((btn) => {
-      if (btn.hasAttribute("data-atc-bound")) return;
+      if (btn.getAttribute("data-atc-bound") === "shopify") return;
       btn.setAttribute("data-atc-bound", "shopify");
-      btn.addEventListener(
-        "click",
-        async (e) => {
-          e.preventDefault();
-          if (typeof e.stopImmediatePropagation === "function")
-            e.stopImmediatePropagation();
-          if (typeof e.stopPropagation === "function") e.stopPropagation();
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
 
-          // Get selected variant (prefer hidden variantId set by Size picker)
-          const hiddenInput = document.querySelector(
-            "input[name='variantId'], input[name='variant_id']"
+        // Get selected variant (prefer hidden variantId set by Size picker)
+        const hiddenInput = document.querySelector(
+          "input[name='variantId'], input[name='variant_id']"
+        );
+        const chosenId =
+          hiddenInput && hiddenInput.value ? hiddenInput.value : "";
+        let selectedVariant = null;
+        if (chosenId) {
+          selectedVariant = (product.variants || []).find(
+            (v) => v.id === chosenId
+          ) || { id: chosenId };
+        } else {
+          selectedVariant = getSelectedVariant(product);
+        }
+
+        if (!selectedVariant || !selectedVariant.id) {
+          alert("Please choose a size.");
+          return;
+        }
+
+        if (
+          Object.prototype.hasOwnProperty.call(
+            selectedVariant,
+            "availableForSale"
+          ) &&
+          selectedVariant.availableForSale === false
+        ) {
+          alert("This variant is out of stock");
+          return;
+        }
+
+        try {
+          btn.disabled = true;
+          btn.textContent = "Adding...";
+
+          // Check if cart manager is available
+          if (!window.cartManager) {
+            throw new Error("Cart functionality not available");
+          }
+
+          const result = await window.cartManager.addToCart(
+            selectedVariant.id,
+            1
           );
-          const chosenId =
-            hiddenInput && hiddenInput.value ? hiddenInput.value : "";
-          let selectedVariant = null;
-          if (chosenId) {
-            selectedVariant = (product.variants || []).find(
-              (v) => v.id === chosenId
-            ) || { id: chosenId };
+
+          if (result === null) {
+            // Graceful degradation - API not available
+            btn.textContent = "Cart unavailable locally";
+            setTimeout(() => {
+              btn.disabled = false;
+              btn.textContent = "Add to Cart";
+            }, 3000);
           } else {
-            selectedVariant = getSelectedVariant(product);
+            btn.textContent = "Added!";
+            setTimeout(() => {
+              btn.disabled = false;
+              btn.textContent = "Add to Cart";
+            }, 2000);
           }
+        } catch (error) {
+          btn.disabled = false;
+          btn.textContent = "Add to Cart";
+          console.error("Add to cart failed:", error);
 
-          if (!selectedVariant || !selectedVariant.id) {
-            alert("Please choose a size.");
-            return;
-          }
-
-          if (
-            Object.prototype.hasOwnProperty.call(
-              selectedVariant,
-              "availableForSale"
-            ) &&
-            selectedVariant.availableForSale === false
-          ) {
-            alert("This variant is out of stock");
-            return;
-          }
-
-          try {
-            btn.disabled = true;
-            btn.textContent = "Adding...";
-
-            // Check if cart manager is available
-            if (!window.cartManager) {
-              throw new Error("Cart functionality not available");
-            }
-
-            const result = await window.cartManager.addToCart(
-              selectedVariant.id,
-              1
+          // Show user-friendly error message
+          if (error.message.includes("not available")) {
+            alert(
+              "Cart functionality requires the site to be deployed to work properly."
             );
-
-            if (result === null) {
-              // Graceful degradation - API not available
-              btn.textContent = "Cart unavailable locally";
-              setTimeout(() => {
-                btn.disabled = false;
-                btn.textContent = "Add to Cart";
-              }, 3000);
-            } else {
-              btn.textContent = "Added!";
-              setTimeout(() => {
-                btn.disabled = false;
-                btn.textContent = "Add to Cart";
-              }, 2000);
-            }
-          } catch (error) {
-            btn.disabled = false;
-            btn.textContent = "Add to Cart";
-            console.error("Add to cart failed:", error);
-
-            // Show user-friendly error message
-            if (error.message.includes("not available")) {
-              alert(
-                "Cart functionality requires the site to be deployed to work properly."
-              );
-            } else {
-              alert("Failed to add item to cart. Please try again.");
-            }
+          } else {
+            alert("Failed to add item to cart. Please try again.");
           }
-        },
-        { capture: true }
-      );
+        }
+      });
     });
   }
 
@@ -3760,9 +3753,9 @@
       document.querySelectorAll(".p-details .btn, button.btn")
     ).find((b) => /add\s*to\s*cart/i.test(b.textContent || ""));
     if (!btn) return;
-    // If any handler already bound this button, skip legacy to avoid double-add
-    if (btn.hasAttribute("data-atc-bound")) return;
-    // Otherwise, allow legacy local-cart fallback even if cartManager exists (e.g., API unavailable)
+    // If this button is already bound by the legacy handler, skip; otherwise bind legacy too
+    if (btn.getAttribute("data-atc-bound") === "legacy") return;
+    // Allow legacy local-cart fallback alongside Shopify to open drawer, but not add
     btn.setAttribute("data-atc-bound", "legacy");
     btn.addEventListener("click", (e) => {
       // allow guard to run; if size not selected it will alert
@@ -3770,6 +3763,14 @@
         '#size-grid .size[aria-pressed="true"]'
       );
       if (!selected) return; // guard will have alerted
+
+      // If Shopify cart exists, just open the cart UI and do not add locally
+      if (window && window.cartManager) {
+        try {
+          if (typeof window.openCart === "function") window.openCart();
+        } catch (_) {}
+        return;
+      }
 
       // Ensure cart is initialized before adding
       if (!window.__cart || typeof window.__cart.setCart !== "function") {
