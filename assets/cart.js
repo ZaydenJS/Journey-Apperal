@@ -134,9 +134,32 @@ class CartManager {
       : { amount: "0.00", currencyCode: "AUD" };
   }
 
+  // Build a reliable checkout URL. By default we force the myshopify.com host
+  // to avoid rare redirects/bounces on custom domains. You can override at runtime:
+  //   window.FORCE_MYSHOPIFY_CHECKOUT = false  // to prefer custom domain
+  //   window.SHOPIFY_CHECKOUT_HOST = "shop.journeysapparel.com";
+  //   window.SHOPIFY_CHECKOUT_FALLBACK_HOST = "7196su-vk.myshopify.com";
+  resolveCheckoutUrl(url) {
+    try {
+      if (!url) return url;
+      const u = new URL(url);
+      const preferredHost = (
+        window.SHOPIFY_CHECKOUT_HOST || "shop.journeysapparel.com"
+      ).replace(/^https?:\/\//, "");
+      const fallbackHost = (
+        window.SHOPIFY_CHECKOUT_FALLBACK_HOST || "7196su-vk.myshopify.com"
+      ).replace(/^https?:\/\//, "");
+      const forceMyShopify = window.FORCE_MYSHOPIFY_CHECKOUT !== false; // default true
+      u.host = forceMyShopify ? fallbackHost : preferredHost;
+      return u.href;
+    } catch (_) {
+      return url;
+    }
+  }
+
   goToCheckout() {
     if (this.cart && this.cart.checkoutUrl) {
-      window.location.href = this.cart.checkoutUrl;
+      window.location.href = this.resolveCheckoutUrl(this.cart.checkoutUrl);
     } else {
       this.showCartMessage("Cart is empty", "error");
     }
@@ -203,7 +226,7 @@ class CartManager {
 
       // Redirect
       if (this.cart && this.cart.checkoutUrl) {
-        window.location.href = this.cart.checkoutUrl;
+        window.location.href = this.resolveCheckoutUrl(this.cart.checkoutUrl);
       } else {
         this.goToCheckout();
       }
