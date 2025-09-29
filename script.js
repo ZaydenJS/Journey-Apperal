@@ -3512,6 +3512,35 @@
           checkout.style.fontWeight = "700";
           checkout.style.letterSpacing = ".02em";
           checkout.style.cursor = "pointer";
+
+          // Wire up Proceed to Checkout → Shopify Checkout (via cartManager)
+          if (!checkout.dataset.clickBound) {
+            checkout.addEventListener("click", function (e) {
+              e.preventDefault();
+              try {
+                if (
+                  window.cartManager &&
+                  typeof window.cartManager.goToCheckout === "function"
+                ) {
+                  window.cartManager.goToCheckout();
+                } else if (
+                  window.cartManager &&
+                  window.cartManager.getCart &&
+                  window.cartManager.getCart() &&
+                  window.cartManager.getCart().checkoutUrl
+                ) {
+                  window.location.href =
+                    window.cartManager.getCart().checkoutUrl;
+                } else {
+                  // Fallback to native cart page if Shopify API is not available locally
+                  window.location.href = "/cart";
+                }
+              } catch (_) {
+                window.location.href = "/cart";
+              }
+            });
+            checkout.dataset.clickBound = "1";
+          }
         }
       }
     } catch (_) {}
