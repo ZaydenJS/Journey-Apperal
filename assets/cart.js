@@ -151,19 +151,71 @@ class CartManager {
       ).replace(/^https?:\/\//, "");
       const forceMyShopify = window.FORCE_MYSHOPIFY_CHECKOUT !== false; // default true
       const always = window.ALWAYS_USE_MYSHOPIFY === true;
-      u.host = always
+      const host = always
         ? fallbackHost
         : forceMyShopify
         ? fallbackHost
         : preferredHost;
+      u.protocol = "https:";
+      u.host = host;
+      try {
+        u.searchParams.set("channel", "buy_button");
+      } catch (_) {}
       return u.href;
     } catch (_) {
       return url;
     }
   }
 
+  // Convert Shopify GID to numeric variant ID
+  toVariantNumericId(gid) {
+    try {
+      const m = String(gid || "").match(/ProductVariant\/(\d+)/);
+      return m ? m[1] : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Build a myshopify.com cart permalink that goes straight to checkout
+  buildCartPermalink() {
+    try {
+      const lines = (this.cart && this.cart.lines) || [];
+      if (!Array.isArray(lines) || lines.length === 0) return null;
+      const items = lines
+        .map((ln) => {
+          const merch = ln && ln.merchandise;
+          const id = merch && this.toVariantNumericId(merch.id);
+          const qty = Math.max(1, parseInt(ln.quantity || 1, 10));
+          return id ? `${id}:${qty}` : null;
+        })
+        .filter(Boolean);
+      if (items.length === 0) return null;
+      const host = (
+        window.SHOPIFY_CHECKOUT_FALLBACK_HOST || "7196su-vk.myshopify.com"
+      ).replace(/^https?:\/\//, "");
+      return `https://${host}/cart/${items.join(
+        ","
+      )}?channel=buy_button&checkout=1`;
+    } catch (_) {
+      return null;
+    }
+  }
+
   goToCheckout() {
-    if (this.cart && this.cart.checkoutUrl) {
+    if (!this.cart) {
+      this.showCartMessage("Cart is empty", "error");
+      return;
+    }
+    const always = window.ALWAYS_USE_MYSHOPIFY === true;
+    if (always) {
+      const permalink = this.buildCartPermalink();
+      if (permalink) {
+        window.location.href = permalink;
+        return;
+      }
+    }
+    if (this.cart.checkoutUrl) {
       window.location.href = this.resolveCheckoutUrl(this.cart.checkoutUrl);
     } else {
       this.showCartMessage("Cart is empty", "error");
@@ -229,7 +281,15 @@ class CartManager {
         }
       }
 
-      // Redirect
+      // Redirect (hard prefer myshopify permalink when enabled)
+      const always = window.ALWAYS_USE_MYSHOPIFY === true;
+      if (always) {
+        const permalink = this.buildCartPermalink();
+        if (permalink) {
+          window.location.href = permalink;
+          return;
+        }
+      }
       if (this.cart && this.cart.checkoutUrl) {
         window.location.href = this.resolveCheckoutUrl(this.cart.checkoutUrl);
       } else {
