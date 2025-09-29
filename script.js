@@ -598,88 +598,103 @@
   }
 
   function setupAddToCart(product) {
-    const addToCartBtns = document.querySelectorAll(
-      '.add-to-cart, .btn[data-action="add-to-cart"]'
+    let addToCartBtns = Array.from(
+      document.querySelectorAll('.add-to-cart, .btn[data-action="add-to-cart"]')
     );
+    if (!addToCartBtns.length) {
+      const textBtn = Array.from(
+        document.querySelectorAll(".p-details .btn, button.btn")
+      ).find((b) => /add\s*to\s*cart/i.test(b.textContent || ""));
+      if (textBtn) addToCartBtns = [textBtn];
+    }
 
     addToCartBtns.forEach((btn) => {
-      btn.onclick = async (e) => {
-        e.preventDefault();
+      if (btn.getAttribute("data-atc-bound") === "1") return;
+      btn.setAttribute("data-atc-bound", "1");
+      btn.addEventListener(
+        "click",
+        async (e) => {
+          e.preventDefault();
+          if (typeof e.stopImmediatePropagation === "function")
+            e.stopImmediatePropagation();
+          if (typeof e.stopPropagation === "function") e.stopPropagation();
 
-        // Get selected variant (prefer hidden variantId set by Size picker)
-        const hiddenInput = document.querySelector(
-          "input[name='variantId'], input[name='variant_id']"
-        );
-        const chosenId =
-          hiddenInput && hiddenInput.value ? hiddenInput.value : "";
-        let selectedVariant = null;
-        if (chosenId) {
-          selectedVariant = (product.variants || []).find(
-            (v) => v.id === chosenId
-          ) || { id: chosenId };
-        } else {
-          selectedVariant = getSelectedVariant(product);
-        }
-
-        if (!selectedVariant || !selectedVariant.id) {
-          alert("Please choose a size.");
-          return;
-        }
-
-        if (
-          Object.prototype.hasOwnProperty.call(
-            selectedVariant,
-            "availableForSale"
-          ) &&
-          selectedVariant.availableForSale === false
-        ) {
-          alert("This variant is out of stock");
-          return;
-        }
-
-        try {
-          btn.disabled = true;
-          btn.textContent = "Adding...";
-
-          // Check if cart manager is available
-          if (!window.cartManager) {
-            throw new Error("Cart functionality not available");
-          }
-
-          const result = await window.cartManager.addToCart(
-            selectedVariant.id,
-            1
+          // Get selected variant (prefer hidden variantId set by Size picker)
+          const hiddenInput = document.querySelector(
+            "input[name='variantId'], input[name='variant_id']"
           );
-
-          if (result === null) {
-            // Graceful degradation - API not available
-            btn.textContent = "Cart unavailable locally";
-            setTimeout(() => {
-              btn.disabled = false;
-              btn.textContent = "Add to Cart";
-            }, 3000);
+          const chosenId =
+            hiddenInput && hiddenInput.value ? hiddenInput.value : "";
+          let selectedVariant = null;
+          if (chosenId) {
+            selectedVariant = (product.variants || []).find(
+              (v) => v.id === chosenId
+            ) || { id: chosenId };
           } else {
-            btn.textContent = "Added!";
-            setTimeout(() => {
-              btn.disabled = false;
-              btn.textContent = "Add to Cart";
-            }, 2000);
+            selectedVariant = getSelectedVariant(product);
           }
-        } catch (error) {
-          btn.disabled = false;
-          btn.textContent = "Add to Cart";
-          console.error("Add to cart failed:", error);
 
-          // Show user-friendly error message
-          if (error.message.includes("not available")) {
-            alert(
-              "Cart functionality requires the site to be deployed to work properly."
+          if (!selectedVariant || !selectedVariant.id) {
+            alert("Please choose a size.");
+            return;
+          }
+
+          if (
+            Object.prototype.hasOwnProperty.call(
+              selectedVariant,
+              "availableForSale"
+            ) &&
+            selectedVariant.availableForSale === false
+          ) {
+            alert("This variant is out of stock");
+            return;
+          }
+
+          try {
+            btn.disabled = true;
+            btn.textContent = "Adding...";
+
+            // Check if cart manager is available
+            if (!window.cartManager) {
+              throw new Error("Cart functionality not available");
+            }
+
+            const result = await window.cartManager.addToCart(
+              selectedVariant.id,
+              1
             );
-          } else {
-            alert("Failed to add item to cart. Please try again.");
+
+            if (result === null) {
+              // Graceful degradation - API not available
+              btn.textContent = "Cart unavailable locally";
+              setTimeout(() => {
+                btn.disabled = false;
+                btn.textContent = "Add to Cart";
+              }, 3000);
+            } else {
+              btn.textContent = "Added!";
+              setTimeout(() => {
+                btn.disabled = false;
+                btn.textContent = "Add to Cart";
+              }, 2000);
+            }
+          } catch (error) {
+            btn.disabled = false;
+            btn.textContent = "Add to Cart";
+            console.error("Add to cart failed:", error);
+
+            // Show user-friendly error message
+            if (error.message.includes("not available")) {
+              alert(
+                "Cart functionality requires the site to be deployed to work properly."
+              );
+            } else {
+              alert("Failed to add item to cart. Please try again.");
+            }
           }
-        }
-      };
+        },
+        { capture: true }
+      );
     });
   }
 
@@ -3741,6 +3756,8 @@
   window.setupCart = setupCart;
 
   function setupAddToCart() {
+    // Skip legacy binding if new cart manager (Shopify) is available
+    if (window && window.cartManager) return;
     const btn = Array.from(document.querySelectorAll(".p-details .btn")).find(
       (b) => /add\s*to\s*cart/i.test(b.textContent || "")
     );
