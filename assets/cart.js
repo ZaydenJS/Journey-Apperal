@@ -207,17 +207,16 @@ class CartManager {
       this.showCartMessage("Cart is empty", "error");
       return;
     }
-    const always = window.ALWAYS_USE_MYSHOPIFY === true;
-    if (always) {
-      const permalink = this.buildCartPermalink();
-      if (permalink) {
-        window.location.href = permalink;
-        return;
-      }
-    }
+    // Always prefer the Checkout token URL (avoids Online Store canonicalization)
     if (this.cart.checkoutUrl) {
       window.location.href = this.resolveCheckoutUrl(this.cart.checkoutUrl);
     } else {
+      // As a last resort we can try a cart permalink, but avoid by default
+      const fallback = this.buildCartPermalink && this.buildCartPermalink();
+      if (fallback) {
+        window.location.href = fallback;
+        return;
+      }
       this.showCartMessage("Cart is empty", "error");
     }
   }
@@ -281,19 +280,16 @@ class CartManager {
         }
       }
 
-      // Redirect (hard prefer myshopify permalink when enabled)
-      const always = window.ALWAYS_USE_MYSHOPIFY === true;
-      if (always) {
-        const permalink = this.buildCartPermalink();
-        if (permalink) {
-          window.location.href = permalink;
-          return;
-        }
-      }
+      // Redirect: prefer the Checkout token URL (avoids Online Store canonicalization)
       if (this.cart && this.cart.checkoutUrl) {
         window.location.href = this.resolveCheckoutUrl(this.cart.checkoutUrl);
       } else {
-        this.goToCheckout();
+        const fallback = this.buildCartPermalink && this.buildCartPermalink();
+        if (fallback) {
+          window.location.href = fallback;
+        } else {
+          this.goToCheckout();
+        }
       }
     } catch (e) {
       console.warn("Prefill checkout failed; falling back to checkout", e);
