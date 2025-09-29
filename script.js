@@ -447,8 +447,8 @@
       }
     }
 
-    // Setup add to cart functionality
-    setupAddToCart(product);
+    // Setup add to cart functionality (Shopify)
+    bindShopifyAddToCart(product);
   }
 
   function createVariantSelectors(product) {
@@ -596,8 +596,47 @@
       console.warn("Failed to load product-variants", e);
     }
   }
+  // Sync legacy drawer with Shopify cart data
+  function syncLocalCartFromShopify(cart) {
+    try {
+      if (
+        !cart ||
+        !window.__cart ||
+        typeof window.__cart.setCart !== "function"
+      )
+        return;
+      const edges = (cart.lines && cart.lines.edges) || [];
+      const items = edges.map(({ node }) => {
+        const merch = node.merchandise || {};
+        const product = merch.product || {};
+        const img =
+          (merch.image && merch.image.url) ||
+          (product.images &&
+            product.images.edges &&
+            product.images.edges[0] &&
+            product.images.edges[0].node &&
+            product.images.edges[0].node.url) ||
+          "";
+        const sizeOpt = (merch.selectedOptions || []).find((o) =>
+          /size/i.test(o.name || "")
+        );
+        const priceAmt =
+          merch.price && merch.price.amount ? Number(merch.price.amount) : 0;
+        return {
+          name: product.title || merch.title || "Item",
+          price: `$${priceAmt.toFixed(2)}`,
+          size: sizeOpt ? sizeOpt.value : undefined,
+          image: img,
+          qty: node.quantity || 1,
+        };
+      });
+      window.__cart.setCart(items);
+    } catch (e) {
+      console.warn("Failed to sync legacy cart drawer from Shopify cart", e);
+    }
+  }
 
-  function setupAddToCart(product) {
+  function bindShopifyAddToCart(product) {
     let addToCartBtns = Array.from(
       document.querySelectorAll('.add-to-cart, .btn[data-action="add-to-cart"]')
     );
@@ -649,6 +688,21 @@
           btn.disabled = true;
           btn.textContent = "Adding...";
 
+          // Open the cart drawer immediately for UX
+          try {
+            if (
+              typeof window.openCart !== "function" &&
+              typeof window.setupCart === "function"
+            ) {
+              window.setupCart();
+            }
+          } catch (_) {}
+          if (typeof window.openCart === "function") {
+            try {
+              window.openCart();
+            } catch (_) {}
+          }
+
           // Check if cart manager is available
           if (!window.cartManager) {
             throw new Error("Cart functionality not available");
@@ -667,6 +721,10 @@
               btn.textContent = "Add to Cart";
             }, 3000);
           } else {
+            // Sync the legacy drawer with the real Shopify cart and confirm UI
+            try {
+              syncLocalCartFromShopify(result);
+            } catch (_) {}
             btn.textContent = "Added!";
             setTimeout(() => {
               btn.disabled = false;
