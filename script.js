@@ -3745,12 +3745,21 @@
       (b) => /add\s*to\s*cart/i.test(b.textContent || "")
     );
     if (!btn) return;
+
+    // Avoid attaching duplicate handlers (which can cause +2 quantity)
+    if (btn.dataset.addHandlerAttached === "1") return;
+    btn.dataset.addHandlerAttached = "1";
+
     btn.addEventListener("click", (e) => {
       // allow guard to run; if size not selected it will alert
       const selected = document.querySelector(
         '#size-grid .size[aria-pressed="true"]'
       );
       if (!selected) return; // guard will have alerted
+
+      // Debounce: prevent accidental double-firing in the same tick
+      if (btn.dataset.isAdding === "1") return;
+      btn.dataset.isAdding = "1";
 
       // Ensure cart is initialized before adding
       if (!window.__cart || typeof window.__cart.setCart !== "function") {
@@ -3784,6 +3793,11 @@
         }
       } catch (_) {}
       window.openCart && window.openCart();
+
+      // Clear debounce after a short moment to allow next add
+      setTimeout(() => {
+        btn.dataset.isAdding = "0";
+      }, 300);
     });
   }
 })();
