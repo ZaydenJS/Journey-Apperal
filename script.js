@@ -1,4 +1,9 @@
 // Journey Apparel interactions
+// Preferred checkout host configuration (custom domain with safe fallback)
+window.SHOPIFY_CHECKOUT_HOST = "shop.journeysapparel.com";
+window.SHOPIFY_CHECKOUT_FALLBACK_HOST = "7196su-vk.myshopify.com";
+window.FORCE_MYSHOPIFY_CHECKOUT = false; // prefer custom domain by default
+
 (function () {
   const $ = (s, ctx = document) => ctx.querySelector(s);
   const $$ = (s, ctx = document) => Array.from(ctx.querySelectorAll(s));
