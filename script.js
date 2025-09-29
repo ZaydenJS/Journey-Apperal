@@ -411,6 +411,12 @@
 
         // Setup product variants and add to cart functionality
         setupProductVariants(p);
+        // Live Size picker from Netlify function (derives availability)
+        try {
+          await setupLiveSizePicker(p);
+        } catch (e) {
+          console.warn("size picker failed", e);
+        }
       } else {
         // Fallback to original product loading logic if Shopify not available
         console.log(
@@ -568,6 +574,102 @@
     return html;
   }
 
+  // Live Size picker using Netlify function product-variants
+  async function setupLiveSizePicker(product) {
+    const here = (location.pathname.split('/').pop() || '').toLowerCase();
+    if (!here.endsWith('product.html')) return; // only on PDP
+
+    // Derive handle from ?slug, path last segment, or data attribute
+    const deriveHandle = () => {
+      const p = new URLSearchParams(location.search).get('slug');
+      if (p) return p;
+      const last = location.pathname.split('/').filter(Boolean).pop();
+      if (last && last !== 'product.html') return last;
+      const el = document.querySelector('[data-product-handle]');
+      return el?.getAttribute('data-product-handle') || null;
+    };
+
+    const handle = deriveHandle();
+    if (!handle) return;
+
+    // Target container: reuse legacy #size-grid if present
+    const grid = document.getElementById('size-grid');
+    if (!grid) return;
+
+    try {
+      const resp = await fetch(`/.netlify/functions/product-variants?handle=${encodeURIComponent(handle)}`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      if (!data || !data.variants) throw new Error('No variant data');
+
+      // Build a map from Size value -> variant meta
+      const bySize = new Map();
+      (data.variants || []).forEach((v) => {
+        const so = (v.selectedOptions || []).find((o) => (o.name || '').toLowerCase() === 'size');
+        if (so) bySize.set(so.value, { id: v.id, available: !!v.availableForSale, qty: v.quantityAvailable ?? null });
+      });
+
+      const values = (data.options || []).find((o) => (o.name || '').toLowerCase() === 'size')?.values || Array.from(bySize.keys());
+      if (!values || !values.length) return;
+
+      // Ensure hidden input exists for variantId
+      let hidden = document.querySelector('input[name="variantId"], input[name="variant_id"]') as HTMLInputElement | null;
+      if (!hidden) {
+        hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'variantId';
+        const ctaRow = document.querySelector('.p-details .cta-row') || document.querySelector('.p-details');
+        ctaRow && ctaRow.insertAdjacentElement('afterbegin', hidden);
+      }
+
+      // Render buttons
+      grid.innerHTML = '';
+      values.forEach((val) => {
+        const meta = bySize.get(val) || {};
+        const btn = document.createElement('button');
+        btn.className = 'size';
+        btn.textContent = val;
+        const disabled = meta.available === false || (typeof meta.qty === 'number' && meta.qty <= 0);
+        if (disabled) {
+          btn.setAttribute('disabled', 'true');
+          btn.style.opacity = '0.5';
+          btn.style.cursor = 'not-allowed';
+        }
+        if (!disabled && typeof meta.qty === 'number' && meta.qty <= 3) {
+          const low = document.createElement('span');
+          low.textContent = '  Low stock';
+          low.style.fontSize = '11px';
+          low.style.color = '#c20';
+          btn.appendChild(low);
+        }
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          if ((btn as HTMLButtonElement).disabled) return;
+          // toggle selected state
+          grid.querySelectorAll('.size[aria-pressed="true"]').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+          btn.setAttribute('aria-pressed', 'true');
+          // persist + store variant id
+          const variantId = (bySize.get(val) || {}).id;
+          if (variantId && hidden) {
+            hidden.value = variantId;
+            try { localStorage.setItem(`pdp:lastSize:${handle}`, val); } catch {}
+            // enable Add to Cart
+            const addBtn = Array.from(document.querySelectorAll('.p-details .btn, .add-to-cart')).find((b:any)=>/add\s*to\s*cart/i.test(b.textContent||'')) as HTMLButtonElement | undefined;
+            if (addBtn) addBtn.disabled = false;
+          }
+        });
+        grid.appendChild(btn);
+      });
+
+      // Default preselect first available
+      const firstAvail = grid.querySelector('.size:not([disabled])') as HTMLButtonElement | null;
+      if (firstAvail) firstAvail.click();
+    } catch (e) {
+      console.warn('Failed to load product-variants', e);
+    }
+  }
+
+
   function setupAddToCartV2(product) {
     const addToCartBtns = Array.from(
       document.querySelectorAll(
@@ -579,15 +681,22 @@
       btn.onclick = async (e) => {
         e.preventDefault();
 
-        // Get selected variant
-        const selectedVariant = getSelectedVariant(product);
+        // Get selected variant (prefer hidden variantId set by Size picker)
+        const hiddenInput = document.querySelector("input[name='variantId'], input[name='variant_id']") as HTMLInputElement | null;
+        const chosenId = hiddenInput?.value || "";
+        let selectedVariant = null as any;
+        if (chosenId) {
+          selectedVariant = (product.variants || []).find((v) => v.id === chosenId) || { id: chosenId };
+        } else {
+          selectedVariant = getSelectedVariant(product);
+        }
 
-        if (!selectedVariant) {
-          alert("Please select all options");
+        if (!selectedVariant || !selectedVariant.id) {
+          alert("Please choose a size.");
           return;
         }
 
-        if (!selectedVariant.availableForSale) {
+        if (selectedVariant.hasOwnProperty('availableForSale') && selectedVariant.availableForSale === false) {
           alert("This variant is out of stock");
           return;
         }
