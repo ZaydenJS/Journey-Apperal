@@ -142,6 +142,77 @@ class CartManager {
     }
   }
 
+  async prefillAndCheckout(prefill = {}) {
+    try {
+      if (!this.cartId) {
+        await this.createCart();
+      }
+
+      // Try to use known customer data if available
+      const customer =
+        window.JourneyAuth && typeof window.JourneyAuth.getUser === "function"
+          ? window.JourneyAuth.getUser()
+          : null;
+
+      // Buyer identity
+      const buyerIdentity = {};
+      if (prefill.email) buyerIdentity.email = prefill.email;
+      if (prefill.phone) buyerIdentity.phone = prefill.phone;
+      if (customer && customer.email && !buyerIdentity.email)
+        buyerIdentity.email = customer.email;
+      if (customer && customer.phone && !buyerIdentity.phone)
+        buyerIdentity.phone = customer.phone;
+
+      if (
+        Object.keys(buyerIdentity).length > 0 &&
+        window.shopifyAPI?.updateCartBuyerIdentity
+      ) {
+        const r = await window.shopifyAPI.updateCartBuyerIdentity(
+          this.cartId,
+          buyerIdentity
+        );
+        if (r && r.cart) {
+          this.cart = r.cart;
+        }
+      }
+
+      // Shipping/delivery address
+      const addr =
+        prefill.address || (customer && customer.defaultAddress) || null;
+      if (addr && window.shopifyAPI?.updateCartDeliveryAddress) {
+        const deliveryAddress = {
+          firstName: addr.firstName || addr.first_name || undefined,
+          lastName: addr.lastName || addr.last_name || undefined,
+          address1: addr.address1 || undefined,
+          address2: addr.address2 || undefined,
+          city: addr.city || undefined,
+          province: addr.province || undefined,
+          country: addr.country || undefined,
+          zip: addr.zip || addr.postcode || undefined,
+          phone: addr.phone || undefined,
+          company: addr.company || undefined,
+        };
+        const r2 = await window.shopifyAPI.updateCartDeliveryAddress(
+          this.cartId,
+          deliveryAddress
+        );
+        if (r2 && r2.cart) {
+          this.cart = r2.cart;
+        }
+      }
+
+      // Redirect
+      if (this.cart && this.cart.checkoutUrl) {
+        window.location.href = this.cart.checkoutUrl;
+      } else {
+        this.goToCheckout();
+      }
+    } catch (e) {
+      console.warn("Prefill checkout failed; falling back to checkout", e);
+      this.goToCheckout();
+    }
+  }
+
   // Event listeners for cart updates
   addListener(callback) {
     this.listeners.push(callback);

@@ -3513,12 +3513,17 @@
           checkout.style.letterSpacing = ".02em";
           checkout.style.cursor = "pointer";
 
-          // Wire up Proceed to Checkout → Shopify Checkout (via cartManager)
+          // Wire up Proceed to Checkout → Shopify Checkout (prefill when possible)
           if (!checkout.dataset.clickBound) {
             checkout.addEventListener("click", function (e) {
               e.preventDefault();
               try {
                 if (
+                  window.cartManager &&
+                  typeof window.cartManager.prefillAndCheckout === "function"
+                ) {
+                  window.cartManager.prefillAndCheckout();
+                } else if (
                   window.cartManager &&
                   typeof window.cartManager.goToCheckout === "function"
                 ) {
