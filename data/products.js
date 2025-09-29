@@ -136,20 +136,6 @@ class ShopifyAPI {
     });
   }
 
-  async updateCartBuyerIdentity(cartId, buyerIdentity) {
-    return this.request("cartBuyerIdentityUpdate", {
-      method: "POST",
-      body: { cartId, buyerIdentity },
-    });
-  }
-
-  async updateCartDeliveryAddress(cartId, deliveryAddress) {
-    return this.request("cartDeliveryAddressUpdate", {
-      method: "POST",
-      body: { cartId, deliveryAddress },
-    });
-  }
-
   // Customer
   async customerLogin(email, password) {
     return this.request("customerLogin", {

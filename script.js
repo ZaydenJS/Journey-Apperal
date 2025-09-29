@@ -1,10 +1,4 @@
 // Journey Apparel interactions
-// Preferred checkout host configuration (custom domain with safe fallback)
-window.SHOPIFY_CHECKOUT_HOST = "shop.journeysapparel.com";
-window.SHOPIFY_CHECKOUT_FALLBACK_HOST = "7196su-vk.myshopify.com";
-window.FORCE_MYSHOPIFY_CHECKOUT = true; // force myshopify.com checkout host (reliable)
-window.ALWAYS_USE_MYSHOPIFY = true; // hard override: always send checkout to myshopify
-
 (function () {
   const $ = (s, ctx = document) => ctx.querySelector(s);
   const $$ = (s, ctx = document) => Array.from(ctx.querySelectorAll(s));
@@ -605,18 +599,12 @@ window.ALWAYS_USE_MYSHOPIFY = true; // hard override: always send checkout to my
 
   function setupAddToCart(product) {
     const addToCartBtns = document.querySelectorAll(
-      '.add-to-cart, .btn[data-action="add-to-cart"], .p-details .btn'
+      '.add-to-cart, .btn[data-action="add-to-cart"]'
     );
 
     addToCartBtns.forEach((btn) => {
-      // Avoid duplicate bindings from legacy handler
-      if (btn.dataset.addHandlerAttached === "1") return;
-      btn.dataset.addHandlerAttached = "1";
-
       btn.onclick = async (e) => {
         e.preventDefault();
-        if (btn.dataset.isAdding === "1") return;
-        btn.dataset.isAdding = "1";
 
         // Get selected variant (prefer hidden variantId set by Size picker)
         const hiddenInput = document.querySelector(
@@ -635,7 +623,6 @@ window.ALWAYS_USE_MYSHOPIFY = true; // hard override: always send checkout to my
 
         if (!selectedVariant || !selectedVariant.id) {
           alert("Please choose a size.");
-          btn.dataset.isAdding = "0";
           return;
         }
 
@@ -647,7 +634,6 @@ window.ALWAYS_USE_MYSHOPIFY = true; // hard override: always send checkout to my
           selectedVariant.availableForSale === false
         ) {
           alert("This variant is out of stock");
-          btn.dataset.isAdding = "0";
           return;
         }
 
@@ -671,20 +657,17 @@ window.ALWAYS_USE_MYSHOPIFY = true; // hard override: always send checkout to my
             setTimeout(() => {
               btn.disabled = false;
               btn.textContent = "Add to Cart";
-              btn.dataset.isAdding = "0";
             }, 3000);
           } else {
             btn.textContent = "Added!";
             setTimeout(() => {
               btn.disabled = false;
               btn.textContent = "Add to Cart";
-              btn.dataset.isAdding = "0";
             }, 2000);
           }
         } catch (error) {
           btn.disabled = false;
           btn.textContent = "Add to Cart";
-          btn.dataset.isAdding = "0";
           console.error("Add to cart failed:", error);
 
           // Show user-friendly error message
@@ -3530,17 +3513,12 @@ window.ALWAYS_USE_MYSHOPIFY = true; // hard override: always send checkout to my
           checkout.style.letterSpacing = ".02em";
           checkout.style.cursor = "pointer";
 
-          // Wire up Proceed to Checkout → Shopify Checkout (prefill when possible)
+          // Wire up Proceed to Checkout → Shopify Checkout (via cartManager)
           if (!checkout.dataset.clickBound) {
             checkout.addEventListener("click", function (e) {
               e.preventDefault();
               try {
                 if (
-                  window.cartManager &&
-                  typeof window.cartManager.prefillAndCheckout === "function"
-                ) {
-                  window.cartManager.prefillAndCheckout();
-                } else if (
                   window.cartManager &&
                   typeof window.cartManager.goToCheckout === "function"
                 ) {
@@ -3551,25 +3529,8 @@ window.ALWAYS_USE_MYSHOPIFY = true; // hard override: always send checkout to my
                   window.cartManager.getCart() &&
                   window.cartManager.getCart().checkoutUrl
                 ) {
-                  try {
-                    const raw = window.cartManager.getCart().checkoutUrl;
-                    const dest =
-                      typeof window.cartManager.resolveCheckoutUrl ===
-                      "function"
-                        ? window.cartManager.resolveCheckoutUrl(raw)
-                        : (function () {
-                            try {
-                              const u = new URL(raw);
-                              u.host = "7196su-vk.myshopify.com"; // hard fallback host
-                              return u.href;
-                            } catch (_) {
-                              return raw;
-                            }
-                          })();
-                    window.location.href = dest;
-                  } catch (_) {
-                    window.location.href = "/cart";
-                  }
+                  window.location.href =
+                    window.cartManager.getCart().checkoutUrl;
                 } else {
                   // Fallback to native cart page if Shopify API is not available locally
                   window.location.href = "/cart";
