@@ -3756,12 +3756,14 @@
   window.setupCart = setupCart;
 
   function setupAddToCart() {
-    // Skip legacy binding if new cart manager (Shopify) is available
-    if (window && window.cartManager) return;
-    const btn = Array.from(document.querySelectorAll(".p-details .btn")).find(
-      (b) => /add\s*to\s*cart/i.test(b.textContent || "")
-    );
+    const btn = Array.from(
+      document.querySelectorAll(".p-details .btn, button.btn")
+    ).find((b) => /add\s*to\s*cart/i.test(b.textContent || ""));
     if (!btn) return;
+    // If modern Shopify handler already bound this button, skip legacy to avoid double-add
+    if (btn.getAttribute("data-atc-bound") === "1") return;
+    // Otherwise, allow legacy local-cart fallback even if cartManager exists (e.g., API unavailable)
+    btn.setAttribute("data-atc-bound", "legacy");
     btn.addEventListener("click", (e) => {
       // allow guard to run; if size not selected it will alert
       const selected = document.querySelector(
