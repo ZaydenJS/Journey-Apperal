@@ -263,10 +263,21 @@
 
         if (titleEl) titleEl.textContent = p.title;
         if (priceEl) {
+          const currency = p.priceRange.minVariantPrice.currencyCode;
           const price = parseFloat(p.priceRange.minVariantPrice.amount);
-          priceEl.textContent = `$${price.toFixed(2)} ${
-            p.priceRange.minVariantPrice.currencyCode
-          }`;
+          const compareAt = parseFloat(
+            (p.compareAtPriceRange &&
+              p.compareAtPriceRange.minVariantPrice &&
+              p.compareAtPriceRange.minVariantPrice.amount) ||
+              "0"
+          );
+          const hasCompare = compareAt && compareAt > price;
+          priceEl.innerHTML = hasCompare
+            ? `<span class="price compare-at" style="text-decoration: line-through; color:#999; margin-right:8px;">$${compareAt.toFixed(
+                2
+              )}</span>` +
+              `<span class="price">$${price.toFixed(2)} ${currency}</span>`
+            : `<span class="price">$${price.toFixed(2)} ${currency}</span>`;
         }
         if (descriptionEl) {
           descriptionEl.innerHTML = p.description || "";
@@ -424,6 +435,68 @@
       ) {
         const variantHTML = createVariantSelectors(product);
         const variantDiv = document.createElement("div");
+
+        // Hide legacy size grid to avoid conflicting with dropdowns
+        try {
+          const grid = document.getElementById("size-grid");
+          if (grid) grid.style.display = "none";
+        } catch (_) {}
+
+        // Preselect first available variant values in the dropdowns
+        try {
+          const firstAvail =
+            product.variants.find((v) => v.availableForSale) ||
+            product.variants[0];
+          if (firstAvail && firstAvail.selectedOptions) {
+            const selectors = Array.from(
+              variantDiv.querySelectorAll(".variant-option select")
+            );
+            firstAvail.selectedOptions.forEach((opt) => {
+              const sel = selectors.find(
+                (s) => s.name.replace("option_", "") === opt.name.toLowerCase()
+              );
+              if (sel) sel.value = opt.value;
+            });
+          }
+        } catch (_) {}
+
+        // Update price and button state on option change
+        const priceElLive = document.querySelector(".p-details .p-price");
+        const updatePriceForVariant = () => {
+          const v = getSelectedVariant(product);
+          if (!v) return;
+          const currency =
+            (v.price && v.price.currencyCode) ||
+            (product.priceRange &&
+              product.priceRange.minVariantPrice &&
+              product.priceRange.minVariantPrice.currencyCode) ||
+            "USD";
+          const price = parseFloat((v.price && v.price.amount) || "0");
+          const compareAt = parseFloat(
+            (v.compareAtPrice && v.compareAtPrice.amount) || "0"
+          );
+          const hasCompare = compareAt && compareAt > price;
+          if (priceElLive) {
+            priceElLive.innerHTML = hasCompare
+              ? `<span class="price compare-at" style="text-decoration: line-through; color:#999; margin-right:8px;">$${compareAt.toFixed(
+                  2
+                )}</span>` +
+                `<span class="price">$${price.toFixed(2)} ${currency}</span>`
+              : `<span class="price">$${price.toFixed(2)} ${currency}</span>`;
+          }
+          const btn = document.querySelector(
+            ".p-details .btn, .add-to-cart, .btn[data-action='add-to-cart']"
+          );
+          if (btn) btn.disabled = !v.availableForSale;
+        };
+        variantDiv
+          .querySelectorAll(".variant-option select")
+          .forEach((sel) =>
+            sel.addEventListener("change", updatePriceForVariant)
+          );
+        // Initial sync
+        updatePriceForVariant();
+
         variantDiv.className = "variant-selectors";
         variantDiv.innerHTML = variantHTML;
 
