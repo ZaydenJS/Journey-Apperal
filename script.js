@@ -440,11 +440,14 @@
         variantDiv.className = "variant-selectors";
         variantDiv.innerHTML = variantHTML;
 
-        // Hide legacy size grid to avoid conflicting with dropdowns
-        try {
-          const grid = document.getElementById("size-grid");
-          if (grid) grid.style.display = "none";
-        } catch (_) {}
+        // Only hide legacy size grid if we actually rendered selectors
+        const hasSelectors = (variantHTML || "").trim().length > 0;
+        if (hasSelectors) {
+          try {
+            const grid = document.getElementById("size-grid");
+            if (grid) grid.style.display = "none";
+          } catch (_) {}
+        }
 
         // Preselect first available variant values in the dropdowns
         try {
@@ -519,14 +522,42 @@
   function createVariantSelectors(product) {
     let html = "";
 
-    product.options.forEach((option) => {
+    // Build a robust options list: prefer product.options; derive from variants if missing
+    const deriveFromVariants = () => {
+      const map = new Map();
+      (product.variants || []).forEach((v) => {
+        (v.selectedOptions || []).forEach((opt) => {
+          const key = (opt.name || "").trim();
+          if (!key) return;
+          const arr = map.get(key) || [];
+          if (!arr.includes(opt.value)) arr.push(opt.value);
+          map.set(key, arr);
+        });
+      });
+      return Array.from(map.entries()).map(([name, values]) => ({
+        name,
+        values,
+      }));
+    };
+
+    const optionsList =
+      Array.isArray(product.options) &&
+      product.options.length > 0 &&
+      product.options.every(
+        (o) => Array.isArray(o.values) && o.values.length > 0
+      )
+        ? product.options
+        : deriveFromVariants();
+
+    optionsList.forEach((option) => {
+      const name = option.name || "Option";
+      const values = Array.isArray(option.values) ? option.values : [];
+      if (!values.length) return;
       html += `
         <div class="variant-option" style="margin-bottom: 16px;">
-          <label style="display: block; font-weight: 500; margin-bottom: 8px;">${
-            option.name
-          }</label>
-          <select name="option_${option.name.toLowerCase()}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            ${option.values
+          <label style="display: block; font-weight: 500; margin-bottom: 8px;">${name}</label>
+          <select name="option_${name.toLowerCase()}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            ${values
               .map((value) => `<option value="${value}">${value}</option>`)
               .join("")}
           </select>
@@ -689,20 +720,33 @@
 
   function getSelectedVariant(product) {
     const selectors = document.querySelectorAll(".variant-option select");
-    const selectedOptions = {};
 
+    // If no selectors exist yet, fall back to first available variant
+    if (!selectors.length) {
+      return (
+        (product.variants || []).find((v) => v.availableForSale) ||
+        (product.variants || [])[0]
+      );
+    }
+
+    const selectedOptions = {};
     selectors.forEach((select) => {
       const optionName = select.name.replace("option_", "");
       selectedOptions[optionName] = select.value;
     });
 
-    // Find matching variant
-    return product.variants.find((variant) => {
-      return variant.selectedOptions.every((option) => {
-        const optionName = option.name.toLowerCase();
+    // Find matching variant; if none, fall back to first available
+    const match = (product.variants || []).find((variant) => {
+      return (variant.selectedOptions || []).every((option) => {
+        const optionName = (option.name || "").toLowerCase();
         return selectedOptions[optionName] === option.value;
       });
     });
+    return (
+      match ||
+      (product.variants || []).find((v) => v.availableForSale) ||
+      (product.variants || [])[0]
+    );
   }
 
   function setupRecentlyViewedAndBestSellers() {
