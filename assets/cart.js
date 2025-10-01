@@ -176,32 +176,90 @@ class CartManager {
   }
 
   async goToCheckout() {
-    if (this.cart && this.cart.checkoutUrl) {
-      console.log("Checkout URL:", this.cart.checkoutUrl);
-      window.location.href = this.cart.checkoutUrl;
-      return;
-    }
-
-    // Try localStorage checkout URL first
-    const storedUrl = localStorage.getItem("shopify_checkout_url");
-    if (storedUrl) {
-      console.log("Checkout URL (persisted):", storedUrl);
-      window.location.href = storedUrl;
-      return;
-    }
-
-    // As a last resort, recreate from snapshot then redirect
-    const snapshot = this.getSnapshot();
     try {
-      await this.createCart(snapshot || []);
-      if (this.cart && this.cart.checkoutUrl) {
-        console.log("Checkout URL (recreated):", this.cart.checkoutUrl);
-        window.location.href = this.cart.checkoutUrl;
+      const getValidUrl = async (recreate = false) => {
+        let raw = null;
+        if (recreate) {
+          const snapshot = this.getSnapshot();
+          await this.createCart(snapshot || []);
+          raw = this.cart?.checkoutUrl || null;
+        } else {
+          raw = await this.getFreshCartCheckoutUrl();
+        }
+        if (!raw || !raw.includes("/cart/c/") || !raw.includes("?key=")) {
+          return null;
+        }
+        return raw;
+      };
+
+      let raw = await getValidUrl(false);
+      if (!raw) raw = await getValidUrl(true);
+      if (!raw) {
+        this.showCartMessage(
+          "Checkout is unavailable. Please add an item to your cart and try again.",
+          "error"
+        );
         return;
       }
-    } catch (e) {}
 
-    this.showCartMessage("Cart is empty", "error");
+      const finalUrl = this.normalizeCheckoutUrl(raw);
+      console.log("Raw checkoutUrl:", raw);
+      console.log("Final checkout redirect URL:", finalUrl);
+      window.location.assign(finalUrl);
+    } catch (err) {
+      console.error("Checkout redirect failed:", err);
+      this.showCartMessage(
+        "Checkout is unavailable. Please try again.",
+        "error"
+      );
+    }
+  }
+
+  getCheckoutHost() {
+    try {
+      return window.SHOPIFY_CHECKOUT_HOST || "7196su-vk.myshopify.com";
+    } catch (_) {
+      return "7196su-vk.myshopify.com";
+    }
+  }
+
+  normalizeCheckoutUrl(checkoutUrlStr) {
+    try {
+      const url = new URL(checkoutUrlStr);
+      if (!url.pathname.startsWith("/cart/c/"))
+        throw new Error("Invalid checkout path");
+      if (!url.searchParams.has("key")) throw new Error("Missing key param");
+      ["preview_theme_id", "preview", "theme_id"].forEach((p) =>
+        url.searchParams.delete(p)
+      );
+      url.hostname = this.getCheckoutHost();
+      return url.href;
+    } catch (e) {
+      console.warn("normalizeCheckoutUrl failed:", e);
+      return checkoutUrlStr;
+    }
+  }
+
+  async getFreshCartCheckoutUrl() {
+    try {
+      if (this.cartId) {
+        const response = await window.shopifyAPI.getCart(this.cartId);
+        this.cart = response.cart;
+      } else {
+        const snapshot = this.getSnapshot();
+        await this.createCart(snapshot || []);
+      }
+      this.checkoutUrl = this.cart?.checkoutUrl || null;
+      if (this.checkoutUrl) {
+        try {
+          localStorage.setItem("shopify_checkout_url", this.checkoutUrl);
+        } catch (_) {}
+      }
+      return this.checkoutUrl;
+    } catch (e) {
+      console.warn("getFreshCartCheckoutUrl failed:", e);
+      return null;
+    }
   }
 
   // Event listeners for cart updates
