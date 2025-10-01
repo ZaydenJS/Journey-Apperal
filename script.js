@@ -3529,12 +3529,12 @@
           checkout.style.letterSpacing = ".02em";
           checkout.style.cursor = "pointer";
 
-          // Wire up Proceed to Checkout → Always use normalized Shopify checkoutUrl
+          // Wire up Proceed to Checkout → Always use Shopify checkoutUrl
           if (!checkout.dataset.clickBound) {
-            checkout.addEventListener("click", async function (e) {
+            checkout.addEventListener("click", function (e) {
               e.preventDefault();
               try {
-                // Preferred: use cartManager.goToCheckout which handles normalization
+                // Preferred: use cartManager.goToCheckout which reads checkoutUrl from Shopify
                 if (
                   window.cartManager &&
                   typeof window.cartManager.goToCheckout === "function"
@@ -3543,41 +3543,30 @@
                   return;
                 }
 
-                // Fallback: try to get checkout URL manually
-                if (
+                // Next: try current cart's checkoutUrl
+                const cart =
                   window.cartManager &&
-                  typeof window.cartManager.getOrCreateCheckoutUrl ===
-                    "function"
-                ) {
+                  typeof window.cartManager.getCart === "function"
+                    ? window.cartManager.getCart()
+                    : null;
+                if (cart && cart.checkoutUrl) {
+                  console.log("Checkout URL:", cart.checkoutUrl);
+                  window.location.href = cart.checkoutUrl;
+                  return;
+                }
+
+                // Last resort: try persisted checkoutUrl from localStorage
+                const stored = (function () {
                   try {
-                    const rawCheckoutUrl =
-                      await window.cartManager.getOrCreateCheckoutUrl();
-
-                    if (rawCheckoutUrl && typeof rawCheckoutUrl === "string") {
-                      console.log(
-                        "Raw checkoutUrl from Shopify (fallback):",
-                        rawCheckoutUrl
-                      );
-
-                      const finalUrl = window.checkoutUtils
-                        ? window.checkoutUtils.normalizeCheckoutUrl(
-                            rawCheckoutUrl
-                          )
-                        : rawCheckoutUrl;
-
-                      console.log(
-                        "Final checkout redirect URL (fallback):",
-                        finalUrl
-                      );
-                      window.location.assign(finalUrl);
-                      return;
-                    }
-                  } catch (error) {
-                    console.error(
-                      "Fallback checkout URL creation failed:",
-                      error
-                    );
+                    return localStorage.getItem("shopify_checkout_url");
+                  } catch (_) {
+                    return null;
                   }
+                })();
+                if (stored) {
+                  console.log("Checkout URL (persisted):", stored);
+                  window.location.href = stored;
+                  return;
                 }
 
                 alert(

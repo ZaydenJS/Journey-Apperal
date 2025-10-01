@@ -20,15 +20,6 @@ export const createShopifyClient = () => {
   });
 };
 
-// Get the checkout host for URL normalization
-export const getCheckoutHost = () => {
-  return (
-    process.env.SHOPIFY_CHECKOUT_HOST ||
-    process.env.SHOPIFY_STOREFRONT_DOMAIN ||
-    process.env.SHOPIFY_STORE_DOMAIN
-  );
-};
-
 // Common GraphQL fragments
 export const PRODUCT_FRAGMENT = `
   fragment ProductFragment on Product {
