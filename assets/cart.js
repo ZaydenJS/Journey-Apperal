@@ -7,6 +7,9 @@ class CartManager {
     this.snapshotKey = "shopify_cart_snapshot";
     this.listeners = [];
 
+    // Clear persisted cart if env (domain/API URL) changed
+    this.ensureFreshEnv();
+
     // Initialize cart on page load
     this.init();
   }
@@ -49,7 +52,9 @@ class CartManager {
 
   async createCart(lines = []) {
     try {
-      const response = await window.shopifyAPI.createCart(lines);
+      const response = await window.shopifyAPI.createCart(lines, {
+        countryCode: "AU",
+      });
       this.cart = response.cart;
       this.cartId = this.cart.id;
       this.checkoutUrl = this.cart.checkoutUrl || null;
@@ -199,13 +204,13 @@ class CartManager {
           try {
             const host = checkoutUrl ? new URL(checkoutUrl).hostname : null;
             console.log({
-              shopDomainUsed: host,
+              shop: host,
               cartId: this.cartId || this.cart?.id || null,
               checkoutUrl,
             });
           } catch (_) {
             console.log({
-              shopDomainUsed: null,
+              shop: null,
               cartId: this.cartId || this.cart?.id || null,
               checkoutUrl,
             });
@@ -330,6 +335,32 @@ class CartManager {
     } catch (_) {}
     const h = (window.location && window.location.hostname) || "";
     return h === "localhost" || h === "127.0.0.1" || h.endsWith(".netlify.app");
+  }
+
+  getEnvSignature() {
+    const host = (
+      window.SHOPIFY_CHECKOUT_HOST || "7196su-vk.myshopify.com"
+    ).toLowerCase();
+    const apiUrl = (window.SHOPIFY_STOREFRONT_API_URL || "").toLowerCase();
+    return `${host}|${apiUrl}`;
+  }
+
+  ensureFreshEnv() {
+    try {
+      const sig = this.getEnvSignature();
+      const prev = localStorage.getItem("shopify_env_sig");
+      if (prev && prev !== sig) {
+        localStorage.removeItem("shopify_cart_id");
+        localStorage.removeItem("shopify_checkout_url");
+        try {
+          localStorage.removeItem(this.snapshotKey);
+        } catch (_) {}
+        this.cartId = null;
+        this.checkoutUrl = null;
+        this.cart = null;
+      }
+      localStorage.setItem("shopify_env_sig", sig);
+    } catch (_) {}
   }
 
   notifyListeners() {

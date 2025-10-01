@@ -3529,46 +3529,19 @@
           checkout.style.letterSpacing = ".02em";
           checkout.style.cursor = "pointer";
 
-          // Wire up Proceed to Checkout → Always use Shopify checkoutUrl
+          // Wire up Proceed to Checkout → Use Cart API (V2) only
           if (!checkout.dataset.clickBound) {
             checkout.addEventListener("click", function (e) {
               e.preventDefault();
               try {
-                // Preferred: use cartManager.goToCheckout which reads checkoutUrl from Shopify
                 if (
                   window.cartManager &&
                   typeof window.cartManager.goToCheckout === "function"
                 ) {
+                  window.CHECKOUT_V2 = true; // ensure V2 path
                   window.cartManager.goToCheckout();
                   return;
                 }
-
-                // Next: try current cart's checkoutUrl
-                const cart =
-                  window.cartManager &&
-                  typeof window.cartManager.getCart === "function"
-                    ? window.cartManager.getCart()
-                    : null;
-                if (cart && cart.checkoutUrl) {
-                  console.log("Checkout URL:", cart.checkoutUrl);
-                  window.location.href = cart.checkoutUrl;
-                  return;
-                }
-
-                // Last resort: try persisted checkoutUrl from localStorage
-                const stored = (function () {
-                  try {
-                    return localStorage.getItem("shopify_checkout_url");
-                  } catch (_) {
-                    return null;
-                  }
-                })();
-                if (stored) {
-                  console.log("Checkout URL (persisted):", stored);
-                  window.location.href = stored;
-                  return;
-                }
-
                 alert(
                   "Checkout is unavailable. Please add an item to your cart and try again."
                 );
