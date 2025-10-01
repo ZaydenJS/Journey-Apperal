@@ -3531,7 +3531,7 @@
 
           // Wire up Proceed to Checkout → Always use normalized Shopify checkoutUrl
           if (!checkout.dataset.clickBound) {
-            checkout.addEventListener("click", function (e) {
+            checkout.addEventListener("click", async function (e) {
               e.preventDefault();
               try {
                 // Preferred: use cartManager.goToCheckout which handles normalization
@@ -3543,33 +3543,40 @@
                   return;
                 }
 
-                // Fallback: manual checkout URL handling with normalization
-                const cart =
+                // Fallback: try to get checkout URL manually
+                if (
                   window.cartManager &&
-                  typeof window.cartManager.getCart === "function"
-                    ? window.cartManager.getCart()
-                    : null;
-
-                let checkoutUrl = null;
-                if (cart && cart.checkoutUrl) {
-                  checkoutUrl = cart.checkoutUrl;
-                } else {
-                  // Try persisted checkoutUrl from localStorage
+                  typeof window.cartManager.getOrCreateCheckoutUrl ===
+                    "function"
+                ) {
                   try {
-                    checkoutUrl = localStorage.getItem("shopify_checkout_url");
-                  } catch (_) {}
-                }
+                    const rawCheckoutUrl =
+                      await window.cartManager.getOrCreateCheckoutUrl();
 
-                if (checkoutUrl) {
-                  try {
-                    const normalizedUrl = window.checkoutUtils
-                      ? window.checkoutUtils.getFinalCheckoutUrl(checkoutUrl)
-                      : checkoutUrl;
+                    if (rawCheckoutUrl && typeof rawCheckoutUrl === "string") {
+                      console.log(
+                        "Raw checkoutUrl from Shopify (fallback):",
+                        rawCheckoutUrl
+                      );
 
-                    window.location.href = normalizedUrl;
-                    return;
+                      const finalUrl = window.checkoutUtils
+                        ? window.checkoutUtils.normalizeCheckoutUrl(
+                            rawCheckoutUrl
+                          )
+                        : rawCheckoutUrl;
+
+                      console.log(
+                        "Final checkout redirect URL (fallback):",
+                        finalUrl
+                      );
+                      window.location.assign(finalUrl);
+                      return;
+                    }
                   } catch (error) {
-                    console.error("Checkout URL normalization failed:", error);
+                    console.error(
+                      "Fallback checkout URL creation failed:",
+                      error
+                    );
                   }
                 }
 

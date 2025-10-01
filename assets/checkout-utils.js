@@ -68,43 +68,50 @@ class CheckoutUtils {
 
   /**
    * Normalize a checkout URL to use the correct host
-   * @param {string} checkoutUrl - The original checkout URL from Shopify
+   * @param {string} checkoutUrlStr - The original checkout URL string from Shopify
    * @returns {string} - The normalized checkout URL
    */
-  normalizeCheckoutUrl(checkoutUrl) {
-    if (!checkoutUrl) {
-      throw new Error('Checkout URL is required');
+  normalizeCheckoutUrl(checkoutUrlStr) {
+    if (!checkoutUrlStr || typeof checkoutUrlStr !== 'string') {
+      throw new Error('Invalid checkoutUrl: must be a non-empty string');
     }
 
     try {
-      const url = new URL(checkoutUrl);
-      
+      const url = new URL(checkoutUrlStr);
+
+      console.log(`Parsing checkout URL hostname: ${url.hostname}`);
+
       // Security check: only allow known Shopify hosts
       if (!this.allowedHosts.has(url.hostname)) {
         console.warn(`Unsafe checkout URL host: ${url.hostname}. Using fallback.`);
         throw new Error('Invalid checkout URL host');
       }
 
+      // Validate that this looks like a real checkout URL
+      if (!url.pathname.includes('/cart/c/') && !url.pathname.includes('/checkouts/')) {
+        throw new Error('Invalid checkoutUrl: missing cart or checkout path');
+      }
+
       // If the hostname is already our target checkout host, return as-is
       if (url.hostname === this.checkoutHost) {
         console.log(`Checkout URL already uses correct host: ${this.checkoutHost}`);
-        return checkoutUrl;
+        return checkoutUrlStr;
       }
 
       // Store original hostname for logging
       const originalHostname = url.hostname;
 
-      // Replace the hostname with our checkout host
+      // Replace ONLY the hostname with our checkout host
       url.hostname = this.checkoutHost;
       const normalizedUrl = url.href;
 
-      console.log(`Normalized checkout URL: ${originalHostname} -> ${this.checkoutHost}`);
+      console.log(`Normalized checkout URL: ${originalHostname} -> ${url.hostname}`);
       console.log(`Full checkout URL: ${normalizedUrl}`);
       return normalizedUrl;
-      
+
     } catch (error) {
       console.error('Failed to normalize checkout URL:', error);
-      throw new Error(`Invalid checkout URL: ${error.message}`);
+      throw new Error(`Invalid checkoutUrl: ${error.message}`);
     }
   }
 
