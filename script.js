@@ -641,9 +641,9 @@
           btn.disabled = true;
           btn.textContent = "Adding...";
 
-          // Use Shopify JS Buy SDK cart
+          // Use Shopify Cart API (Storefront) cart
           if (!window.JCart || typeof window.JCart.add !== "function") {
-            throw new Error("Shopify Buy SDK cart not available");
+            throw new Error("Shopify Cart API cart not available");
           }
 
           await window.JCart.add(selectedVariant.id, 1);
@@ -3516,8 +3516,9 @@
           checkout.style.fontWeight = "700";
           checkout.style.letterSpacing = ".02em";
           checkout.style.cursor = "pointer";
+          checkout.setAttribute("type", "button");
 
-          // Proceed to Checkout via Shopify JS Buy SDK
+          // Proceed to Checkout via Shopify Cart API (Storefront Cart)
           if (!checkout.dataset.clickBound) {
             checkout.addEventListener("click", function (e) {
               e.preventDefault();
@@ -4118,87 +4119,85 @@ document.addEventListener("DOMContentLoaded", () => {
   }, 1000);
 });
 
-// Shopify JS Buy SDK global cart (JCart) — pure frontend
+// Shopify Cart API (2025-01) global cart (JCart) — pure frontend
 (function () {
-  const SHOP_DOMAIN = "7196su-vk.myshopify.com";
+  const API_URL =
+    window?.ENV?.SHOPIFY_STOREFRONT_API_URL ||
+    "https://7196su-vk.myshopify.com/api/2025-01/graphql.json";
   const TOKEN =
     window?.ENV?.SHOPIFY_STOREFRONT_TOKEN || "e9f772f8551e9494e4d4695902f59e46";
-  const STORAGE_KEY = "ja_checkout_id";
-  let sdkLoaded = !!window.ShopifyBuy;
-  let loading = null;
+  const STORAGE_KEY = "ja_cart_id";
 
-  function loadSdk() {
-    if (sdkLoaded) return Promise.resolve();
-    if (loading) return loading;
-    loading = new Promise((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src =
-        "https://sdks.shopifycdn.com/js-buy-sdk/v2/latest/index.umd.min.js";
-      s.async = true;
-      s.onload = () => {
-        sdkLoaded = !!window.ShopifyBuy;
-        resolve();
-      };
-      s.onerror = (e) => reject(new Error("Failed to load Shopify JS Buy SDK"));
-      document.head.appendChild(s);
+  async function gql(query, variables) {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Storefront-Access-Token": TOKEN,
+      },
+      body: JSON.stringify({ query, variables }),
+      credentials: "omit",
     });
-    return loading;
+    const json = await res.json();
+    if (!res.ok || json.errors) {
+      throw new Error(
+        "Storefront API error: " + (json.errors?.[0]?.message || res.status)
+      );
+    }
+    return json.data;
   }
 
+  const MUT_CREATE =
+    "mutation CartCreate{ cartCreate(input:{}){ cart{ id checkoutUrl } } }";
+  const Q_CART = "query GetCart($id: ID!){ cart(id:$id){ id checkoutUrl } }";
+  const MUT_ADD =
+    "mutation CartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!){ cartLinesAdd(cartId:$cartId, lines:$lines){ cart{ id checkoutUrl } userErrors{ field message } } }";
+
   const JCart = {
-    _client: null,
-    _checkoutId: null,
-    _initializing: null,
+    _cartId: null,
 
-    async _ensureClient() {
-      await loadSdk();
-      if (!this._client) {
-        this._client = window.ShopifyBuy.buildClient({
-          domain: SHOP_DOMAIN,
-          storefrontAccessToken: TOKEN,
-        });
-      }
-      return this._client;
-    },
-
-    async _fetchOrCreateCheckout() {
-      await this._ensureClient();
+    async _ensureCart() {
       try {
-        this._checkoutId = localStorage.getItem(STORAGE_KEY) || null;
+        this._cartId = localStorage.getItem(STORAGE_KEY) || null;
       } catch (_) {}
-      if (this._checkoutId) {
+      if (this._cartId) {
         try {
-          const co = await this._client.checkout.fetch(this._checkoutId);
-          if (co && !co.completedAt) return co;
+          const d = await gql(Q_CART, { id: this._cartId });
+          if (d?.cart?.id) return d.cart;
         } catch (_) {}
       }
-      const created = await this._client.checkout.create();
-      this._checkoutId = created.id;
+      const d = await gql(MUT_CREATE, {});
+      const id = d?.cartCreate?.cart?.id;
+      if (!id) throw new Error("Failed to create cart");
+      this._cartId = id;
       try {
-        localStorage.setItem(STORAGE_KEY, this._checkoutId);
+        localStorage.setItem(STORAGE_KEY, id);
       } catch (_) {}
-      return created;
+      return { id, checkoutUrl: d?.cartCreate?.cart?.checkoutUrl };
     },
 
-    async add(variantId, quantity) {
+    async add(variantGid, quantity) {
       const qty = Math.max(1, Number(quantity || 1));
-      const co = await this._fetchOrCreateCheckout();
-      const updated = await this._client.checkout.addLineItems(co.id, [
-        { variantId, quantity: qty },
-      ]);
-      // keep id persisted (unchanged normally)
-      this._checkoutId = updated.id;
-      try {
-        localStorage.setItem(STORAGE_KEY, this._checkoutId);
-      } catch (_) {}
+      const cart = await this._ensureCart();
+      const d = await gql(MUT_ADD, {
+        cartId: cart.id,
+        lines: [{ merchandiseId: variantGid, quantity: qty }],
+      });
+      const updated = d?.cartLinesAdd?.cart;
+      if (updated?.id) {
+        this._cartId = updated.id;
+        try {
+          localStorage.setItem(STORAGE_KEY, updated.id);
+        } catch (_) {}
+      }
       return updated;
     },
 
     async toCheckout() {
-      const co = await this._fetchOrCreateCheckout();
-      const fresh = await this._client.checkout.fetch(co.id);
-      const url = fresh && (fresh.webUrl || fresh.checkoutUrl || fresh.web_url);
-      if (!url) throw new Error("No webUrl on checkout");
+      const cart = await this._ensureCart();
+      const d = await gql(Q_CART, { id: cart.id });
+      const url = d?.cart?.checkoutUrl;
+      if (!url) throw new Error("No checkoutUrl");
       window.location.href = url;
     },
   };
