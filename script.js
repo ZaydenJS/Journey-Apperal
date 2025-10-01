@@ -633,7 +633,11 @@
           ) &&
           selectedVariant.availableForSale === false
         ) {
-          alert("This variant is out of stock");
+          alert("This item is currently unavailable");
+          try {
+            btn.disabled = true;
+            btn.textContent = "Unavailable";
+          } catch (_) {}
           return;
         }
 
@@ -641,12 +645,48 @@
           btn.disabled = true;
           btn.textContent = "Adding...";
 
-          // Use Shopify Cart API (Storefront) cart
-          if (!window.JCart || typeof window.JCart.add !== "function") {
-            throw new Error("Shopify Cart API cart not available");
-          }
+          // Update localStorage cart lines (permalink-based checkout)
+          const CP = window.CartPermalink || {};
+          const getLines =
+            typeof CP.getLines === "function"
+              ? CP.getLines
+              : function () {
+                  try {
+                    return JSON.parse(
+                      localStorage.getItem("ja_cart_lines") || "[]"
+                    );
+                  } catch (_) {
+                    return [];
+                  }
+                };
+          const setLines =
+            typeof CP.setLines === "function"
+              ? CP.setLines
+              : function (lines) {
+                  try {
+                    const filtered = (lines || []).filter(
+                      (l) => Number(l.quantity) > 0
+                    );
+                    localStorage.setItem(
+                      "ja_cart_lines",
+                      JSON.stringify(filtered)
+                    );
+                  } catch (_) {}
+                };
 
-          await window.JCart.add(selectedVariant.id, 1);
+          const lines = getLines() || [];
+          const idx = Array.isArray(lines)
+            ? lines.findIndex((l) => l && l.variantGid === selectedVariant.id)
+            : -1;
+          if (idx >= 0) {
+            lines[idx].quantity = Math.max(
+              1,
+              Number(lines[idx].quantity || 0) + 1
+            );
+          } else {
+            lines.push({ variantGid: selectedVariant.id, quantity: 1 });
+          }
+          setLines(lines);
 
           btn.textContent = "Added!";
           setTimeout(() => {
@@ -3518,19 +3558,70 @@
           checkout.style.cursor = "pointer";
           checkout.setAttribute("type", "button");
 
-          // Proceed to Checkout via Shopify Cart API (Storefront Cart)
+          // Proceed to Checkout via Shopify Cart Permalink (client-only)
           if (!checkout.dataset.clickBound) {
             checkout.addEventListener("click", function (e) {
               e.preventDefault();
               try {
-                if (
-                  window.JCart &&
-                  typeof window.JCart.toCheckout === "function"
-                ) {
-                  window.JCart.toCheckout();
-                } else {
-                  alert("Checkout is not ready. Please try again.");
+                const CP = window.CartPermalink || {};
+                const getLines =
+                  typeof CP.getLines === "function"
+                    ? CP.getLines
+                    : function () {
+                        try {
+                          return JSON.parse(
+                            localStorage.getItem("ja_cart_lines") || "[]"
+                          );
+                        } catch (_) {
+                          return [];
+                        }
+                      };
+                const build =
+                  typeof CP.buildCartPermalink === "function"
+                    ? CP.buildCartPermalink
+                    : function (lines) {
+                        const gidToNumeric = (gid) => {
+                          if (!gid) return "";
+                          const m = String(gid).match(/ProductVariant\/(\d+)/);
+                          return m ? m[1] : "";
+                        };
+                        const items = (Array.isArray(lines) ? lines : [])
+                          .filter((l) => Number(l?.quantity) > 0)
+                          .map(
+                            (l) =>
+                              `${gidToNumeric(l.variantGid)}:${Math.max(
+                                1,
+                                Number(l.quantity)
+                              )}`
+                          )
+                          .filter((s) => s && !s.startsWith(":"));
+                        const store =
+                          (window.ENV &&
+                            (window.ENV.SHOPIFY_STOREFRONT_DOMAIN ||
+                              window.ENV.SHOPIFY_STORE_DOMAIN)) ||
+                          "7196su-vk.myshopify.com";
+                        let url = `https://${store}/cart/${items.join(",")}`;
+                        try {
+                          const code = localStorage.getItem("ja_discount");
+                          if (code) {
+                            const sep = url.includes("?") ? "&" : "?";
+                            url += `${sep}discount=${encodeURIComponent(code)}`;
+                          }
+                        } catch (_) {}
+                        return url;
+                      };
+                const lines = getLines() || [];
+                const nonEmpty = lines.filter((l) => Number(l?.quantity) > 0);
+                if (!nonEmpty.length) {
+                  alert("Your cart is empty.");
+                  return;
                 }
+                const url = build(nonEmpty);
+                if (!url) {
+                  alert("Checkout is unavailable. Please try again.");
+                  return;
+                }
+                window.location.href = url;
               } catch (err) {
                 console.error("Checkout failed:", err);
                 alert("Checkout is unavailable. Please try again.");
@@ -4118,119 +4209,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, 1000);
 });
-
-// Shopify Cart API (2025-01) global cart (JCart) — pure frontend
-(function () {
-  const API_URL =
-    window?.ENV?.SHOPIFY_STOREFRONT_API_URL ||
-    "https://7196su-vk.myshopify.com/api/2025-01/graphql.json";
-  const TOKEN =
-    window?.ENV?.SHOPIFY_STOREFRONT_TOKEN || "e9f772f8551e9494e4d4695902f59e46";
-  const STORAGE_KEY = "ja_cart_id";
-
-  async function gql(query, variables) {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Storefront-Access-Token": TOKEN,
-      },
-      body: JSON.stringify({ query, variables }),
-      credentials: "omit",
-    });
-    const json = await res.json();
-    if (!res.ok || json.errors) {
-      throw new Error(
-        "Storefront API error: " + (json.errors?.[0]?.message || res.status)
-      );
-    }
-    return json.data;
-  }
-
-  const MUT_CREATE =
-    "mutation CartCreate{ cartCreate(input:{}){ cart{ id checkoutUrl } } }";
-  const Q_CART = "query GetCart($id: ID!){ cart(id:$id){ id checkoutUrl } }";
-  const MUT_ADD =
-    "mutation CartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!){ cartLinesAdd(cartId:$cartId, lines:$lines){ cart{ id checkoutUrl } userErrors{ field message } } }";
-
-  const JCart = {
-    _cartId: null,
-
-    async _ensureCart() {
-      try {
-        this._cartId = localStorage.getItem(STORAGE_KEY) || null;
-      } catch (_) {}
-      if (this._cartId) {
-        try {
-          const d = await gql(Q_CART, { id: this._cartId });
-          if (d?.cart?.id) return d.cart;
-        } catch (_) {}
-      }
-      const d = await gql(MUT_CREATE, {});
-      const id = d?.cartCreate?.cart?.id;
-      if (!id) throw new Error("Failed to create cart");
-      this._cartId = id;
-      try {
-        localStorage.setItem(STORAGE_KEY, id);
-      } catch (_) {}
-      return { id, checkoutUrl: d?.cartCreate?.cart?.checkoutUrl };
-    },
-
-    async add(variantGid, quantity) {
-      const qty = Math.max(1, Number(quantity || 1));
-      const cart = await this._ensureCart();
-      const d = await gql(MUT_ADD, {
-        cartId: cart.id,
-        lines: [{ merchandiseId: variantGid, quantity: qty }],
-      });
-      const updated = d?.cartLinesAdd?.cart;
-      if (updated?.id) {
-        this._cartId = updated.id;
-        try {
-          localStorage.setItem(STORAGE_KEY, updated.id);
-        } catch (_) {}
-      }
-      return updated;
-    },
-
-    async toCheckout() {
-      const API_URL =
-        "https://7196su-vk.myshopify.com/api/2025-01/graphql.json";
-      const TOKEN =
-        window.ENV?.SHOPIFY_STOREFRONT_TOKEN || "YOUR_STOREFRONT_TOKEN";
-      let cartId = null;
-      try {
-        cartId = localStorage.getItem("ja_cart_id");
-      } catch (_) {}
-      if (!cartId) {
-        console.error("No cartId found in localStorage");
-        return;
-      }
-      const query = `
-        query getCheckoutUrl($id: ID!) {
-          cart(id: $id) {
-            checkoutUrl
-          }
-        }
-      `;
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": TOKEN,
-        },
-        body: JSON.stringify({ query, variables: { id: cartId } }),
-      });
-      const data = await response.json();
-      const url = data?.data?.cart?.checkoutUrl;
-      if (!url) {
-        console.error("No checkoutUrl returned", data);
-        return;
-      }
-      console.log("✅ Redirecting to checkout:", url);
-      window.location.replace(url);
-    },
-  };
-
-  window.JCart = JCart;
-})();
