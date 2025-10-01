@@ -3550,7 +3550,7 @@
                     ? window.cartManager.getCart()
                     : null;
                 if (cart && cart.checkoutUrl) {
-                  console.log("CHECKOUT_DEBUG received →", cart.checkoutUrl);
+                  console.log("CHECKOUT_DEBUG final →", cart.checkoutUrl);
                   console.log("Redirecting now…");
                   window.location.href = cart.checkoutUrl;
                   setTimeout(
@@ -3574,7 +3574,7 @@
                   }
                 })();
                 if (stored) {
-                  console.log("CHECKOUT_DEBUG received →", stored);
+                  console.log("CHECKOUT_DEBUG final →", stored);
                   console.log("Redirecting now…");
                   window.location.href = stored;
                   setTimeout(() => window.location.assign(stored), 50);

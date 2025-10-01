@@ -230,7 +230,7 @@ class CartManager {
         DEBUG = localStorage.getItem("CHECKOUT_DEBUG") === "1";
       } catch (_) {}
       if (DEBUG) {
-        console.log("CHECKOUT_DEBUG received →", url);
+        console.log("CHECKOUT_DEBUG final →", url);
         console.log("[CHECKOUT_DEBUG] cartId:", this.cartId);
         console.log("Redirecting now…");
       }
