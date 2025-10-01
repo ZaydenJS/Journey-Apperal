@@ -4193,17 +4193,25 @@ document.addEventListener("DOMContentLoaded", () => {
         ? window.__HEADLESS_CART_LINES__
         : [];
     }
-    async function createCartViaApi(lines) {
-      var res = await fetch("/.netlify/functions/createCart", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lines: lines }),
-      });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      var json = await res.json();
-      var url = json && json.cart && json.cart.checkoutUrl;
-      if (!url) throw new Error("No checkoutUrl");
-      return url;
+    function submitCheckoutForm(lines) {
+      try {
+        var form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/.netlify/functions/checkout";
+        var input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "lines";
+        input.value = JSON.stringify(lines);
+        form.appendChild(input);
+        document.body.appendChild(form);
+        console.log("CHECKOUT_DEBUG submit → /.netlify/functions/checkout", {
+          count: Array.isArray(lines) ? lines.length : 0,
+        });
+        form.submit();
+      } catch (e) {
+        console.error("submitCheckoutForm failed", e);
+        throw e;
+      }
     }
     function attach() {
       document.querySelectorAll(BTN_SELECTOR).forEach(function (btn) {
@@ -4220,25 +4228,10 @@ document.addEventListener("DOMContentLoaded", () => {
             e.stopPropagation();
             e.stopImmediatePropagation();
             try {
-              if (
-                window.cartManager &&
-                typeof window.cartManager.goToCheckout === "function"
-              ) {
-                // cartManager already redirects verbatim and logs final URL
-                return void window.cartManager.goToCheckout();
-              }
               var lines = getLinesFromCartState();
               if (!lines || !lines.length)
                 throw new Error("No cart lines to checkout");
-              var checkoutUrl = await createCartViaApi(lines);
-              console.log("CHECKOUT_DEBUG final →", checkoutUrl);
-              window.location.href = checkoutUrl;
-              setTimeout(function () {
-                window.location.assign(checkoutUrl);
-              }, 50);
-              setTimeout(function () {
-                window.location.replace(checkoutUrl);
-              }, 200);
+              submitCheckoutForm(lines);
             } catch (err) {
               console.error("Checkout failed", err);
               alert("Could not start checkout. Please try again.");
