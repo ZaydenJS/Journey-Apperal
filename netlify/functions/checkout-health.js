@@ -1,4 +1,8 @@
-import { storefrontRequest, createApiResponse, createErrorResponse } from "./utils/shopify.js";
+import {
+  storefrontRequest,
+  createApiResponse,
+  createErrorResponse,
+} from "./utils/shopify.js";
 
 export const handler = async (event, context) => {
   try {
@@ -6,33 +10,44 @@ export const handler = async (event, context) => {
     const variantId = urlParams.get("variant") || process.env.KNOWN_VARIANT_ID;
 
     if (!variantId) {
-      return createErrorResponse("Missing variant id (query ?variant=gid://shopify/ProductVariant/...) or KNOWN_VARIANT_ID env", 400);
+      return createErrorResponse(
+        "Missing variant id (query ?variant=gid://shopify/ProductVariant/...) or KNOWN_VARIANT_ID env",
+        400
+      );
     }
 
     const mutation = `
-      mutation CheckoutCreate($input: CheckoutCreateInput!) {
-        checkoutCreate(input: $input) {
-          checkout { id webUrl }
-          checkoutUserErrors { field message }
+      mutation CartCreate($input: CartInput!) {
+        cartCreate(input: $input) {
+          cart { id checkoutUrl }
+          userErrors { field message }
         }
       }
     `;
 
-    const variables = { input: { lineItems: [{ variantId, quantity: 1 }] } };
+    const variables = {
+      input: { lines: [{ merchandiseId: variantId, quantity: 1 }] },
+    };
     const resp = await storefrontRequest(mutation, variables);
 
     if (resp.errors && resp.errors.length) {
-      return createErrorResponse(`Storefront error: ${resp.errors[0].message}`, 500);
+      return createErrorResponse(
+        `Storefront error: ${resp.errors[0].message}`,
+        500
+      );
     }
 
-    const checkout = resp.data?.checkoutCreate?.checkout;
-    const webUrl = checkout?.webUrl;
-    if (!webUrl) {
-      return createErrorResponse("No webUrl returned from checkoutCreate", 500);
+    const cart = resp.data?.cartCreate?.cart;
+    const checkoutUrl = cart?.checkoutUrl;
+    if (!checkoutUrl) {
+      return createErrorResponse(
+        "No checkoutUrl returned from cartCreate",
+        500
+      );
     }
 
     // Fetch the checkout HTML to ensure it is reachable (200) and looks like Shopify checkout
-    const htmlRes = await fetch(webUrl, { method: "GET" });
+    const htmlRes = await fetch(checkoutUrl, { method: "GET" });
     const ok = htmlRes.ok;
     const text = await htmlRes.text();
     const marker = ok && /Shopify|checkout|Checkout/.test(text);
@@ -40,7 +55,7 @@ export const handler = async (event, context) => {
     const status = ok && marker ? "PASS" : "FAIL";
     const details = {
       status,
-      webUrl,
+      checkoutUrl,
       httpStatus: htmlRes.status,
       marker: marker ? "found" : "missing",
     };
@@ -50,4 +65,3 @@ export const handler = async (event, context) => {
     return createErrorResponse(e.message, 500);
   }
 };
-

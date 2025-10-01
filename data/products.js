@@ -142,15 +142,6 @@ class ShopifyAPI {
     });
   }
 
-  // Checkout (Storefront API)
-  async createCheckout(lines = []) {
-    // lines: [{ variantId: 'gid://shopify/ProductVariant/...', quantity: 1 }]
-    return this.request("createCheckout", {
-      method: "POST",
-      body: { lines },
-    });
-  }
-
   // Customer
   async customerLogin(email, password) {
     return this.request("customerLogin", {

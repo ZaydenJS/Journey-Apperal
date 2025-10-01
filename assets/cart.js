@@ -190,27 +190,29 @@ class CartManager {
         }
       }
 
-      // Last resort: create a fresh checkout via Storefront API using snapshot
+      // Last resort: ensure a Cart exists and read its checkoutUrl
       if (!url) {
-        const snapshot = this.getSnapshot();
-        const lines = Array.isArray(snapshot)
-          ? snapshot
-              .filter((l) => l.merchandiseId && l.quantity > 0)
-              .map((l) => ({
-                variantId: l.merchandiseId,
-                quantity: l.quantity,
-              }))
-          : [];
-        if (lines.length === 0) {
-          this.showCartMessage("Cart is empty", "error");
-          return;
-        }
-        const resp = await window.shopifyAPI.createCheckout(lines);
-        url = resp?.checkout?.webUrl || null;
-        if (url) {
+        // If we have a cartId, refresh it; otherwise, create from snapshot
+        if (this.cartId) {
           try {
-            localStorage.setItem("shopify_checkout_url", url);
+            const res = await window.shopifyAPI.getCart(this.cartId);
+            this.cart = res.cart;
+            url =
+              this.cart && this.cart.checkoutUrl ? this.cart.checkoutUrl : null;
           } catch (_) {}
+        }
+        if (!url) {
+          const snapshot = this.getSnapshot();
+          const lines = Array.isArray(snapshot)
+            ? snapshot.filter((l) => l.merchandiseId && l.quantity > 0)
+            : [];
+          if (lines.length === 0) {
+            this.showCartMessage("Cart is empty", "error");
+            return;
+          }
+          await this.createCart(lines);
+          url =
+            this.cart && this.cart.checkoutUrl ? this.cart.checkoutUrl : null;
         }
       }
 
@@ -228,10 +230,15 @@ class CartManager {
         DEBUG = localStorage.getItem("CHECKOUT_DEBUG") === "1";
       } catch (_) {}
       if (DEBUG) {
-        console.log("[CHECKOUT_DEBUG] Redirecting to webUrl (exact):", url);
+        console.log(
+          "[CHECKOUT_DEBUG] cartId:",
+          this.cartId,
+          "checkoutUrl:",
+          url
+        );
       }
 
-      // Redirect exactly to Shopify's webUrl with no modifications
+      // Redirect exactly to Shopify's checkoutUrl with no modifications
       window.location.href = url;
     } catch (e) {
       console.error("Checkout redirect failed:", e);
