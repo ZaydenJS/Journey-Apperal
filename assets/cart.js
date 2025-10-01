@@ -181,6 +181,9 @@ class CartManager {
   }
 
   async goToCheckout() {
+    this.showCartMessage("Checkout is unavailable.", "error");
+    return;
+
     // Feature-flagged V2: strict Storefront Cart API flow; redirect using EXACT checkoutUrl
     if (window.CHECKOUT_V2) {
       try {

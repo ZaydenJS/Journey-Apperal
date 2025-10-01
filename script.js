@@ -3513,46 +3513,12 @@
               '<div style="display:flex; justify-content:space-between; margin:8px 0; font-weight:700;"><span>Order Total Incl. Tax</span><span id="cart-total-incl">$0.00</span></div>' +
               '<div style="display:flex; justify-content:space-between; margin:6px 0;"><span>Order Total Excl. Tax</span><span id="cart-total-excl">$0.00</span></div>' +
               "</div>" +
-              '<button id="checkout-btn" style="width:100%; margin-top:12px; padding:14px 16px; border-radius:9999px; background:#000; color:#fff; font-weight:700; cursor:pointer;">Proceed to Checkout</button>';
+
             footer.dataset.enhanced = "1";
           }
         }
 
-        const checkout = document.getElementById("checkout-btn");
-        if (checkout) {
-          checkout.style.width = "100%";
-          checkout.style.padding = "14px 16px";
-          checkout.style.borderRadius = "9999px";
-          checkout.style.background = "#000";
-          checkout.style.color = "#fff";
-          checkout.style.fontWeight = "700";
-          checkout.style.letterSpacing = ".02em";
-          checkout.style.cursor = "pointer";
 
-          // Wire up Proceed to Checkout → Use Cart API (V2) only
-          if (!checkout.dataset.clickBound) {
-            checkout.addEventListener("click", function (e) {
-              e.preventDefault();
-              try {
-                if (
-                  window.cartManager &&
-                  typeof window.cartManager.goToCheckout === "function"
-                ) {
-                  window.CHECKOUT_V2 = true; // ensure V2 path
-                  window.cartManager.goToCheckout();
-                  return;
-                }
-                alert(
-                  "Checkout is unavailable. Please add an item to your cart and try again."
-                );
-              } catch (err) {
-                console.error("Checkout redirect failed:", err);
-                alert("Checkout is unavailable. Please try again.");
-              }
-            });
-            checkout.dataset.clickBound = "1";
-          }
-        }
       }
     } catch (_) {}
 

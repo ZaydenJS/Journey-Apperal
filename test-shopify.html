@@ -1,72 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shopify Integration Test - Journey Apparel</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
-        .test-section h2 { margin-top: 0; color: #333; }
-        .loading { color: #666; font-style: italic; }
-        .error { color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 4px; }
-        .success { color: #2e7d32; background: #e8f5e9; padding: 10px; border-radius: 4px; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 16px; }
-        .product-card { border: 1px solid #eee; border-radius: 8px; padding: 12px; text-align: center; }
-        .product-card img { width: 100%; height: 200px; object-fit: cover; border-radius: 4px; }
-        .product-card h3 { margin: 8px 0 4px 0; font-size: 14px; }
-        .product-card .price { font-weight: bold; color: #333; }
-        button { background: #111; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 4px; }
-        button:hover { background: #333; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        .form-group { margin: 10px 0; }
-        .form-group label { display: block; margin-bottom: 4px; font-weight: bold; }
-        .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .test-section h2 {
+        margin-top: 0;
+        color: #333;
+      }
+      .loading {
+        color: #666;
+        font-style: italic;
+      }
+      .error {
+        color: #d32f2f;
+        background: #ffebee;
+        padding: 10px;
+        border-radius: 4px;
+      }
+      .success {
+        color: #2e7d32;
+        background: #e8f5e9;
+        padding: 10px;
+        border-radius: 4px;
+      }
+      .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .product-card {
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+      }
+      .product-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 4px;
+      }
+      .product-card h3 {
+        margin: 8px 0 4px 0;
+        font-size: 14px;
+      }
+      .product-card .price {
+        font-weight: bold;
+        color: #333;
+      }
+      button {
+        background: #111;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 4px;
+      }
+      button:hover {
+        background: #333;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .form-group {
+        margin: 10px 0;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 4px;
+        font-weight: bold;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Journey Apparel - Shopify Integration Test</h1>
     <p>This page tests the Shopify headless storefront integration.</p>
 
     <!-- Collections Test -->
     <div class="test-section">
-        <h2>Collections Test</h2>
-        <button onclick="testCollections()">Load Collections</button>
-        <div id="collections-result" class="loading">Click button to test...</div>
+      <h2>Collections Test</h2>
+      <button onclick="testCollections()">Load Collections</button>
+      <div id="collections-result" class="loading">Click button to test...</div>
     </div>
 
     <!-- Products Test -->
     <div class="test-section">
-        <h2>Products Test</h2>
-        <button onclick="testProducts()">Load All Products</button>
-        <button onclick="testProductsByTag('Tops')">Load Tops</button>
-        <button onclick="testProductsByTag('Hoodies')">Load Hoodies</button>
-        <div id="products-result" class="loading">Click button to test...</div>
+      <h2>Products Test</h2>
+      <button onclick="testProducts()">Load All Products</button>
+      <button onclick="testProductsByTag('Tops')">Load Tops</button>
+      <button onclick="testProductsByTag('Hoodies')">Load Hoodies</button>
+      <div id="products-result" class="loading">Click button to test...</div>
     </div>
 
     <!-- Cart Test -->
     <div class="test-section">
-        <h2>Cart Test</h2>
-        <button onclick="testCreateCart()">Create Cart</button>
-        <button onclick="testAddToCart()" id="add-to-cart-btn" disabled>Add Test Item to Cart</button>
-        <div id="cart-result" class="loading">Click button to test...</div>
+      <h2>Cart Test</h2>
+      <button onclick="testCreateCart()">Create Cart</button>
+      <button onclick="testAddToCart()" id="add-to-cart-btn" disabled>
+        Add Test Item to Cart
+      </button>
+      <div id="cart-result" class="loading">Click button to test...</div>
     </div>
 
     <!-- Customer Test -->
     <div class="test-section">
-        <h2>Customer Authentication Test</h2>
-        <div class="form-group">
-            <label>Email:</label>
-            <input type="email" id="test-email" placeholder="test@example.com">
-        </div>
-        <div class="form-group">
-            <label>Password:</label>
-            <input type="password" id="test-password" placeholder="password">
-        </div>
-        <button onclick="testRegister()">Test Register</button>
-        <button onclick="testLogin()">Test Login</button>
-        <button onclick="testGetCustomer()" id="get-customer-btn" disabled>Get Customer Data</button>
-        <div id="customer-result" class="loading">Enter credentials and test...</div>
+      <h2>Customer Authentication Test</h2>
+      <div class="form-group">
+        <label>Email:</label>
+        <input type="email" id="test-email" placeholder="test@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Password:</label>
+        <input type="password" id="test-password" placeholder="password" />
+      </div>
+      <button onclick="testRegister()">Test Register</button>
+      <button onclick="testLogin()">Test Login</button>
+      <button onclick="testGetCustomer()" id="get-customer-btn" disabled>
+        Get Customer Data
+      </button>
+      <div id="customer-result" class="loading">
+        Enter credentials and test...
+      </div>
     </div>
 
     <script src="data/products.js"></script>
@@ -74,234 +152,275 @@
     <script src="assets/account.js"></script>
 
     <script>
-        let testCartId = null;
-        let testAccessToken = null;
+      let testCartId = null;
+      let testAccessToken = null;
 
-        async function testCollections() {
-            const resultDiv = document.getElementById('collections-result');
-            resultDiv.innerHTML = '<div class="loading">Loading collections...</div>';
-            
-            try {
-                const data = await window.shopifyAPI.getCollections();
-                resultDiv.innerHTML = `
+      async function testCollections() {
+        const resultDiv = document.getElementById("collections-result");
+        resultDiv.innerHTML =
+          '<div class="loading">Loading collections...</div>';
+
+        try {
+          const data = await window.shopifyAPI.getCollections();
+          resultDiv.innerHTML = `
                     <div class="success">✅ Collections loaded successfully!</div>
-                    <p><strong>Found ${data.collections.length} collections:</strong></p>
+                    <p><strong>Found ${
+                      data.collections.length
+                    } collections:</strong></p>
                     <ul>
-                        ${data.collections.map(c => `<li><strong>${c.title}</strong> (${c.handle})</li>`).join('')}
+                        ${data.collections
+                          .map(
+                            (c) =>
+                              `<li><strong>${c.title}</strong> (${c.handle})</li>`
+                          )
+                          .join("")}
                     </ul>
                 `;
-            } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
-            }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
         }
+      }
 
-        async function testProducts() {
-            const resultDiv = document.getElementById('products-result');
-            resultDiv.innerHTML = '<div class="loading">Loading products...</div>';
-            
-            try {
-                await window.__CATALOG.loadProducts();
-                const products = window.__CATALOG.products;
-                
-                resultDiv.innerHTML = `
+      async function testProducts() {
+        const resultDiv = document.getElementById("products-result");
+        resultDiv.innerHTML = '<div class="loading">Loading products...</div>';
+
+        try {
+          await window.__CATALOG.loadProducts();
+          const products = window.__CATALOG.products;
+
+          resultDiv.innerHTML = `
                     <div class="success">✅ Products loaded successfully!</div>
                     <p><strong>Found ${products.length} products</strong></p>
                     <div class="product-grid">
-                        ${products.slice(0, 8).map(p => `
+                        ${products
+                          .slice(0, 8)
+                          .map(
+                            (p) => `
                             <div class="product-card">
-                                <img src="${p.images[0]?.url || 'https://via.placeholder.com/200'}" alt="${p.title}">
+                                <img src="${
+                                  p.images[0]?.url ||
+                                  "https://via.placeholder.com/200"
+                                }" alt="${p.title}">
                                 <h3>${p.title}</h3>
-                                <div class="price">$${parseFloat(p.priceRange.minVariantPrice.amount).toFixed(2)}</div>
+                                <div class="price">$${parseFloat(
+                                  p.priceRange.minVariantPrice.amount
+                                ).toFixed(2)}</div>
                             </div>
-                        `).join('')}
+                        `
+                          )
+                          .join("")}
                     </div>
                 `;
-            } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
-            }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
         }
+      }
 
-        async function testProductsByTag(tag) {
-            const resultDiv = document.getElementById('products-result');
-            resultDiv.innerHTML = `<div class="loading">Loading ${tag} products...</div>`;
-            
-            try {
-                const data = await window.shopifyAPI.getCollection('all', tag);
-                const products = data.products;
-                
-                resultDiv.innerHTML = `
+      async function testProductsByTag(tag) {
+        const resultDiv = document.getElementById("products-result");
+        resultDiv.innerHTML = `<div class="loading">Loading ${tag} products...</div>`;
+
+        try {
+          const data = await window.shopifyAPI.getCollection("all", tag);
+          const products = data.products;
+
+          resultDiv.innerHTML = `
                     <div class="success">✅ ${tag} products loaded successfully!</div>
-                    <p><strong>Found ${products.length} ${tag} products</strong></p>
+                    <p><strong>Found ${
+                      products.length
+                    } ${tag} products</strong></p>
                     <div class="product-grid">
-                        ${products.slice(0, 4).map(p => `
+                        ${products
+                          .slice(0, 4)
+                          .map(
+                            (p) => `
                             <div class="product-card">
-                                <img src="${p.images[0]?.url || 'https://via.placeholder.com/200'}" alt="${p.title}">
+                                <img src="${
+                                  p.images[0]?.url ||
+                                  "https://via.placeholder.com/200"
+                                }" alt="${p.title}">
                                 <h3>${p.title}</h3>
-                                <div class="price">$${parseFloat(p.priceRange.minVariantPrice.amount).toFixed(2)}</div>
+                                <div class="price">$${parseFloat(
+                                  p.priceRange.minVariantPrice.amount
+                                ).toFixed(2)}</div>
                             </div>
-                        `).join('')}
+                        `
+                          )
+                          .join("")}
                     </div>
                 `;
-            } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
-            }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
         }
+      }
 
-        async function testCreateCart() {
-            const resultDiv = document.getElementById('cart-result');
-            resultDiv.innerHTML = '<div class="loading">Creating cart...</div>';
-            
-            try {
-                const data = await window.shopifyAPI.createCart();
-                testCartId = data.cart.id;
-                
-                resultDiv.innerHTML = `
+      async function testCreateCart() {
+        const resultDiv = document.getElementById("cart-result");
+        resultDiv.innerHTML = '<div class="loading">Creating cart...</div>';
+
+        try {
+          const data = await window.shopifyAPI.createCart();
+          testCartId = data.cart.id;
+
+          resultDiv.innerHTML = `
                     <div class="success">✅ Cart created successfully!</div>
                     <p><strong>Cart ID:</strong> ${testCartId}</p>
                     <p><strong>Checkout URL:</strong> <a href="${data.cart.checkoutUrl}" target="_blank">Open Checkout</a></p>
                 `;
-                
-                document.getElementById('add-to-cart-btn').disabled = false;
-            } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
-            }
+
+          document.getElementById("add-to-cart-btn").disabled = false;
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testAddToCart() {
+        if (!testCartId) {
+          alert("Please create a cart first");
+          return;
         }
 
-        async function testAddToCart() {
-            if (!testCartId) {
-                alert('Please create a cart first');
-                return;
-            }
+        const resultDiv = document.getElementById("cart-result");
+        resultDiv.innerHTML =
+          '<div class="loading">Adding item to cart...</div>';
 
-            const resultDiv = document.getElementById('cart-result');
-            resultDiv.innerHTML = '<div class="loading">Adding item to cart...</div>';
-            
-            try {
-                // Get first available product variant
-                await window.__CATALOG.loadProducts();
-                const products = window.__CATALOG.products;
-                if (products.length === 0) {
-                    throw new Error('No products available to add to cart');
-                }
-                
-                const firstProduct = products[0];
-                const firstVariant = firstProduct.variants[0];
-                
-                const lines = [{
-                    merchandiseId: firstVariant.id,
-                    quantity: 1
-                }];
-                
-                const data = await window.shopifyAPI.addToCart(testCartId, lines);
-                
-                resultDiv.innerHTML = `
+        try {
+          // Get first available product variant
+          await window.__CATALOG.loadProducts();
+          const products = window.__CATALOG.products;
+          if (products.length === 0) {
+            throw new Error("No products available to add to cart");
+          }
+
+          const firstProduct = products[0];
+          const firstVariant = firstProduct.variants[0];
+
+          const lines = [
+            {
+              merchandiseId: firstVariant.id,
+              quantity: 1,
+            },
+          ];
+
+          const data = await window.shopifyAPI.addToCart(testCartId, lines);
+
+          resultDiv.innerHTML = `
                     <div class="success">✅ Item added to cart successfully!</div>
                     <p><strong>Product:</strong> ${firstProduct.title}</p>
-                    <p><strong>Total Items:</strong> ${data.cart.totalQuantity}</p>
-                    <p><strong>Total:</strong> $${parseFloat(data.cart.cost.totalAmount.amount).toFixed(2)}</p>
-                    <p><strong>Checkout URL:</strong> <a href="${data.cart.checkoutUrl}" target="_blank">Go to Checkout</a></p>
+                    <p><strong>Total Items:</strong> ${
+                      data.cart.totalQuantity
+                    }</p>
+                    <p><strong>Total:</strong> $${parseFloat(
+                      data.cart.cost.totalAmount.amount
+                    ).toFixed(2)}</p>
+
                 `;
-            } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
-            }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testRegister() {
+        const email = document.getElementById("test-email").value;
+        const password = document.getElementById("test-password").value;
+        const resultDiv = document.getElementById("customer-result");
+
+        if (!email || !password) {
+          resultDiv.innerHTML =
+            '<div class="error">❌ Please enter email and password</div>';
+          return;
         }
 
-        async function testRegister() {
-            const email = document.getElementById('test-email').value;
-            const password = document.getElementById('test-password').value;
-            const resultDiv = document.getElementById('customer-result');
-            
-            if (!email || !password) {
-                resultDiv.innerHTML = '<div class="error">❌ Please enter email and password</div>';
-                return;
-            }
-            
-            resultDiv.innerHTML = '<div class="loading">Registering customer...</div>';
-            
-            try {
-                const data = await window.JourneyAuth.register({
-                    email: email,
-                    password: password,
-                    firstName: 'Test',
-                    lastName: 'User'
-                });
-                
-                testAccessToken = data.accessToken;
-                
-                resultDiv.innerHTML = `
+        resultDiv.innerHTML =
+          '<div class="loading">Registering customer...</div>';
+
+        try {
+          const data = await window.JourneyAuth.register({
+            email: email,
+            password: password,
+            firstName: "Test",
+            lastName: "User",
+          });
+
+          testAccessToken = data.accessToken;
+
+          resultDiv.innerHTML = `
                     <div class="success">✅ Customer registered successfully!</div>
                     <p><strong>Customer:</strong> ${data.customer.firstName} ${data.customer.lastName}</p>
                     <p><strong>Email:</strong> ${data.customer.email}</p>
                 `;
-                
-                document.getElementById('get-customer-btn').disabled = false;
-            } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
-            }
+
+          document.getElementById("get-customer-btn").disabled = false;
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testLogin() {
+        const email = document.getElementById("test-email").value;
+        const password = document.getElementById("test-password").value;
+        const resultDiv = document.getElementById("customer-result");
+
+        if (!email || !password) {
+          resultDiv.innerHTML =
+            '<div class="error">❌ Please enter email and password</div>';
+          return;
         }
 
-        async function testLogin() {
-            const email = document.getElementById('test-email').value;
-            const password = document.getElementById('test-password').value;
-            const resultDiv = document.getElementById('customer-result');
-            
-            if (!email || !password) {
-                resultDiv.innerHTML = '<div class="error">❌ Please enter email and password</div>';
-                return;
-            }
-            
-            resultDiv.innerHTML = '<div class="loading">Logging in...</div>';
-            
-            try {
-                const data = await window.JourneyAuth.login(email, password);
-                testAccessToken = data.accessToken;
-                
-                resultDiv.innerHTML = `
+        resultDiv.innerHTML = '<div class="loading">Logging in...</div>';
+
+        try {
+          const data = await window.JourneyAuth.login(email, password);
+          testAccessToken = data.accessToken;
+
+          resultDiv.innerHTML = `
                     <div class="success">✅ Customer logged in successfully!</div>
                     <p><strong>Customer:</strong> ${data.customer.firstName} ${data.customer.lastName}</p>
                     <p><strong>Email:</strong> ${data.customer.email}</p>
                     <p><strong>Orders:</strong> ${data.customer.orders.length}</p>
                 `;
-                
-                document.getElementById('get-customer-btn').disabled = false;
-            } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
-            }
+
+          document.getElementById("get-customer-btn").disabled = false;
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+        }
+      }
+
+      async function testGetCustomer() {
+        if (!testAccessToken) {
+          alert("Please login first");
+          return;
         }
 
-        async function testGetCustomer() {
-            if (!testAccessToken) {
-                alert('Please login first');
-                return;
-            }
+        const resultDiv = document.getElementById("customer-result");
+        resultDiv.innerHTML =
+          '<div class="loading">Getting customer data...</div>';
 
-            const resultDiv = document.getElementById('customer-result');
-            resultDiv.innerHTML = '<div class="loading">Getting customer data...</div>';
-            
-            try {
-                const data = await window.shopifyAPI.getCustomer(testAccessToken);
-                
-                resultDiv.innerHTML = `
+        try {
+          const data = await window.shopifyAPI.getCustomer(testAccessToken);
+
+          resultDiv.innerHTML = `
                     <div class="success">✅ Customer data retrieved successfully!</div>
                     <p><strong>Customer:</strong> ${data.customer.displayName}</p>
                     <p><strong>Email:</strong> ${data.customer.email}</p>
                     <p><strong>Orders:</strong> ${data.customer.orders.length}</p>
                     <p><strong>Addresses:</strong> ${data.customer.addresses.length}</p>
                 `;
-            } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
-            }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
         }
+      }
 
-        // Auto-test collections on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('Shopify Integration Test Page Loaded');
-            console.log('Available APIs:', {
-                shopifyAPI: !!window.shopifyAPI,
-                cartManager: !!window.cartManager,
-                JourneyAuth: !!window.JourneyAuth
-            });
+      // Auto-test collections on page load
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Shopify Integration Test Page Loaded");
+        console.log("Available APIs:", {
+          shopifyAPI: !!window.shopifyAPI,
+          cartManager: !!window.cartManager,
+          JourneyAuth: !!window.JourneyAuth,
         });
+      });
     </script>
-</body>
+  </body>
 </html>
