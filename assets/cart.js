@@ -240,10 +240,16 @@ class CartManager {
 
   async goToCheckout() {
     try {
-      // Get current cart lines for recreation if needed
-      const currentLines = this.getSnapshot() || [];
+      // Determine if there are any items in the cart or snapshot
+      const snapshotLines = this.getSnapshot() || [];
+      const hasCartItems =
+        (this.cart &&
+          ((typeof this.cart.totalQuantity === "number" &&
+            this.cart.totalQuantity > 0) ||
+            (Array.isArray(this.cart.lines) && this.cart.lines.length > 0))) ||
+        snapshotLines.length > 0;
 
-      if (currentLines.length === 0) {
+      if (!hasCartItems) {
         this.showCartMessage(
           "Your cart is empty. Please add items before checkout.",
           "error"
