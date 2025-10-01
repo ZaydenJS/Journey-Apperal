@@ -230,16 +230,16 @@ class CartManager {
         DEBUG = localStorage.getItem("CHECKOUT_DEBUG") === "1";
       } catch (_) {}
       if (DEBUG) {
-        console.log(
-          "[CHECKOUT_DEBUG] cartId:",
-          this.cartId,
-          "checkoutUrl:",
-          url
-        );
+        console.log("CHECKOUT_DEBUG received →", url);
+        console.log("[CHECKOUT_DEBUG] cartId:", this.cartId);
+        console.log("Redirecting now…");
       }
 
-      // Redirect exactly to Shopify's checkoutUrl with no modifications
+      // Redirect exactly to Shopify's checkoutUrl with no modifications + fallbacks
       window.location.href = url;
+      setTimeout(() => window.location.assign(url), 50);
+      setTimeout(() => window.location.replace(url), 200);
+      DEBUG && console.log("Navigation dispatched");
     } catch (e) {
       console.error("Checkout redirect failed:", e);
       this.showCartMessage(

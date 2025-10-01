@@ -3550,8 +3550,18 @@
                     ? window.cartManager.getCart()
                     : null;
                 if (cart && cart.checkoutUrl) {
-                  console.log("Checkout URL:", cart.checkoutUrl);
+                  console.log("CHECKOUT_DEBUG received →", cart.checkoutUrl);
+                  console.log("Redirecting now…");
                   window.location.href = cart.checkoutUrl;
+                  setTimeout(
+                    () => window.location.assign(cart.checkoutUrl),
+                    50
+                  );
+                  setTimeout(
+                    () => window.location.replace(cart.checkoutUrl),
+                    200
+                  );
+                  console.log("Navigation dispatched");
                   return;
                 }
 
@@ -3564,8 +3574,12 @@
                   }
                 })();
                 if (stored) {
-                  console.log("Checkout URL (persisted):", stored);
+                  console.log("CHECKOUT_DEBUG received →", stored);
+                  console.log("Redirecting now…");
                   window.location.href = stored;
+                  setTimeout(() => window.location.assign(stored), 50);
+                  setTimeout(() => window.location.replace(stored), 200);
+                  console.log("Navigation dispatched");
                   return;
                 }
 
