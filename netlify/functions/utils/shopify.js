@@ -1,24 +1,42 @@
-import { createStorefrontApiClient } from "@shopify/storefront-api-client";
-
-// Initialize Shopify Storefront API client
-export const createShopifyClient = () => {
-  const storeDomain =
-    process.env.SHOPIFY_STOREFRONT_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
-  const storefrontToken =
-    process.env.SHOPIFY_STOREFRONT_API_TOKEN ||
-    process.env.SHOPIFY_STOREFRONT_TOKEN;
-  const apiVersion = process.env.SHOPIFY_API_VERSION || "2024-07";
-
-  if (!storeDomain || !storefrontToken) {
-    throw new Error("Missing required Shopify environment variables");
+// Centralized Storefront config and request helper using explicit API URL
+export const getStorefrontConfig = () => {
+  const storeDomain = process.env.SHOPIFY_STORE_DOMAIN;
+  const storefrontApiUrl = process.env.SHOPIFY_STOREFRONT_API_URL;
+  const storefrontToken = process.env.SHOPIFY_STOREFRONT_TOKEN;
+  if (!storeDomain || !storefrontApiUrl || !storefrontToken) {
+    throw new Error(
+      "Missing required env: SHOPIFY_STORE_DOMAIN, SHOPIFY_STOREFRONT_API_URL, SHOPIFY_STOREFRONT_TOKEN"
+    );
   }
-
-  return createStorefrontApiClient({
-    storeDomain,
-    apiVersion,
-    publicAccessToken: storefrontToken,
-  });
+  return { storeDomain, storefrontApiUrl, storefrontToken };
 };
+
+export const storefrontRequest = async (query, variables = {}) => {
+  const { storefrontApiUrl, storefrontToken } = getStorefrontConfig();
+  const res = await fetch(storefrontApiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Shopify-Storefront-Access-Token": storefrontToken,
+    },
+    body: JSON.stringify({ query, variables }),
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      `Storefront API ${res.status}: ${
+        json?.errors?.[0]?.message || res.statusText
+      }`
+    );
+  }
+  return json;
+};
+
+// Back-compat: mimic the previous client shape with a request() method
+export const createShopifyClient = () => ({
+  request: async (query, { variables } = {}) =>
+    storefrontRequest(query, variables),
+});
 
 // Common GraphQL fragments
 export const PRODUCT_FRAGMENT = `
