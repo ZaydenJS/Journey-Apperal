@@ -4173,3 +4173,85 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, 1000);
 });
+
+// Hard override: capture checkout clicks and force verbatim Cart API checkoutUrl
+(function () {
+  try {
+    var BTN_SELECTOR =
+      "#checkout-btn, #proceedToCheckout, button[data-checkout], .checkout-button";
+    function getLinesFromCartState() {
+      try {
+        if (
+          window.cartManager &&
+          typeof window.cartManager.getSnapshot === "function"
+        ) {
+          var snap = window.cartManager.getSnapshot();
+          if (Array.isArray(snap) && snap.length) return snap;
+        }
+      } catch (_) {}
+      return Array.isArray(window.__HEADLESS_CART_LINES__)
+        ? window.__HEADLESS_CART_LINES__
+        : [];
+    }
+    async function createCartViaApi(lines) {
+      var res = await fetch("/.netlify/functions/createCart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lines: lines }),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      var json = await res.json();
+      var url = json && json.cart && json.cart.checkoutUrl;
+      if (!url) throw new Error("No checkoutUrl");
+      return url;
+    }
+    function attach() {
+      document.querySelectorAll(BTN_SELECTOR).forEach(function (btn) {
+        if (btn.dataset && btn.dataset.checkoutCaptureBound === "1") return;
+        btn.dataset.checkoutCaptureBound = "1";
+        // If wrapped in <a>, neutralize href to avoid native nav
+        var a = btn.closest("a");
+        if (a) a.removeAttribute("href");
+        btn.addEventListener(
+          "click",
+          async function (e) {
+            // stop legacy listeners that might rewrite to /checkouts/cn/
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            try {
+              if (
+                window.cartManager &&
+                typeof window.cartManager.goToCheckout === "function"
+              ) {
+                // cartManager already redirects verbatim and logs final URL
+                return void window.cartManager.goToCheckout();
+              }
+              var lines = getLinesFromCartState();
+              if (!lines || !lines.length)
+                throw new Error("No cart lines to checkout");
+              var checkoutUrl = await createCartViaApi(lines);
+              console.log("CHECKOUT_DEBUG final →", checkoutUrl);
+              window.location.href = checkoutUrl;
+              setTimeout(function () {
+                window.location.assign(checkoutUrl);
+              }, 50);
+              setTimeout(function () {
+                window.location.replace(checkoutUrl);
+              }, 200);
+            } catch (err) {
+              console.error("Checkout failed", err);
+              alert("Could not start checkout. Please try again.");
+            }
+          },
+          { capture: true }
+        );
+      });
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", attach);
+    } else {
+      attach();
+    }
+  } catch (_) {}
+})();
