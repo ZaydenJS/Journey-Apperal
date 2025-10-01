@@ -176,6 +176,59 @@ class CartManager {
   }
 
   async goToCheckout() {
+    // Feature-flagged V2: strict Storefront Cart API flow; redirect using EXACT checkoutUrl
+    if (window.CHECKOUT_V2) {
+      try {
+        const snapshot = this.getSnapshot() || [];
+
+        // Ensure cart exists and is fresh
+        if (!this.cartId) {
+          await this.createCart(snapshot);
+        } else {
+          try {
+            const response = await window.shopifyAPI.getCart(this.cartId);
+            this.cart = response.cart;
+          } catch (e) {
+            // If fetch fails (expired/invalid), recreate with snapshot
+            await this.createCart(snapshot);
+          }
+        }
+
+        const checkoutUrl = this.cart?.checkoutUrl || null;
+        if (this.isDevMode()) {
+          try {
+            const host = checkoutUrl ? new URL(checkoutUrl).hostname : null;
+            console.log({
+              shopDomainUsed: host,
+              cartId: this.cartId || this.cart?.id || null,
+              checkoutUrl,
+            });
+          } catch (_) {
+            console.log({
+              shopDomainUsed: null,
+              cartId: this.cartId || this.cart?.id || null,
+              checkoutUrl,
+            });
+          }
+        }
+
+        if (!checkoutUrl) {
+          throw new Error("Missing checkoutUrl from Cart API response");
+        }
+
+        // Redirect to the EXACT checkoutUrl (unchanged)
+        window.location.assign(checkoutUrl);
+      } catch (err) {
+        console.error("Checkout V2 failed:", err);
+        this.showCartMessage(
+          "Checkout is unavailable. Please try again.",
+          "error"
+        );
+      }
+      return;
+    }
+
+    // Fallback (V1): legacy guarded flow
     try {
       const getValidUrl = async (recreate = false) => {
         let raw = null;
@@ -269,6 +322,14 @@ class CartManager {
 
   removeListener(callback) {
     this.listeners = this.listeners.filter((listener) => listener !== callback);
+  }
+
+  isDevMode() {
+    try {
+      if (window.__DEV__ === true) return true;
+    } catch (_) {}
+    const h = (window.location && window.location.hostname) || "";
+    return h === "localhost" || h === "127.0.0.1" || h.endsWith(".netlify.app");
   }
 
   notifyListeners() {
