@@ -133,7 +133,9 @@
         overflow: hidden !important;
       }
       #new-arrivals .card .img-wrap img.alt,
-      #best-sellers .card .img-wrap img.alt {
+      #new-arrivals .card .img-wrap img.hover-img,
+      #best-sellers .card .img-wrap img.alt,
+      #best-sellers .card .img-wrap img.hover-img {
         position: absolute !important;
         inset: 0 !important;
         width: 100% !important;
@@ -146,13 +148,17 @@
       }
       @media (hover: hover) {
         #new-arrivals .card:hover .img-wrap img.alt,
-        #best-sellers .card:hover .img-wrap img.alt {
+        #new-arrivals .card:hover .img-wrap img.hover-img,
+        #best-sellers .card:hover .img-wrap img.alt,
+        #best-sellers .card:hover .img-wrap img.hover-img {
           opacity: 1 !important;
         }
       }
       @media (hover: none) {
         #new-arrivals .card:active .img-wrap img.alt,
-        #best-sellers .card:active .img-wrap img.alt {
+        #new-arrivals .card:active .img-wrap img.hover-img,
+        #best-sellers .card:active .img-wrap img.alt,
+        #best-sellers .card:active .img-wrap img.hover-img {
           opacity: 1 !important;
         }
       }

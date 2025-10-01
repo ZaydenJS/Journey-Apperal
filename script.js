@@ -1110,30 +1110,44 @@
     });
   }
 
-  // Sitewide: enable image hover swap for cards with a secondary <img.alt>
+  // Sitewide: enable image hover swap for cards with a secondary hover image
   function enableHoverSwapIn(root) {
     try {
       const scope = root || document;
       const wraps = scope.querySelectorAll(".card .img-wrap");
       wraps.forEach((wrap) => {
-        const alt = wrap.querySelector("img.alt");
-        if (!alt) return;
+        // Look for both .alt and .hover-img classes
+        const hoverImg = wrap.querySelector("img.alt, img.hover-img");
+        if (!hoverImg) return;
+
         // Ensure overlay styles (inline per site preference)
         if (!wrap.style.position) wrap.style.position = "relative";
-        alt.style.position = "absolute";
-        alt.style.inset = "0";
-        alt.style.width = "100%";
-        alt.style.height = "100%";
-        alt.style.zIndex = alt.style.zIndex || "1";
-        if (!alt.style.objectFit) alt.style.objectFit = "cover";
-        if (!alt.style.transition) alt.style.transition = "opacity 160ms ease";
-        alt.style.pointerEvents = "none";
-        if (!alt.style.opacity) alt.style.opacity = "0";
+        hoverImg.style.position = "absolute";
+        hoverImg.style.inset = "0";
+        hoverImg.style.width = "100%";
+        hoverImg.style.height = "100%";
+        hoverImg.style.zIndex = hoverImg.style.zIndex || "1";
+        if (!hoverImg.style.objectFit) hoverImg.style.objectFit = "cover";
+        if (!hoverImg.style.transition)
+          hoverImg.style.transition = "opacity 180ms ease";
+        hoverImg.style.pointerEvents = "none";
+        if (!hoverImg.style.opacity) hoverImg.style.opacity = "0";
 
         // Use the full card as the hover/touch target to avoid overlay intercepts
         const target = wrap.closest("article.card") || wrap;
-        const show = () => (alt.style.opacity = "1");
-        const hide = () => (alt.style.opacity = "0");
+        const show = () => (hoverImg.style.opacity = "1");
+        const hide = () => (hoverImg.style.opacity = "0");
+
+        // Remove any existing event listeners to avoid duplicates
+        target.removeEventListener("pointerenter", show);
+        target.removeEventListener("pointerleave", hide);
+        target.removeEventListener("mouseenter", show);
+        target.removeEventListener("mouseleave", hide);
+        target.removeEventListener("touchstart", show);
+        target.removeEventListener("touchend", hide);
+        target.removeEventListener("touchcancel", hide);
+
+        // Add event listeners
         // Pointer events (covers mouse, pen)
         target.addEventListener("pointerenter", show);
         target.addEventListener("pointerleave", hide);
@@ -2068,7 +2082,8 @@
     const hasComparePrice =
       compareAtPrice && parseFloat(compareAtPrice) > price;
     const mainImage = product.images[0]?.url || "";
-    const hoverImage = product.images[1]?.url || mainImage;
+    const hoverImage = product.images[1]?.url || "";
+    const hasHoverImage = hoverImage && hoverImage !== mainImage;
 
     return `
       <article class="card" data-href="product.html?slug=${
@@ -2082,12 +2097,12 @@
                alt="${product.title}"
                style="width: 100%; height: 100%; object-fit: cover" />
           ${
-            hoverImage !== mainImage
+            hasHoverImage
               ? `
             <img class="hover-img"
                  src="${hoverImage}"
                  alt="${product.title} - alternate"
-                 style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 180ms ease; pointer-events: none;" />
+                 style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 180ms ease; pointer-events: none; z-index: 1;" />
           `
               : ""
           }
@@ -2232,7 +2247,8 @@
     const hasComparePrice =
       compareAtPrice && parseFloat(compareAtPrice) > price;
     const mainImage = product.images[0]?.url || "";
-    const hoverImage = product.images[1]?.url || mainImage;
+    const hoverImage = product.images[1]?.url || "";
+    const hasHoverImage = hoverImage && hoverImage !== mainImage;
 
     return `
       <article class="card" data-href="product.html?slug=${
@@ -2246,12 +2262,12 @@
                alt="${product.title}"
                style="width: 100%; height: 100%; object-fit: cover" />
           ${
-            hoverImage !== mainImage
+            hasHoverImage
               ? `
             <img class="hover-img"
                  src="${hoverImage}"
                  alt="${product.title} - alternate"
-                 style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 180ms ease; pointer-events: none;" />
+                 style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 180ms ease; pointer-events: none; z-index: 1;" />
           `
               : ""
           }

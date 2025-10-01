@@ -375,10 +375,21 @@ input {
   background: #f7f7f7;
 }
 .card img {
-  /* Removed hover transition effects */
+  transition: opacity 180ms ease;
 }
-/* Removed hover image swap functionality */
-.card { cursor: default; }
+.card .hover-img,
+.card img.alt {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.card { cursor: pointer; }
 
 .price {
   font-weight: 600;
