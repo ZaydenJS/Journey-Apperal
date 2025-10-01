@@ -177,50 +177,13 @@ class CartManager {
 
   async goToCheckout() {
     try {
-      // Prefer live cart checkoutUrl
-      let url =
-        this.cart && this.cart.checkoutUrl ? this.cart.checkoutUrl : null;
-
-      // Fallback: persisted URL
-      if (!url) {
-        try {
-          url = localStorage.getItem("shopify_checkout_url") || null;
-        } catch (_) {
-          url = null;
-        }
-      }
-
-      // Last resort: ensure a Cart exists and read its checkoutUrl
-      if (!url) {
-        // If we have a cartId, refresh it; otherwise, create from snapshot
-        if (this.cartId) {
-          try {
-            const res = await window.shopifyAPI.getCart(this.cartId);
-            this.cart = res.cart;
-            url =
-              this.cart && this.cart.checkoutUrl ? this.cart.checkoutUrl : null;
-          } catch (_) {}
-        }
-        if (!url) {
-          const snapshot = this.getSnapshot();
-          const lines = Array.isArray(snapshot)
-            ? snapshot.filter((l) => l.merchandiseId && l.quantity > 0)
-            : [];
-          if (lines.length === 0) {
-            this.showCartMessage("Cart is empty", "error");
-            return;
-          }
-          await this.createCart(lines);
-          url =
-            this.cart && this.cart.checkoutUrl ? this.cart.checkoutUrl : null;
-        }
-      }
-
-      if (!url) {
-        this.showCartMessage(
-          "Checkout is unavailable. Please try again.",
-          "error"
-        );
+      // Build lines from current cart snapshot
+      const snapshot = this.getSnapshot();
+      const lines = Array.isArray(snapshot)
+        ? snapshot.filter((l) => l.merchandiseId && l.quantity > 0)
+        : [];
+      if (lines.length === 0) {
+        this.showCartMessage("Cart is empty", "error");
         return;
       }
 
@@ -230,16 +193,22 @@ class CartManager {
         DEBUG = localStorage.getItem("CHECKOUT_DEBUG") === "1";
       } catch (_) {}
       if (DEBUG) {
-        console.log("CHECKOUT_DEBUG final →", url);
-        console.log("[CHECKOUT_DEBUG] cartId:", this.cartId);
-        console.log("Redirecting now…");
+        console.log("CHECKOUT_DEBUG submit → /.netlify/functions/checkout", {
+          count: lines.length,
+        });
       }
 
-      // Redirect exactly to Shopify's checkoutUrl with no modifications + fallbacks
-      window.location.href = url;
-      setTimeout(() => window.location.assign(url), 50);
-      setTimeout(() => window.location.replace(url), 200);
-      DEBUG && console.log("Navigation dispatched");
+      // Submit a POST form to Netlify function for a 302 redirect to checkoutUrl
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "/.netlify/functions/checkout";
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "lines";
+      input.value = JSON.stringify(lines);
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
     } catch (e) {
       console.error("Checkout redirect failed:", e);
       this.showCartMessage(
