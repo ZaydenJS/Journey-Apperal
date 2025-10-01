@@ -3,7 +3,7 @@ class CartManager {
   constructor() {
     this.cart = null;
     this.cartId = localStorage.getItem("shopify_cart_id");
-    this.checkoutUrl = localStorage.getItem("shopify_checkout_url") || null;
+    this.checkoutUrl = null;
     this.snapshotKey = "shopify_cart_snapshot";
     this.listeners = [];
 
@@ -23,9 +23,6 @@ class CartManager {
           this.cart = response.cart;
           this.checkoutUrl = this.cart.checkoutUrl || null;
           localStorage.setItem("shopify_cart_id", this.cart.id);
-          if (this.checkoutUrl) {
-            localStorage.setItem("shopify_checkout_url", this.checkoutUrl);
-          }
         } catch (e) {
           // If cart is invalid/expired, try to recreate from snapshot
           const snapshot = this.getSnapshot();
@@ -59,9 +56,6 @@ class CartManager {
       this.cartId = this.cart.id;
       this.checkoutUrl = this.cart.checkoutUrl || null;
       localStorage.setItem("shopify_cart_id", this.cartId);
-      if (this.checkoutUrl) {
-        localStorage.setItem("shopify_checkout_url", this.checkoutUrl);
-      }
       // Persist lightweight snapshot of lines
       this.persistSnapshotFromCart();
       this.notifyListeners();
@@ -94,9 +88,6 @@ class CartManager {
       }
 
       this.checkoutUrl = this.cart.checkoutUrl || null;
-      if (this.checkoutUrl) {
-        localStorage.setItem("shopify_checkout_url", this.checkoutUrl);
-      }
       this.persistSnapshotFromCart();
       this.notifyListeners();
 
@@ -148,9 +139,6 @@ class CartManager {
       const response = await window.shopifyAPI.updateCart(this.cartId, lines);
       this.cart = response.cart;
       this.checkoutUrl = this.cart.checkoutUrl || null;
-      if (this.checkoutUrl) {
-        localStorage.setItem("shopify_checkout_url", this.checkoutUrl);
-      }
       this.persistSnapshotFromCart();
       this.notifyListeners();
 
@@ -311,11 +299,6 @@ class CartManager {
         await this.createCart(snapshot || []);
       }
       this.checkoutUrl = this.cart?.checkoutUrl || null;
-      if (this.checkoutUrl) {
-        try {
-          localStorage.setItem("shopify_checkout_url", this.checkoutUrl);
-        } catch (_) {}
-      }
       return this.checkoutUrl;
     } catch (e) {
       console.warn("getFreshCartCheckoutUrl failed:", e);

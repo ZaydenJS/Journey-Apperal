@@ -3515,6 +3515,62 @@
               "</div>" +
 
             footer.dataset.enhanced = "1";
+            // Add Proceed to Checkout button (server-side one-shot)
+            try {
+              const btn = document.createElement("button");
+              btn.id = "checkout-btn";
+              btn.textContent = "Proceed to Checkout";
+              btn.style.width = "100%";
+              btn.style.marginTop = "12px";
+              btn.style.padding = "14px 16px";
+              btn.style.borderRadius = "9999px";
+              btn.style.background = "#000";
+              btn.style.color = "#fff";
+              btn.style.fontWeight = "700";
+              btn.style.cursor = "pointer";
+              footer.appendChild(btn);
+
+              if (!btn.dataset.bound) {
+                btn.addEventListener("click", async function (e) {
+                  e.preventDefault();
+                  if (btn.disabled) return;
+                  btn.disabled = true;
+                  const originalText = btn.textContent;
+                  btn.textContent = "Redirecting...";
+                  try {
+                    const lines = (window.cartManager && typeof window.cartManager.getSnapshot === "function")
+                      ? (window.cartManager.getSnapshot() || [])
+                      : [];
+
+                    const res = await fetch("/.netlify/functions/checkout", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      redirect: "manual",
+                      body: JSON.stringify({ countryCode: "AU", lines }),
+                    });
+
+                    if (res.status === 302) {
+                      const loc = res.headers.get("Location");
+                      if (loc) {
+                        window.location.href = loc;
+                        return;
+                      }
+                    }
+                    const err = await res.json().catch(() => ({ error: "Checkout failed" }));
+                    console.error("Server checkout error:", err);
+                    alert("Checkout is unavailable. Please try again.");
+                  } catch (err) {
+                    console.error("Server checkout request failed:", err);
+                    alert("Checkout is unavailable. Please try again.");
+                  } finally {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                  }
+                });
+                btn.dataset.bound = "1";
+              }
+            } catch (_) {}
+
           }
         }
 
