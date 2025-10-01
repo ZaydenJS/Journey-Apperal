@@ -176,32 +176,60 @@ class CartManager {
   }
 
   async goToCheckout() {
-    if (this.cart && this.cart.checkoutUrl) {
-      console.log("Checkout URL:", this.cart.checkoutUrl);
-      window.location.href = this.cart.checkoutUrl;
-      return;
-    }
-
-    // Try localStorage checkout URL first
-    const storedUrl = localStorage.getItem("shopify_checkout_url");
-    if (storedUrl) {
-      console.log("Checkout URL (persisted):", storedUrl);
-      window.location.href = storedUrl;
-      return;
-    }
-
-    // As a last resort, recreate from snapshot then redirect
-    const snapshot = this.getSnapshot();
     try {
-      await this.createCart(snapshot || []);
-      if (this.cart && this.cart.checkoutUrl) {
-        console.log("Checkout URL (recreated):", this.cart.checkoutUrl);
-        window.location.href = this.cart.checkoutUrl;
+      // Prefer live cart checkoutUrl
+      let url =
+        this.cart && this.cart.checkoutUrl ? this.cart.checkoutUrl : null;
+
+      // Fallback: persisted URL
+      if (!url) {
+        try {
+          url = localStorage.getItem("shopify_checkout_url") || null;
+        } catch (_) {
+          url = null;
+        }
+      }
+
+      // Last resort: recreate from snapshot then read checkoutUrl
+      if (!url) {
+        const snapshot = this.getSnapshot();
+        await this.createCart(snapshot || []);
+        url = this.cart && this.cart.checkoutUrl ? this.cart.checkoutUrl : null;
+      }
+
+      if (!url) {
+        this.showCartMessage("Cart is empty", "error");
         return;
       }
-    } catch (e) {}
 
-    this.showCartMessage("Cart is empty", "error");
+      // Sanitize and harden checkout URL
+      let target;
+      try {
+        target = new URL(url);
+      } catch (_) {
+        // If parsing fails, navigate as-is
+        window.location.href = url;
+        return;
+      }
+
+      // Remove preview parameters that can cause Shopify to bounce back
+      target.searchParams.delete("preview_theme_id");
+
+      // Try to land on the payment step when possible
+      if (!target.searchParams.has("step")) {
+        target.searchParams.set("step", "payment");
+      }
+
+      // Navigate
+      console.log("Checkout URL (final):", target.toString());
+      window.location.href = target.toString();
+    } catch (e) {
+      console.error("Checkout redirect failed:", e);
+      this.showCartMessage(
+        "Checkout is unavailable. Please try again.",
+        "error"
+      );
+    }
   }
 
   // Event listeners for cart updates
