@@ -91,11 +91,15 @@ class CheckoutUtils {
         return checkoutUrl;
       }
 
+      // Store original hostname for logging
+      const originalHostname = url.hostname;
+
       // Replace the hostname with our checkout host
       url.hostname = this.checkoutHost;
-      const normalizedUrl = url.toString();
-      
-      console.log(`Normalized checkout URL: ${url.hostname} -> ${normalizedUrl}`);
+      const normalizedUrl = url.href;
+
+      console.log(`Normalized checkout URL: ${originalHostname} -> ${this.checkoutHost}`);
+      console.log(`Full checkout URL: ${normalizedUrl}`);
       return normalizedUrl;
       
     } catch (error) {
