@@ -314,7 +314,9 @@
                     <p><strong>Total:</strong> $${parseFloat(
                       data.cart.cost.totalAmount.amount
                     ).toFixed(2)}</p>
-
+                    <p><strong>Checkout URL:</strong> <a href="${
+                      data.cart.checkoutUrl
+                    }" target="_blank">Go to Checkout</a></p>
                 `;
         } catch (error) {
           resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;

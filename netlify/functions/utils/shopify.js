@@ -2,30 +2,12 @@ import { createStorefrontApiClient } from "@shopify/storefront-api-client";
 
 // Initialize Shopify Storefront API client
 export const createShopifyClient = () => {
-  const explicitUrl = process.env.SHOPIFY_STOREFRONT_API_URL;
-  let storeDomain =
-    process.env.SHOPIFY_STOREFRONT_DOMAIN ||
-    process.env.SHOPIFY_STORE_DOMAIN ||
-    "";
-  let apiVersion = process.env.SHOPIFY_API_VERSION || "2024-07";
+  const storeDomain =
+    process.env.SHOPIFY_STOREFRONT_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
   const storefrontToken =
     process.env.SHOPIFY_STOREFRONT_API_TOKEN ||
     process.env.SHOPIFY_STOREFRONT_TOKEN;
-
-  if (explicitUrl) {
-    try {
-      const u = new URL(explicitUrl);
-      storeDomain = u.hostname || storeDomain;
-      const segs = u.pathname.split("/").filter(Boolean);
-      const idx = segs.indexOf("api");
-      if (idx >= 0 && segs[idx + 1]) apiVersion = segs[idx + 1];
-    } catch (e) {
-      console.warn(
-        "Invalid SHOPIFY_STOREFRONT_API_URL; falling back to DOMAIN+VERSION envs",
-        e
-      );
-    }
-  }
+  const apiVersion = process.env.SHOPIFY_API_VERSION || "2024-07";
 
   if (!storeDomain || !storefrontToken) {
     throw new Error("Missing required Shopify environment variables");

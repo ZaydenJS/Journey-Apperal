@@ -3513,68 +3513,73 @@
               '<div style="display:flex; justify-content:space-between; margin:8px 0; font-weight:700;"><span>Order Total Incl. Tax</span><span id="cart-total-incl">$0.00</span></div>' +
               '<div style="display:flex; justify-content:space-between; margin:6px 0;"><span>Order Total Excl. Tax</span><span id="cart-total-excl">$0.00</span></div>' +
               "</div>" +
-
+              '<button id="checkout-btn" style="width:100%; margin-top:12px; padding:14px 16px; border-radius:9999px; background:#000; color:#fff; font-weight:700; cursor:pointer;">Proceed to Checkout</button>';
             footer.dataset.enhanced = "1";
-            // Add Proceed to Checkout button (server-side one-shot)
-            try {
-              const btn = document.createElement("button");
-              btn.id = "checkout-btn";
-              btn.textContent = "Proceed to Checkout";
-              btn.style.width = "100%";
-              btn.style.marginTop = "12px";
-              btn.style.padding = "14px 16px";
-              btn.style.borderRadius = "9999px";
-              btn.style.background = "#000";
-              btn.style.color = "#fff";
-              btn.style.fontWeight = "700";
-              btn.style.cursor = "pointer";
-              footer.appendChild(btn);
-
-              if (!btn.dataset.bound) {
-                btn.addEventListener("click", async function (e) {
-                  e.preventDefault();
-                  if (btn.disabled) return;
-                  btn.disabled = true;
-                  const originalText = btn.textContent;
-                  btn.textContent = "Redirecting...";
-                  try {
-                    const lines = (window.cartManager && typeof window.cartManager.getSnapshot === "function")
-                      ? (window.cartManager.getSnapshot() || [])
-                      : [];
-
-                    const res = await fetch("/.netlify/functions/checkout", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      redirect: "manual",
-                      body: JSON.stringify({ countryCode: "AU", lines }),
-                    });
-
-                    if (res.status === 302) {
-                      const loc = res.headers.get("Location");
-                      if (loc) {
-                        window.location.href = loc;
-                        return;
-                      }
-                    }
-                    const err = await res.json().catch(() => ({ error: "Checkout failed" }));
-                    console.error("Server checkout error:", err);
-                    alert("Checkout is unavailable. Please try again.");
-                  } catch (err) {
-                    console.error("Server checkout request failed:", err);
-                    alert("Checkout is unavailable. Please try again.");
-                  } finally {
-                    btn.disabled = false;
-                    btn.textContent = originalText;
-                  }
-                });
-                btn.dataset.bound = "1";
-              }
-            } catch (_) {}
-
           }
         }
 
+        const checkout = document.getElementById("checkout-btn");
+        if (checkout) {
+          checkout.style.width = "100%";
+          checkout.style.padding = "14px 16px";
+          checkout.style.borderRadius = "9999px";
+          checkout.style.background = "#000";
+          checkout.style.color = "#fff";
+          checkout.style.fontWeight = "700";
+          checkout.style.letterSpacing = ".02em";
+          checkout.style.cursor = "pointer";
 
+          // Wire up Proceed to Checkout → Always use Shopify checkoutUrl
+          if (!checkout.dataset.clickBound) {
+            checkout.addEventListener("click", function (e) {
+              e.preventDefault();
+              try {
+                // Preferred: use cartManager.goToCheckout which reads checkoutUrl from Shopify
+                if (
+                  window.cartManager &&
+                  typeof window.cartManager.goToCheckout === "function"
+                ) {
+                  window.cartManager.goToCheckout();
+                  return;
+                }
+
+                // Next: try current cart's checkoutUrl
+                const cart =
+                  window.cartManager &&
+                  typeof window.cartManager.getCart === "function"
+                    ? window.cartManager.getCart()
+                    : null;
+                if (cart && cart.checkoutUrl) {
+                  console.log("Checkout URL:", cart.checkoutUrl);
+                  window.location.href = cart.checkoutUrl;
+                  return;
+                }
+
+                // Last resort: try persisted checkoutUrl from localStorage
+                const stored = (function () {
+                  try {
+                    return localStorage.getItem("shopify_checkout_url");
+                  } catch (_) {
+                    return null;
+                  }
+                })();
+                if (stored) {
+                  console.log("Checkout URL (persisted):", stored);
+                  window.location.href = stored;
+                  return;
+                }
+
+                alert(
+                  "Checkout is unavailable. Please add an item to your cart and try again."
+                );
+              } catch (err) {
+                console.error("Checkout redirect failed:", err);
+                alert("Checkout is unavailable. Please try again.");
+              }
+            });
+            checkout.dataset.clickBound = "1";
+          }
+        }
       }
     } catch (_) {}
 
