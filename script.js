@@ -4194,11 +4194,41 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     async toCheckout() {
-      const cart = await this._ensureCart();
-      const d = await gql(Q_CART, { id: cart.id });
-      const url = d?.cart?.checkoutUrl;
-      if (!url) throw new Error("No checkoutUrl");
-      window.location.href = url;
+      const API_URL =
+        "https://7196su-vk.myshopify.com/api/2025-01/graphql.json";
+      const TOKEN =
+        window.ENV?.SHOPIFY_STOREFRONT_TOKEN || "YOUR_STOREFRONT_TOKEN";
+      let cartId = null;
+      try {
+        cartId = localStorage.getItem("ja_cart_id");
+      } catch (_) {}
+      if (!cartId) {
+        console.error("No cartId found in localStorage");
+        return;
+      }
+      const query = `
+        query getCheckoutUrl($id: ID!) {
+          cart(id: $id) {
+            checkoutUrl
+          }
+        }
+      `;
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Shopify-Storefront-Access-Token": TOKEN,
+        },
+        body: JSON.stringify({ query, variables: { id: cartId } }),
+      });
+      const data = await response.json();
+      const url = data?.data?.cart?.checkoutUrl;
+      if (!url) {
+        console.error("No checkoutUrl returned", data);
+        return;
+      }
+      console.log("✅ Redirecting to checkout:", url);
+      window.location.replace(url);
     },
   };
 
