@@ -1,42 +1,24 @@
-// Centralized Storefront config and request helper using explicit API URL
-export const getStorefrontConfig = () => {
-  const storeDomain = process.env.SHOPIFY_STORE_DOMAIN;
-  const storefrontApiUrl = process.env.SHOPIFY_STOREFRONT_API_URL;
-  const storefrontToken = process.env.SHOPIFY_STOREFRONT_TOKEN;
-  if (!storeDomain || !storefrontApiUrl || !storefrontToken) {
-    throw new Error(
-      "Missing required env: SHOPIFY_STORE_DOMAIN, SHOPIFY_STOREFRONT_API_URL, SHOPIFY_STOREFRONT_TOKEN"
-    );
-  }
-  return { storeDomain, storefrontApiUrl, storefrontToken };
-};
+import { createStorefrontApiClient } from "@shopify/storefront-api-client";
 
-export const storefrontRequest = async (query, variables = {}) => {
-  const { storefrontApiUrl, storefrontToken } = getStorefrontConfig();
-  const res = await fetch(storefrontApiUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Shopify-Storefront-Access-Token": storefrontToken,
-    },
-    body: JSON.stringify({ query, variables }),
+// Initialize Shopify Storefront API client
+export const createShopifyClient = () => {
+  const storeDomain =
+    process.env.SHOPIFY_STOREFRONT_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
+  const storefrontToken =
+    process.env.SHOPIFY_STOREFRONT_API_TOKEN ||
+    process.env.SHOPIFY_STOREFRONT_TOKEN;
+  const apiVersion = process.env.SHOPIFY_API_VERSION || "2024-07";
+
+  if (!storeDomain || !storefrontToken) {
+    throw new Error("Missing required Shopify environment variables");
+  }
+
+  return createStorefrontApiClient({
+    storeDomain,
+    apiVersion,
+    publicAccessToken: storefrontToken,
   });
-  const json = await res.json();
-  if (!res.ok) {
-    throw new Error(
-      `Storefront API ${res.status}: ${
-        json?.errors?.[0]?.message || res.statusText
-      }`
-    );
-  }
-  return json;
 };
-
-// Back-compat: mimic the previous client shape with a request() method
-export const createShopifyClient = () => ({
-  request: async (query, { variables } = {}) =>
-    storefrontRequest(query, variables),
-});
 
 // Common GraphQL fragments
 export const PRODUCT_FRAGMENT = `
@@ -239,7 +221,7 @@ export const handleGraphQLResponse = (response) => {
 };
 
 // Helper function to create standardized API responses
-export const createApiResponse = (data, status = 200, extraHeaders = {}) => {
+export const createApiResponse = (data, status = 200) => {
   return {
     statusCode: status,
     headers: {
@@ -247,26 +229,9 @@ export const createApiResponse = (data, status = 200, extraHeaders = {}) => {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Headers": "Content-Type",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      ...extraHeaders,
     },
     body: JSON.stringify(data),
   };
-};
-
-// Helper to add CDN/browser caching
-export const createCachedApiResponse = (
-  data,
-  {
-    status = 200,
-    browserTtl = 60, // seconds
-    cdnTtl = 300, // seconds (Netlify CDN)
-    staleWhileRevalidate = 300,
-  } = {}
-) => {
-  const cacheHeader = `public, max-age=${browserTtl}, s-maxage=${cdnTtl}, stale-while-revalidate=${staleWhileRevalidate}`;
-  return createApiResponse(data, status, {
-    "Cache-Control": cacheHeader,
-  });
 };
 
 // Helper function to handle API errors

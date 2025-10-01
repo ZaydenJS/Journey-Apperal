@@ -1,9 +1,9 @@
 import {
   createShopifyClient,
+  PRODUCT_FRAGMENT,
   COLLECTION_FRAGMENT,
   handleGraphQLResponse,
   createApiResponse,
-  createCachedApiResponse,
   createErrorResponse,
 } from "./utils/shopify.js";
 
@@ -53,20 +53,13 @@ export const handler = async (event, context) => {
             edges {
               cursor
               node {
-                id
-                handle
-                title
-                availableForSale
-                priceRange { minVariantPrice { amount currencyCode } }
-                images(first: 1) {
-                  edges { node { id url altText width height } }
-                }
-                seo { title description }
+                ...ProductFragment
               }
             }
           }
         }
         ${COLLECTION_FRAGMENT}
+        ${PRODUCT_FRAGMENT}
       `;
       variables = { handle, tag: `tag:${tag}`, first: parseInt(first), after };
     } else {
@@ -85,19 +78,14 @@ export const handler = async (event, context) => {
               edges {
                 cursor
                 node {
-                  id
-                  handle
-                  title
-                  availableForSale
-                  priceRange { minVariantPrice { amount currencyCode } }
-                  images(first: 1) { edges { node { id url altText width height } } }
-                  seo { title description }
+                  ...ProductFragment
                 }
               }
             }
           }
         }
         ${COLLECTION_FRAGMENT}
+        ${PRODUCT_FRAGMENT}
       `;
       variables = { handle, first: parseInt(first), after };
     }
@@ -132,31 +120,34 @@ export const handler = async (event, context) => {
       id: edge.node.id,
       handle: edge.node.handle,
       title: edge.node.title,
+      description: edge.node.description,
+      tags: edge.node.tags,
+      vendor: edge.node.vendor,
+      productType: edge.node.productType,
       availableForSale: edge.node.availableForSale,
+      totalInventory: edge.node.totalInventory,
       priceRange: edge.node.priceRange,
+      compareAtPriceRange: edge.node.compareAtPriceRange,
       images: edge.node.images.edges.map((imgEdge) => imgEdge.node),
-      variants: [], // omit variants on list for speed
-      options: [],
+      variants: edge.node.variants.edges.map((varEdge) => varEdge.node),
+      options: edge.node.options,
       seo: edge.node.seo,
-      slug: edge.node.handle,
+      slug: edge.node.handle, // For compatibility with your existing frontend
     }));
 
-    return createCachedApiResponse(
-      {
-        collection,
-        products,
-        pageInfo:
-          data.collection &&
-          data.collection.products &&
-          data.collection.products.pageInfo
-            ? data.collection.products.pageInfo
-            : data.products
-            ? data.products.pageInfo
-            : null,
-        total: products.length,
-      },
-      { browserTtl: 60, cdnTtl: 300, staleWhileRevalidate: 300 }
-    );
+    return createApiResponse({
+      collection,
+      products,
+      pageInfo:
+        data.collection &&
+        data.collection.products &&
+        data.collection.products.pageInfo
+          ? data.collection.products.pageInfo
+          : data.products
+          ? data.products.pageInfo
+          : null,
+      total: products.length,
+    });
   } catch (error) {
     return createErrorResponse(error.message);
   }

@@ -3550,18 +3550,8 @@
                     ? window.cartManager.getCart()
                     : null;
                 if (cart && cart.checkoutUrl) {
-                  console.log("CHECKOUT_DEBUG final →", cart.checkoutUrl);
-                  console.log("Redirecting now…");
+                  console.log("Checkout URL:", cart.checkoutUrl);
                   window.location.href = cart.checkoutUrl;
-                  setTimeout(
-                    () => window.location.assign(cart.checkoutUrl),
-                    50
-                  );
-                  setTimeout(
-                    () => window.location.replace(cart.checkoutUrl),
-                    200
-                  );
-                  console.log("Navigation dispatched");
                   return;
                 }
 
@@ -3574,12 +3564,8 @@
                   }
                 })();
                 if (stored) {
-                  console.log("CHECKOUT_DEBUG final →", stored);
-                  console.log("Redirecting now…");
+                  console.log("Checkout URL (persisted):", stored);
                   window.location.href = stored;
-                  setTimeout(() => window.location.assign(stored), 50);
-                  setTimeout(() => window.location.replace(stored), 200);
-                  console.log("Navigation dispatched");
                   return;
                 }
 
@@ -4173,78 +4159,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, 1000);
 });
-
-// Hard override: capture checkout clicks and force verbatim Cart API checkoutUrl
-(function () {
-  try {
-    var BTN_SELECTOR =
-      "#checkout-btn, #proceedToCheckout, button[data-checkout], .checkout-button";
-    function getLinesFromCartState() {
-      try {
-        if (
-          window.cartManager &&
-          typeof window.cartManager.getSnapshot === "function"
-        ) {
-          var snap = window.cartManager.getSnapshot();
-          if (Array.isArray(snap) && snap.length) return snap;
-        }
-      } catch (_) {}
-      return Array.isArray(window.__HEADLESS_CART_LINES__)
-        ? window.__HEADLESS_CART_LINES__
-        : [];
-    }
-    function submitCheckoutForm(lines) {
-      try {
-        var form = document.createElement("form");
-        form.method = "POST";
-        form.action = "/.netlify/functions/checkout";
-        var input = document.createElement("input");
-        input.type = "hidden";
-        input.name = "lines";
-        input.value = JSON.stringify(lines);
-        form.appendChild(input);
-        document.body.appendChild(form);
-        console.log("CHECKOUT_DEBUG submit → /.netlify/functions/checkout", {
-          count: Array.isArray(lines) ? lines.length : 0,
-        });
-        form.submit();
-      } catch (e) {
-        console.error("submitCheckoutForm failed", e);
-        throw e;
-      }
-    }
-    function attach() {
-      document.querySelectorAll(BTN_SELECTOR).forEach(function (btn) {
-        if (btn.dataset && btn.dataset.checkoutCaptureBound === "1") return;
-        btn.dataset.checkoutCaptureBound = "1";
-        // If wrapped in <a>, neutralize href to avoid native nav
-        var a = btn.closest("a");
-        if (a) a.removeAttribute("href");
-        btn.addEventListener(
-          "click",
-          async function (e) {
-            // stop legacy listeners that might rewrite to /checkouts/cn/
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            try {
-              var lines = getLinesFromCartState();
-              if (!lines || !lines.length)
-                throw new Error("No cart lines to checkout");
-              submitCheckoutForm(lines);
-            } catch (err) {
-              console.error("Checkout failed", err);
-              alert("Could not start checkout. Please try again.");
-            }
-          },
-          { capture: true }
-        );
-      });
-    }
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", attach);
-    } else {
-      attach();
-    }
-  } catch (_) {}
-})();

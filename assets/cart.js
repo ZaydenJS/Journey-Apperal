@@ -176,46 +176,32 @@ class CartManager {
   }
 
   async goToCheckout() {
+    if (this.cart && this.cart.checkoutUrl) {
+      console.log("Checkout URL:", this.cart.checkoutUrl);
+      window.location.href = this.cart.checkoutUrl;
+      return;
+    }
+
+    // Try localStorage checkout URL first
+    const storedUrl = localStorage.getItem("shopify_checkout_url");
+    if (storedUrl) {
+      console.log("Checkout URL (persisted):", storedUrl);
+      window.location.href = storedUrl;
+      return;
+    }
+
+    // As a last resort, recreate from snapshot then redirect
+    const snapshot = this.getSnapshot();
     try {
-      // Build lines from current cart snapshot
-      const snapshot = this.getSnapshot();
-      const lines = Array.isArray(snapshot)
-        ? snapshot.filter((l) => l.merchandiseId && l.quantity > 0)
-        : [];
-      if (lines.length === 0) {
-        this.showCartMessage("Cart is empty", "error");
+      await this.createCart(snapshot || []);
+      if (this.cart && this.cart.checkoutUrl) {
+        console.log("Checkout URL (recreated):", this.cart.checkoutUrl);
+        window.location.href = this.cart.checkoutUrl;
         return;
       }
+    } catch (e) {}
 
-      // Diagnostics: CHECKOUT_DEBUG via localStorage flag
-      let DEBUG = false;
-      try {
-        DEBUG = localStorage.getItem("CHECKOUT_DEBUG") === "1";
-      } catch (_) {}
-      if (DEBUG) {
-        console.log("CHECKOUT_DEBUG submit → /.netlify/functions/checkout", {
-          count: lines.length,
-        });
-      }
-
-      // Submit a POST form to Netlify function for a 302 redirect to checkoutUrl
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = "/.netlify/functions/checkout";
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = "lines";
-      input.value = JSON.stringify(lines);
-      form.appendChild(input);
-      document.body.appendChild(form);
-      form.submit();
-    } catch (e) {
-      console.error("Checkout redirect failed:", e);
-      this.showCartMessage(
-        "Checkout is unavailable. Please try again.",
-        "error"
-      );
-    }
+    this.showCartMessage("Cart is empty", "error");
   }
 
   // Event listeners for cart updates
