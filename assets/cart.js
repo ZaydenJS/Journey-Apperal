@@ -176,32 +176,14 @@ class CartManager {
   }
 
   async goToCheckout() {
-    if (this.cart && this.cart.checkoutUrl) {
-      console.log("Checkout URL:", this.cart.checkoutUrl);
-      window.location.href = this.cart.checkoutUrl;
-      return;
-    }
-
-    // Try localStorage checkout URL first
-    const storedUrl = localStorage.getItem("shopify_checkout_url");
-    if (storedUrl) {
-      console.log("Checkout URL (persisted):", storedUrl);
-      window.location.href = storedUrl;
-      return;
-    }
-
-    // As a last resort, recreate from snapshot then redirect
-    const snapshot = this.getSnapshot();
+    // Checkout now handled by Shopify Buy Button embed
     try {
-      await this.createCart(snapshot || []);
-      if (this.cart && this.cart.checkoutUrl) {
-        console.log("Checkout URL (recreated):", this.cart.checkoutUrl);
-        window.location.href = this.cart.checkoutUrl;
-        return;
-      }
-    } catch (e) {}
-
-    this.showCartMessage("Cart is empty", "error");
+      this.showCartMessage(
+        "Checkout is handled by Shopify Buy Button.",
+        "info"
+      );
+    } catch (_) {}
+    return;
   }
 
   // Event listeners for cart updates
