@@ -176,32 +176,78 @@ class CartManager {
   }
 
   async goToCheckout() {
-    if (this.cart && this.cart.checkoutUrl) {
-      console.log("Checkout URL:", this.cart.checkoutUrl);
-      window.location.href = this.cart.checkoutUrl;
-      return;
-    }
-
-    // Try localStorage checkout URL first
-    const storedUrl = localStorage.getItem("shopify_checkout_url");
-    if (storedUrl) {
-      console.log("Checkout URL (persisted):", storedUrl);
-      window.location.href = storedUrl;
-      return;
-    }
-
-    // As a last resort, recreate from snapshot then redirect
-    const snapshot = this.getSnapshot();
     try {
-      await this.createCart(snapshot || []);
+      let checkoutUrl = null;
+
+      // Try current cart's checkout URL first
       if (this.cart && this.cart.checkoutUrl) {
-        console.log("Checkout URL (recreated):", this.cart.checkoutUrl);
-        window.location.href = this.cart.checkoutUrl;
+        checkoutUrl = this.cart.checkoutUrl;
+        console.log("Using cart checkout URL:", checkoutUrl);
+      } else {
+        // Try localStorage checkout URL
+        const storedUrl = localStorage.getItem("shopify_checkout_url");
+        if (storedUrl) {
+          checkoutUrl = storedUrl;
+          console.log("Using persisted checkout URL:", checkoutUrl);
+        }
+      }
+
+      // If we have a checkout URL, normalize and redirect
+      if (checkoutUrl) {
+        try {
+          const normalizedUrl = window.checkoutUtils
+            ? window.checkoutUtils.getFinalCheckoutUrl(checkoutUrl)
+            : checkoutUrl;
+
+          window.location.href = normalizedUrl;
+          return;
+        } catch (error) {
+          console.error("Failed to normalize checkout URL:", error);
+          this.showCartMessage(
+            "Checkout URL is invalid. Recreating cart...",
+            "warning"
+          );
+        }
+      }
+
+      // Last resort: recreate cart from snapshot and try again
+      console.log("Recreating cart from snapshot...");
+      const snapshot = this.getSnapshot();
+
+      if (!snapshot || snapshot.length === 0) {
+        this.showCartMessage(
+          "Your cart is empty. Please add items before checkout.",
+          "error"
+        );
         return;
       }
-    } catch (e) {}
 
-    this.showCartMessage("Cart is empty", "error");
+      try {
+        await this.createCart(snapshot);
+        if (this.cart && this.cart.checkoutUrl) {
+          const normalizedUrl = window.checkoutUtils
+            ? window.checkoutUtils.getFinalCheckoutUrl(this.cart.checkoutUrl)
+            : this.cart.checkoutUrl;
+
+          console.log("Checkout URL (recreated):", normalizedUrl);
+          window.location.href = normalizedUrl;
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to recreate cart:", error);
+      }
+
+      this.showCartMessage(
+        "Unable to proceed to checkout. Please try again.",
+        "error"
+      );
+    } catch (error) {
+      console.error("Checkout failed:", error);
+      this.showCartMessage(
+        "Checkout is temporarily unavailable. Please try again.",
+        "error"
+      );
+    }
   }
 
   // Event listeners for cart updates

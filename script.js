@@ -3529,12 +3529,12 @@
           checkout.style.letterSpacing = ".02em";
           checkout.style.cursor = "pointer";
 
-          // Wire up Proceed to Checkout → Always use Shopify checkoutUrl
+          // Wire up Proceed to Checkout → Always use normalized Shopify checkoutUrl
           if (!checkout.dataset.clickBound) {
             checkout.addEventListener("click", function (e) {
               e.preventDefault();
               try {
-                // Preferred: use cartManager.goToCheckout which reads checkoutUrl from Shopify
+                // Preferred: use cartManager.goToCheckout which handles normalization
                 if (
                   window.cartManager &&
                   typeof window.cartManager.goToCheckout === "function"
@@ -3543,30 +3543,34 @@
                   return;
                 }
 
-                // Next: try current cart's checkoutUrl
+                // Fallback: manual checkout URL handling with normalization
                 const cart =
                   window.cartManager &&
                   typeof window.cartManager.getCart === "function"
                     ? window.cartManager.getCart()
                     : null;
+
+                let checkoutUrl = null;
                 if (cart && cart.checkoutUrl) {
-                  console.log("Checkout URL:", cart.checkoutUrl);
-                  window.location.href = cart.checkoutUrl;
-                  return;
+                  checkoutUrl = cart.checkoutUrl;
+                } else {
+                  // Try persisted checkoutUrl from localStorage
+                  try {
+                    checkoutUrl = localStorage.getItem("shopify_checkout_url");
+                  } catch (_) {}
                 }
 
-                // Last resort: try persisted checkoutUrl from localStorage
-                const stored = (function () {
+                if (checkoutUrl) {
                   try {
-                    return localStorage.getItem("shopify_checkout_url");
-                  } catch (_) {
-                    return null;
+                    const normalizedUrl = window.checkoutUtils
+                      ? window.checkoutUtils.getFinalCheckoutUrl(checkoutUrl)
+                      : checkoutUrl;
+
+                    window.location.href = normalizedUrl;
+                    return;
+                  } catch (error) {
+                    console.error("Checkout URL normalization failed:", error);
                   }
-                })();
-                if (stored) {
-                  console.log("Checkout URL (persisted):", stored);
-                  window.location.href = stored;
-                  return;
                 }
 
                 alert(
