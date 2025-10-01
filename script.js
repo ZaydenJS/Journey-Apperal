@@ -641,30 +641,18 @@
           btn.disabled = true;
           btn.textContent = "Adding...";
 
-          // Check if cart manager is available
-          if (!window.cartManager) {
-            throw new Error("Cart functionality not available");
+          // Use Shopify JS Buy SDK cart
+          if (!window.JCart || typeof window.JCart.add !== "function") {
+            throw new Error("Shopify Buy SDK cart not available");
           }
 
-          const result = await window.cartManager.addToCart(
-            selectedVariant.id,
-            1
-          );
+          await window.JCart.add(selectedVariant.id, 1);
 
-          if (result === null) {
-            // Graceful degradation - API not available
-            btn.textContent = "Cart unavailable locally";
-            setTimeout(() => {
-              btn.disabled = false;
-              btn.textContent = "Add to Cart";
-            }, 3000);
-          } else {
-            btn.textContent = "Added!";
-            setTimeout(() => {
-              btn.disabled = false;
-              btn.textContent = "Add to Cart";
-            }, 2000);
-          }
+          btn.textContent = "Added!";
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = "Add to Cart";
+          }, 1200);
         } catch (error) {
           btn.disabled = false;
           btn.textContent = "Add to Cart";
@@ -3529,11 +3517,23 @@
           checkout.style.letterSpacing = ".02em";
           checkout.style.cursor = "pointer";
 
-          // Checkout now handled by Shopify Buy Button embed
+          // Proceed to Checkout via Shopify JS Buy SDK
           if (!checkout.dataset.clickBound) {
             checkout.addEventListener("click", function (e) {
               e.preventDefault();
-              alert("Checkout is handled by Shopify Buy Button.");
+              try {
+                if (
+                  window.JCart &&
+                  typeof window.JCart.toCheckout === "function"
+                ) {
+                  window.JCart.toCheckout();
+                } else {
+                  alert("Checkout is not ready. Please try again.");
+                }
+              } catch (err) {
+                console.error("Checkout failed:", err);
+                alert("Checkout is unavailable. Please try again.");
+              }
             });
             checkout.dataset.clickBound = "1";
           }
@@ -4117,3 +4117,91 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, 1000);
 });
+
+// Shopify JS Buy SDK global cart (JCart) — pure frontend
+(function () {
+  const SHOP_DOMAIN = "7196su-vk.myshopify.com";
+  const TOKEN =
+    window?.ENV?.SHOPIFY_STOREFRONT_TOKEN || "e9f772f8551e9494e4d4695902f59e46";
+  const STORAGE_KEY = "ja_checkout_id";
+  let sdkLoaded = !!window.ShopifyBuy;
+  let loading = null;
+
+  function loadSdk() {
+    if (sdkLoaded) return Promise.resolve();
+    if (loading) return loading;
+    loading = new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src =
+        "https://sdks.shopifycdn.com/js-buy-sdk/v2/latest/index.umd.min.js";
+      s.async = true;
+      s.onload = () => {
+        sdkLoaded = !!window.ShopifyBuy;
+        resolve();
+      };
+      s.onerror = (e) => reject(new Error("Failed to load Shopify JS Buy SDK"));
+      document.head.appendChild(s);
+    });
+    return loading;
+  }
+
+  const JCart = {
+    _client: null,
+    _checkoutId: null,
+    _initializing: null,
+
+    async _ensureClient() {
+      await loadSdk();
+      if (!this._client) {
+        this._client = window.ShopifyBuy.buildClient({
+          domain: SHOP_DOMAIN,
+          storefrontAccessToken: TOKEN,
+        });
+      }
+      return this._client;
+    },
+
+    async _fetchOrCreateCheckout() {
+      await this._ensureClient();
+      try {
+        this._checkoutId = localStorage.getItem(STORAGE_KEY) || null;
+      } catch (_) {}
+      if (this._checkoutId) {
+        try {
+          const co = await this._client.checkout.fetch(this._checkoutId);
+          if (co && !co.completedAt) return co;
+        } catch (_) {}
+      }
+      const created = await this._client.checkout.create();
+      this._checkoutId = created.id;
+      try {
+        localStorage.setItem(STORAGE_KEY, this._checkoutId);
+      } catch (_) {}
+      return created;
+    },
+
+    async add(variantId, quantity) {
+      const qty = Math.max(1, Number(quantity || 1));
+      const co = await this._fetchOrCreateCheckout();
+      const updated = await this._client.checkout.addLineItems(co.id, [
+        { variantId, quantity: qty },
+      ]);
+      // keep id persisted (unchanged normally)
+      this._checkoutId = updated.id;
+      try {
+        localStorage.setItem(STORAGE_KEY, this._checkoutId);
+      } catch (_) {}
+      return updated;
+    },
+
+    async toCheckout() {
+      const co = await this._fetchOrCreateCheckout();
+      const fresh = await this._client.checkout.fetch(co.id);
+      const url = fresh && (fresh.webUrl || fresh.checkoutUrl || fresh.web_url);
+      if (!url) throw new Error("No webUrl on checkout");
+      window.location.href = url;
+    },
+  };
+
+  window.JCart = JCart;
+})();
