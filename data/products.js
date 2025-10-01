@@ -194,10 +194,13 @@ window.__CATALOG = {
         const collections = await window.shopifyAPI.getCollections();
         this.products = [];
 
-        for (const collection of collections.collections) {
-          const collectionData = await window.shopifyAPI.getCollection(
-            collection.handle
-          );
+        // Fetch collections in parallel for speed
+        const results = await Promise.all(
+          collections.collections.map((collection) =>
+            window.shopifyAPI.getCollection(collection.handle)
+          )
+        );
+        for (const collectionData of results) {
           this.products.push(...(collectionData.products || []));
         }
       }

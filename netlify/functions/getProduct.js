@@ -1,30 +1,31 @@
-import { 
-  createShopifyClient, 
+import {
+  createShopifyClient,
   PRODUCT_FRAGMENT,
-  handleGraphQLResponse, 
-  createApiResponse, 
-  createErrorResponse 
-} from './utils/shopify.js';
+  handleGraphQLResponse,
+  createApiResponse,
+  createCachedApiResponse,
+  createErrorResponse,
+} from "./utils/shopify.js";
 
 export const handler = async (event, context) => {
   // Handle CORS preflight
-  if (event.httpMethod === 'OPTIONS') {
+  if (event.httpMethod === "OPTIONS") {
     return createApiResponse({}, 200);
   }
 
-  if (event.httpMethod !== 'GET') {
-    return createErrorResponse('Method not allowed', 405);
+  if (event.httpMethod !== "GET") {
+    return createErrorResponse("Method not allowed", 405);
   }
 
   try {
     const { handle } = event.queryStringParameters || {};
-    
+
     if (!handle) {
-      return createErrorResponse('Product handle is required', 400);
+      return createErrorResponse("Product handle is required", 400);
     }
 
     const client = createShopifyClient();
-    
+
     const query = `
       query GetProduct($handle: String!) {
         product(handle: $handle) {
@@ -40,7 +41,7 @@ export const handler = async (event, context) => {
     const data = handleGraphQLResponse(response);
 
     if (!data.product) {
-      return createErrorResponse('Product not found', 404);
+      return createErrorResponse("Product not found", 404);
     }
 
     // Transform the data to match your frontend expectations
@@ -56,15 +57,17 @@ export const handler = async (event, context) => {
       totalInventory: data.product.totalInventory,
       priceRange: data.product.priceRange,
       compareAtPriceRange: data.product.compareAtPriceRange,
-      images: data.product.images.edges.map(edge => edge.node),
-      variants: data.product.variants.edges.map(edge => edge.node),
+      images: data.product.images.edges.map((edge) => edge.node),
+      variants: data.product.variants.edges.map((edge) => edge.node),
       options: data.product.options,
       seo: data.product.seo,
-      slug: data.product.handle // For compatibility with your existing frontend
+      slug: data.product.handle, // For compatibility with your existing frontend
     };
 
-    return createApiResponse({ product });
-
+    return createCachedApiResponse(
+      { product },
+      { browserTtl: 60, cdnTtl: 300, staleWhileRevalidate: 300 }
+    );
   } catch (error) {
     return createErrorResponse(error.message);
   }

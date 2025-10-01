@@ -239,7 +239,7 @@ export const handleGraphQLResponse = (response) => {
 };
 
 // Helper function to create standardized API responses
-export const createApiResponse = (data, status = 200) => {
+export const createApiResponse = (data, status = 200, extraHeaders = {}) => {
   return {
     statusCode: status,
     headers: {
@@ -247,9 +247,26 @@ export const createApiResponse = (data, status = 200) => {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Headers": "Content-Type",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      ...extraHeaders,
     },
     body: JSON.stringify(data),
   };
+};
+
+// Helper to add CDN/browser caching
+export const createCachedApiResponse = (
+  data,
+  {
+    status = 200,
+    browserTtl = 60, // seconds
+    cdnTtl = 300, // seconds (Netlify CDN)
+    staleWhileRevalidate = 300,
+  } = {}
+) => {
+  const cacheHeader = `public, max-age=${browserTtl}, s-maxage=${cdnTtl}, stale-while-revalidate=${staleWhileRevalidate}`;
+  return createApiResponse(data, status, {
+    "Cache-Control": cacheHeader,
+  });
 };
 
 // Helper function to handle API errors
