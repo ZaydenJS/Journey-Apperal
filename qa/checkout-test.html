@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Checkout URL QA</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
+      .row { display:flex; gap:12px; margin-bottom:8px; align-items:center; }
+      input { padding:8px; border:1px solid #ccc; border-radius:6px; min-width: 220px; }
+      button { padding:10px 14px; border-radius:8px; border:0; background:#000; color:#fff; cursor:pointer; }
+      .muted { color:#666; font-size: 13px; }
+      a { word-break: break-all; }
+    </style>
+  </head>
+  <body>
+    <h1>Checkout URL QA</h1>
+    <p class="muted">Enter Shopify Product Variant IDs (numeric) and quantities. Click "Build URL" to see the exact checkout link.</p>
+
+    <div id="inputs">
+      <div class="row"><input id="vid1" placeholder="Variant ID (e.g. 1234567890)" /><input id="qty1" type="number" min="0" placeholder="Qty" value="1" /></div>
+      <div class="row"><input id="vid2" placeholder="Variant ID (optional)" /><input id="qty2" type="number" min="0" placeholder="Qty" value="1" /></div>
+      <div class="row"><input id="vid3" placeholder="Variant ID (optional)" /><input id="qty3" type="number" min="0" placeholder="Qty" value="1" /></div>
+    </div>
+
+    <div class="row"><button id="build">Build URL</button></div>
+
+    <div id="out" class="row" style="margin-top:16px;"></div>
+
+    <script>
+      function buildUrlFromInputs() {
+        const pairs = [];
+        for (let i = 1; i <= 3; i++) {
+          const id = (document.getElementById('vid' + i).value || '').trim();
+          const qty = Math.max(0, Number(document.getElementById('qty' + i).value || 0));
+          if (!id || !/^\d+$/.test(id) || qty <= 0) continue;
+          pairs.push(id + ':' + Math.max(1, qty));
+        }
+        if (!pairs.length) return '';
+        let url = 'https://shop.journeysapparel.com/cart/' + pairs.join(',');
+        try {
+          const params = new URLSearchParams(window.location.search || '');
+          const pass = [];
+          params.forEach((v, k) => {
+            const kk = String(k);
+            if (kk === 'discount' || kk.toLowerCase().startsWith('utm_')) {
+              pass.push(encodeURIComponent(kk) + '=' + encodeURIComponent(v));
+            }
+          });
+          if (pass.length) url += '?' + pass.join('&');
+        } catch (e) {}
+        return url;
+      }
+
+      document.getElementById('build').addEventListener('click', function () {
+        const out = document.getElementById('out');
+        const url = buildUrlFromInputs();
+        if (!url) {
+          out.innerHTML = '<div class="muted">Add at least one valid Variant ID and quantity.</div>';
+          return;
+        }
+        out.innerHTML = '<a href="' + url + '" target="_blank" rel="noopener">' + url + '</a>';
+      });
+    </script>
+  </body>
+</html>
+

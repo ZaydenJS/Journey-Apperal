@@ -3637,6 +3637,13 @@
             checkout.addEventListener("click", function (e) {
               e.preventDefault();
               try {
+                if (typeof window.buildCheckoutUrl === "function") {
+                  const direct = window.buildCheckoutUrl();
+                  if (direct) {
+                    window.location.href = direct;
+                    return;
+                  }
+                }
                 const CP = window.CartPermalink || {};
                 const getLines =
                   typeof CP.getLines === "function"
@@ -3669,18 +3676,28 @@
                               )}`
                           )
                           .filter((s) => s && !s.startsWith(":"));
-                        const store =
-                          (window.ENV &&
-                            (window.ENV.SHOPIFY_STOREFRONT_DOMAIN ||
-                              window.ENV.SHOPIFY_STORE_DOMAIN)) ||
-                          "7196su-vk.myshopify.com";
-                        let url = `https://${store}/cart/${items.join(",")}`;
+                        let url = `https://shop.journeysapparel.com/cart/${items.join(
+                          ","
+                        )}`;
                         try {
-                          const code = localStorage.getItem("ja_discount");
-                          if (code) {
-                            const sep = url.includes("?") ? "&" : "?";
-                            url += `${sep}discount=${encodeURIComponent(code)}`;
-                          }
+                          const params = new URLSearchParams(
+                            window.location.search || ""
+                          );
+                          const pass = [];
+                          params.forEach((v, k) => {
+                            const kk = String(k);
+                            if (
+                              kk === "discount" ||
+                              kk.toLowerCase().startsWith("utm_")
+                            ) {
+                              pass.push(
+                                `${encodeURIComponent(kk)}=${encodeURIComponent(
+                                  v
+                                )}`
+                              );
+                            }
+                          });
+                          if (pass.length) url += `?${pass.join("&")}`;
                         } catch (_) {}
                         return url;
                       };
@@ -3733,6 +3750,53 @@
       } catch (_) {}
       updateCartCount(items);
       renderCart(items);
+    };
+    // Build Shopify checkout URL from mini-cart items
+    // Reads localStorage cartItems, merges duplicates, converts GIDs to numeric, and appends discount/UTM params
+    window.buildCheckoutUrl = function buildCheckoutUrl() {
+      try {
+        const items = JSON.parse(localStorage.getItem("cartItems") || "[]");
+        if (!Array.isArray(items) || !items.length) return "";
+
+        const toNumericId = (id, gid) => {
+          if (!id && gid) {
+            const m = String(gid).match(/ProductVariant\/(\d+)/);
+            return m ? m[1] : "";
+          }
+          if (id && /^\d+$/.test(String(id))) return String(id);
+          return "";
+        };
+
+        const byId = {};
+        items.forEach((it) => {
+          if (!it) return;
+          const vid = toNumericId(it.variantId, it.variantGid);
+          const qty = Math.max(0, Number(it.qty || 0));
+          if (!vid || qty <= 0) return;
+          byId[vid] = (byId[vid] || 0) + qty;
+        });
+
+        const parts = Object.keys(byId).map(
+          (vid) => `${vid}:${Math.max(1, byId[vid])}`
+        );
+        if (!parts.length) return "";
+
+        let url = `https://shop.journeysapparel.com/cart/${parts.join(",")}`;
+        try {
+          const params = new URLSearchParams(window.location.search || "");
+          const pass = [];
+          params.forEach((v, k) => {
+            const kk = String(k);
+            if (kk === "discount" || kk.toLowerCase().startsWith("utm_")) {
+              pass.push(`${encodeURIComponent(kk)}=${encodeURIComponent(v)}`);
+            }
+          });
+          if (pass.length) url += `?${pass.join("&")}`;
+        } catch (_) {}
+        return url;
+      } catch (_) {
+        return "";
+      }
     };
 
     window.openCart = function openCart() {
