@@ -175,103 +175,20 @@
             var out = card.querySelector("#signOutLink");
             // Fetch profile email (if backend is configured or in mock mode)
             try {
-              fetch("/.netlify/functions/account-me", {
-                credentials: "include",
-              })
-                .then(function (r) {
-                  return r.json().then(function (j) {
-                    return { ok: r.ok, status: r.status, body: j };
-                  });
-                })
-                .then(function (res) {
-                  if (!res.ok) return;
-                  var em =
-                    res.body &&
-                    (res.body.email || (res.body.data && res.body.data.email));
-                  if (em) {
-                    var p = card.querySelector("[data-email-line]");
-                    if (p)
-                      p.innerHTML =
-                        'You\'re signed in as <strong style="color:#111">' +
-                        em +
-                        "</strong>";
-                    var s = card.querySelector("#settingsLine");
-                    if (s)
-                      s.innerHTML =
-                        'Manage your account details from your Shopify account. Current email: <strong style="color:#111">' +
-                        em +
-                        "</strong>.";
-                  }
-                })
-                .catch(function () {});
+              // Legacy backend removed; profile email is managed by Shopify New Customer Accounts UI
             } catch (e) {}
 
             // Fetch recent orders (mock or live)
             try {
-              fetch("/.netlify/functions/account-orders?limit=5", {
-                credentials: "include",
-              })
-                .then(function (r) {
-                  return r.json().then(function (j) {
-                    return { ok: r.ok, status: r.status, body: j };
-                  });
-                })
-                .then(function (res) {
-                  var box = card.querySelector("#ordersPreview");
-                  if (!box) return;
-                  if (
-                    !res.ok ||
-                    !res.body ||
-                    !Array.isArray(res.body.orders) ||
-                    res.body.orders.length === 0
-                  ) {
-                    box.innerHTML = "No recent orders found.";
-                    return;
-                  }
-                  var html =
-                    '<ul style="list-style:none; padding:0; margin:0">' +
-                    res.body.orders
-                      .map(function (o) {
-                        var date = (o.processedAt || "").split("T")[0];
-                        var total = o.totalPrice
-                          ? o.totalPrice.amount +
-                            " " +
-                            o.totalPrice.currencyCode
-                          : "";
-                        return (
-                          '<li style="padding:8px 0; border-bottom:1px solid #eee">' +
-                          "<strong>" +
-                          (o.name || "Order") +
-                          "</strong> · " +
-                          date +
-                          (total ? " · " + total : "") +
-                          (o.statusUrl
-                            ? ' · <a target="_blank" rel="noopener" href="' +
-                              o.statusUrl +
-                              '">View</a>'
-                            : "") +
-                          "</li>"
-                        );
-                      })
-                      .join("") +
-                    "</ul>";
-                  box.innerHTML = html;
-                })
-                .catch(function () {});
+              var box = card && card.querySelector("#ordersPreview");
+              if (box)
+                box.textContent =
+                  "No recent orders found. View all orders in your Shopify account.";
             } catch (e) {}
 
             // Fetch rewards points (placeholder)
             try {
-              fetch("/.netlify/functions/loyalty-points")
-                .then(function (r) {
-                  return r.json();
-                })
-                .then(function (j) {
-                  var el = card.querySelector("#pointsBalance");
-                  if (el && j && typeof j.balance !== "undefined")
-                    el.textContent = j.balance;
-                })
-                .catch(function () {});
+              // Loyalty points UI is handled by the Shopify/Yotpo widgets after Shopify login
             } catch (e) {}
 
             if (out)

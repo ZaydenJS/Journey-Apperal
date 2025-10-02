@@ -880,26 +880,10 @@
     <script>
       (function () {
         document.addEventListener("DOMContentLoaded", function () {
-          JAAccount.setHeaderProfileLink();
-          JAAccount.attachFormHandler("login-form", async function (ctx) {
-            var email = ctx.get("email");
-            var pwd = ctx.get("password");
-            if (!email || !pwd) {
-              ctx.setMessage("Please enter your email and password.", "#c00");
-              return;
-            }
-            ctx.setMessage("Signing in…", "#666");
-            try {
-              var res = await JourneyAuth.login(email, pwd);
-              ctx.setMessage("Signed in. Redirecting…", "#0a0");
-              JourneyAuth.redirectAfterAuth("/account/index.html");
-            } catch (e) {
-              ctx.setMessage(
-                e && e.message ? e.message : "Login failed. Please try again.",
-                "#c00"
-              );
-            }
-          });
+          try {
+            JAAccount.setHeaderProfileLink && JAAccount.setHeaderProfileLink();
+          } catch (_) {}
+          // Local login is not used; page already redirects to Shopify New Customer Accounts
         });
       })();
     </script>

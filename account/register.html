@@ -920,35 +920,7 @@
     <script>
       (function () {
         document.addEventListener("DOMContentLoaded", function () {
-          JAAccount.attachFormHandler("register-form", async function (ctx) {
-            var first = ctx.get("first"),
-              last = ctx.get("last"),
-              email = ctx.get("email"),
-              pwd = ctx.get("password");
-            if (!first || !last || !email || !pwd) {
-              ctx.setMessage("Please complete all fields.", "#c00");
-              return;
-            }
-            ctx.setMessage("Creating your account…", "#666");
-            try {
-              var res = await JourneyAuth.register({
-                firstName: first,
-                lastName: last,
-                email: email,
-                password: pwd,
-                acceptsMarketing: false,
-              });
-              ctx.setMessage("Account created. Redirecting…", "#0a0");
-              JourneyAuth.redirectAfterAuth("/account/index.html");
-            } catch (e) {
-              ctx.setMessage(
-                e && e.message
-                  ? e.message
-                  : "Registration failed. Please try again.",
-                "#c00"
-              );
-            }
-          });
+          // Local registration is not used; this page immediately redirects to Shopify New Customer Accounts
         });
       })();
     </script>

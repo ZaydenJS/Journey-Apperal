@@ -598,9 +598,11 @@
   }
 
   function setupAddToCart(product) {
-    const addToCartBtns = document.querySelectorAll(
-      '.add-to-cart, .btn[data-action="add-to-cart"]'
-    );
+    const addToCartBtns = Array.from(
+      document.querySelectorAll(
+        '.add-to-cart, .btn[data-action="add-to-cart"], .p-details .btn'
+      )
+    ).filter((b) => /add\s*to\s*cart/i.test(b.textContent || ""));
 
     addToCartBtns.forEach((btn) => {
       btn.onclick = async (e) => {
@@ -685,6 +687,78 @@
             );
           } else {
             lines.push({ variantGid: selectedVariant.id, quantity: 1 });
+
+            // Also update mini-cart UI and open the cart drawer
+            try {
+              const nameEl = document.querySelector(
+                ".p-details .upper, .p-details .title, h1, .product-title"
+              );
+              const name =
+                (nameEl && nameEl.textContent.trim()) ||
+                (product && product.title) ||
+                "";
+              const priceEl = document.querySelector(
+                ".price .current, .product-price .current, .p-details .price .current"
+              );
+              const price = (priceEl && priceEl.textContent.trim()) || "";
+              const size =
+                (selectedVariant &&
+                Array.isArray(selectedVariant.selectedOptions)
+                  ? (
+                      selectedVariant.selectedOptions.find(function (o) {
+                        return String(o.name || "").toLowerCase() === "size";
+                      }) || {}
+                    ).value
+                  : "") || "";
+              const image =
+                (document.querySelector(".gallery-main img") &&
+                  document
+                    .querySelector(".gallery-main img")
+                    .getAttribute("src")) ||
+                (product &&
+                  product.images &&
+                  product.images[0] &&
+                  product.images[0].src) ||
+                "";
+
+              // Initialize mini-cart if needed
+              if (
+                typeof window.openCart !== "function" &&
+                typeof window.setupCart === "function"
+              ) {
+                try {
+                  window.setupCart();
+                } catch (_) {}
+              }
+
+              const items =
+                window.__cart && typeof window.__cart.getCart === "function"
+                  ? window.__cart.getCart()
+                  : [];
+              const existing = items.find(function (it) {
+                return it.name === name && it.size === size;
+              });
+              if (existing) existing.qty = (existing.qty || 1) + 1;
+              else
+                items.push({
+                  name: name,
+                  price: price,
+                  size: size,
+                  image: image,
+                  qty: 1,
+                  variantGid: (selectedVariant && selectedVariant.id) || "",
+                });
+
+              if (
+                window.__cart &&
+                typeof window.__cart.setCart === "function"
+              ) {
+                window.__cart.setCart(items);
+              }
+              if (typeof window.openCart === "function") {
+                window.openCart();
+              }
+            } catch (_) {}
           }
           setLines(lines);
 
@@ -3642,6 +3716,21 @@
     };
     const setCart = (items) => {
       localStorage.setItem("cartItems", JSON.stringify(items));
+      // Keep permalink cart (ja_cart_lines) in sync with mini-cart UI
+      try {
+        const byVariant = {};
+        (items || []).forEach((it) => {
+          if (!it || !it.variantGid) return;
+          const key = String(it.variantGid);
+          byVariant[key] =
+            (byVariant[key] || 0) + Math.max(1, Number(it.qty || 1));
+        });
+        const lines = Object.keys(byVariant).map((variantGid) => ({
+          variantGid,
+          quantity: byVariant[variantGid],
+        }));
+        localStorage.setItem("ja_cart_lines", JSON.stringify(lines));
+      } catch (_) {}
       updateCartCount(items);
       renderCart(items);
     };
@@ -3857,7 +3946,7 @@
   // Make setupCart globally available immediately after declaration
   window.setupCart = setupCart;
 
-  function setupAddToCart() {
+  function setupAddToCartUI() {
     const btn = Array.from(document.querySelectorAll(".p-details .btn")).find(
       (b) => /add\s*to\s*cart/i.test(b.textContent || "")
     );

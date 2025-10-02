@@ -119,8 +119,16 @@
     <!-- Cart Test -->
     <div class="test-section">
       <h2>Cart Test</h2>
-      <button onclick="testCreateCart()">Create Cart</button>
-      <button onclick="testAddToCart()" id="add-to-cart-btn" disabled>
+      <button
+        onclick="document.getElementById('cart-result').innerHTML='<div class=&quot;error&quot;>Deprecated: server cart endpoints removed. Use cart permalinks.</div>'"
+      >
+        Create Cart
+      </button>
+      <button
+        onclick="document.getElementById('cart-result').innerHTML='<div class=&quot;error&quot;>Deprecated: server cart endpoints removed. Use cart permalinks.</div>'"
+        id="add-to-cart-btn"
+        disabled
+      >
         Add Test Item to Cart
       </button>
       <div id="cart-result" class="loading">Click button to test...</div>
@@ -137,9 +145,21 @@
         <label>Password:</label>
         <input type="password" id="test-password" placeholder="password" />
       </div>
-      <button onclick="testRegister()">Test Register</button>
-      <button onclick="testLogin()">Test Login</button>
-      <button onclick="testGetCustomer()" id="get-customer-btn" disabled>
+      <button
+        onclick="document.getElementById('customer-result').innerHTML='<div class=&quot;error&quot;>Deprecated: local auth removed. Use Shopify New Customer Accounts.</div>'"
+      >
+        Test Register
+      </button>
+      <button
+        onclick="document.getElementById('customer-result').innerHTML='<div class=&quot;error&quot;>Deprecated: local auth removed. Use Shopify New Customer Accounts.</div>'"
+      >
+        Test Login
+      </button>
+      <button
+        onclick="document.getElementById('customer-result').innerHTML='<div class=&quot;error&quot;>Deprecated: customer profile endpoints removed with New Customer Accounts.</div>'"
+        id="get-customer-btn"
+        disabled
+      >
         Get Customer Data
       </button>
       <div id="customer-result" class="loading">

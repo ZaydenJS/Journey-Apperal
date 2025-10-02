@@ -286,9 +286,14 @@
           );
         }
 
-        if (!apis.cartManager) {
+        if (
+          !(
+            window.CartPermalink &&
+            typeof window.CartPermalink.buildCartPermalink === "function"
+          )
+        ) {
           recommendations.push(
-            "🛒 Check that assets/cart.js is loading correctly"
+            "🛒 Ensure CartPermalink (src/lib/cartPermalink.js) is loaded for checkout links"
           );
         }
 
