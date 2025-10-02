@@ -1,126 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Integration Status - Journey Apparel</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .status-card { 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            padding: 20px; 
-            margin: 16px 0; 
-            background: #f9f9f9; 
-        }
-        .status-working { border-color: #4caf50; background: #e8f5e9; }
-        .status-limited { border-color: #ff9800; background: #fff3e0; }
-        .status-error { border-color: #f44336; background: #ffebee; }
-        .status-icon { font-size: 24px; margin-right: 8px; }
-        h1 { color: #333; }
-        h2 { color: #555; margin-top: 0; }
-        .test-btn { 
-            background: #111; 
-            color: white; 
-            border: none; 
-            padding: 8px 16px; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            margin: 4px; 
-        }
-        .test-btn:hover { background: #333; }
-        .result { margin: 8px 0; padding: 8px; border-radius: 4px; }
-        .success { background: #e8f5e9; color: #2e7d32; }
-        .warning { background: #fff3e0; color: #f57c00; }
-        .error { background: #ffebee; color: #d32f2f; }
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .status-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 16px 0;
+        background: #f9f9f9;
+      }
+      .status-working {
+        border-color: #4caf50;
+        background: #e8f5e9;
+      }
+      .status-limited {
+        border-color: #ff9800;
+        background: #fff3e0;
+      }
+      .status-error {
+        border-color: #f44336;
+        background: #ffebee;
+      }
+      .status-icon {
+        font-size: 24px;
+        margin-right: 8px;
+      }
+      h1 {
+        color: #333;
+      }
+      h2 {
+        color: #555;
+        margin-top: 0;
+      }
+      .test-btn {
+        background: #111;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 4px;
+      }
+      .test-btn:hover {
+        background: #333;
+      }
+      .result {
+        margin: 8px 0;
+        padding: 8px;
+        border-radius: 4px;
+      }
+      .success {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .warning {
+        background: #fff3e0;
+        color: #f57c00;
+      }
+      .error {
+        background: #ffebee;
+        color: #d32f2f;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>🚀 Journey Apparel - Integration Status</h1>
-    
+
     <div id="environment-status" class="status-card">
-        <h2><span class="status-icon">🌍</span>Environment Detection</h2>
-        <div id="env-details">Checking...</div>
+      <h2><span class="status-icon">🌍</span>Environment Detection</h2>
+      <div id="env-details">Checking...</div>
     </div>
 
     <div id="api-status" class="status-card">
-        <h2><span class="status-icon">🔌</span>Shopify API Status</h2>
-        <div id="api-details">Checking...</div>
-        <button class="test-btn" onclick="testShopifyAPI()">Test API Connection</button>
+      <h2><span class="status-icon">🔌</span>Shopify API Status</h2>
+      <div id="api-details">Checking...</div>
+      <button class="test-btn" onclick="testShopifyAPI()">
+        Test API Connection
+      </button>
     </div>
 
     <div id="features-status" class="status-card">
-        <h2><span class="status-icon">⚙️</span>Feature Status</h2>
-        <div id="features-details">Checking...</div>
+      <h2><span class="status-icon">⚙️</span>Feature Status</h2>
+      <div id="features-details">Checking...</div>
     </div>
 
     <div id="recommendations" class="status-card">
-        <h2><span class="status-icon">💡</span>Recommendations</h2>
-        <div id="recommendations-details">Analyzing...</div>
+      <h2><span class="status-icon">💡</span>Recommendations</h2>
+      <div id="recommendations-details">Analyzing...</div>
     </div>
 
     <script src="data/products.js"></script>
-    <script src="assets/cart.js"></script>
     <script src="assets/account.js"></script>
 
     <script>
-        function updateStatus(elementId, status, message) {
-            const element = document.getElementById(elementId);
-            element.className = `status-card status-${status}`;
-            element.querySelector('div:last-child').innerHTML = message;
-        }
+      function updateStatus(elementId, status, message) {
+        const element = document.getElementById(elementId);
+        element.className = `status-card status-${status}`;
+        element.querySelector("div:last-child").innerHTML = message;
+      }
 
-        function checkEnvironment() {
-            const isLocal = location.hostname === 'localhost' || 
-                           location.hostname === '127.0.0.1' || 
-                           location.protocol === 'file:';
-            
-            const isNetlify = location.hostname.includes('netlify.app') || 
-                             location.hostname.includes('netlify.com');
-            
-            let status, message;
-            
-            if (isLocal) {
-                status = 'limited';
-                message = `
+      function checkEnvironment() {
+        const isLocal =
+          location.hostname === "localhost" ||
+          location.hostname === "127.0.0.1" ||
+          location.protocol === "file:";
+
+        const isNetlify =
+          location.hostname.includes("netlify.app") ||
+          location.hostname.includes("netlify.com");
+
+        let status, message;
+
+        if (isLocal) {
+          status = "limited";
+          message = `
                     <div class="warning">⚠️ Local Development Environment</div>
                     <p><strong>Current URL:</strong> ${location.href}</p>
                     <p><strong>Limitations:</strong> Shopify API calls will not work locally</p>
                     <p><strong>Recommendation:</strong> Deploy to Netlify for full functionality</p>
                 `;
-            } else if (isNetlify) {
-                status = 'working';
-                message = `
+        } else if (isNetlify) {
+          status = "working";
+          message = `
                     <div class="success">✅ Netlify Deployment Detected</div>
                     <p><strong>Current URL:</strong> ${location.href}</p>
                     <p><strong>Status:</strong> All features should work properly</p>
                 `;
-            } else {
-                status = 'working';
-                message = `
+        } else {
+          status = "working";
+          message = `
                     <div class="success">✅ Production Environment</div>
                     <p><strong>Current URL:</strong> ${location.href}</p>
                     <p><strong>Status:</strong> Deployed environment detected</p>
                 `;
-            }
-            
-            updateStatus('environment-status', status, message);
-            return { isLocal, isNetlify, status };
         }
 
-        async function checkAPIs() {
-            const apis = {
-                shopifyAPI: !!window.shopifyAPI,
-                cartManager: !!window.cartManager,
-                JourneyAuth: !!window.JourneyAuth
-            };
+        updateStatus("environment-status", status, message);
+        return { isLocal, isNetlify, status };
+      }
 
-            let status, message;
-            const loadedCount = Object.values(apis).filter(Boolean).length;
-            
-            if (loadedCount === 3) {
-                status = 'working';
-                message = `
+      async function checkAPIs() {
+        const apis = {
+          shopifyAPI: !!window.shopifyAPI,
+          cartManager: !!window.cartManager,
+          JourneyAuth: !!window.JourneyAuth,
+        };
+
+        let status, message;
+        const loadedCount = Object.values(apis).filter(Boolean).length;
+
+        if (loadedCount === 3) {
+          status = "working";
+          message = `
                     <div class="success">✅ All APIs Loaded Successfully</div>
                     <ul>
                         <li>Shopify API Client: ✅ Loaded</li>
@@ -128,136 +168,167 @@
                         <li>Authentication: ✅ Loaded</li>
                     </ul>
                 `;
-            } else {
-                status = 'error';
-                message = `
+        } else {
+          status = "error";
+          message = `
                     <div class="error">❌ Some APIs Failed to Load</div>
                     <ul>
-                        <li>Shopify API Client: ${apis.shopifyAPI ? '✅' : '❌'} ${apis.shopifyAPI ? 'Loaded' : 'Failed'}</li>
-                        <li>Cart Manager: ${apis.cartManager ? '✅' : '❌'} ${apis.cartManager ? 'Loaded' : 'Failed'}</li>
-                        <li>Authentication: ${apis.JourneyAuth ? '✅' : '❌'} ${apis.JourneyAuth ? 'Loaded' : 'Failed'}</li>
+                        <li>Shopify API Client: ${
+                          apis.shopifyAPI ? "✅" : "❌"
+                        } ${apis.shopifyAPI ? "Loaded" : "Failed"}</li>
+                        <li>Cart Manager: ${apis.cartManager ? "✅" : "❌"} ${
+            apis.cartManager ? "Loaded" : "Failed"
+          }</li>
+                        <li>Authentication: ${apis.JourneyAuth ? "✅" : "❌"} ${
+            apis.JourneyAuth ? "Loaded" : "Failed"
+          }</li>
                     </ul>
                 `;
-            }
-            
-            updateStatus('api-status', status, message);
-            return apis;
         }
 
-        async function testShopifyAPI() {
-            const resultDiv = document.createElement('div');
-            resultDiv.className = 'result';
-            
-            try {
-                if (!window.shopifyAPI) {
-                    throw new Error('Shopify API not loaded');
-                }
-                
-                const collections = await window.shopifyAPI.getCollections();
-                
-                if (collections.error && collections.fallback) {
-                    resultDiv.className += ' warning';
-                    resultDiv.innerHTML = '⚠️ API test returned fallback response (expected in local development)';
-                } else {
-                    resultDiv.className += ' success';
-                    resultDiv.innerHTML = `✅ API test successful! Found ${collections.collections?.length || 0} collections`;
-                }
-            } catch (error) {
-                resultDiv.className += ' error';
-                resultDiv.innerHTML = `❌ API test failed: ${error.message}`;
-            }
-            
-            const apiDetails = document.getElementById('api-details');
-            apiDetails.appendChild(resultDiv);
+        updateStatus("api-status", status, message);
+        return apis;
+      }
+
+      async function testShopifyAPI() {
+        const resultDiv = document.createElement("div");
+        resultDiv.className = "result";
+
+        try {
+          if (!window.shopifyAPI) {
+            throw new Error("Shopify API not loaded");
+          }
+
+          const collections = await window.shopifyAPI.getCollections();
+
+          if (collections.error && collections.fallback) {
+            resultDiv.className += " warning";
+            resultDiv.innerHTML =
+              "⚠️ API test returned fallback response (expected in local development)";
+          } else {
+            resultDiv.className += " success";
+            resultDiv.innerHTML = `✅ API test successful! Found ${
+              collections.collections?.length || 0
+            } collections`;
+          }
+        } catch (error) {
+          resultDiv.className += " error";
+          resultDiv.innerHTML = `❌ API test failed: ${error.message}`;
         }
 
-        function checkFeatures(envInfo, apis) {
-            const features = [];
-            
-            // Product Loading
-            if (apis.shopifyAPI && !envInfo.isLocal) {
-                features.push('✅ Product Loading: Fully functional');
-            } else if (apis.shopifyAPI && envInfo.isLocal) {
-                features.push('⚠️ Product Loading: Limited (fallback mode)');
-            } else {
-                features.push('❌ Product Loading: Not available');
-            }
-            
-            // Cart Functionality
-            if (apis.cartManager && !envInfo.isLocal) {
-                features.push('✅ Shopping Cart: Fully functional');
-            } else if (apis.cartManager && envInfo.isLocal) {
-                features.push('⚠️ Shopping Cart: Limited (local mode)');
-            } else {
-                features.push('❌ Shopping Cart: Not available');
-            }
-            
-            // Customer Accounts
-            if (apis.JourneyAuth && !envInfo.isLocal) {
-                features.push('✅ Customer Accounts: Fully functional');
-            } else if (apis.JourneyAuth && envInfo.isLocal) {
-                features.push('⚠️ Customer Accounts: Limited (local mode)');
-            } else {
-                features.push('❌ Customer Accounts: Not available');
-            }
-            
-            // Basic Website
-            features.push('✅ Basic Website: Fully functional');
-            
-            const status = features.some(f => f.includes('❌')) ? 'error' : 
-                          features.some(f => f.includes('⚠️')) ? 'limited' : 'working';
-            
-            const message = `<ul><li>${features.join('</li><li>')}</li></ul>`;
-            
-            updateStatus('features-status', status, message);
-            return { features, status };
+        const apiDetails = document.getElementById("api-details");
+        apiDetails.appendChild(resultDiv);
+      }
+
+      function checkFeatures(envInfo, apis) {
+        const features = [];
+
+        // Product Loading
+        if (apis.shopifyAPI && !envInfo.isLocal) {
+          features.push("✅ Product Loading: Fully functional");
+        } else if (apis.shopifyAPI && envInfo.isLocal) {
+          features.push("⚠️ Product Loading: Limited (fallback mode)");
+        } else {
+          features.push("❌ Product Loading: Not available");
         }
 
-        function showRecommendations(envInfo, apis, features) {
-            let recommendations = [];
-            
-            if (envInfo.isLocal) {
-                recommendations.push('🚀 <strong>Deploy to Netlify</strong> for full Shopify functionality');
-                recommendations.push('🔧 Set environment variables: SHOPIFY_STORE_DOMAIN and SHOPIFY_STOREFRONT_TOKEN');
-                recommendations.push('📝 Use the deployment guide in DEPLOYMENT-GUIDE.md');
-            }
-            
-            if (!apis.shopifyAPI) {
-                recommendations.push('🔄 Check that data/products.js is loading correctly');
-            }
-            
-            if (!apis.cartManager) {
-                recommendations.push('🛒 Check that assets/cart.js is loading correctly');
-            }
-            
-            if (!apis.JourneyAuth) {
-                recommendations.push('👤 Check that assets/account.js is loading correctly');
-            }
-            
-            if (recommendations.length === 0) {
-                recommendations.push('🎉 Everything looks good! Your integration is working properly.');
-            }
-            
-            const status = recommendations.length === 1 && recommendations[0].includes('🎉') ? 'working' : 'limited';
-            const message = `<ul><li>${recommendations.join('</li><li>')}</li></ul>`;
-            
-            updateStatus('recommendations', status, message);
+        // Cart Functionality
+        if (apis.cartManager && !envInfo.isLocal) {
+          features.push("✅ Shopping Cart: Fully functional");
+        } else if (apis.cartManager && envInfo.isLocal) {
+          features.push("⚠️ Shopping Cart: Limited (local mode)");
+        } else {
+          features.push("❌ Shopping Cart: Not available");
         }
 
-        // Run all checks on page load
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log('🔍 Running integration status checks...');
-            
-            // Wait a moment for scripts to load
-            setTimeout(async () => {
-                const envInfo = checkEnvironment();
-                const apis = await checkAPIs();
-                const features = checkFeatures(envInfo, apis);
-                showRecommendations(envInfo, apis, features);
-                
-                console.log('✅ Integration status check complete');
-            }, 500);
-        });
+        // Customer Accounts
+        if (apis.JourneyAuth && !envInfo.isLocal) {
+          features.push("✅ Customer Accounts: Fully functional");
+        } else if (apis.JourneyAuth && envInfo.isLocal) {
+          features.push("⚠️ Customer Accounts: Limited (local mode)");
+        } else {
+          features.push("❌ Customer Accounts: Not available");
+        }
+
+        // Basic Website
+        features.push("✅ Basic Website: Fully functional");
+
+        const status = features.some((f) => f.includes("❌"))
+          ? "error"
+          : features.some((f) => f.includes("⚠️"))
+          ? "limited"
+          : "working";
+
+        const message = `<ul><li>${features.join("</li><li>")}</li></ul>`;
+
+        updateStatus("features-status", status, message);
+        return { features, status };
+      }
+
+      function showRecommendations(envInfo, apis, features) {
+        let recommendations = [];
+
+        if (envInfo.isLocal) {
+          recommendations.push(
+            "🚀 <strong>Deploy to Netlify</strong> for full Shopify functionality"
+          );
+          recommendations.push(
+            "🔧 Set environment variables: SHOPIFY_STORE_DOMAIN and SHOPIFY_STOREFRONT_TOKEN"
+          );
+          recommendations.push(
+            "📝 Use the deployment guide in DEPLOYMENT-GUIDE.md"
+          );
+        }
+
+        if (!apis.shopifyAPI) {
+          recommendations.push(
+            "🔄 Check that data/products.js is loading correctly"
+          );
+        }
+
+        if (!apis.cartManager) {
+          recommendations.push(
+            "🛒 Check that assets/cart.js is loading correctly"
+          );
+        }
+
+        if (!apis.JourneyAuth) {
+          recommendations.push(
+            "👤 Check that assets/account.js is loading correctly"
+          );
+        }
+
+        if (recommendations.length === 0) {
+          recommendations.push(
+            "🎉 Everything looks good! Your integration is working properly."
+          );
+        }
+
+        const status =
+          recommendations.length === 1 && recommendations[0].includes("🎉")
+            ? "working"
+            : "limited";
+        const message = `<ul><li>${recommendations.join(
+          "</li><li>"
+        )}</li></ul>`;
+
+        updateStatus("recommendations", status, message);
+      }
+
+      // Run all checks on page load
+      document.addEventListener("DOMContentLoaded", async () => {
+        console.log("🔍 Running integration status checks...");
+
+        // Wait a moment for scripts to load
+        setTimeout(async () => {
+          const envInfo = checkEnvironment();
+          const apis = await checkAPIs();
+          const features = checkFeatures(envInfo, apis);
+          showRecommendations(envInfo, apis, features);
+
+          console.log("✅ Integration status check complete");
+        }, 500);
+      });
     </script>
-</body>
+  </body>
 </html>

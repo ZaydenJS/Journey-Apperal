@@ -7,6 +7,7 @@ This is a headless Shopify storefront built with HTML/CSS/JavaScript and deploye
 ### 1. Shopify Configuration
 
 Your Shopify store is already configured:
+
 - **Store Domain**: `7196su-vk.myshopify.com`
 - **Storefront API**: Enabled with required scopes
 - **Collections**: Tops, Hoodies, Bottoms, Hats
@@ -32,47 +33,44 @@ SHOPIFY_STOREFRONT_TOKEN=your_actual_token_here
 ### 4. Features Implemented
 
 #### ✅ Products & Collections
+
 - Fetch products by collection
 - Support filtering by product tags
 - Dynamic product loading on homepage and collection pages
 - Product detail pages with variants and add-to-cart
 
-#### ✅ Cart & Checkout
-- Add-to-cart functionality
-- Cart management (create, update, remove items)
-- Redirect to Shopify Checkout
-- Cart persistence across sessions
+#### ✅ Checkout (Simplified)
+
+- Client-only checkout via Shopify cart permalinks
+- Local cart lines stored in browser (no server-side cart)
+- Redirects directly to `https://<store>.myshopify.com/cart/ID:QTY,...`
 
 #### ✅ Customer Accounts
-- Customer registration and login
-- Order history display
-- Account management
-- Secure token-based authentication
+
+- Uses Shopify New Customer Accounts (passwordless) via redirect
+- No local email/password forms or tokens in this frontend
 
 #### ✅ Collections & Categories
+
 - **Tops** (tag: "Tops")
-- **Hoodies** (tag: "Hoodies") 
+- **Hoodies** (tag: "Hoodies")
 - **Bottoms** (tag: "Bottoms")
 - **Hats** (tag: "Hats")
 
 #### 🔄 Ready for Integration
+
 - **Mailchimp**: Popup and welcome automation slots ready
 - **Smile.io**: Loyalty program integration points prepared
 - **Judge.me**: Product review widget slots ready
 
 ### 5. API Endpoints
 
-All Shopify calls go through Netlify Functions:
+All active Shopify calls go through Netlify Functions:
 
-- `/.netlify/functions/listCollections` - Get all collections
-- `/.netlify/functions/getCollection?handle=collection-name&tag=optional` - Get collection products
-- `/.netlify/functions/getProduct?handle=product-handle` - Get single product
-- `/.netlify/functions/createCart` - Create new cart
-- `/.netlify/functions/addToCart` - Add items to cart
-- `/.netlify/functions/updateCart` - Update cart items
-- `/.netlify/functions/customerLogin` - Customer login
-- `/.netlify/functions/customerRegister` - Customer registration
-- `/.netlify/functions/getCustomer` - Get customer data
+- `/.netlify/functions/listCollections` — Get all collections
+- `/.netlify/functions/getCollection?handle=collection-name&tag=optional` — Get collection products
+- `/.netlify/functions/getProduct?handle=product-handle` — Get single product
+- `/.netlify/functions/product-variants?handle=product-handle` — Lightweight variant availability for size picker
 
 ### 6. Frontend Integration
 
@@ -93,6 +91,7 @@ The frontend automatically loads products from Shopify:
 ### 8. Testing
 
 Use Shopify's Bogus Gateway for test orders:
+
 - Test card: `4242 4242 4242 4242`
 - Any future expiry date
 - Any 3-digit CVC
@@ -108,11 +107,13 @@ Use Shopify's Bogus Gateway for test orders:
 ### 10. Support
 
 For Shopify-specific issues:
+
 - Check Shopify Admin → Settings → Apps and sales channels → Develop apps
 - Verify Storefront API permissions
 - Test API calls in Shopify GraphQL Admin API
 
 For deployment issues:
+
 - Check Netlify Functions logs
 - Verify environment variables are set
 - Test API endpoints directly

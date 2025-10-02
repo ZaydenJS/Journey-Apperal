@@ -76,25 +76,6 @@ class ShopifyAPI {
       return { products: [], product: null };
     }
 
-    if (endpoint.includes("createCart")) {
-      return {
-        cart: {
-          id: "local-cart-" + Date.now(),
-          checkoutUrl: "#",
-          totalQuantity: 0,
-          cost: { totalAmount: { amount: "0.00", currencyCode: "USD" } },
-        },
-      };
-    }
-
-    if (endpoint.includes("customer")) {
-      return {
-        customer: null,
-        accessToken: null,
-        errors: ["API not available in local development"],
-      };
-    }
-
     return { error: "API not available", fallback: true };
   }
 
@@ -114,59 +95,7 @@ class ShopifyAPI {
     return this.request(`getProduct?handle=${handle}`);
   }
 
-  // Cart
-  async createCart(lines = [], buyerIdentity = null) {
-    const body = { lines };
-    if (buyerIdentity) body.buyerIdentity = buyerIdentity;
-    return this.request("createCart", {
-      method: "POST",
-      body,
-    });
-  }
-
-  async getCart(cartId) {
-    return this.request(`getCart?id=${encodeURIComponent(cartId)}`);
-  }
-
-  async addToCart(cartId, lines) {
-    return this.request("addToCart", {
-      method: "POST",
-      body: { cartId, lines },
-    });
-  }
-
-  async updateCart(cartId, lines) {
-    return this.request("updateCart", {
-      method: "POST",
-      body: { cartId, lines },
-    });
-  }
-
-  // Customer
-  async customerLogin(email, password) {
-    return this.request("customerLogin", {
-      method: "POST",
-      body: { email, password },
-    });
-  }
-
-  async customerRegister(customerData) {
-    return this.request("customerRegister", {
-      method: "POST",
-      body: customerData,
-    });
-  }
-
-  async customerRecover(email) {
-    return this.request("customerRecover", {
-      method: "POST",
-      body: { email },
-    });
-  }
-
-  async getCustomer(accessToken) {
-    return this.request(`getCustomer?accessToken=${accessToken}`);
-  }
+  // Cart & Customer APIs removed. Checkout now uses Shopify cart permalinks client-side; authentication handled by Shopify New Customer Accounts.
 
   // Clear cache
   clearCache() {

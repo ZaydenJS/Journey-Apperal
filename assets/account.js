@@ -101,54 +101,40 @@
     }
   }
 
-  // Shopify Authentication Functions
-  async function login(email, password) {
+  // Shopify Authentication Functions (client does not handle credentials)
+  async function login() {
+    console.warn("Use Shopify New Customer Accounts for authentication");
     try {
-      const response = await window.shopifyAPI.customerLogin(email, password);
-      setAuth(response.accessToken, response.expiresAt, response.customer);
-      return response;
-    } catch (error) {
-      console.error("Login failed:", error);
-      throw error;
+      window.location.href = SHOPIFY_LOGIN_URL;
+    } catch (_) {
+      location.href = SHOPIFY_LOGIN_URL;
     }
+    return { redirected: true };
   }
 
-  async function register(customerData) {
+  async function register() {
+    console.warn("Use Shopify New Customer Accounts for registration");
     try {
-      const response = await window.shopifyAPI.customerRegister(customerData);
-      if (response.accessToken) {
-        setAuth(response.accessToken, response.expiresAt, response.customer);
-      }
-      return response;
-    } catch (error) {
-      console.error("Registration failed:", error);
-      throw error;
+      window.location.href = SHOPIFY_LOGIN_URL;
+    } catch (_) {
+      location.href = SHOPIFY_LOGIN_URL;
     }
+    return { redirected: true };
   }
 
-  async function recover(email) {
+  async function recover() {
+    console.warn("Use Shopify New Customer Accounts for passwordless recovery");
     try {
-      const response = await window.shopifyAPI.customerRecover(email);
-      return response;
-    } catch (error) {
-      console.error("Password recovery failed:", error);
-      throw error;
+      window.location.href = SHOPIFY_LOGIN_URL;
+    } catch (_) {
+      location.href = SHOPIFY_LOGIN_URL;
     }
+    return { redirected: true };
   }
 
   async function refreshCustomerData() {
-    try {
-      const accessToken = getAccessToken();
-      if (!accessToken) return null;
-
-      const response = await window.shopifyAPI.getCustomer(accessToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(response.customer));
-      return response.customer;
-    } catch (error) {
-      console.error("Failed to refresh customer data:", error);
-      clearAuth();
-      return null;
-    }
+    // Not available client-side with New Customer Accounts; rely on Shopify UI
+    return null;
   }
 
   function logout() {
