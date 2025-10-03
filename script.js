@@ -171,6 +171,8 @@
       "setupRecentlyViewedAndBestSellers",
       setupRecentlyViewedAndBestSellers
     );
+    __safe("setupSitewideRecentlyViewed", setupSitewideRecentlyViewed);
+
     __safe("setupSizeSelection", setupSizeSelection);
     __safe("setupWishlist", setupWishlist);
 
@@ -426,6 +428,26 @@
       const images = p.images || [];
       const mainImage = images[0]?.url || "";
       const altImage = images[1]?.url || "";
+
+      // Track Recently Viewed (add current product, then render excluding itself)
+      try {
+        const priceNum = parseFloat(p.priceRange.minVariantPrice.amount);
+        const displayPrice = `${money(priceNum)} ${
+          p.priceRange.minVariantPrice.currencyCode || ""
+        }`.trim();
+        const mainImgUrl = (p.images && p.images[0] && p.images[0].url) || "";
+        const handle = p.handle || slug;
+        __rvAdd({
+          handle,
+          title: p.title,
+          image: mainImgUrl,
+          price: displayPrice,
+        });
+        const rvTrack = document.querySelector(
+          "#you-also-viewed .carousel-track"
+        );
+        __rvRenderInto(rvTrack, { exclude: handle });
+      } catch (_) {}
 
       if (mainGalleryImg && mainImage) {
         mainGalleryImg.src = mainImage;
@@ -1077,7 +1099,7 @@
     ); // Fallback to first variant
   }
 
-  function setupRecentlyViewedAndBestSellers() {
+  async function setupRecentlyViewedAndBestSellers() {
     const here = (location.pathname.split("/").pop() || "").toLowerCase();
     if (!here.endsWith("product.html")) return;
 
@@ -1100,104 +1122,217 @@
       </article>`;
     };
 
-    // Recently Viewed: render from localStorage if present
+    // Recently Viewed: render from storage (v2) and exclude current product
     try {
       const track = document.querySelector("#you-also-viewed .carousel-track");
+      const params = new URLSearchParams(location.search);
+      const slug = params.get("slug");
       if (track) {
-        const items = JSON.parse(
-          localStorage.getItem("recentlyViewedV1") || "[]"
-        ).filter(Boolean);
-        if (items && items.length) {
-          track.innerHTML = items.map(cardHTML).join("");
-        }
+        __rvRenderInto(track, { exclude: slug });
       }
     } catch (_) {}
 
-    // Best Sellers: populate a longer list so arrows can scroll through
+    // Best Sellers: dynamically load from Shopify (collection 'best-sellers' or tag variants)
     const bestSection = document.querySelector("#featured-collection");
     const bestTrack =
       bestSection && bestSection.querySelector(".carousel-track");
-    if (bestTrack) {
-      const best = [
-        {
-          name: "City Hoodie",
-          price: "$98.00 AUD",
-          main: "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=city-hoodie",
-        },
-        {
-          name: "Aero Tee",
-          price: "$48.00 AUD",
-          main: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1528701800489-20be0b02f47e?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=aero-tee",
-        },
-        {
-          name: "Tech Tee",
-          price: "$48.00 AUD",
-          main: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=tech-tee",
-        },
-        {
-          name: "Aero Jogger",
-          price: "$78.00 AUD",
-          main: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=aero-jogger",
-        },
-        {
-          name: "City Hoodie",
-          price: "$98.00 AUD",
-          main: "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=city-hoodie",
-        },
-        {
-          name: "Ultra Short",
-          price: "$58.00 AUD",
-          main: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=ultra-short",
-        },
-        {
-          name: "Aero Jogger",
-          price: "$78.00 AUD",
-          main: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=aero-jogger",
-        },
-      ];
-
-      let idx = 0;
-      const renderPair = () => {
-        if (!best.length) return;
-        const a = best[idx % best.length];
-        const b = best[(idx + 1) % best.length];
-        bestTrack.innerHTML = [cardHTML(a), cardHTML(b)].join("");
-      };
-      renderPair();
-
-      const prevBtn = bestSection && bestSection.querySelector(".ctrl.prev");
-      const nextBtn = bestSection && bestSection.querySelector(".ctrl.next");
-      if (prevBtn) {
-        prevBtn.removeAttribute("onclick");
-        prevBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          idx = (idx - 2 + best.length) % best.length;
-          renderPair();
-        });
-      }
-      if (nextBtn) {
-        nextBtn.removeAttribute("onclick");
-        nextBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          idx = (idx + 2) % best.length;
-          renderPair();
-        });
+    if (bestTrack && window.shopifyAPI) {
+      try {
+        let bestProducts = [];
+        // 1) Try dedicated collection handle 'best-sellers'
+        try {
+          const col = await window.shopifyAPI.getCollection("best-sellers");
+          bestProducts = (col && col.products) || [];
+        } catch (_) {}
+        // 2) Fallback to tag variants
+        if (!bestProducts || bestProducts.length === 0) {
+          const tagVariants = [
+            "best sellers",
+            "best-sellers",
+            "Best Sellers",
+            "Best-Sellers",
+          ];
+          for (const t of tagVariants) {
+            try {
+              const byTag = await window.shopifyAPI.getCollection("all", t);
+              if (byTag && byTag.products && byTag.products.length) {
+                bestProducts = byTag.products;
+                break;
+              }
+            } catch (_) {}
+          }
+        }
+        // If still empty, hide the section
+        if (!bestProducts || bestProducts.length === 0) {
+          bestSection.style.display = "none";
+          return;
+        }
+        // Render two cards at a time with prev/next controls
+        let idx = 0;
+        const renderPair = () => {
+          const a = bestProducts[idx % bestProducts.length];
+          const b = bestProducts[(idx + 1) % bestProducts.length];
+          bestTrack.innerHTML = [a, b]
+            .filter(Boolean)
+            .map((p) => renderHomepageProductCard(p))
+            .join("");
+          try {
+            setupCardLinks();
+          } catch (_) {}
+        };
+        renderPair();
+        const prevBtn = bestSection && bestSection.querySelector(".ctrl.prev");
+        const nextBtn = bestSection && bestSection.querySelector(".ctrl.next");
+        if (prevBtn) {
+          prevBtn.removeAttribute("onclick");
+          prevBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            idx = (idx - 2 + bestProducts.length) % bestProducts.length;
+            renderPair();
+          });
+        }
+        if (nextBtn) {
+          nextBtn.removeAttribute("onclick");
+          nextBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            idx = (idx + 2) % bestProducts.length;
+            renderPair();
+          });
+        }
+      } catch (e) {
+        console.warn("Failed to load Best Sellers on PDP", e);
       }
     }
+  }
+
+  /* Recently Viewed (sitewide) */
+  const RV_KEY = "recentlyViewedV2";
+  const RV_MAX = 12;
+  const RV_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+  function __rvLoad() {
+    try {
+      let arr = JSON.parse(localStorage.getItem(RV_KEY) || "[]");
+      if (!Array.isArray(arr)) arr = [];
+      const now = Date.now();
+      arr = arr.filter(
+        (it) => it && it.handle && (!it.ts || now - it.ts <= RV_TTL_MS)
+      );
+      // Persist cleanup
+      localStorage.setItem(RV_KEY, JSON.stringify(arr));
+      return arr;
+    } catch (_) {
+      return [];
+    }
+  }
+  function __rvSave(arr) {
+    try {
+      localStorage.setItem(RV_KEY, JSON.stringify(arr || []));
+    } catch (_) {}
+  }
+  function __rvAdd(item) {
+    try {
+      if (!item || !item.handle) return;
+      const now = Date.now();
+      let arr = __rvLoad();
+      arr = arr.filter((it) => it.handle !== item.handle);
+      arr.unshift({
+        handle: item.handle,
+        title: item.title || "",
+        image: item.image || "",
+        price: item.price || "",
+        ts: now,
+      });
+      if (arr.length > RV_MAX) arr = arr.slice(0, RV_MAX);
+      __rvSave(arr);
+    } catch (_) {}
+  }
+  function __rvCardHTML(it) {
+    const href = `product.html?slug=${encodeURIComponent(it.handle)}`;
+    const img = it.image || "";
+    const title = it.title || "";
+    const price = it.price || "";
+    return `\n  <article class="card" data-href="${href}" style="cursor:pointer">\n    <a href="${href}" class="img-wrap" style="position:relative; display:block; aspect-ratio:3/4; overflow:hidden; border-radius:0">\n      <img src="${img}" alt="${title}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover" onerror="this.style.display='none'; this.parentNode.style.background='#f5f5f5'; this.parentNode.style.minHeight='220px';"/>\n    </a>\n    <div class="row mt-8" style="display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:8px; font-size:14px; text-align:center;">\n      <span style="font-weight:400; text-transform:uppercase; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:95%">${title}</span>\n      <span class="price" style="font-weight:400">${price}</span>\n    </div>\n  </article>`;
+  }
+  function __rvRenderInto(track, opts) {
+    try {
+      if (!track) return;
+      const exclude = opts && opts.exclude;
+      let items = __rvLoad();
+      if (exclude) items = items.filter((it) => it.handle !== exclude);
+      if (!items.length) {
+        const sec = track.closest("section");
+        if (sec) sec.style.display = "none";
+        return;
+      }
+      track.innerHTML = items.map(__rvCardHTML).join("");
+      try {
+        setupCardLinks && setupCardLinks();
+      } catch (_) {}
+    } catch (_) {}
+  }
+  function ensureSitewideRVSection() {
+    try {
+      const isPDP = (location.pathname.split("/").pop() || "")
+        .toLowerCase()
+        .endsWith("product.html");
+      if (isPDP) return null;
+      let sec = document.getElementById("recently-viewed");
+      if (sec) return sec;
+      const main = document.querySelector("main") || document.body;
+      sec = document.createElement("section");
+      sec.id = "recently-viewed";
+      sec.className = "section container";
+      sec.setAttribute("aria-label", "Recently Viewed");
+      sec.style.width = "100%";
+      sec.style.maxWidth = "none";
+      sec.style.margin = "0";
+      sec.style.paddingLeft = "0";
+      sec.style.paddingRight = "0";
+      sec.innerHTML = `\n  <div class="upper center" style="font-weight:800; text-align:center; font-size:16px; margin:0 0 12px;">Recently Viewed</div>\n  <div class="carousel" role="region" aria-label="Recently Viewed" style="position:relative">\n    <button class="ctrl prev" aria-label="Previous" type="button"><span style="display:inline-block; transform:rotate(180deg)">›</span></button>\n    <button class="ctrl next" aria-label="Next" type="button"><span>›</span></button>\n    <div class="carousel-track mobile-2x1" role="list" style="width:100%; padding:0; margin:0; box-sizing:border-box;"></div>\n  </div>`;
+      if (main) main.appendChild(sec);
+      const track = sec.querySelector(".carousel-track");
+      const prev = sec.querySelector(".ctrl.prev");
+      const next = sec.querySelector(".ctrl.next");
+      const scrollByAmt = () =>
+        Math.max(240, Math.floor((track.clientWidth || 0) * 0.8));
+      const goPrev = () =>
+        track && track.scrollBy({ left: -scrollByAmt(), behavior: "smooth" });
+      const goNext = () =>
+        track && track.scrollBy({ left: scrollByAmt(), behavior: "smooth" });
+      if (prev)
+        prev.addEventListener("click", (e) => {
+          e.preventDefault();
+          goPrev();
+        });
+      if (next)
+        next.addEventListener("click", (e) => {
+          e.preventDefault();
+          goNext();
+        });
+      return sec;
+    } catch (_) {
+      return null;
+    }
+  }
+  function setupSitewideRecentlyViewed() {
+    try {
+      const isPDP = (location.pathname.split("/").pop() || "")
+        .toLowerCase()
+        .endsWith("product.html");
+      if (isPDP) {
+        const track = document.querySelector(
+          "#you-also-viewed .carousel-track"
+        );
+        const params = new URLSearchParams(location.search);
+        const slug = params.get("slug");
+        __rvRenderInto(track, { exclude: slug });
+        return;
+      }
+      const sec = ensureSitewideRVSection();
+      const track = sec && sec.querySelector(".carousel-track");
+      __rvRenderInto(track, {});
+    } catch (_) {}
   }
 
   function setupMobileNav() {
@@ -2769,15 +2904,40 @@
 
       let products = [];
 
-      // Load products from all collections (if Shopify API available)
+      // Load products (Shopify API)
       if (window.shopifyAPI) {
-        const collections = await window.shopifyAPI.getCollections();
-
-        for (const collection of collections.collections) {
-          const collectionData = await window.shopifyAPI.getCollection(
-            collection.handle
-          );
-          products.push(...(collectionData.products || []));
+        if (section === "best-sellers") {
+          // Try dedicated collection handle first
+          try {
+            const byCol = await window.shopifyAPI.getCollection("best-sellers");
+            if (byCol && byCol.products) products = byCol.products.slice();
+          } catch (_) {}
+          // Fallback to tag variants if collection is missing/empty
+          if (!products.length) {
+            const tagVariants = [
+              "best sellers",
+              "best-sellers",
+              "Best Sellers",
+              "Best-Sellers",
+            ];
+            for (const t of tagVariants) {
+              try {
+                const byTag = await window.shopifyAPI.getCollection("all", t);
+                if (byTag && byTag.products && byTag.products.length) {
+                  products = byTag.products.slice();
+                  break;
+                }
+              } catch (_) {}
+            }
+          }
+        } else {
+          const collections = await window.shopifyAPI.getCollections();
+          for (const collection of collections.collections) {
+            const collectionData = await window.shopifyAPI.getCollection(
+              collection.handle
+            );
+            products.push(...(collectionData.products || []));
+          }
         }
       } else {
         console.log("Shopify API not available for homepage products");
@@ -4347,6 +4507,7 @@
 
     function updateCartCount(items = getCart()) {
       const count = items.reduce((a, it) => a + (it.qty || 1), 0);
+
       // Update any existing count placeholders (e.g., in mobile drawer)
       $$("#cart-count").forEach((el) => (el.textContent = String(count)));
 
