@@ -2590,6 +2590,17 @@
             );
             products.push(...(collectionData.products || []));
           }
+        } else if (collectionHandle === "best-sellers") {
+          // Special-case: mirror homepage "Best Sellers" selection
+          // Pull from all collections and filter to available products
+          const collections = await window.shopifyAPI.getCollections();
+          for (const collection of collections.collections) {
+            const collectionData = await window.shopifyAPI.getCollection(
+              collection.handle
+            );
+            products.push(...(collectionData.products || []));
+          }
+          products = products.filter((p) => p.availableForSale);
         } else {
           // Load specific collection
           const data = await window.shopifyAPI.getCollection(
