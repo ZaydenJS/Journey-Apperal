@@ -697,10 +697,36 @@
                 (nameEl && nameEl.textContent.trim()) ||
                 (product && product.title) ||
                 "";
-              const priceEl = document.querySelector(
-                ".price .current, .product-price .current, .p-details .price .current"
-              );
-              const price = (priceEl && priceEl.textContent.trim()) || "";
+              let price = "";
+              try {
+                if (
+                  selectedVariant &&
+                  selectedVariant.price &&
+                  selectedVariant.price.amount
+                ) {
+                  price = `$${parseFloat(selectedVariant.price.amount).toFixed(
+                    2
+                  )}`;
+                } else {
+                  const priceNode =
+                    document.querySelector(".p-details .p-price") ||
+                    document.querySelector(
+                      ".price .current, .product-price .current, .p-details .price .current"
+                    );
+                  if (priceNode && priceNode.textContent) {
+                    price = priceNode.textContent.trim();
+                  } else if (
+                    product &&
+                    product.priceRange &&
+                    product.priceRange.minVariantPrice &&
+                    product.priceRange.minVariantPrice.amount
+                  ) {
+                    price = `$${parseFloat(
+                      product.priceRange.minVariantPrice.amount
+                    ).toFixed(2)}`;
+                  }
+                }
+              } catch (_) {}
               const size =
                 (selectedVariant &&
                 Array.isArray(selectedVariant.selectedOptions)
@@ -3883,6 +3909,12 @@
         wrap.innerHTML =
           '<div style="text-align:center; color:#666; padding:24px 0;">Your cart is empty.</div>';
         sub.textContent = "$0.00";
+        const gstEl = document.getElementById("cart-gst");
+        const inclEl = document.getElementById("cart-total-incl");
+        const exclEl = document.getElementById("cart-total-excl");
+        if (gstEl) gstEl.textContent = "$0.00";
+        if (inclEl) inclEl.textContent = "$0.00";
+        if (exclEl) exclEl.textContent = "$0.00";
         return;
       }
       let html = "";
