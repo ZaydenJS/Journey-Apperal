@@ -3957,15 +3957,14 @@
         '<div style="height:1px; background:#e5e5e5; margin:12px 0;"></div><div style="text-align:center; margin-bottom:12px;"><a href="#" id="continue-shopping" style="color:#2f6fec; text-decoration:underline;">Continue shopping</a></div>';
       wrap.innerHTML = html;
       sub.textContent = money(total);
-      // AU GST (10%) is typically displayed as included in consumer prices.
-      // GST component of an incl.-GST subtotal is 1/11 of the total.
-      const gst = total / 11;
+      // GST added on top (10% of subtotal)
+      const gst = total * 0.1;
       const gstEl = document.getElementById("cart-gst");
       const inclEl = document.getElementById("cart-total-incl");
       const exclEl = document.getElementById("cart-total-excl");
       if (gstEl) gstEl.textContent = money(gst);
-      if (inclEl) inclEl.textContent = money(total);
-      if (exclEl) exclEl.textContent = money(total - gst);
+      if (inclEl) inclEl.textContent = money(total + gst);
+      if (exclEl) exclEl.textContent = money(total);
       // remove handlers
       wrap.querySelectorAll("[data-remove]").forEach((btn) =>
         btn.addEventListener("click", () => {
