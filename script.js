@@ -2156,14 +2156,17 @@
       });
     });
 
-    // Fallback delegated handler in case sections are injected after init
+    // Delegated handler: ensure clicks always toggle, even if buttons were injected later
     document.addEventListener("click", (e) => {
       const b = e.target.closest(".collapsible > button");
-      if (!b || b.dataset.collapsibleWired === "1") return;
+      if (!b) return;
       const sec = b.closest(".collapsible");
       const panel = sec && sec.querySelector(".content");
       if (!sec || !panel) return;
       e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === "function")
+        e.stopImmediatePropagation();
       const isOpen = b.getAttribute("aria-expanded") === "true";
       const closePanel = (section, button, p) => {
         section.classList.remove("open");
@@ -2182,9 +2185,8 @@
         const h = p.scrollHeight;
         p.style.height = h + "px";
         const done = () => {
-          if (button.getAttribute("aria-expanded") === "true") {
+          if (button.getAttribute("aria-expanded") === "true")
             p.style.height = "auto";
-          }
           p.removeEventListener("transitionend", done);
         };
         p.addEventListener("transitionend", done);
