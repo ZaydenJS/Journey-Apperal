@@ -27,6 +27,7 @@ export const PRODUCT_FRAGMENT = `
     handle
     title
     description
+    descriptionHtml
     tags
     vendor
     productType
@@ -102,6 +103,9 @@ export const PRODUCT_FRAGMENT = `
     seo {
       title
       description
+    }
+    metafield(namespace: "custom", key: "short_description") {
+      value
     }
   }
 `;

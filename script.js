@@ -273,8 +273,126 @@
           p.priceRange.minVariantPrice.currencyCode
         }`;
       }
-      if (descriptionEl) {
-        descriptionEl.innerHTML = p.description || "";
+      // Populate Details accordion with sanitized description HTML and fallbacks
+      try {
+        const detailsCollapsible = Array.from(
+          document.querySelectorAll(".p-details .collapsible")
+        ).find((c) =>
+          /details/i.test(c.querySelector("button")?.textContent || "")
+        );
+        if (detailsCollapsible) {
+          const contentEl = detailsCollapsible.querySelector(".content");
+
+          function escapeHtml(s) {
+            return String(s || "")
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#39;");
+          }
+
+          function sanitizeRichHTML(html) {
+            const allowed = new Set([
+              "p",
+              "h1",
+              "h2",
+              "h3",
+              "h4",
+              "ul",
+              "ol",
+              "li",
+              "strong",
+              "em",
+              "a",
+              "br",
+            ]);
+            const tmp = document.createElement("div");
+            tmp.innerHTML = html || "";
+
+            const walk = (node) => {
+              const children = Array.from(node.childNodes);
+              for (const child of children) {
+                if (child.nodeType === 1) {
+                  // ELEMENT
+                  const tag = child.tagName.toLowerCase();
+                  if (!allowed.has(tag)) {
+                    // unwrap disallowed element, keep its children
+                    while (child.firstChild)
+                      node.insertBefore(child.firstChild, child);
+                    child.remove();
+                    continue;
+                  }
+                  if (tag === "a") {
+                    // keep only href/target; ensure safe href; add rel for target=_blank
+                    const href = child.getAttribute("href") || "";
+                    const target = child.getAttribute("target") || "";
+                    // Remove all attributes first
+                    Array.from(child.attributes).forEach((a) =>
+                      child.removeAttribute(a.name)
+                    );
+                    if (/^(https?:|mailto:)/i.test(href))
+                      child.setAttribute("href", href);
+                    if (target === "_blank")
+                      child.setAttribute("target", "_blank");
+                    if (child.getAttribute("target") === "_blank") {
+                      child.setAttribute("rel", "noopener noreferrer");
+                    }
+                  } else {
+                    // strip all attributes for other tags
+                    Array.from(child.attributes).forEach((a) =>
+                      child.removeAttribute(a.name)
+                    );
+                  }
+                  walk(child);
+                } else if (child.nodeType === 8) {
+                  // comment
+                  child.remove();
+                }
+              }
+            };
+            walk(tmp);
+            return tmp.innerHTML;
+          }
+
+          // Compute description HTML with fallbacks
+          let descHTML =
+            p.descriptionHtml || (p.metafield && p.metafield.value) || "";
+          if (!descHTML) {
+            const plain = p.description || (p.seo && p.seo.description) || "";
+            if (plain) {
+              const blocks = String(plain)
+                .split(/\n{2,}|\r?\n/)
+                .filter(Boolean)
+                .map((t) => `<p>${escapeHtml(t)}</p>`);
+              descHTML = blocks.join("");
+            }
+          }
+
+          const safeHTML = sanitizeRichHTML(descHTML);
+          if (safeHTML && safeHTML.trim()) {
+            if (contentEl) {
+              contentEl.innerHTML = safeHTML;
+              // basic typography/spacing
+              contentEl.style.fontSize = "16px";
+              contentEl.style.lineHeight = "1.6";
+              contentEl.querySelectorAll("p, ul, ol").forEach((el) => {
+                el.style.margin = "12px 0";
+              });
+              contentEl.querySelectorAll("ul, ol").forEach((el) => {
+                el.style.paddingLeft = "18px";
+              });
+              contentEl.querySelectorAll("a").forEach((a) => {
+                a.style.textDecoration = "underline";
+              });
+            }
+          } else {
+            // Hide Details accordion if empty
+            detailsCollapsible.style.display = "none";
+          }
+        }
+      } catch (e) {
+        console.warn("Details description render failed", e);
       }
 
       // Use Shopify images

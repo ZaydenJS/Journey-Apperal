@@ -49,6 +49,7 @@ export const handler = async (event, context) => {
       handle: data.product.handle,
       title: data.product.title,
       description: data.product.description,
+      descriptionHtml: data.product.descriptionHtml,
       tags: data.product.tags,
       vendor: data.product.vendor,
       productType: data.product.productType,
@@ -60,6 +61,7 @@ export const handler = async (event, context) => {
       variants: data.product.variants.edges.map((edge) => edge.node),
       options: data.product.options,
       seo: data.product.seo,
+      metafield: data.product.metafield,
       slug: data.product.handle, // For compatibility with your existing frontend
     };
 
