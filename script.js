@@ -590,6 +590,55 @@
         }
         __cacheSet("pdp:product:" + slug, p);
         renderFrom(p);
+
+        // Push to Recently Viewed (dedupe + move-to-front, cap 12, 30d TTL)
+        try {
+          var rv = [];
+          try {
+            rv = JSON.parse(localStorage.getItem("recentlyViewedV1") || "[]");
+          } catch (_) {
+            rv = [];
+          }
+          var now = Date.now();
+          var THIRTY_D = 30 * 24 * 60 * 60 * 1000;
+          rv = (rv || []).filter(function (it) {
+            return it && it.ts && now - it.ts <= THIRTY_D;
+          });
+          var href = "product.html?slug=" + encodeURIComponent(slug);
+          var main =
+            (p.images && p.images[0] && (p.images[0].url || p.images[0].src)) ||
+            "";
+          var alt =
+            (p.images && p.images[1] && (p.images[1].url || p.images[1].src)) ||
+            "";
+          var price = "";
+          try {
+            var pr = p.priceRange && p.priceRange.minVariantPrice;
+            if (pr && pr.amount) {
+              price =
+                "$" +
+                parseFloat(pr.amount).toFixed(2) +
+                " " +
+                (pr.currencyCode || "");
+              price = price.trim();
+            }
+          } catch (_) {}
+          // remove existing by handle/href
+          rv = rv.filter(function (it) {
+            return (it.handle || "") !== slug && (it.href || "") !== href;
+          });
+          rv.unshift({
+            handle: slug,
+            href: href,
+            name: p.title || "",
+            price: price,
+            main: main,
+            alt: alt,
+            ts: now,
+          });
+          if (rv.length > 12) rv = rv.slice(0, 12);
+          localStorage.setItem("recentlyViewedV1", JSON.stringify(rv));
+        } catch (_) {}
       } else {
         // Fallback to original product loading logic if Shopify not available
         console.log(
@@ -1079,18 +1128,24 @@
 
   function setupRecentlyViewedAndBestSellers() {
     const here = (location.pathname.split("/").pop() || "").toLowerCase();
-    if (!here.endsWith("product.html")) return;
+    const currentSlug = new URLSearchParams(location.search).get("slug") || "";
 
     const cardHTML = (it) => {
       const href = it.href || "product.html";
       const price = it.price || "";
       const name = it.name || "";
-      const pair = getImagesForLabel(name, 800, 800);
-      const altImg = `<img class=\"hover-img\" src=\"${pair.alt}\" alt=\"\" style=\"position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition: opacity 180ms ease; pointer-events:none;\" />`;
+      const main = it.main || "";
+      const alt = it.alt || "";
+      const pair = !main ? getImagesForLabel(name, 800, 800) : null;
+      const mainSrc = main || (pair && pair.main) || "";
+      const altSrc = alt || (pair && pair.alt) || "";
+      const altImg = altSrc
+        ? `<img class="hover-img" src="${altSrc}" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition: opacity 180ms ease; pointer-events:none;" />`
+        : "";
       return `
       <article class="card" data-href="${href}" style="cursor:pointer">
         <a href="${href}" class="img-wrap" onmouseenter="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='1'}" onmouseleave="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='0'}" style="position:relative; display:block; aspect-ratio:3/4; overflow:hidden; border-radius:0">
-          <img src="${pair.main}" alt="${name}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"/>
+          <img src="${mainSrc}" alt="${name}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"/>
           ${altImg}
         </a>
         <div class="row mt-8" style="display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:8px; font-size:14px; text-align:center;">
@@ -1102,12 +1157,39 @@
 
     // Recently Viewed: render from localStorage if present
     try {
-      const track = document.querySelector("#you-also-viewed .carousel-track");
-      if (track) {
-        const items = JSON.parse(
-          localStorage.getItem("recentlyViewedV1") || "[]"
-        ).filter(Boolean);
+      const section = document.querySelector("#you-also-viewed");
+      if (section) {
+        const now = Date.now();
+        const THIRTY_D = 30 * 24 * 60 * 60 * 1000;
+        let items = [];
+        try {
+          items = JSON.parse(localStorage.getItem("recentlyViewedV1") || "[]");
+        } catch (_) {
+          items = [];
+        }
+        items = (items || []).filter(Boolean).filter(function (it) {
+          return it && it.ts && now - it.ts <= THIRTY_D;
+        });
+        if (currentSlug)
+          items = items.filter(function (it) {
+            return (it.handle || "") !== currentSlug;
+          });
+        items = items.slice(0, 12);
         if (items && items.length) {
+          // remove placeholder text blocks
+          Array.from(section.querySelectorAll("p")).forEach(function (p) {
+            var parent = p.parentElement;
+            if (parent) parent.remove();
+          });
+          // ensure track container exists
+          var track = section.querySelector(".carousel-track");
+          if (!track) {
+            track = document.createElement("div");
+            track.className = "carousel-track";
+            track.style.cssText =
+              "display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:0 12px;";
+            section.appendChild(track);
+          }
           track.innerHTML = items.map(cardHTML).join("");
         }
       }
