@@ -2662,76 +2662,41 @@
     container,
     countElement
   ) {
-    // Show loading state
-    container.innerHTML =
-      '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">Loading products...</div>';
+    // Cache-first, background-refresh strategy for instant rendering
+    const cacheKey = `collection:${collectionHandle || "all"}:${tag || "-"}`;
+    const TTL = 10 * 60 * 1000; // 10 minutes
 
-    try {
-      let products = [];
-
-      if (window.shopifyAPI) {
-        if (collectionHandle === "all") {
-          // Load all products from all collections
-          const collections = await window.shopifyAPI.getCollections();
-          for (const collection of collections.collections) {
-            const collectionData = await window.shopifyAPI.getCollection(
-              collection.handle,
-              tag
-            );
-            products.push(...(collectionData.products || []));
-          }
-        } else if (collectionHandle === "best-sellers") {
-          // Special-case: mirror homepage "Best Sellers" selection
-          // Pull from all collections and filter to available products
-          const collections = await window.shopifyAPI.getCollections();
-          for (const collection of collections.collections) {
-            const collectionData = await window.shopifyAPI.getCollection(
-              collection.handle
-            );
-            products.push(...(collectionData.products || []));
-          }
-          products = products.filter((p) => p.availableForSale);
-        } else {
-          // Load specific collection
-          const data = await window.shopifyAPI.getCollection(
-            collectionHandle,
-            tag
-          );
-          products = data.products || [];
-        }
-      } else {
-        console.log(
-          "Shopify API not available, using fallback product loading"
-        );
-        products = [];
-      }
-
-      // Update product count
-      if (countElement) {
-        countElement.textContent = `${products.length} product${
-          products.length !== 1 ? "s" : ""
-        }`;
-      }
-
-      if (products.length === 0) {
+    const renderList = (list) => {
+      if (!list || !list.length) {
         showEmptyState(container, "No products found in this collection.");
+        if (countElement) countElement.textContent = "0 products";
         return;
       }
-
-      // Render products
-      container.innerHTML = products
-        .map((product) => renderProductCard(product))
-        .join("");
-
-      // Setup card interactions
-      setupCardLinks();
-
-      // Prefetch PDP data for visible product cards to ensure instant PDP load
+      // Render cards immediately
+      container.innerHTML = list.map((p) => renderProductCard(p)).join("");
+      if (countElement)
+        countElement.textContent = `${list.length} product${
+          list.length !== 1 ? "s" : ""
+        }`;
+      // Warm PDP caches to guarantee handoff on click
       try {
+        const firstImgs = [];
+        list.forEach((p, idx) => {
+          if (p && p.handle) __cacheSet("pdp:product:" + p.handle, p);
+          const u =
+            (p.images && (p.images[0]?.url || p.images[0]?.src)) || null;
+          if (u && idx < 12) firstImgs.push(u);
+        });
+        __prewarmImages(firstImgs);
+      } catch (_) {}
+      // Setup interactions and prefetching after paint
+      try {
+        setupCardLinks();
         const cards = Array.from(
           container.querySelectorAll("article.card[data-href]")
         );
-        cards.slice(0, 8).forEach(function (card) {
+        // Immediately prefetch first 8 PDPs in parallel
+        cards.slice(0, 8).forEach((card) => {
           const href =
             card.getAttribute("data-href") ||
             (card.querySelector("a[href]") &&
@@ -2740,10 +2705,11 @@
           const handle = __extractHandleFromHref(href);
           if (handle) __prefetchPDP(handle);
         });
+        // Lazy prefetch the rest as they approach viewport
         if ("IntersectionObserver" in window) {
           const io = new IntersectionObserver(
-            function (entries) {
-              entries.forEach(function (entry) {
+            (entries) => {
+              entries.forEach((entry) => {
                 if (!entry.isIntersecting) return;
                 const el = entry.target;
                 const href =
@@ -2758,14 +2724,85 @@
             },
             { rootMargin: "300px" }
           );
-          cards.forEach(function (el) {
-            io.observe(el);
-          });
+          cards.forEach((el) => io.observe(el));
         }
       } catch (_) {}
+    };
+
+    try {
+      // 1) Instant paint from cache if present
+      const cached = __cacheGetFresh(cacheKey, TTL);
+      if (cached && Array.isArray(cached) && cached.length) {
+        renderList(cached);
+      } else {
+        // Only show a minimal loading if no cache
+        container.innerHTML =
+          '<div style="grid-column: 1 / -1; text-align: center; padding: 24px; color: #666;">Loading products…</div>';
+      }
+
+      // 2) Fetch fresh data in background and update cache + UI if changed
+      let products = [];
+      if (window.shopifyAPI) {
+        if (collectionHandle === "all") {
+          // Load all products from all collections (parallel)
+          const collections = await window.shopifyAPI.getCollections();
+          const handles = (collections && collections.collections) || [];
+          const results = await Promise.all(
+            handles.map((c) =>
+              window.shopifyAPI
+                .getCollection(c.handle, tag)
+                .catch(() => ({ products: [] }))
+            )
+          );
+          products = results.flatMap((r) => r.products || []);
+        } else if (collectionHandle === "best-sellers") {
+          // Special-case: mirror homepage logic — available products across all
+          const collections = await window.shopifyAPI.getCollections();
+          const handles = (collections && collections.collections) || [];
+          const results = await Promise.all(
+            handles.map((c) =>
+              window.shopifyAPI
+                .getCollection(c.handle)
+                .catch(() => ({ products: [] }))
+            )
+          );
+          products = results
+            .flatMap((r) => r.products || [])
+            .filter((p) => p.availableForSale);
+        } else {
+          // Specific collection
+          const data = await window.shopifyAPI.getCollection(
+            collectionHandle,
+            tag
+          );
+          products = data.products || [];
+        }
+      } else {
+        console.log(
+          "Shopify API not available, using fallback product loading"
+        );
+        products = [];
+      }
+
+      // Update cache
+      __cacheSet(cacheKey, products);
+
+      // If we already painted from cache, only update UI if list changed
+      const currentHandles = Array.from(
+        container.querySelectorAll("article.card[data-href]")
+      ).map((el) =>
+        __extractHandleFromHref(el.getAttribute("data-href") || "")
+      );
+      const nextHandles = (products || []).map((p) => p.handle);
+      const changed =
+        currentHandles.length !== nextHandles.length ||
+        currentHandles.some((h, i) => h !== nextHandles[i]);
+      if (changed) renderList(products);
     } catch (error) {
       console.error("Error loading products:", error);
-      showEmptyState(container, "Failed to load products. Please try again.");
+      if (!container.querySelector("article.card")) {
+        showEmptyState(container, "Failed to load products. Please try again.");
+      }
     }
   }
 
