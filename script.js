@@ -3603,12 +3603,6 @@
           if (!footer.dataset.enhanced) {
             footer.innerHTML =
               '<div style="border:1px solid #dcdcdc; border-radius:8px; padding:16px; background:#fff;">' +
-              '<div style="font-weight:700; font-size:13px; margin-bottom:8px;">Discount code</div>' +
-              '<div style="display:flex; gap:8px; margin-bottom:12px;">' +
-              '<input id="discount-input" type="text" placeholder="Enter discount code" style="flex:1; padding:10px 12px; border:1px solid #dcdcdc; border-radius:6px; font-size:14px;" />' +
-              '<button id="discount-apply" style="padding:10px 14px; border-radius:6px; border:1px solid #dcdcdc; background:#eee; font-weight:600; cursor:pointer;">Apply</button>' +
-              "</div>" +
-              '<div style="height:1px; background:#e5e5e5; margin:12px 0;"></div>' +
               '<div style="display:flex; justify-content:space-between; margin:6px 0;"><span>Subtotal</span><span id="cart-subtotal">$0.00</span></div>' +
               '<div style="display:flex; justify-content:space-between; margin:6px 0;"><span>GST</span><span id="cart-gst">$0.00</span></div>' +
               '<div style="height:1px; background:#e5e5e5; margin:12px 0;"></div>' +
