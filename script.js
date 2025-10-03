@@ -230,6 +230,184 @@
     const slug = params.get("slug");
     if (!slug) return;
 
+    let __pdpSetupDone = false;
+    const renderFrom = (p) => {
+      if (!p) return;
+      // Update page title
+      document.title = `${p.title} – Journey Apparel`;
+
+      const titleEl = document.querySelector(".p-details h1");
+      const priceEl = document.querySelector(".p-details .p-price");
+      const descriptionEl = document.querySelector(".p-details .p-description");
+
+      // New gallery (preferred)
+      const mainGalleryImg = document.querySelector(".gallery-main img");
+      const galleryThumbs = Array.from(
+        document.querySelectorAll(".thumbs img")
+      );
+
+      // Legacy edge-peek gallery (if present)
+      const mainImg = document.querySelector(".edge-gallery .main");
+      const leftImg = document.querySelector(".edge-gallery .left");
+      const rightImg = document.querySelector(".edge-gallery .right");
+
+      if (titleEl) titleEl.textContent = p.title;
+      if (priceEl) {
+        const price = parseFloat(p.priceRange.minVariantPrice.amount);
+        priceEl.textContent = `$${price.toFixed(2)} ${
+          p.priceRange.minVariantPrice.currencyCode
+        }`;
+      }
+      if (descriptionEl) {
+        descriptionEl.innerHTML = p.description || "";
+      }
+
+      // Use Shopify images
+      const images = p.images || [];
+      const mainImage = images[0]?.url || "";
+      const altImage = images[1]?.url || "";
+
+      if (mainGalleryImg && mainImage) {
+        mainGalleryImg.src = mainImage;
+        mainGalleryImg.alt = p.title;
+        if (galleryThumbs[0]) {
+          galleryThumbs[0].src = mainImage;
+          galleryThumbs[0].alt = p.title;
+        }
+        if (galleryThumbs[1] && altImage) {
+          galleryThumbs[1].src = altImage;
+          galleryThumbs[1].alt = p.title + " alt";
+        }
+      }
+
+      if (mainImg && mainImage) {
+        mainImg.src = mainImage;
+        mainImg.alt = p.title;
+      }
+      if (rightImg && altImage) {
+        rightImg.src = altImage;
+        rightImg.alt = p.title + " alt";
+      }
+
+      // Populate hero carousel (#hero-track) with Shopify images
+      try {
+        const heroTrack = document.getElementById("hero-track");
+        if (heroTrack && images && images.length) {
+          const trackImgs = Array.from(heroTrack.querySelectorAll("img"));
+          // Update existing placeholders
+          if (trackImgs[0] && images[0]) {
+            trackImgs[0].src = images[0].url;
+            trackImgs[0].alt = p.title;
+          }
+          if (trackImgs[1] && images[1]) {
+            trackImgs[1].src = images[1].url;
+            trackImgs[1].alt = p.title + " alt 1";
+          }
+          if (trackImgs[2] && images[2]) {
+            trackImgs[2].src = images[2].url;
+            trackImgs[2].alt = p.title + " alt 2";
+          }
+          // Append any remaining images so the next/prev controls can scroll to them
+          for (let i = trackImgs.length; i < images.length; i++) {
+            const img = document.createElement("img");
+            img.src = images[i].url;
+            img.alt = `${p.title} alt ${i}`;
+            img.style.width = "100%";
+            img.style.height = "100%";
+            img.style.borderRadius = "0";
+            img.style.objectFit = "cover";
+            img.style.scrollSnapAlign = "center";
+            img.style.pointerEvents = "none";
+            img.style.transition = "none";
+            heroTrack.appendChild(img);
+          }
+          // Rebuild dots to match new image count
+          const dotsWrap = document.getElementById("hero-dots");
+          if (dotsWrap) {
+            dotsWrap.innerHTML = "";
+            const imgsNow = Array.from(heroTrack.querySelectorAll("img"));
+            imgsNow.forEach((_, i) => {
+              const dot = document.createElement("span");
+              dot.setAttribute("data-idx", String(i));
+              dot.style.cssText =
+                "width:8px;height:8px;border-radius:50%;background:#c7c7c7;display:inline-block;transition:background .2s;";
+              dot.addEventListener("click", function () {
+                const el = imgsNow[i];
+                if (el)
+                  heroTrack.scrollTo({
+                    left: el.offsetLeft,
+                    behavior: "smooth",
+                  });
+              });
+              dotsWrap.appendChild(dot);
+            });
+          }
+        }
+      } catch (e) {
+        console.warn("hero-track population failed", e);
+      }
+
+      // Wire prev/next controls to navigate images reliably
+      try {
+        const heroTrack = document.getElementById("hero-track");
+        if (!heroTrack) throw new Error("heroTrack missing");
+
+        const prev = document.querySelector(".hero-carousel .ctrl.prev");
+        const next = document.querySelector(".hero-carousel .ctrl.next");
+
+        const slides = () => Array.from(heroTrack.querySelectorAll("img"));
+        const slideW = () => heroTrack.clientWidth;
+        const count = () => slides().length;
+        const idx = () =>
+          Math.round(heroTrack.scrollLeft / Math.max(1, slideW()));
+        const clamp = (i) => Math.max(0, Math.min(count() - 1, i));
+        const goTo = (i) => {
+          const target = clamp(i);
+          heroTrack.scrollTo({ left: target * slideW(), behavior: "smooth" });
+        };
+
+        if (prev) {
+          prev.addEventListener(
+            "click",
+            (e) => {
+              e.preventDefault();
+              goTo(idx() - 1);
+            },
+            { passive: false }
+          );
+        }
+        if (next) {
+          next.addEventListener(
+            "click",
+            (e) => {
+              e.preventDefault();
+              goTo(idx() + 1);
+            },
+            { passive: false }
+          );
+        }
+      } catch (_) {}
+
+      if (!__pdpSetupDone) {
+        // Setup product variants and add to cart functionality
+        try {
+          setupProductVariants(p);
+        } catch (_) {}
+        try {
+          setupLiveSizePicker(p);
+        } catch (e) {
+          console.warn("size picker failed", e);
+        }
+        __pdpSetupDone = true;
+      }
+    };
+
+    // Instant render from cache when available
+    try {
+      const cached = __cacheGetFresh("pdp:product:" + slug, 10 * 60 * 1000);
+      if (cached) renderFrom(cached);
+    } catch (_) {}
+
     try {
       // Load product from Shopify (if available)
       if (window.shopifyAPI) {
@@ -240,172 +418,8 @@
           console.error("Product not found:", slug);
           return;
         }
-
-        // Update page title
-        document.title = `${p.title} – Journey Apparel`;
-
-        const titleEl = document.querySelector(".p-details h1");
-        const priceEl = document.querySelector(".p-details .p-price");
-        const descriptionEl = document.querySelector(
-          ".p-details .p-description"
-        );
-
-        // New gallery (preferred)
-        const mainGalleryImg = document.querySelector(".gallery-main img");
-        const galleryThumbs = Array.from(
-          document.querySelectorAll(".thumbs img")
-        );
-
-        // Legacy edge-peek gallery (if present)
-        const mainImg = document.querySelector(".edge-gallery .main");
-        const leftImg = document.querySelector(".edge-gallery .left");
-        const rightImg = document.querySelector(".edge-gallery .right");
-
-        if (titleEl) titleEl.textContent = p.title;
-        if (priceEl) {
-          const price = parseFloat(p.priceRange.minVariantPrice.amount);
-          priceEl.textContent = `$${price.toFixed(2)} ${
-            p.priceRange.minVariantPrice.currencyCode
-          }`;
-        }
-        if (descriptionEl) {
-          descriptionEl.innerHTML = p.description || "";
-        }
-
-        // Use Shopify images
-        const images = p.images || [];
-        const mainImage = images[0]?.url || "";
-        const altImage = images[1]?.url || "";
-
-        if (mainGalleryImg && mainImage) {
-          mainGalleryImg.src = mainImage;
-          mainGalleryImg.alt = p.title;
-          if (galleryThumbs[0]) {
-            galleryThumbs[0].src = mainImage;
-            galleryThumbs[0].alt = p.title;
-          }
-          if (galleryThumbs[1] && altImage) {
-            galleryThumbs[1].src = altImage;
-            galleryThumbs[1].alt = p.title + " alt";
-          }
-        }
-
-        if (mainImg && mainImage) {
-          mainImg.src = mainImage;
-          mainImg.alt = p.title;
-        }
-        if (rightImg && altImage) {
-          rightImg.src = altImage;
-          rightImg.alt = p.title + " alt";
-        }
-
-        // Populate hero carousel (#hero-track) with Shopify images
-        try {
-          const heroTrack = document.getElementById("hero-track");
-          if (heroTrack && images && images.length) {
-            const trackImgs = Array.from(heroTrack.querySelectorAll("img"));
-            // Update existing placeholders
-            if (trackImgs[0] && images[0]) {
-              trackImgs[0].src = images[0].url;
-              trackImgs[0].alt = p.title;
-            }
-            if (trackImgs[1] && images[1]) {
-              trackImgs[1].src = images[1].url;
-              trackImgs[1].alt = p.title + " alt 1";
-            }
-            if (trackImgs[2] && images[2]) {
-              trackImgs[2].src = images[2].url;
-              trackImgs[2].alt = p.title + " alt 2";
-            }
-            // Append any remaining images so the next/prev controls can scroll to them
-            for (let i = trackImgs.length; i < images.length; i++) {
-              const img = document.createElement("img");
-              img.src = images[i].url;
-              img.alt = `${p.title} alt ${i}`;
-              img.style.width = "100%";
-              img.style.height = "100%";
-              img.style.borderRadius = "0";
-              img.style.objectFit = "cover";
-              img.style.scrollSnapAlign = "center";
-              img.style.pointerEvents = "none";
-              img.style.transition = "none";
-              heroTrack.appendChild(img);
-            }
-            // Rebuild dots to match new image count
-            const dotsWrap = document.getElementById("hero-dots");
-            if (dotsWrap) {
-              dotsWrap.innerHTML = "";
-              const imgsNow = Array.from(heroTrack.querySelectorAll("img"));
-              imgsNow.forEach((_, i) => {
-                const dot = document.createElement("span");
-                dot.setAttribute("data-idx", String(i));
-                dot.style.cssText =
-                  "width:8px;height:8px;border-radius:50%;background:#c7c7c7;display:inline-block;transition:background .2s;";
-                dot.addEventListener("click", function () {
-                  const el = imgsNow[i];
-                  if (el)
-                    heroTrack.scrollTo({
-                      left: el.offsetLeft,
-                      behavior: "smooth",
-                    });
-                });
-                dotsWrap.appendChild(dot);
-              });
-            }
-          }
-        } catch (e) {
-          console.warn("hero-track population failed", e);
-        }
-
-        // Wire prev/next controls to navigate images reliably
-        try {
-          const heroTrack = document.getElementById("hero-track");
-          if (!heroTrack) throw new Error("heroTrack missing");
-
-          const prev = document.querySelector(".hero-carousel .ctrl.prev");
-          const next = document.querySelector(".hero-carousel .ctrl.next");
-
-          const slides = () => Array.from(heroTrack.querySelectorAll("img"));
-          const slideW = () => heroTrack.clientWidth;
-          const count = () => slides().length;
-          const idx = () =>
-            Math.round(heroTrack.scrollLeft / Math.max(1, slideW()));
-          const clamp = (i) => Math.max(0, Math.min(count() - 1, i));
-          const goTo = (i) => {
-            const target = clamp(i);
-            heroTrack.scrollTo({ left: target * slideW(), behavior: "smooth" });
-          };
-
-          if (prev) {
-            prev.addEventListener(
-              "click",
-              (e) => {
-                e.preventDefault();
-                goTo(idx() - 1);
-              },
-              { passive: false }
-            );
-          }
-          if (next) {
-            next.addEventListener(
-              "click",
-              (e) => {
-                e.preventDefault();
-                goTo(idx() + 1);
-              },
-              { passive: false }
-            );
-          }
-        } catch (_) {}
-
-        // Setup product variants and add to cart functionality
-        setupProductVariants(p);
-
-        try {
-          await setupLiveSizePicker(p);
-        } catch (e) {
-          console.warn("size picker failed", e);
-        }
+        __cacheSet("pdp:product:" + slug, p);
+        renderFrom(p);
       } else {
         // Fallback to original product loading logic if Shopify not available
         console.log(
@@ -472,7 +486,7 @@
     return html;
   }
 
-  // Live Size picker using Netlify function product-variants
+  // Live Size picker using Netlify function product-variants (with cache-first render)
   async function setupLiveSizePicker(product) {
     const here = (location.pathname.split("/").pop() || "").toLowerCase();
     if (!here.endsWith("product.html")) return; // only on PDP
@@ -494,16 +508,8 @@
     const grid = document.getElementById("size-grid");
     if (!grid) return;
 
-    try {
-      const resp = await fetch(
-        `/.netlify/functions/product-variants?handle=${encodeURIComponent(
-          handle
-        )}`
-      );
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      if (!data || !data.variants) throw new Error("No variant data");
-
+    const renderFrom = (data) => {
+      if (!data || !data.variants) return;
       // Build a map from Size value -> variant meta
       const bySize = new Map();
       (data.variants || []).forEach((v) => {
@@ -537,6 +543,14 @@
           document.querySelector(".p-details");
         if (ctaRow) ctaRow.insertAdjacentElement("afterbegin", hidden);
       }
+
+      const saved = (() => {
+        try {
+          return localStorage.getItem("pdp:lastSize:" + handle) || "";
+        } catch (_) {
+          return "";
+        }
+      })();
 
       // Render buttons
       grid.innerHTML = "";
@@ -589,9 +603,39 @@
         grid.appendChild(btn);
       });
 
-      // Default preselect first available
-      const firstAvail = grid.querySelector(".size:not([disabled])");
-      if (firstAvail) firstAvail.click();
+      // Default preselect saved or first available (do not override if already selected)
+      if (!grid.querySelector('.size[aria-pressed="true"]')) {
+        let toSelect = null;
+        if (saved) {
+          toSelect = Array.from(grid.querySelectorAll(".size")).find(function (
+            b
+          ) {
+            return (
+              (b.textContent || "").trim().startsWith(saved) && !b.disabled
+            );
+          });
+        }
+        if (!toSelect) toSelect = grid.querySelector(".size:not([disabled])");
+        if (toSelect) toSelect.click();
+      }
+    };
+
+    try {
+      // Cache-first render for instant size grid
+      const cached = __cacheGetFresh("pdp:variants:" + handle, 10 * 60 * 1000);
+      if (cached && cached.variants) renderFrom(cached);
+
+      // Fetch fresh in background and update if needed
+      const resp = await fetch(
+        `/.netlify/functions/product-variants?handle=${encodeURIComponent(
+          handle
+        )}`
+      );
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      if (!data || !data.variants) throw new Error("No variant data");
+      __cacheSet("pdp:variants:" + handle, data);
+      renderFrom(data);
     } catch (e) {
       console.warn("Failed to load product-variants", e);
     }
@@ -1227,6 +1271,80 @@
       });
     });
   }
+
+  // Lightweight localStorage cache helpers + PDP prefetch
+  function __cacheSet(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify({ t: Date.now(), v: value }));
+    } catch (_) {}
+  }
+  function __cacheGetFresh(key, maxAgeMs) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || typeof obj.t !== "number") return null;
+      if (maxAgeMs != null && Date.now() - obj.t > maxAgeMs) return null;
+      return obj.v;
+    } catch (_) {
+      return null;
+    }
+  }
+  function __prewarmImages(urls) {
+    try {
+      (urls || []).forEach(function (u) {
+        if (!u) return;
+        const img = new Image();
+        img.decoding = "async";
+        img.loading = "eager";
+        img.src = u;
+      });
+    } catch (_) {}
+  }
+  function __extractHandleFromHref(href) {
+    try {
+      const u = new URL(href, location.href);
+      const h = u.searchParams.get("slug");
+      return h || null;
+    } catch (_) {
+      const m = String(href || "").match(/slug=([^&]+)/);
+      return m ? decodeURIComponent(m[1]) : null;
+    }
+  }
+  async function __prefetchPDP(handle) {
+    if (!handle) return;
+    try {
+      if (
+        window.shopifyAPI &&
+        typeof window.shopifyAPI.getProduct === "function"
+      ) {
+        const resp = await window.shopifyAPI.getProduct(handle);
+        const p = resp && resp.product;
+        if (p) {
+          __cacheSet("pdp:product:" + handle, p);
+          const imgs = (p.images || [])
+            .map(function (i) {
+              return (i && (i.url || i.src)) || null;
+            })
+            .filter(Boolean)
+            .slice(0, 4);
+          __prewarmImages(imgs);
+        }
+      }
+    } catch (_) {}
+    try {
+      const r = await fetch(
+        `/.netlify/functions/product-variants?handle=${encodeURIComponent(
+          handle
+        )}`
+      );
+      if (r && r.ok) {
+        const data = await r.json();
+        if (data) __cacheSet("pdp:variants:" + handle, data);
+      }
+    } catch (_) {}
+  }
+
   function setupCardLinks() {
     // Delegate clicks so it works for all cards (including dynamically added ones)
     document.addEventListener("click", (e) => {
@@ -1235,6 +1353,36 @@
       if (!card) return;
       const href = card.getAttribute("data-href");
       if (href) window.location.href = href;
+    });
+
+    // Prefetch PDP data/images on hover/touch/mousedown so PDP renders instantly
+    const trigger = (e) => {
+      const el = e.target.closest(
+        '.card[data-href], a[href*="product.html?slug="]'
+      );
+      if (!el) return;
+      const href =
+        el.getAttribute("data-href") ||
+        (el.tagName === "A"
+          ? el.getAttribute("href")
+          : (el.querySelector("a[href]") &&
+              el.querySelector("a[href]").getAttribute("href")) ||
+            "");
+      if (!href) return;
+      const handle = __extractHandleFromHref(href);
+      if (handle) __prefetchPDP(handle);
+    };
+    document.addEventListener("mouseenter", trigger, {
+      passive: true,
+      capture: false,
+    });
+    document.addEventListener("touchstart", trigger, {
+      passive: true,
+      capture: false,
+    });
+    document.addEventListener("mousedown", trigger, {
+      passive: true,
+      capture: false,
     });
   }
 
