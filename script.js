@@ -645,6 +645,26 @@
       }
     };
 
+    // Instant render from product object (if it already includes variants)
+    try {
+      if (
+        product &&
+        Array.isArray(product.variants) &&
+        product.variants.length
+      ) {
+        const quick = {
+          variants: product.variants.map((v) => ({
+            id: v.id,
+            availableForSale: !!v.availableForSale,
+            quantityAvailable: v.quantityAvailable ?? null,
+            selectedOptions: v.selectedOptions || [],
+          })),
+          options: product.options || [],
+        };
+        renderFrom(quick);
+      }
+    } catch (_) {}
+
     try {
       // Cache-first render for instant size grid
       const cached = __cacheGetFresh("pdp:variants:" + handle, 10 * 60 * 1000);
