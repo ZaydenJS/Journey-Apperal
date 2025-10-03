@@ -2102,17 +2102,25 @@
 
       // Start collapsed
       btn.setAttribute("aria-expanded", "false");
-      panel.style.height = "0px";
       panel.style.overflow = "hidden";
+      panel.style.height = "0px";
+      panel.style.display = "none";
+      panel.style.transition = panel.style.transition || "height 0.25s ease";
+      panel.style.willChange = "height";
 
       const openPanel = () => {
         sec.classList.add("open");
         btn.setAttribute("aria-expanded", "true");
-        // from 0 to auto via fixed height transition
         panel.style.display = "block"; // ensure measurable
+        panel.style.overflow = "hidden";
+        panel.style.transition = panel.style.transition || "height 0.25s ease";
+        if (panel.style.height === "auto" || !panel.style.height) {
+          panel.style.height = "0px";
+        }
         const h = panel.scrollHeight;
-        panel.style.height = h + "px";
-        // after transition, set to auto to accommodate dynamic content
+        requestAnimationFrame(() => {
+          panel.style.height = h + "px";
+        });
         const done = () => {
           if (btn.getAttribute("aria-expanded") === "true") {
             panel.style.height = "auto";
@@ -2129,6 +2137,13 @@
         requestAnimationFrame(() => {
           panel.style.height = "0px";
         });
+        const doneClose = () => {
+          if (btn.getAttribute("aria-expanded") === "false") {
+            panel.style.display = "none";
+          }
+          panel.removeEventListener("transitionend", doneClose);
+        };
+        panel.addEventListener("transitionend", doneClose);
       };
 
       const toggle = () => {
@@ -2144,10 +2159,15 @@
 
       // Mark as wired and attach handlers
       btn.dataset.collapsibleWired = "1";
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        toggle();
-      });
+      btn.addEventListener(
+        "click",
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggle();
+        },
+        { capture: true }
+      );
       btn.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
