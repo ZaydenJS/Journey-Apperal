@@ -2142,13 +2142,55 @@
         }
       };
 
-      btn.addEventListener("click", toggle);
+      // Mark as wired and attach handlers
+      btn.dataset.collapsibleWired = "1";
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        toggle();
+      });
       btn.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           toggle();
         }
       });
+    });
+
+    // Fallback delegated handler in case sections are injected after init
+    document.addEventListener("click", (e) => {
+      const b = e.target.closest(".collapsible > button");
+      if (!b || b.dataset.collapsibleWired === "1") return;
+      const sec = b.closest(".collapsible");
+      const panel = sec && sec.querySelector(".content");
+      if (!sec || !panel) return;
+      e.preventDefault();
+      const isOpen = b.getAttribute("aria-expanded") === "true";
+      const closePanel = (section, button, p) => {
+        section.classList.remove("open");
+        button.setAttribute("aria-expanded", "false");
+        const current = p.scrollHeight;
+        p.style.height = current + "px";
+        requestAnimationFrame(() => {
+          p.style.height = "0px";
+        });
+      };
+      const openPanel = (section, button, p) => {
+        closeAllCollapsiblesExcept(section);
+        section.classList.add("open");
+        button.setAttribute("aria-expanded", "true");
+        p.style.display = "block";
+        const h = p.scrollHeight;
+        p.style.height = h + "px";
+        const done = () => {
+          if (button.getAttribute("aria-expanded") === "true") {
+            p.style.height = "auto";
+          }
+          p.removeEventListener("transitionend", done);
+        };
+        p.addEventListener("transitionend", done);
+      };
+      if (isOpen) closePanel(sec, b, panel);
+      else openPanel(sec, b, panel);
     });
 
     // Global listeners: clicking outside, scrolling, or resizing closes any open collapsibles
