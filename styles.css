@@ -890,7 +890,7 @@ input {
   appearance: none;
   -webkit-appearance: none;
   font-size: 14px;
-  color: inherit;
+  color: #111;
   letter-spacing: .3px;
 }
 .collapsible button:hover { color: #111; }
@@ -1084,7 +1084,7 @@ input {
   appearance: none !important;
   -webkit-appearance: none !important;
   font-size: 14px !important;
-  color: inherit !important;
+  color: #111 !important;
   letter-spacing: .3px !important;
 }
 
