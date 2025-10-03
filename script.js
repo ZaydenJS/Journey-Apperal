@@ -1195,11 +1195,18 @@
       }
     } catch (_) {}
 
-    // Best Sellers: populate a longer list so arrows can scroll through
+    // Best Sellers: ensure container exists and populate
     const bestSection = document.querySelector("#featured-collection");
-    const bestTrack =
-      bestSection && bestSection.querySelector(".carousel-track");
-    if (bestTrack) {
+    if (bestSection) {
+      let bestTrack = bestSection.querySelector(".carousel-track");
+      if (!bestTrack) {
+        bestTrack = document.createElement("div");
+        bestTrack.className = "carousel-track";
+        bestTrack.style.cssText =
+          "display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:0 12px;";
+        bestSection.appendChild(bestTrack);
+      }
+
       const best = [
         {
           name: "City Hoodie",
@@ -1252,32 +1259,33 @@
         },
       ];
 
-      let idx = 0;
-      const renderPair = () => {
-        if (!best.length) return;
-        const a = best[idx % best.length];
-        const b = best[(idx + 1) % best.length];
-        bestTrack.innerHTML = [cardHTML(a), cardHTML(b)].join("");
-      };
-      renderPair();
+      const prevBtn = bestSection.querySelector(".ctrl.prev");
+      const nextBtn = bestSection.querySelector(".ctrl.next");
 
-      const prevBtn = bestSection && bestSection.querySelector(".ctrl.prev");
-      const nextBtn = bestSection && bestSection.querySelector(".ctrl.next");
-      if (prevBtn) {
+      if (prevBtn && nextBtn) {
+        let idx = 0;
+        const renderPair = () => {
+          if (!best.length) return;
+          const a = best[idx % best.length];
+          const b = best[(idx + 1) % best.length];
+          bestTrack.innerHTML = [cardHTML(a), cardHTML(b)].join("");
+        };
+        renderPair();
         prevBtn.removeAttribute("onclick");
         prevBtn.addEventListener("click", (e) => {
           e.preventDefault();
           idx = (idx - 2 + best.length) % best.length;
           renderPair();
         });
-      }
-      if (nextBtn) {
         nextBtn.removeAttribute("onclick");
         nextBtn.addEventListener("click", (e) => {
           e.preventDefault();
           idx = (idx + 2) % best.length;
           renderPair();
         });
+      } else {
+        // No controls: render all
+        bestTrack.innerHTML = best.map(cardHTML).join("");
       }
     }
   }
