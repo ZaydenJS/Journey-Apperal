@@ -395,6 +395,10 @@
       } catch (e) {
         console.warn("Failed to render product details", e);
       }
+      // Ensure accordions are wired (idempotent)
+      try {
+        setupCollapsibles();
+      } catch (_) {}
 
       // New gallery (preferred)
       const mainGalleryImg = document.querySelector(".gallery-main img");
@@ -2110,6 +2114,7 @@
     };
 
     $$(".collapsible").forEach((sec, idx) => {
+      if (sec.dataset.collapsibleBound === "1") return;
       const btn = $("button", sec);
       const panel = $(".content", sec);
       if (!btn || !panel) return;
@@ -2172,6 +2177,8 @@
           toggle();
         }
       });
+      // Mark as bound to prevent duplicate listeners
+      sec.dataset.collapsibleBound = "1";
     });
 
     // Global listeners: clicking outside, scrolling, or resizing closes any open collapsibles
