@@ -945,6 +945,12 @@ input {
   transform: rotate(90deg);
 }
 
+/* Product page: ensure collapsible button labels are perfectly centered on all devices */
+.p-details .collapsible button { text-align: center !important; }
+/* Remove auto-injected chevron that can offset centering on mobile */
+.p-details .collapsible button::after { content: none !important; }
+
+
 /* Trust list rows */
 .trust-list {
   margin: 20px 0;
