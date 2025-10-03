@@ -230,6 +230,105 @@
     const slug = params.get("slug");
     if (!slug) return;
 
+    // Helpers for PDP description rendering
+    function escapeHTML(str) {
+      return (str || "").replace(
+        /[&<>"']/g,
+        (c) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          }[c] || c)
+      );
+    }
+    function sanitizeHTML(input) {
+      const allowed = new Set([
+        "P",
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+        "UL",
+        "OL",
+        "LI",
+        "STRONG",
+        "EM",
+        "A",
+        "BR",
+      ]);
+      const doc = document.implementation.createHTMLDocument("");
+      const div = doc.createElement("div");
+      div.innerHTML = input || "";
+      const walk = (node) => {
+        const kids = Array.from(node.childNodes);
+        for (const child of kids) {
+          if (child.nodeType === 1) {
+            const tag = child.tagName;
+            if (!allowed.has(tag)) {
+              // unwrap disallowed element but keep its (sanitized) children
+              const frag = doc.createDocumentFragment();
+              while (child.firstChild) frag.appendChild(child.firstChild);
+              child.replaceWith(frag);
+              continue;
+            }
+            // scrub attributes
+            for (const attr of Array.from(child.attributes)) {
+              if (
+                tag === "A" &&
+                (attr.name === "href" || attr.name === "target")
+              ) {
+                continue;
+              }
+              child.removeAttribute(attr.name);
+            }
+            if (tag === "A") {
+              // security: noopener for new tabs
+              if (child.getAttribute("target") === "_blank") {
+                child.setAttribute("rel", "noopener noreferrer");
+              }
+            }
+          } else if (child.nodeType === 8) {
+            // Remove comments
+            child.remove();
+            continue;
+          }
+          walk(child);
+        }
+      };
+      walk(div);
+      return div.innerHTML;
+    }
+    function computeDescriptionHTML(p) {
+      const rawPrimary =
+        (p &&
+          typeof p.descriptionHtml === "string" &&
+          p.descriptionHtml.trim()) ||
+        (p &&
+          p.metafield &&
+          typeof p.metafield.value === "string" &&
+          p.metafield.value.trim()) ||
+        "";
+      if (rawPrimary) return sanitizeHTML(rawPrimary);
+      const plain =
+        (p && typeof p.description === "string" && p.description.trim()) ||
+        (p &&
+          p.seo &&
+          typeof p.seo.description === "string" &&
+          p.seo.description.trim()) ||
+        "";
+      if (!plain) return "";
+      const html =
+        "<p>" +
+        escapeHTML(plain)
+          .split(/\r?\n+/)
+          .join("</p><p>") +
+        "</p>";
+      return sanitizeHTML(html);
+    }
+
     // Minimal instant paint from click handoff (title + first image)
     try {
       const m = sessionStorage.getItem("handoff:min:" + slug);
@@ -255,6 +354,48 @@
       const priceEl = document.querySelector(".p-details .p-price");
       const descriptionEl = document.querySelector(".p-details .p-description");
 
+      // Render Details accordion content from product description (sanitized)
+      try {
+        const detailsSection = document.querySelector(
+          ".p-details .collapsible"
+        );
+        const detailsPanel =
+          detailsSection && detailsSection.querySelector(".content");
+        if (detailsPanel) {
+          const html = computeDescriptionHTML(p);
+          if (html) {
+            detailsPanel.innerHTML =
+              '<div class="rich-desc" style="font-size:16.5px; line-height:1.6; color:#333;"></div>';
+            const wrapper = detailsPanel.firstElementChild;
+            wrapper.innerHTML = html;
+            // spacing and list padding
+            wrapper.querySelectorAll("p,ul,ol").forEach((el) => {
+              el.style.margin = "12px 0";
+            });
+            wrapper.querySelectorAll("ul,ol").forEach((el) => {
+              el.style.paddingLeft = "18px";
+            });
+            // link styles
+            wrapper.querySelectorAll("a").forEach((a) => {
+              a.style.color = "inherit";
+              a.style.textDecoration = "none";
+              a.addEventListener(
+                "mouseenter",
+                () => (a.style.textDecoration = "underline")
+              );
+              a.addEventListener(
+                "mouseleave",
+                () => (a.style.textDecoration = "none")
+              );
+            });
+          } else if (detailsSection) {
+            detailsSection.style.display = "none"; // hide when empty
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to render product details", e);
+      }
+
       // New gallery (preferred)
       const mainGalleryImg = document.querySelector(".gallery-main img");
       const galleryThumbs = Array.from(
@@ -273,126 +414,8 @@
           p.priceRange.minVariantPrice.currencyCode
         }`;
       }
-      // Populate Details accordion with sanitized description HTML and fallbacks
-      try {
-        const detailsCollapsible = Array.from(
-          document.querySelectorAll(".p-details .collapsible")
-        ).find((c) =>
-          /details/i.test(c.querySelector("button")?.textContent || "")
-        );
-        if (detailsCollapsible) {
-          const contentEl = detailsCollapsible.querySelector(".content");
-
-          function escapeHtml(s) {
-            return String(s || "")
-              .replace(/&/g, "&amp;")
-              .replace(/</g, "&lt;")
-              .replace(/>/g, "&gt;")
-              .replace(/"/g, "&quot;")
-              .replace(/'/g, "&#39;");
-          }
-
-          function sanitizeRichHTML(html) {
-            const allowed = new Set([
-              "p",
-              "h1",
-              "h2",
-              "h3",
-              "h4",
-              "ul",
-              "ol",
-              "li",
-              "strong",
-              "em",
-              "a",
-              "br",
-            ]);
-            const tmp = document.createElement("div");
-            tmp.innerHTML = html || "";
-
-            const walk = (node) => {
-              const children = Array.from(node.childNodes);
-              for (const child of children) {
-                if (child.nodeType === 1) {
-                  // ELEMENT
-                  const tag = child.tagName.toLowerCase();
-                  if (!allowed.has(tag)) {
-                    // unwrap disallowed element, keep its children
-                    while (child.firstChild)
-                      node.insertBefore(child.firstChild, child);
-                    child.remove();
-                    continue;
-                  }
-                  if (tag === "a") {
-                    // keep only href/target; ensure safe href; add rel for target=_blank
-                    const href = child.getAttribute("href") || "";
-                    const target = child.getAttribute("target") || "";
-                    // Remove all attributes first
-                    Array.from(child.attributes).forEach((a) =>
-                      child.removeAttribute(a.name)
-                    );
-                    if (/^(https?:|mailto:)/i.test(href))
-                      child.setAttribute("href", href);
-                    if (target === "_blank")
-                      child.setAttribute("target", "_blank");
-                    if (child.getAttribute("target") === "_blank") {
-                      child.setAttribute("rel", "noopener noreferrer");
-                    }
-                  } else {
-                    // strip all attributes for other tags
-                    Array.from(child.attributes).forEach((a) =>
-                      child.removeAttribute(a.name)
-                    );
-                  }
-                  walk(child);
-                } else if (child.nodeType === 8) {
-                  // comment
-                  child.remove();
-                }
-              }
-            };
-            walk(tmp);
-            return tmp.innerHTML;
-          }
-
-          // Compute description HTML with fallbacks
-          let descHTML =
-            p.descriptionHtml || (p.metafield && p.metafield.value) || "";
-          if (!descHTML) {
-            const plain = p.description || (p.seo && p.seo.description) || "";
-            if (plain) {
-              const blocks = String(plain)
-                .split(/\n{2,}|\r?\n/)
-                .filter(Boolean)
-                .map((t) => `<p>${escapeHtml(t)}</p>`);
-              descHTML = blocks.join("");
-            }
-          }
-
-          const safeHTML = sanitizeRichHTML(descHTML);
-          if (safeHTML && safeHTML.trim()) {
-            if (contentEl) {
-              contentEl.innerHTML = safeHTML;
-              // basic typography/spacing
-              contentEl.style.fontSize = "16px";
-              contentEl.style.lineHeight = "1.6";
-              contentEl.querySelectorAll("p, ul, ol").forEach((el) => {
-                el.style.margin = "12px 0";
-              });
-              contentEl.querySelectorAll("ul, ol").forEach((el) => {
-                el.style.paddingLeft = "18px";
-              });
-              contentEl.querySelectorAll("a").forEach((a) => {
-                a.style.textDecoration = "underline";
-              });
-            }
-          } else {
-            // Hide Details accordion if empty
-            detailsCollapsible.style.display = "none";
-          }
-        }
-      } catch (e) {
-        console.warn("Details description render failed", e);
+      if (descriptionEl) {
+        descriptionEl.innerHTML = p.description || "";
       }
 
       // Use Shopify images
@@ -2102,25 +2125,17 @@
 
       // Start collapsed
       btn.setAttribute("aria-expanded", "false");
-      panel.style.overflow = "hidden";
       panel.style.height = "0px";
-      panel.style.display = "none";
-      panel.style.transition = panel.style.transition || "height 0.25s ease";
-      panel.style.willChange = "height";
+      panel.style.overflow = "hidden";
 
       const openPanel = () => {
         sec.classList.add("open");
         btn.setAttribute("aria-expanded", "true");
+        // from 0 to auto via fixed height transition
         panel.style.display = "block"; // ensure measurable
-        panel.style.overflow = "hidden";
-        panel.style.transition = panel.style.transition || "height 0.25s ease";
-        if (panel.style.height === "auto" || !panel.style.height) {
-          panel.style.height = "0px";
-        }
         const h = panel.scrollHeight;
-        requestAnimationFrame(() => {
-          panel.style.height = h + "px";
-        });
+        panel.style.height = h + "px";
+        // after transition, set to auto to accommodate dynamic content
         const done = () => {
           if (btn.getAttribute("aria-expanded") === "true") {
             panel.style.height = "auto";
@@ -2137,13 +2152,6 @@
         requestAnimationFrame(() => {
           panel.style.height = "0px";
         });
-        const doneClose = () => {
-          if (btn.getAttribute("aria-expanded") === "false") {
-            panel.style.display = "none";
-          }
-          panel.removeEventListener("transitionend", doneClose);
-        };
-        panel.addEventListener("transitionend", doneClose);
       };
 
       const toggle = () => {
@@ -2157,17 +2165,7 @@
         }
       };
 
-      // Mark as wired and attach handlers
-      btn.dataset.collapsibleWired = "1";
-      btn.addEventListener(
-        "click",
-        (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          toggle();
-        },
-        { capture: true }
-      );
+      btn.addEventListener("click", toggle);
       btn.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -2175,6 +2173,16 @@
         }
       });
     });
+
+    // Global listeners: clicking outside, scrolling, or resizing closes any open collapsibles
+    document.addEventListener("click", (e) => {
+      if (e.target.closest(".collapsible")) return;
+      closeAllCollapsiblesExcept(null);
+    });
+    window.addEventListener("scroll", () => closeAllCollapsiblesExcept(null), {
+      passive: true,
+    });
+    window.addEventListener("resize", () => closeAllCollapsiblesExcept(null));
   }
 
   function setupGallery() {

@@ -104,9 +104,7 @@ export const PRODUCT_FRAGMENT = `
       title
       description
     }
-    metafield(namespace: "custom", key: "short_description") {
-      value
-    }
+    metafield(namespace: "custom", key: "short_description") { value }
   }
 `;
 
