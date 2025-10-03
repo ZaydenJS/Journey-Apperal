@@ -1641,9 +1641,13 @@
   function setupCardLinks() {
     // Delegate clicks so it works for all cards (including dynamically added ones)
     document.addEventListener("click", (e) => {
-      if (e.target.closest(".ctrl,a,button")) return;
+      // Ignore carousel controls and non-card buttons only; allow anchors inside cards
+      if (e.target.closest(".ctrl,button")) return;
       const card = e.target.closest(".card[data-href]");
       if (!card) return;
+      // If clicking an anchor inside the card, prevent default so we can write handoff first
+      const a = e.target.closest("a[href]");
+      if (a) e.preventDefault();
       const href = card.getAttribute("data-href");
       if (!href) return;
       // Before navigation: write handoff cache for zero-delay PDP render
@@ -2736,8 +2740,8 @@
         renderList(cached);
       } else {
         // Only show a minimal loading if no cache
-        container.innerHTML =
-          '<div style="grid-column: 1 / -1; text-align: center; padding: 24px; color: #666;">Loading products…</div>';
+        // No visible loader; paint will occur when cache or fresh data is available
+        container.innerHTML = "";
       }
 
       // 2) Fetch fresh data in background and update cache + UI if changed
@@ -2901,9 +2905,8 @@
 
   async function loadHomepageSection(container, section, limit = 8) {
     try {
-      // Show loading state
-      container.innerHTML =
-        '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #666;">Loading...</div>';
+      // No visible loader; we will paint as soon as cache or data is ready
+      container.innerHTML = "";
 
       let products = [];
 
