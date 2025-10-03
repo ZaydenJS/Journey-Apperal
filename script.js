@@ -1639,6 +1639,8 @@
   }
 
   function setupCardLinks() {
+    if (window.__cardLinksBound) return;
+    window.__cardLinksBound = true;
     // Delegate clicks so it works for all cards (including dynamically added ones)
     document.addEventListener("click", (e) => {
       // Ignore carousel controls and non-card buttons only; allow anchors inside cards
@@ -2886,71 +2888,60 @@
       location.pathname === "";
     if (!isHomepage) return;
 
-    // Load New Arrivals
     const newArrivalsContainer = document.querySelector(
       "#new-arrivals .carousel-track"
     );
-    if (newArrivalsContainer) {
-      await loadHomepageSection(newArrivalsContainer, "new-arrivals", 8);
-    }
-
-    // Load Best Sellers
     const bestSellersContainer = document.querySelector(
       "#best-sellers .carousel-track"
     );
-    if (bestSellersContainer) {
-      await loadHomepageSection(bestSellersContainer, "best-sellers", 4);
-    }
+
+    // Run both sections in parallel for fastest paint
+    const tasks = [];
+    if (newArrivalsContainer)
+      tasks.push(loadHomepageSection(newArrivalsContainer, "new-arrivals", 8));
+    if (bestSellersContainer)
+      tasks.push(loadHomepageSection(bestSellersContainer, "best-sellers", 4));
+    if (tasks.length) await Promise.race(tasks); // allow earliest section to paint ASAP
+    // let the other continue in background without blocking
   }
 
   async function loadHomepageSection(container, section, limit = 8) {
-    try {
-      // No visible loader; we will paint as soon as cache or data is ready
-      container.innerHTML = "";
+    // Cache-first with early paint and background refresh; staged render to hit <250ms
+    const cacheKey = `home:${section}`;
+    const TTL = 10 * 60 * 1000;
 
-      let products = [];
-
-      // Load products from all collections (if Shopify API available)
-      if (window.shopifyAPI) {
-        const collections = await window.shopifyAPI.getCollections();
-
-        for (const collection of collections.collections) {
-          const collectionData = await window.shopifyAPI.getCollection(
-            collection.handle
-          );
-          products.push(...(collectionData.products || []));
-        }
-      } else {
-        console.log("Shopify API not available for homepage products");
-      }
-
-      // Filter and sort products based on section
-
-      // Prefetch PDP data for visible product cards in this section
+    const renderList = (list) => {
+      if (!list || !list.length) return; // avoid placeholders
+      container.innerHTML = list
+        .map((p) => renderHomepageProductCard(p))
+        .join("");
       try {
+        setupCardLinks();
+        // Warm PDP caches and prewarm images
+        const firstImgs = [];
+        list.forEach((p, idx) => {
+          if (p?.handle) __cacheSet("pdp:product:" + p.handle, p);
+          const u =
+            (p.images && (p.images[0]?.url || p.images[0]?.src)) || null;
+          if (u && idx < 12) firstImgs.push(u);
+        });
+        __prewarmImages(firstImgs);
+        // Prefetch visible PDPs immediately
         const cards = Array.from(
           container.querySelectorAll("article.card[data-href]")
         );
-        cards.slice(0, 8).forEach(function (card) {
-          const href =
-            card.getAttribute("data-href") ||
-            (card.querySelector("a[href]") &&
-              card.querySelector("a[href]").getAttribute("href")) ||
-            "";
+        cards.slice(0, 8).forEach((card) => {
+          const href = card.getAttribute("data-href") || "";
           const handle = __extractHandleFromHref(href);
           if (handle) __prefetchPDP(handle);
         });
         if ("IntersectionObserver" in window) {
           const io = new IntersectionObserver(
-            function (entries) {
-              entries.forEach(function (entry) {
+            (entries) => {
+              entries.forEach((entry) => {
                 if (!entry.isIntersecting) return;
                 const el = entry.target;
-                const href =
-                  el.getAttribute("data-href") ||
-                  (el.querySelector("a[href]") &&
-                    el.querySelector("a[href]").getAttribute("href")) ||
-                  "";
+                const href = el.getAttribute("data-href") || "";
                 const handle = __extractHandleFromHref(href);
                 if (handle) __prefetchPDP(handle);
                 io.unobserve(el);
@@ -2958,58 +2949,92 @@
             },
             { rootMargin: "300px" }
           );
-          cards.forEach(function (el) {
-            io.observe(el);
-          });
+          cards.forEach((el) => io.observe(el));
         }
       } catch (_) {}
+    };
 
+    // 1) Instant paint from cache if present
+    const cached = __cacheGetFresh(cacheKey, TTL);
+    if (cached && Array.isArray(cached) && cached.length) {
+      renderList(cached.slice(0, limit));
+    } else {
+      // No visible loader
+      container.innerHTML = "";
+    }
+
+    // 2) Fetch fresh data with early staged paint
+    try {
+      let products = [];
+      if (window.shopifyAPI) {
+        const collections = await window.shopifyAPI.getCollections();
+        const cols = (collections && collections.collections) || [];
+
+        // Accumulate products as results arrive; paint early when we have enough
+        let earlyPainted = false;
+        let acc = [];
+
+        await Promise.all(
+          cols.map((c, idx) =>
+            window.shopifyAPI
+              .getCollection(c.handle)
+              .then((res) => {
+                const prods = (res && res.products) || [];
+                // For section-specific filtering
+                let chunk = prods.slice();
+                if (section === "best-sellers") {
+                  chunk = chunk.filter((p) => p.availableForSale);
+                }
+                acc = acc.concat(chunk);
+                // Early paint once we have enough and no cache was shown
+                if (!earlyPainted && acc.length >= limit && !cached?.length) {
+                  earlyPainted = true;
+                  const firstSlice =
+                    section === "new-arrivals"
+                      ? acc
+                          .slice()
+                          .sort(
+                            (a, b) =>
+                              new Date(b.createdAt) - new Date(a.createdAt)
+                          )
+                          .slice(0, limit)
+                      : acc.slice(0, limit);
+                  __cacheSet(cacheKey, firstSlice);
+                  renderList(firstSlice);
+                }
+              })
+              .catch(() => {})
+          )
+        );
+
+        products = acc;
+      } else {
+        console.log("Shopify API not available for homepage products");
+      }
+
+      // Finalize products per section
       if (section === "new-arrivals") {
-        // Sort by creation date (newest first)
         products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       } else if (section === "best-sellers") {
-        // For now, just take random products. In a real implementation,
-        // you'd sort by sales data or use a specific collection
         products = products.filter((p) => p.availableForSale);
       }
-
-      // Limit products
       products = products.slice(0, limit);
 
-      if (products.length === 0) {
-        const message =
-          section === "new-arrivals"
-            ? "No new arrivals available at the moment."
-            : "No best sellers available at the moment.";
-        container.innerHTML = `
-          <div style="display: flex; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; color: #666; font-size: 16px; width: 100%; grid-column: 1 / -1;">
-            <div>
-              <p style="margin: 0 0 8px 0;">${message}</p>
-              <p style="margin: 0; font-size: 14px;">Check back soon for ${
-                section === "new-arrivals" ? "new" : "popular"
-              } products!</p>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      // Render products
-      container.innerHTML = products
-        .map((product) => renderHomepageProductCard(product))
-        .join("");
-
-      // Setup card interactions
-      setupCardLinks();
+      // Update cache and UI if changed
+      __cacheSet(cacheKey, products);
+      const currentHandles = Array.from(
+        container.querySelectorAll("article.card[data-href]")
+      ).map((el) =>
+        __extractHandleFromHref(el.getAttribute("data-href") || "")
+      );
+      const nextHandles = products.map((p) => p.handle);
+      const changed =
+        currentHandles.length !== nextHandles.length ||
+        currentHandles.some((h, i) => h !== nextHandles[i]);
+      if (changed) renderList(products);
     } catch (error) {
       console.error(`Error loading ${section}:`, error);
-      container.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; color: #666; font-size: 16px; width: 100%; grid-column: 1 / -1;">
-          <div>
-            <p style="margin: 0;">Failed to load products.</p>
-          </div>
-        </div>
-      `;
+      // No fallback UI; keep whatever is painted
     }
   }
 
