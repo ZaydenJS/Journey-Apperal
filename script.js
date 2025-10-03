@@ -230,6 +230,21 @@
     const slug = params.get("slug");
     if (!slug) return;
 
+    // Minimal instant paint from click handoff (title + first image)
+    try {
+      const m = sessionStorage.getItem("handoff:min:" + slug);
+      if (m) {
+        const o = JSON.parse(m);
+        const tEl = document.querySelector(".p-details h1");
+        if (tEl && o && o.title) tEl.textContent = o.title;
+        const heroTrack = document.getElementById("hero-track");
+        const firstImg = heroTrack && heroTrack.querySelector("img");
+        if (firstImg && o && o.images && o.images[0])
+          firstImg.src = o.images[0];
+        sessionStorage.removeItem("handoff:min:" + slug);
+      }
+    } catch (_) {}
+
     let __pdpSetupDone = false;
     const renderFrom = (p) => {
       if (!p) return;
@@ -386,6 +401,16 @@
             { passive: false }
           );
         }
+
+        // Instant render from sessionStorage handoff (from collection click)
+        try {
+          const h = sessionStorage.getItem("handoff:product:" + slug);
+          if (h) {
+            const p = JSON.parse(h);
+            if (p) renderFrom(p);
+            sessionStorage.removeItem("handoff:product:" + slug);
+          }
+        } catch (_) {}
       } catch (_) {}
 
       if (!__pdpSetupDone) {
@@ -626,11 +651,23 @@
       if (cached && cached.variants) renderFrom(cached);
 
       // Fetch fresh in background and update if needed
+
+      // Priority 1: sessionStorage handoff (instant)
+      try {
+        const h = sessionStorage.getItem("handoff:variants:" + handle);
+        if (h) {
+          const d = JSON.parse(h);
+          if (d && d.variants) renderFrom(d);
+          sessionStorage.removeItem("handoff:variants:" + handle);
+        }
+      } catch (_) {}
+
       const resp = await fetch(
         `/.netlify/functions/product-variants?handle=${encodeURIComponent(
           handle
         )}`
       );
+
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
       if (!data || !data.variants) throw new Error("No variant data");
@@ -1313,6 +1350,7 @@
   }
   async function __prefetchPDP(handle) {
     if (!handle) return;
+
     try {
       if (
         window.shopifyAPI &&
@@ -1352,7 +1390,88 @@
       const card = e.target.closest(".card[data-href]");
       if (!card) return;
       const href = card.getAttribute("data-href");
-      if (href) window.location.href = href;
+      if (!href) return;
+      // Before navigation: write handoff cache for zero-delay PDP render
+      try {
+        const handle = __extractHandleFromHref(href);
+        if (handle) {
+          const cachedP = __cacheGetFresh(
+            "pdp:product:" + handle,
+            10 * 60 * 1000
+          );
+          if (cachedP)
+            sessionStorage.setItem(
+              "handoff:product:" + handle,
+              JSON.stringify(cachedP)
+            );
+          const cachedV = __cacheGetFresh(
+            "pdp:variants:" + handle,
+            10 * 60 * 1000
+          );
+          if (cachedV)
+            sessionStorage.setItem(
+              "handoff:variants:" + handle,
+              JSON.stringify(cachedV)
+            );
+          // Also store minimal card meta in case product cache isn’t warm yet
+          const img = card.querySelector(".img-wrap img");
+          const titleEl = card.querySelector(
+            "[data-title], .title, .name, span, h3, h2"
+          );
+          const minimal = {
+            handle,
+            title: (titleEl && (titleEl.textContent || "").trim()) || "",
+            images: [img && img.getAttribute("src")].filter(Boolean),
+          };
+          sessionStorage.setItem(
+            "handoff:min:" + handle,
+            JSON.stringify(minimal)
+          );
+
+          // Prefetch visible product cards in a container (collection/homepage)
+          function __prefetchVisibleProducts(container) {
+            try {
+              if (!container) return;
+              const cards = Array.from(
+                container.querySelectorAll("article.card[data-href]")
+              );
+              const initial = cards.slice(0, 8);
+              initial.forEach(function (card) {
+                const href =
+                  card.getAttribute("data-href") ||
+                  (card.querySelector("a[href]") &&
+                    card.querySelector("a[href]").getAttribute("href")) ||
+                  "";
+                const handle = __extractHandleFromHref(href);
+                if (handle) __prefetchPDP(handle);
+              });
+              if ("IntersectionObserver" in window) {
+                const io = new IntersectionObserver(
+                  function (entries) {
+                    entries.forEach(function (entry) {
+                      if (!entry.isIntersecting) return;
+                      const el = entry.target;
+                      const href =
+                        el.getAttribute("data-href") ||
+                        (el.querySelector("a[href]") &&
+                          el.querySelector("a[href]").getAttribute("href")) ||
+                        "";
+                      const handle = __extractHandleFromHref(href);
+                      if (handle) __prefetchPDP(handle);
+                      io.unobserve(el);
+                    });
+                  },
+                  { rootMargin: "300px" }
+                );
+                cards.forEach(function (el) {
+                  io.observe(el);
+                });
+              }
+            } catch (_) {}
+          }
+        }
+      } catch (_) {}
+      window.location.href = href;
     });
 
     // Prefetch PDP data/images on hover/touch/mousedown so PDP renders instantly
@@ -1372,18 +1491,9 @@
       const handle = __extractHandleFromHref(href);
       if (handle) __prefetchPDP(handle);
     };
-    document.addEventListener("mouseenter", trigger, {
-      passive: true,
-      capture: false,
-    });
-    document.addEventListener("touchstart", trigger, {
-      passive: true,
-      capture: false,
-    });
-    document.addEventListener("mousedown", trigger, {
-      passive: true,
-      capture: false,
-    });
+    document.addEventListener("mouseenter", trigger, { passive: true });
+    document.addEventListener("touchstart", trigger, { passive: true });
+    document.addEventListener("mousedown", trigger, { passive: true });
   }
 
   // Sitewide: enable image hover swap for cards with a secondary hover image
@@ -2346,6 +2456,44 @@
 
       // Setup card interactions
       setupCardLinks();
+
+      // Prefetch PDP data for visible product cards to ensure instant PDP load
+      try {
+        const cards = Array.from(
+          container.querySelectorAll("article.card[data-href]")
+        );
+        cards.slice(0, 8).forEach(function (card) {
+          const href =
+            card.getAttribute("data-href") ||
+            (card.querySelector("a[href]") &&
+              card.querySelector("a[href]").getAttribute("href")) ||
+            "";
+          const handle = __extractHandleFromHref(href);
+          if (handle) __prefetchPDP(handle);
+        });
+        if ("IntersectionObserver" in window) {
+          const io = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                const el = entry.target;
+                const href =
+                  el.getAttribute("data-href") ||
+                  (el.querySelector("a[href]") &&
+                    el.querySelector("a[href]").getAttribute("href")) ||
+                  "";
+                const handle = __extractHandleFromHref(href);
+                if (handle) __prefetchPDP(handle);
+                io.unobserve(el);
+              });
+            },
+            { rootMargin: "300px" }
+          );
+          cards.forEach(function (el) {
+            io.observe(el);
+          });
+        }
+      } catch (_) {}
     } catch (error) {
       console.error("Error loading products:", error);
       showEmptyState(container, "Failed to load products. Please try again.");
@@ -2468,6 +2616,45 @@
       }
 
       // Filter and sort products based on section
+
+      // Prefetch PDP data for visible product cards in this section
+      try {
+        const cards = Array.from(
+          container.querySelectorAll("article.card[data-href]")
+        );
+        cards.slice(0, 8).forEach(function (card) {
+          const href =
+            card.getAttribute("data-href") ||
+            (card.querySelector("a[href]") &&
+              card.querySelector("a[href]").getAttribute("href")) ||
+            "";
+          const handle = __extractHandleFromHref(href);
+          if (handle) __prefetchPDP(handle);
+        });
+        if ("IntersectionObserver" in window) {
+          const io = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                const el = entry.target;
+                const href =
+                  el.getAttribute("data-href") ||
+                  (el.querySelector("a[href]") &&
+                    el.querySelector("a[href]").getAttribute("href")) ||
+                  "";
+                const handle = __extractHandleFromHref(href);
+                if (handle) __prefetchPDP(handle);
+                io.unobserve(el);
+              });
+            },
+            { rootMargin: "300px" }
+          );
+          cards.forEach(function (el) {
+            io.observe(el);
+          });
+        }
+      } catch (_) {}
+
       if (section === "new-arrivals") {
         // Sort by creation date (newest first)
         products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
