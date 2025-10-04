@@ -1249,6 +1249,9 @@
           }
           track.innerHTML = items.map(cardHTML).join("");
           normalizeCarouselMedia(section);
+          requestAnimationFrame(function () {
+            normalizeCarouselMedia(section);
+          });
         }
       }
     } catch (_) {}
@@ -1328,6 +1331,9 @@
           const b = best[(idx + 1) % best.length];
           bestTrack.innerHTML = [cardHTML(a), cardHTML(b)].join("");
           normalizeCarouselMedia(bestSection);
+          requestAnimationFrame(function () {
+            normalizeCarouselMedia(bestSection);
+          });
         };
         renderPair();
         prevBtn.removeAttribute("onclick");
@@ -1346,6 +1352,9 @@
         // No controls: render all
         bestTrack.innerHTML = best.map(cardHTML).join("");
         normalizeCarouselMedia(bestSection);
+        requestAnimationFrame(function () {
+          normalizeCarouselMedia(bestSection);
+        });
       }
     }
   }
@@ -1917,8 +1926,19 @@
             (wrap.closest("#you-also-viewed") ||
               wrap.closest("#featured-collection"))
           );
-          const desiredAR = inPDP ? "1 / 1.7" : "1 / 1.7"; // homepage grids also use 1/1.7
+          const desiredAR = "1 / 1.7"; // match homepage New Arrivals
           wrap.style.aspectRatio = desiredAR;
+
+          // Hard-size fallback for uniformity on mobile (iOS/Safari quirks)
+          const ratio = 1.7; // height = width * 1.7
+          if (window.innerWidth <= 768) {
+            const w =
+              wrap.clientWidth || wrap.getBoundingClientRect().width || 0;
+            if (w > 0) wrap.style.height = Math.round(w * ratio) + "px";
+          } else {
+            // reset on desktop to allow CSS control
+            wrap.style.height = "";
+          }
         } catch (_) {}
         wrap.style.overflow = wrap.style.overflow || "hidden";
 
@@ -1969,6 +1989,8 @@
         "nav a",
         ".card",
         "[data-href]",
+
+        ".noop",
         ".filter-chip",
         ".size",
         ".accordion button",
