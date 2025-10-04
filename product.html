@@ -178,8 +178,48 @@
             4,
             1fr
           ) !important; /* 4x1 layout on desktop */
+
           gap: 16px !important;
           overflow: visible !important;
+        }
+      }
+    </style>
+    <style id="mobile-pdp-fixes">
+      @media (max-width: 768px) {
+        /* Edge-to-edge layout for Recently Viewed and Best Sellers inside PDP */
+        .p-details #you-also-viewed,
+        .p-details #featured-collection {
+          margin-left: -16px !important; /* negate .p-details horizontal padding */
+          margin-right: -16px !important;
+        }
+        .p-details #you-also-viewed .carousel-track,
+        .p-details #featured-collection .carousel-track {
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          grid-template-columns: repeat(2, 1fr) !important; /* uniform, 2-up */
+        }
+        /* Uniform image sizing across cards */
+        .p-details #you-also-viewed .img-wrap,
+        .p-details #featured-collection .img-wrap {
+          aspect-ratio: 3 / 4 !important;
+          display: block !important;
+          width: 100% !important;
+        }
+        .p-details #you-also-viewed .img-wrap img,
+        .p-details #featured-collection .img-wrap img {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+        }
+        /* Mobile: force accordion text to black (no blue links) */
+        .p-details .collapsible button,
+        .p-details .collapsible .content,
+        .p-details .collapsible .content * {
+          color: #111 !important;
+        }
+        .p-details .collapsible .content a {
+          color: #111 !important;
+          text-decoration: none !important;
         }
       }
     </style>
@@ -223,6 +263,7 @@
             <span
               style="
                 display: block;
+
                 width: 22px;
                 height: 2px;
                 background: #000;

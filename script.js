@@ -1242,7 +1242,7 @@
             track = document.createElement("div");
             track.className = "carousel-track";
             track.style.cssText =
-              "display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:0 12px;";
+              "display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0;";
             section.appendChild(track);
           }
           track.innerHTML = items.map(cardHTML).join("");
@@ -1258,7 +1258,7 @@
         bestTrack = document.createElement("div");
         bestTrack.className = "carousel-track";
         bestTrack.style.cssText =
-          "display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:0 12px;";
+          "display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0;";
         bestSection.appendChild(bestTrack);
       }
 
