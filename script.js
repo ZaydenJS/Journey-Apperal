@@ -171,6 +171,8 @@
       "setupRecentlyViewedAndBestSellers",
       setupRecentlyViewedAndBestSellers
     );
+    // Ensure size picker initializes even if product render is delayed
+    __safe("setupLiveSizePicker", setupLiveSizePicker);
     __safe("setupSizeSelection", setupSizeSelection);
     __safe("setupWishlist", setupWishlist);
 
