@@ -859,14 +859,54 @@
       }
     } catch (_) {}
 
+    // NEW: fallbacks for instant render using product handoff/cache if variants cache isn't warm
     try {
-      // Cache-first render for instant size grid
-      const cached = __cacheGetFresh("pdp:variants:" + handle, 10 * 60 * 1000);
-      if (cached && cached.variants) renderFrom(cached);
+      // 1) sessionStorage product handoff -> synthesize quick variant payload
+      const hp = sessionStorage.getItem("handoff:product:" + handle);
+      if (hp) {
+        try {
+          const p = JSON.parse(hp);
+          if (p && Array.isArray(p.variants) && p.variants.length) {
+            const quick = {
+              variants: p.variants.map((v) => ({
+                id: v.id,
+                availableForSale: !!v.availableForSale,
+                quantityAvailable: v.quantityAvailable ?? null,
+                selectedOptions: v.selectedOptions || [],
+              })),
+              options: p.options || [],
+            };
+            renderFrom(quick);
+          }
+        } catch (_) {}
+      }
+      // 2) localStorage product cache -> synthesize quick variant payload
+      try {
+        const cachedP = __cacheGetFresh(
+          "pdp:product:" + handle,
+          10 * 60 * 1000
+        );
+        if (
+          cachedP &&
+          Array.isArray(cachedP.variants) &&
+          cachedP.variants.length
+        ) {
+          const quick = {
+            variants: cachedP.variants.map((v) => ({
+              id: v.id,
+              availableForSale: !!v.availableForSale,
+              quantityAvailable: v.quantityAvailable ?? null,
+              selectedOptions: v.selectedOptions || [],
+            })),
+            options: cachedP.options || [],
+          };
+          renderFrom(quick);
+        }
+      } catch (_) {}
+    } catch (_) {}
 
-      // Fetch fresh in background and update if needed
-
-      // Priority 1: sessionStorage handoff (instant)
+    try {
+      // Priority A: sessionStorage handoff (instant)
       try {
         const h = sessionStorage.getItem("handoff:variants:" + handle);
         if (h) {
@@ -876,6 +916,11 @@
         }
       } catch (_) {}
 
+      // Priority B: Cache-first render for instant size grid
+      const cached = __cacheGetFresh("pdp:variants:" + handle, 10 * 60 * 1000);
+      if (cached && cached.variants) renderFrom(cached);
+
+      // Fetch fresh in background and update if needed
       const resp = await fetch(
         `/.netlify/functions/product-variants?handle=${encodeURIComponent(
           handle
