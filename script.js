@@ -1934,10 +1934,21 @@
           if (window.innerWidth <= 768) {
             const w =
               wrap.clientWidth || wrap.getBoundingClientRect().width || 0;
-            if (w > 0) wrap.style.height = Math.round(w * ratio) + "px";
+            if (w > 0) {
+              wrap.style.height = Math.round(w * ratio) + "px";
+              wrap.style.minHeight = wrap.style.height; // ensure no collapse
+            } else {
+              // width not ready yet; retry shortly
+              setTimeout(function () {
+                try {
+                  normalizeCarouselMedia(scope);
+                } catch (_) {}
+              }, 60);
+            }
           } else {
             // reset on desktop to allow CSS control
             wrap.style.height = "";
+            wrap.style.minHeight = "";
           }
         } catch (_) {}
         wrap.style.overflow = wrap.style.overflow || "hidden";
@@ -1949,6 +1960,7 @@
           img.style.width = "100%";
           img.style.height = "100%";
           img.style.objectFit = img.style.objectFit || "cover";
+
           const isAlt =
             i > 0 ||
             img.classList.contains("alt") ||
@@ -1961,6 +1973,23 @@
             if (!img.style.opacity) img.style.opacity = "0";
           }
         });
+        // After images are set, if on mobile ensure we normalize once images load
+        if (window.innerWidth <= 768) {
+          imgs.forEach(function (img) {
+            if (!img.complete) {
+              img.addEventListener(
+                "load",
+                function () {
+                  try {
+                    normalizeCarouselMedia(scope);
+                  } catch (_) {}
+                },
+                { once: true }
+              );
+            }
+          });
+        }
+
         // hover handlers
         wrap.onmouseenter = function () {
           const h = this.querySelector("img.hover-img, img.alt");
@@ -1973,6 +2002,23 @@
       });
     } catch (_) {}
   }
+  // Recalculate uniform media sizing on load/resize/orientation
+  (function () {
+    try {
+      var __jaMediaDebounce;
+      function __jaRecalc() {
+        try {
+          normalizeCarouselMedia();
+        } catch (_) {}
+      }
+      ["load", "resize", "orientationchange"].forEach(function (ev) {
+        window.addEventListener(ev, function () {
+          clearTimeout(__jaMediaDebounce);
+          __jaMediaDebounce = setTimeout(__jaRecalc, 120);
+        });
+      });
+    } catch (_) {}
+  })();
 
   // Desktop-only: show pointer cursor on all clickable elements (icons, chips, arrows, links)
   function enforcePointerCursor(root) {
