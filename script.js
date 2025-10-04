@@ -1199,7 +1199,7 @@
         : "";
       return `
       <article class="card" data-href="${href}" style="cursor:pointer">
-        <a href="${href}" class="img-wrap" onmouseenter="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='1'}" onmouseleave="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='0'}" style="position:relative; display:block; aspect-ratio:3/4; overflow:hidden; border-radius:0">
+        <a href="${href}" class="img-wrap" onmouseenter="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='1'}" onmouseleave="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='0'}" style="position:relative; display:block; aspect-ratio:1/1.7; overflow:hidden; border-radius:0">
           <img src="${mainSrc}" alt="${name}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"/>
           ${altImg}
         </a>

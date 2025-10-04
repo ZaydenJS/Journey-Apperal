@@ -183,6 +183,45 @@
         }
       }
     </style>
+    <style id="mobile-pdp-fixes">
+      @media (max-width: 768px) {
+        /* Edge-to-edge layout for Recently Viewed and Best Sellers inside PDP */
+        .p-details #you-also-viewed,
+        .p-details #featured-collection {
+          margin-left: -16px !important;
+          margin-right: -16px !important;
+        }
+        .p-details #you-also-viewed .carousel-track,
+        .p-details #featured-collection .carousel-track {
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          grid-template-columns: repeat(2, 1fr) !important;
+        }
+        /* Match New Arrivals aspect ratio */
+        .p-details #you-also-viewed .img-wrap,
+        .p-details #featured-collection .img-wrap {
+          aspect-ratio: 1 / 1.7 !important;
+          display: block !important;
+          width: 100% !important;
+        }
+        .p-details #you-also-viewed .img-wrap img,
+        .p-details #featured-collection .img-wrap img {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+        }
+        /* Mobile: force accordion text to black */
+        .p-details .collapsible button,
+        .p-details .collapsible .content,
+        .p-details .collapsible .content * {
+          color: #111 !important;
+        }
+        .p-details .collapsible .content a {
+          color: #111 !important;
+          text-decoration: none !important;
+        }
+      }
+    </style>
   </head>
   <body style="margin: 0; overflow-x: hidden">
     <div
