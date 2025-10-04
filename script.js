@@ -173,6 +173,8 @@
     );
     // Ensure size picker initializes even if product render is delayed
     __safe("setupLiveSizePicker", setupLiveSizePicker);
+    // Prefetch collection data on click for instant paints
+    __safe("setupCollectionLinkPrefetch", setupCollectionLinkPrefetch);
     __safe("setupSizeSelection", setupSizeSelection);
     __safe("setupWishlist", setupWishlist);
 
@@ -570,6 +572,15 @@
         } catch (e) {
           console.warn("size picker failed", e);
         }
+        // Safety: if the grid is still empty (due to race/timing), retry shortly
+        try {
+          setTimeout(function () {
+            var grid = document.getElementById("size-grid");
+            if (grid && !grid.querySelector(".size")) {
+              setupLiveSizePicker(p);
+            }
+          }, 150);
+        } catch (_) {}
         __pdpSetupDone = true;
       }
     };
@@ -1776,7 +1787,38 @@
           }
         }
       } catch (_) {}
-      window.location.href = href;
+      (async function () {
+        try {
+          const handle = __extractHandleFromHref(href);
+          if (handle) {
+            const hasCached = !!__cacheGetFresh(
+              "pdp:product:" + handle,
+              10 * 60 * 1000
+            );
+            if (
+              !hasCached &&
+              window.shopifyAPI &&
+              typeof window.shopifyAPI.getProduct === "function"
+            ) {
+              const timeout = new Promise((r) => setTimeout(r, 140));
+              const result = await Promise.race([
+                window.shopifyAPI.getProduct(handle).catch(() => null),
+                timeout,
+              ]);
+              if (result && result.product) {
+                __cacheSet("pdp:product:" + handle, result.product);
+                try {
+                  sessionStorage.setItem(
+                    "handoff:product:" + handle,
+                    JSON.stringify(result.product)
+                  );
+                } catch (_) {}
+              }
+            }
+          }
+        } catch (_) {}
+        window.location.href = href;
+      })();
     });
 
     // Prefetch PDP data/images on hover/touch/mousedown so PDP renders instantly
@@ -5100,3 +5142,56 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, 1000);
 });
+
+// Prefetch collections on click so collection pages paint instantly from cache
+function setupCollectionLinkPrefetch() {
+  if (window.__collectionPrefetchBound) return;
+  window.__collectionPrefetchBound = true;
+  document.addEventListener(
+    "click",
+    function (e) {
+      const a =
+        e.target &&
+        e.target.closest &&
+        e.target.closest('a[href*="collection.html"]');
+      if (!a) return;
+      const href = a.getAttribute("href") || "";
+      if (!href) return;
+      // Only prefetch for explicit collection=... links (categories). Other modes can be heavy.
+      let u;
+      try {
+        u = new URL(href, location.href);
+      } catch (_) {
+        return; // let browser handle
+      }
+      const params = u.searchParams;
+      const coll = params.get("collection");
+      if (!coll) return; // skip non-collection links
+      e.preventDefault();
+      (async function () {
+        try {
+          const handle = (coll || "").toLowerCase().replace(/\s+/g, "-");
+          const tag = params.get("tag") || null;
+          const cacheKey = `collection:${handle}:${tag || "-"}`;
+          const has = __cacheGetFresh(cacheKey, 10 * 60 * 1000);
+          if (
+            !has &&
+            window.shopifyAPI &&
+            typeof window.shopifyAPI.getCollection === "function"
+          ) {
+            const timeout = new Promise((r) => setTimeout(r, 140));
+            const data = await Promise.race([
+              window.shopifyAPI.getCollection(handle, tag).catch(() => null),
+              timeout,
+            ]);
+            if (data && Array.isArray(data.products)) {
+              __cacheSet(cacheKey, data.products);
+            }
+          }
+        } catch (_) {}
+        window.location.href = href;
+      })();
+    },
+    true
+  ); // capture to run before default nav
+}
