@@ -707,9 +707,6 @@
 
   // Live Size picker using Netlify function product-variants (with cache-first render)
   async function setupLiveSizePicker(product) {
-    const here = (location.pathname.split("/").pop() || "").toLowerCase();
-    if (!here.endsWith("product.html")) return; // only on PDP
-
     // Derive handle from ?slug, path last segment, or data attribute
     const deriveHandle = () => {
       const p = new URLSearchParams(location.search).get("slug");
