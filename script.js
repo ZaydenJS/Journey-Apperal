@@ -1302,7 +1302,9 @@
 
     // Recently Viewed: render from localStorage if present
     try {
-      const section = document.querySelector("#you-also-viewed");
+      const section =
+        document.querySelector("#rv-desktop") ||
+        document.querySelector("#you-also-viewed");
       if (section) {
         const now = Date.now();
         const THIRTY_D = 30 * 24 * 60 * 60 * 1000;
@@ -1390,7 +1392,9 @@
     } catch (_) {}
 
     // Best Sellers: ensure container exists and populate
-    const bestSection = document.querySelector("#featured-collection");
+    const bestSection =
+      document.querySelector("#bs-desktop") ||
+      document.querySelector("#featured-collection");
     // Remove any existing product cards not managed by our track (prevents mixed layouts)
     try {
       Array.from(bestSection.querySelectorAll(".card")).forEach(function (el) {

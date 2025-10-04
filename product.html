@@ -164,11 +164,11 @@
           letter-spacing: 0.2px !important;
         }
 
-        /* Show the inline PDP sections on desktop (override previous hide) */
+        /* Hide the inline (right-column) versions of these sections on desktop */
         .p-details #you-also-viewed,
         .p-details #featured-collection,
         .p-details section[aria-label="Join Journey"] {
-          display: block !important;
+          display: none !important;
         }
 
         /* Recently Viewed & Best Sellers: 4-up horizontal on desktop */
@@ -1475,83 +1475,89 @@
     <section
       id="below-product-sections"
       style="width: 100%; max-width: none; margin: 0; padding: 0"
-    ></section>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        try {
-          if (window.innerWidth >= 1024) {
-            var afterMain = document.querySelector(
-              "main.container.section.product"
-            );
-            var target = document.getElementById("below-product-sections");
-            if (!target && afterMain) {
-              target = document.createElement("section");
-              target.id = "below-product-sections";
-              target.setAttribute(
-                "style",
-                "width:100%;max-width:none;margin:0;padding:0;"
-              );
-              afterMain.insertAdjacentElement("afterend", target);
-            }
-
-            function cloneAndNormalize(el) {
-              var c = el.cloneNode(true);
-              c.style.margin = "48px 0 0 0";
-              c.style.padding = "0";
-              // Make carousel containers full-bleed within this section
-              var car = c.querySelector(".carousel");
-              if (car) {
-                car.style.marginLeft = "0";
-                car.style.marginRight = "0";
-                car.style.width = "100%";
-              }
-              var track = c.querySelector(".carousel-track");
-              if (track) {
-                track.style.display = "grid";
-                track.style.gridAutoFlow = "row";
-                track.style.gridAutoColumns = "initial";
-                track.style.gridTemplateColumns = "repeat(4, 1fr)";
-                track.style.gap = "16px";
-                track.style.overflowX = "visible";
-                track.style.scrollSnapType = "none";
-              }
-              // Ensure 4 cards visible on desktop; if fewer, pad by cloning existing
-              try {
-                var kids = Array.from(track.children || []);
-                if (kids.length > 0 && kids.length < 4) {
-                  var base = kids.slice();
-                  for (var i = 0; i < 4 - base.length; i++) {
-                    track.appendChild(base[i % base.length].cloneNode(true));
-                  }
-                }
-              } catch (e) {}
-
-              return c;
-            }
-
-            var rv = document.getElementById("you-also-viewed");
-            var bs = document.getElementById("featured-collection");
-            var cta = document.querySelector(
-              ".p-details section[aria-label='Join Journey']"
-            );
-
-            if (target) {
-              if (rv) target.appendChild(cloneAndNormalize(rv));
-              if (bs) target.appendChild(cloneAndNormalize(bs));
-              if (cta) {
-                var c = cta.cloneNode(true);
-                c.style.maxWidth = "980px";
-                c.style.margin = "44px auto 56px";
-                c.style.textAlign = "center";
-                target.appendChild(c);
-              }
-            }
+    >
+      <style>
+        @media (max-width: 1023px) {
+          #below-product-sections {
+            display: none !important;
           }
-        } catch (e) {
-          if (console && console.warn) console.warn("layout clone error", e);
         }
-      });
-    </script>
+        @media (min-width: 1024px) {
+          #below-product-sections {
+            display: block;
+          }
+        }
+      </style>
+      <div
+        class="container"
+        style="max-width: 1200px; margin: 0 auto; padding: 0 16px"
+      >
+        <div
+          id="rv-desktop"
+          class="mt-32"
+          style="margin-top: 48px; padding: 0; text-align: center"
+        >
+          <div
+            class="upper center"
+            style="
+              font-weight: 800;
+              text-align: center;
+              font-size: 16px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              margin-bottom: 16px;
+            "
+          >
+            RECENTLY VIEWED
+          </div>
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 40px 20px;
+              text-align: center;
+              color: #666;
+              font-size: 14px;
+            "
+          >
+            <p style="margin: 0">No recently viewed products.</p>
+          </div>
+        </div>
+        <div
+          id="bs-desktop"
+          class="mt-32"
+          style="margin-top: 48px; padding: 0; text-align: center"
+        >
+          <div
+            class="upper center"
+            style="
+              font-weight: 800;
+              text-align: center;
+              font-size: 16px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              margin-bottom: 16px;
+            "
+          >
+            BEST SELLERS
+          </div>
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 40px 20px;
+              text-align: center;
+              color: #666;
+              font-size: 14px;
+            "
+          >
+            <p style="margin: 0">No best sellers available.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Footer -->
     <footer style="background: #fff; color: #111; margin-top: 0">
