@@ -1184,6 +1184,7 @@
   function setupRecentlyViewedAndBestSellers() {
     const here = (location.pathname.split("/").pop() || "").toLowerCase();
     const currentSlug = new URLSearchParams(location.search).get("slug") || "";
+    const isDesktop = window.innerWidth >= 1024;
 
     const cardHTML = (it) => {
       const href = it.href || "product.html";
@@ -1302,9 +1303,11 @@
 
     // Recently Viewed: render from localStorage if present
     try {
-      const section =
-        document.querySelector("#rv-desktop") ||
-        document.querySelector("#you-also-viewed");
+      let section = isDesktop
+        ? document.querySelector("#rv-desktop") ||
+          document.querySelector("#you-also-viewed")
+        : document.querySelector("#you-also-viewed") ||
+          document.querySelector("#rv-desktop");
       if (section) {
         const now = Date.now();
         const THIRTY_D = 30 * 24 * 60 * 60 * 1000;
@@ -1322,6 +1325,12 @@
             return (it.handle || "") !== currentSlug;
           });
         items = items.slice(0, 12);
+        if (!(items && items.length) && section) {
+          try {
+            section.style.display = "none";
+          } catch (_) {}
+        }
+
         if (items && items.length) {
           // remove placeholder text blocks
           Array.from(section.querySelectorAll("p")).forEach(function (p) {
@@ -1392,9 +1401,11 @@
     } catch (_) {}
 
     // Best Sellers: ensure container exists and populate
-    const bestSection =
-      document.querySelector("#bs-desktop") ||
-      document.querySelector("#featured-collection");
+    const bestSection = isDesktop
+      ? document.querySelector("#bs-desktop") ||
+        document.querySelector("#featured-collection")
+      : document.querySelector("#featured-collection") ||
+        document.querySelector("#bs-desktop");
     // Remove any existing product cards not managed by our track (prevents mixed layouts)
     try {
       Array.from(bestSection.querySelectorAll(".card")).forEach(function (el) {
