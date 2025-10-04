@@ -1244,7 +1244,7 @@
             track = document.createElement("div");
             track.className = "carousel-track";
             track.style.cssText =
-              "display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:stretch;padding:0;";
+              "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
             section.appendChild(track);
           }
           track.innerHTML = items.map(cardHTML).join("");
@@ -1264,8 +1264,13 @@
         bestTrack = document.createElement("div");
         bestTrack.className = "carousel-track";
         bestTrack.style.cssText =
-          "display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:stretch;padding:0;";
+          "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
         bestSection.appendChild(bestTrack);
+      }
+      // Enforce 2x1 grid layout consistently even if track already existed
+      if (bestTrack) {
+        bestTrack.style.cssText =
+          "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
       }
 
       const best = [
