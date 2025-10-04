@@ -1334,8 +1334,17 @@
             track = document.createElement("div");
             track.className = "carousel-track mobile-2x1";
             track.style.cssText =
-              "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
+              "display:grid;grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
             section.appendChild(track);
+            try {
+              try {
+                track.style.gridTemplateColumns =
+                  window.innerWidth >= 1024 ? "repeat(4,1fr)" : "repeat(2,1fr)";
+              } catch (_) {}
+
+              track.style.gridTemplateColumns =
+                window.innerWidth >= 1024 ? "repeat(4,1fr)" : "repeat(2,1fr)";
+            } catch (_) {}
           }
           const pageSize = window.innerWidth >= 1024 ? 4 : 2;
           if ((items || []).length > pageSize) {
@@ -1373,8 +1382,13 @@
               clearTimeout(rvResizeTO);
               rvResizeTO = setTimeout(function () {
                 const ps = window.innerWidth >= 1024 ? 4 : 2;
+                try {
+                  track.style.gridTemplateColumns =
+                    window.innerWidth >= 1024
+                      ? "repeat(4,1fr)"
+                      : "repeat(2,1fr)";
+                } catch (_) {}
                 if (ps !== pageSize) {
-                  // restart at 0 for simplicity
                   idx = 0;
                 }
                 renderPage();
@@ -1415,13 +1429,19 @@
         bestTrack = document.createElement("div");
         bestTrack.className = "carousel-track mobile-2x1";
         bestTrack.style.cssText =
-          "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
+          "display:grid;grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
         bestSection.appendChild(bestTrack);
+        try {
+          bestTrack.style.gridTemplateColumns =
+            window.innerWidth >= 1024 ? "repeat(4,1fr)" : "repeat(2,1fr)";
+        } catch (_) {}
       }
-      // Enforce 2x1 grid layout consistently even if track already existed
+      // Apply responsive columns even if track already existed
       if (bestTrack) {
-        bestTrack.style.cssText =
-          "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
+        try {
+          bestTrack.style.gridTemplateColumns =
+            window.innerWidth >= 1024 ? "repeat(4,1fr)" : "repeat(2,1fr)";
+        } catch (_) {}
       }
 
       const best = [
@@ -1513,6 +1533,10 @@
         window.addEventListener("resize", function () {
           clearTimeout(bsResizeTO);
           bsResizeTO = setTimeout(function () {
+            try {
+              bestTrack.style.gridTemplateColumns =
+                window.innerWidth >= 1024 ? "repeat(4,1fr)" : "repeat(2,1fr)";
+            } catch (_) {}
             idx = 0;
             renderPage();
           }, 150);
