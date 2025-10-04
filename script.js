@@ -1251,7 +1251,15 @@
         }
         span.textContent = side === "prev" ? "‹" : "›";
         span.style.cssText =
-          "display:inline-block;color:#fff;transition:transform 120ms ease;";
+          "display:inline-block;transition:transform 120ms ease;";
+        // Match arrow color to context: white over imagery (mobile hero-like), dark on desktop white background
+        if (window.innerWidth >= 1024) {
+          btn.style.color = "#111";
+          span.style.color = "#111";
+        } else {
+          btn.style.color = "#fff";
+          span.style.color = "#fff";
+        }
         btn.onmouseenter = function () {
           this.style.background = "rgba(255,255,255,0.15)";
           this.style.borderColor = "rgba(255,255,255,0.35)";
@@ -1322,38 +1330,54 @@
           var track = section.querySelector(".carousel-track");
           if (!track) {
             track = document.createElement("div");
-            track.className = "carousel-track";
+            track.className = "carousel-track mobile-2x1";
             track.style.cssText =
               "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
             section.appendChild(track);
           }
-          if ((items || []).length > 2) {
+          const pageSize = window.innerWidth >= 1024 ? 4 : 2;
+          if ((items || []).length > pageSize) {
             const ctrls = ensureArrows(section);
             let idx = 0;
-            function renderPair() {
-              const a = items[idx % items.length];
-              const b = items[(idx + 1) % items.length];
-              track.innerHTML = [cardHTML(a), cardHTML(b)].join("");
+            function renderPage() {
+              const out = [];
+              for (let i = 0; i < pageSize; i++) {
+                out.push(items[(idx + i) % items.length]);
+              }
+              track.innerHTML = out.map(cardHTML).join("");
               normalizeCarouselMedia(section);
               requestAnimationFrame(function () {
                 normalizeCarouselMedia(section);
               });
             }
-            renderPair();
+            renderPage();
             if (ctrls.prev) {
               ctrls.prev.onclick = function (e) {
                 e.preventDefault();
-                idx = (idx - 2 + items.length) % items.length;
-                renderPair();
+                idx = (idx - pageSize + items.length) % items.length;
+                renderPage();
               };
             }
             if (ctrls.next) {
               ctrls.next.onclick = function (e) {
                 e.preventDefault();
-                idx = (idx + 2) % items.length;
-                renderPair();
+                idx = (idx + pageSize) % items.length;
+                renderPage();
               };
             }
+            // Re-render on resize to switch 2-up/4-up
+            let rvResizeTO;
+            window.addEventListener("resize", function () {
+              clearTimeout(rvResizeTO);
+              rvResizeTO = setTimeout(function () {
+                const ps = window.innerWidth >= 1024 ? 4 : 2;
+                if (ps !== pageSize) {
+                  // restart at 0 for simplicity
+                  idx = 0;
+                }
+                renderPage();
+              }, 150);
+            });
           } else {
             track.innerHTML = items.map(cardHTML).join("");
             normalizeCarouselMedia(section);
@@ -1385,7 +1409,7 @@
       let bestTrack = bestSection.querySelector(".carousel-track");
       if (!bestTrack) {
         bestTrack = document.createElement("div");
-        bestTrack.className = "carousel-track";
+        bestTrack.className = "carousel-track mobile-2x1";
         bestTrack.style.cssText =
           "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
         bestSection.appendChild(bestTrack);
@@ -1454,28 +1478,40 @@
 
       if (prevBtn && nextBtn) {
         let idx = 0;
-        const renderPair = () => {
+        const pageSize = window.innerWidth >= 1024 ? 4 : 2;
+        const renderPage = () => {
           if (!best.length) return;
-          const a = best[idx % best.length];
-          const b = best[(idx + 1) % best.length];
-          bestTrack.innerHTML = [cardHTML(a), cardHTML(b)].join("");
+          const out = [];
+          for (let i = 0; i < pageSize; i++) {
+            out.push(best[(idx + i) % best.length]);
+          }
+          bestTrack.innerHTML = out.map(cardHTML).join("");
           normalizeCarouselMedia(bestSection);
           requestAnimationFrame(function () {
             normalizeCarouselMedia(bestSection);
           });
         };
-        renderPair();
+        renderPage();
         prevBtn.removeAttribute("onclick");
         prevBtn.addEventListener("click", (e) => {
           e.preventDefault();
-          idx = (idx - 2 + best.length) % best.length;
-          renderPair();
+          idx = (idx - pageSize + best.length) % best.length;
+          renderPage();
         });
         nextBtn.removeAttribute("onclick");
         nextBtn.addEventListener("click", (e) => {
           e.preventDefault();
-          idx = (idx + 2) % best.length;
-          renderPair();
+          idx = (idx + pageSize) % best.length;
+          renderPage();
+        });
+        // Re-render on resize to switch 2-up/4-up
+        let bsResizeTO;
+        window.addEventListener("resize", function () {
+          clearTimeout(bsResizeTO);
+          bsResizeTO = setTimeout(function () {
+            idx = 0;
+            renderPage();
+          }, 150);
         });
       } else {
         // No controls: render all
