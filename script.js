@@ -1211,6 +1211,49 @@
         </div>
       </article>`;
     };
+    // Ensure left/right arrow controls exist inside a section; returns {prev,next}
+    function ensureArrows(section) {
+      if (!section) return { prev: null, next: null };
+      try {
+        section.style.position = section.style.position || "relative";
+      } catch (_) {}
+      let prev = section.querySelector(".ctrl.prev");
+      let next = section.querySelector(".ctrl.next");
+      const baseBtnStyle = [
+        "position:absolute",
+        "top:50%",
+        "transform:translateY(-50%)",
+        "width:36px",
+        "height:36px",
+        "border-radius:999px",
+        "border:1px solid rgba(0,0,0,0.1)",
+        "background:#fff",
+        "color:#111",
+        "display:flex",
+        "align-items:center",
+        "justify-content:center",
+        "z-index:2",
+        "cursor:pointer",
+        "box-shadow:0 1px 4px rgba(0,0,0,0.12)",
+      ].join(";\u0020");
+      if (!prev) {
+        prev = document.createElement("button");
+        prev.className = "ctrl prev";
+        prev.setAttribute("aria-label", "Previous");
+        prev.style.cssText = baseBtnStyle + "; left:8px;";
+        prev.textContent = "‹";
+        section.appendChild(prev);
+      }
+      if (!next) {
+        next = document.createElement("button");
+        next.className = "ctrl next";
+        next.setAttribute("aria-label", "Next");
+        next.style.cssText = baseBtnStyle + "; right:8px;";
+        next.textContent = "›";
+        section.appendChild(next);
+      }
+      return { prev, next };
+    }
 
     // Recently Viewed: render from localStorage if present
     try {
@@ -1247,17 +1290,60 @@
               "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
             section.appendChild(track);
           }
-          track.innerHTML = items.map(cardHTML).join("");
-          normalizeCarouselMedia(section);
-          requestAnimationFrame(function () {
+          if ((items || []).length > 2) {
+            const ctrls = ensureArrows(section);
+            let idx = 0;
+            function renderPair() {
+              const a = items[idx % items.length];
+              const b = items[(idx + 1) % items.length];
+              track.innerHTML = [cardHTML(a), cardHTML(b)].join("");
+              normalizeCarouselMedia(section);
+              requestAnimationFrame(function () {
+                normalizeCarouselMedia(section);
+              });
+            }
+            renderPair();
+            if (ctrls.prev) {
+              ctrls.prev.onclick = function (e) {
+                e.preventDefault();
+                idx = (idx - 2 + items.length) % items.length;
+                renderPair();
+              };
+            }
+            if (ctrls.next) {
+              ctrls.next.onclick = function (e) {
+                e.preventDefault();
+                idx = (idx + 2) % items.length;
+                renderPair();
+              };
+            }
+          } else {
+            track.innerHTML = items.map(cardHTML).join("");
             normalizeCarouselMedia(section);
-          });
+            requestAnimationFrame(function () {
+              normalizeCarouselMedia(section);
+            });
+          }
         }
       }
     } catch (_) {}
 
     // Best Sellers: ensure container exists and populate
     const bestSection = document.querySelector("#featured-collection");
+    // Remove any existing product cards not managed by our track (prevents mixed layouts)
+    try {
+      Array.from(bestSection.querySelectorAll(".card")).forEach(function (el) {
+        if (!el.closest(".carousel-track")) el.remove();
+      });
+    } catch (_) {}
+    // Remove placeholder text blocks as well
+    try {
+      Array.from(bestSection.querySelectorAll("p")).forEach(function (p) {
+        var parent = p.parentElement;
+        if (parent && !parent.closest(".carousel-track")) parent.remove();
+      });
+    } catch (_) {}
+
     if (bestSection) {
       let bestTrack = bestSection.querySelector(".carousel-track");
       if (!bestTrack) {
@@ -1325,8 +1411,9 @@
         },
       ];
 
-      const prevBtn = bestSection.querySelector(".ctrl.prev");
-      const nextBtn = bestSection.querySelector(".ctrl.next");
+      const __bsCtrls = ensureArrows(bestSection);
+      const prevBtn = __bsCtrls.prev;
+      const nextBtn = __bsCtrls.next;
 
       if (prevBtn && nextBtn) {
         let idx = 0;
