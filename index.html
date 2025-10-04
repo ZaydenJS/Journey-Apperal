@@ -1329,6 +1329,25 @@
       </div>
     </section>
 
+    <script>
+      (function () {
+        function reorder() {
+          if (window.innerWidth >= 1024) {
+            var cat = document.getElementById("categories");
+            var back = document.getElementById("back-in-stock-promo");
+            if (cat && back && back.previousElementSibling !== cat) {
+              back.parentNode.insertBefore(cat, back);
+            }
+          }
+        }
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", reorder);
+        } else {
+          reorder();
+        }
+      })();
+    </script>
+
     <!-- Best Sellers Carousel -->
     <section
       class="section container"
