@@ -1215,32 +1215,15 @@
     function ensureArrows(section) {
       if (!section) return { prev: null, next: null };
       try {
+        section.classList.add("carousel");
         section.style.position = section.style.position || "relative";
       } catch (_) {}
       let prev = section.querySelector(".ctrl.prev");
       let next = section.querySelector(".ctrl.next");
-      const baseBtnStyle = [
-        "position:absolute",
-        "top:50%",
-        "transform:translateY(-50%)",
-        "width:36px",
-        "height:36px",
-        "border-radius:999px",
-        "border:1px solid rgba(0,0,0,0.1)",
-        "background:#fff",
-        "color:#111",
-        "display:flex",
-        "align-items:center",
-        "justify-content:center",
-        "z-index:2",
-        "cursor:pointer",
-        "box-shadow:0 1px 4px rgba(0,0,0,0.12)",
-      ].join(";\u0020");
       if (!prev) {
         prev = document.createElement("button");
         prev.className = "ctrl prev";
         prev.setAttribute("aria-label", "Previous");
-        prev.style.cssText = baseBtnStyle + "; left:8px;";
         prev.textContent = "‹";
         section.appendChild(prev);
       }
@@ -1248,7 +1231,6 @@
         next = document.createElement("button");
         next.className = "ctrl next";
         next.setAttribute("aria-label", "Next");
-        next.style.cssText = baseBtnStyle + "; right:8px;";
         next.textContent = "›";
         section.appendChild(next);
       }
