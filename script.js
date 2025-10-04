@@ -1195,7 +1195,7 @@
       const mainSrc = main || (pair && pair.main) || "";
       const altSrc = alt || (pair && pair.alt) || "";
       const altImg = altSrc
-        ? `<img class="hover-img" src="${altSrc}" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition: opacity 180ms ease; pointer-events:none;" />`
+        ? `<img class="hover-img" src="${altSrc}" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition: opacity 180ms ease; pointer-events:none; z-index:1;" />`
         : "";
       return `
       <article class="card" data-href="${href}" style="cursor:pointer">
@@ -1203,9 +1203,11 @@
           <img src="${mainSrc}" alt="${name}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"/>
           ${altImg}
         </a>
-        <div class="row mt-8" style="display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:8px; font-size:14px; text-align:center;">
-          <span style="font-weight:400; text-transform:uppercase; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:95%">${name}</span>
-          <span class="price" style="font-weight:400">${price}</span>
+        <div class="details" style="padding: 12px 0; text-align: center;">
+          <h3 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px;">${name}</h3>
+          <div class="price-container">
+            <span class="price" style="font-weight: 500; font-size: 14px;">${price}</span>
+          </div>
         </div>
       </article>`;
     };
@@ -1242,10 +1244,11 @@
             track = document.createElement("div");
             track.className = "carousel-track";
             track.style.cssText =
-              "display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:0 12px;";
+              "display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:stretch;padding:0;";
             section.appendChild(track);
           }
           track.innerHTML = items.map(cardHTML).join("");
+          normalizeCarouselMedia(section);
         }
       }
     } catch (_) {}
@@ -1258,7 +1261,7 @@
         bestTrack = document.createElement("div");
         bestTrack.className = "carousel-track";
         bestTrack.style.cssText =
-          "display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:0 12px;";
+          "display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:stretch;padding:0;";
         bestSection.appendChild(bestTrack);
       }
 
@@ -1324,6 +1327,7 @@
           const a = best[idx % best.length];
           const b = best[(idx + 1) % best.length];
           bestTrack.innerHTML = [cardHTML(a), cardHTML(b)].join("");
+          normalizeCarouselMedia(bestSection);
         };
         renderPair();
         prevBtn.removeAttribute("onclick");
@@ -1341,6 +1345,7 @@
       } else {
         // No controls: render all
         bestTrack.innerHTML = best.map(cardHTML).join("");
+        normalizeCarouselMedia(bestSection);
       }
     }
   }
@@ -1900,13 +1905,21 @@
     try {
       const scope = root || document;
       const wraps = scope.querySelectorAll(
-        "#new-arrivals .img-wrap, #best-sellers .img-wrap"
+        "#new-arrivals .img-wrap, #best-sellers .img-wrap, .p-details #you-also-viewed .img-wrap, .p-details #featured-collection .img-wrap"
       );
       wraps.forEach((wrap) => {
         // wrapper sizing
         wrap.style.position = wrap.style.position || "relative";
         wrap.style.display = wrap.style.display || "block";
-        if (!wrap.style.aspectRatio) wrap.style.aspectRatio = "3 / 4";
+        try {
+          const inPDP = !!(
+            wrap.closest(".p-details") &&
+            (wrap.closest("#you-also-viewed") ||
+              wrap.closest("#featured-collection"))
+          );
+          const desiredAR = inPDP ? "1 / 1.7" : "1 / 1.7"; // homepage grids also use 1/1.7
+          wrap.style.aspectRatio = desiredAR;
+        } catch (_) {}
         wrap.style.overflow = wrap.style.overflow || "hidden";
 
         const imgs = wrap.querySelectorAll("img");
