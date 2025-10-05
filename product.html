@@ -134,6 +134,16 @@
           padding-left: 0 !important;
           padding-right: 0 !important;
         }
+        /* Ensure gallery has a stable height at first paint on desktop */
+        .gallery-main,
+        #hero-track {
+          min-height: 520px !important;
+        }
+        #hero-track img {
+          height: 100% !important;
+          object-fit: cover !important;
+        }
+
         .p-gallery {
           margin: 0 !important;
         }
@@ -145,6 +155,11 @@
           box-sizing: border-box !important; /* include padding within width */
           margin-left: auto !important;
           margin-right: auto !important; /* center inside the right column for equal whitespace */
+          /* Prevent initial jump: center vertically by CSS from first paint */
+          align-self: center !important;
+          transform: translateY(
+            -120px
+          ) !important; /* match previous visual offset */
         }
         /* Desktop: place price under product title */
         .p-details > .row:first-child {
@@ -2810,54 +2825,6 @@
             tab = b.getAttribute("data-sg-tab");
             renderChart();
           });
-        });
-      })();
-    </script>
-    <script>
-      (function () {
-        function centerDetails() {
-          try {
-            var isDesktop = window.innerWidth >= 1024;
-            var details = document.querySelector(".p-details");
-            var gallery =
-              document.querySelector(".p-gallery") ||
-              document.querySelector(".gallery");
-            if (!details) return;
-            if (!isDesktop) {
-              details.style.marginTop = "0";
-              return;
-            }
-            // Use current gallery height (set earlier by sizeHero) to avoid late reflow
-            var gh = gallery ? gallery.getBoundingClientRect().height : 0;
-            // If gallery height not ready yet, predict it using same logic as sizeHero
-            if (!gh || gh < 200) {
-              var header = document.querySelector(".header-inner");
-              var announce = document.querySelector(".announcement");
-              var headerH =
-                (header ? header.offsetHeight : 64) +
-                (announce && getComputedStyle(announce).position !== "static"
-                  ? announce.offsetHeight || 0
-                  : 0);
-              var factor = 0.78; // desktop factor used in sizeHero
-              var minH = 520;
-              gh = Math.max(
-                minH,
-                Math.round((window.innerHeight - headerH) * factor)
-              );
-            }
-            var dh = details.getBoundingClientRect().height;
-            var offset = Math.max(0, Math.round((gh - dh) / 2) - 120);
-            details.style.marginTop = offset + "px";
-          } catch (err) {}
-        }
-        // Run as early as possible on DOMContentLoaded (after sizeHero registered earlier)
-        document.addEventListener("DOMContentLoaded", function () {
-          requestAnimationFrame(centerDetails);
-        });
-        // Also recompute on load and resize as a safety
-        window.addEventListener("load", centerDetails);
-        window.addEventListener("resize", function () {
-          requestAnimationFrame(centerDetails);
         });
       })();
     </script>
