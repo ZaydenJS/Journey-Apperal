@@ -209,6 +209,50 @@
         }
       }
     </style>
+    <style id="desktop-pdp-arrows">
+      @media (min-width: 1024px) {
+        /* Match global arrow design on desktop PDP sections */
+        #rv-desktop .ctrl,
+        #bs-desktop .ctrl {
+          position: absolute !important;
+          top: 50% !important;
+          transform: translateY(-50%) !important;
+          width: 36px !important;
+          height: 36px !important;
+          border-radius: 50% !important;
+          background: transparent !important;
+          border: 1px solid transparent !important;
+          color: #111 !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          line-height: 1 !important;
+          font-size: 20px !important;
+          padding: 0 !important;
+          z-index: 10 !important;
+        }
+        #rv-desktop .ctrl.prev,
+        #bs-desktop .ctrl.prev {
+          left: 8px !important;
+        }
+        #rv-desktop .ctrl.next,
+        #bs-desktop .ctrl.next {
+          right: 8px !important;
+        }
+        #rv-desktop .ctrl span,
+        #bs-desktop .ctrl span {
+          display: inline-block !important;
+          color: #111 !important;
+          transition: transform 120ms ease !important;
+        }
+        #rv-desktop .ctrl:hover,
+        #bs-desktop .ctrl:hover {
+          background: rgba(0, 0, 0, 0.04) !important;
+          border-color: rgba(0, 0, 0, 0.15) !important;
+        }
+      }
+    </style>
+
     <style id="mobile-pdp-fixes">
       @media (max-width: 768px) {
         /* Edge-to-edge layout for Recently Viewed and Best Sellers inside PDP */
