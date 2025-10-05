@@ -2822,26 +2822,42 @@
             var gallery =
               document.querySelector(".p-gallery") ||
               document.querySelector(".gallery");
-            if (!details) {
-              return;
-            }
+            if (!details) return;
             if (!isDesktop) {
               details.style.marginTop = "0";
               return;
             }
+            // Use current gallery height (set earlier by sizeHero) to avoid late reflow
             var gh = gallery ? gallery.getBoundingClientRect().height : 0;
+            // If gallery height not ready yet, predict it using same logic as sizeHero
+            if (!gh || gh < 200) {
+              var header = document.querySelector(".header-inner");
+              var announce = document.querySelector(".announcement");
+              var headerH =
+                (header ? header.offsetHeight : 64) +
+                (announce && getComputedStyle(announce).position !== "static"
+                  ? announce.offsetHeight || 0
+                  : 0);
+              var factor = 0.78; // desktop factor used in sizeHero
+              var minH = 520;
+              gh = Math.max(
+                minH,
+                Math.round((window.innerHeight - headerH) * factor)
+              );
+            }
             var dh = details.getBoundingClientRect().height;
             var offset = Math.max(0, Math.round((gh - dh) / 2) - 120);
             details.style.marginTop = offset + "px";
           } catch (err) {}
         }
+        // Run as early as possible on DOMContentLoaded (after sizeHero registered earlier)
+        document.addEventListener("DOMContentLoaded", function () {
+          requestAnimationFrame(centerDetails);
+        });
+        // Also recompute on load and resize as a safety
         window.addEventListener("load", centerDetails);
         window.addEventListener("resize", function () {
           requestAnimationFrame(centerDetails);
-        });
-        // In case images load after DOMContentLoaded
-        document.addEventListener("DOMContentLoaded", function () {
-          setTimeout(centerDetails, 100);
         });
       })();
     </script>
