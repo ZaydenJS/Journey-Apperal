@@ -273,10 +273,10 @@
         /* Bigger hero on mobile: more vertical height from first paint */
         .gallery-main,
         #hero-track {
-          min-height: 420px !important;
+          min-height: 360px !important;
         }
         #hero-track {
-          height: 68vh !important;
+          height: 58vh !important;
         }
         #hero-track img {
           height: 100% !important;
@@ -1049,10 +1049,8 @@
                 ? announce.offsetHeight || 0
                 : 0);
             var isDesktop = window.innerWidth >= 1024;
-            var factor = isDesktop
-              ? 0.78
-              : 0.72; /* mobile: increase vertical height */
-            var minH = isDesktop ? 520 : 420;
+            var factor = isDesktop ? 0.78 : 0.62; /* mobile: reduce ~15% */
+            var minH = isDesktop ? 520 : 360;
             var h = Math.max(
               minH,
               Math.round((window.innerHeight - headerH) * factor)
