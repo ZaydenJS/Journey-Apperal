@@ -171,8 +171,17 @@
           display: none !important;
         }
 
-        /* Recently Viewed & Best Sellers: 4-up horizontal on desktop */
-        .product .carousel-track.mobile-2x1 {
+        /* PDP desktop grids */
+        #rv-desktop .carousel-track.mobile-2x1 {
+          display: grid !important;
+          grid-template-columns: repeat(
+            5,
+            1fr
+          ) !important; /* 5x1 layout on desktop */
+          gap: 16px !important;
+          overflow: visible !important;
+        }
+        #bs-desktop .carousel-track.mobile-2x1 {
           display: grid !important;
           grid-template-columns: repeat(
             4,

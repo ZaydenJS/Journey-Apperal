@@ -1346,7 +1346,7 @@
               "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
             section.appendChild(track);
           }
-          const pageSize = window.innerWidth >= 1024 ? 4 : 2;
+          const pageSize = window.innerWidth >= 1024 ? 5 : 2;
           if ((items || []).length > pageSize) {
             const ctrls = ensureArrows(section);
             let idx = 0;
@@ -1381,7 +1381,7 @@
             window.addEventListener("resize", function () {
               clearTimeout(rvResizeTO);
               rvResizeTO = setTimeout(function () {
-                const ps = window.innerWidth >= 1024 ? 4 : 2;
+                const ps = window.innerWidth >= 1024 ? 5 : 2;
                 if (ps !== pageSize) {
                   // restart at 0 for simplicity
                   idx = 0;
