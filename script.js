@@ -2011,38 +2011,8 @@
           }
         }
       } catch (_) {}
-      (async function () {
-        try {
-          const handle = __extractHandleFromHref(href);
-          if (handle) {
-            const hasCached = !!__cacheGetFresh(
-              "pdp:product:" + handle,
-              10 * 60 * 1000
-            );
-            if (
-              !hasCached &&
-              window.shopifyAPI &&
-              typeof window.shopifyAPI.getProduct === "function"
-            ) {
-              const timeout = new Promise((r) => setTimeout(r, 140));
-              const result = await Promise.race([
-                window.shopifyAPI.getProduct(handle).catch(() => null),
-                timeout,
-              ]);
-              if (result && result.product) {
-                __cacheSet("pdp:product:" + handle, result.product);
-                try {
-                  sessionStorage.setItem(
-                    "handoff:product:" + handle,
-                    JSON.stringify(result.product)
-                  );
-                } catch (_) {}
-              }
-            }
-          }
-        } catch (_) {}
-        window.location.href = href;
-      })();
+      // Instant navigation; do not await prefetch to avoid any delay
+      window.location.href = href;
     });
 
     // Prefetch PDP data/images on hover/touch/mousedown so PDP renders instantly
