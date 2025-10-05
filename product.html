@@ -277,10 +277,17 @@
         }
         #hero-track {
           height: 58vh !important;
+          /* Prevent image drag/pan on mobile */
+          touch-action: pan-y !important; /* allow vertical scroll only */
+          -ms-touch-action: pan-y !important;
+          overscroll-behavior-x: none !important;
         }
         #hero-track img {
           height: 100% !important;
           object-fit: cover !important;
+          -webkit-user-drag: none !important;
+          user-select: none !important;
+          -webkit-touch-callout: none !important;
         }
 
         /* Edge-to-edge layout for Recently Viewed and Best Sellers inside PDP */
