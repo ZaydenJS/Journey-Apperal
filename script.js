@@ -196,9 +196,7 @@
     __safe("ensureShopClickToggle", ensureShopClickToggle);
     __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
-    // Extra safety: ensure PDP Details toggles even if any prior wiring misses
-    __safe("ensurePdpDetailsToggle", ensurePdpDetailsToggle);
-    __safe("bindDetailsDelegatedToggle", bindDetailsDelegatedToggle);
+    // Clean single binding: rely on setupCollapsibles only for PDP Details
   });
 
   function setupSizeSelection() {
@@ -2639,58 +2637,6 @@
         if (isOpen) {
           closePanel();
         } else {
-          // Fallback: ensure the PDP Details accordion toggles open/close reliably
-          function ensurePdpDetailsToggle() {
-            try {
-              const sec = document.querySelector(".p-details .collapsible");
-              if (!sec || sec.dataset.detailsManualBound === "1") return;
-              const btn = sec.querySelector("button");
-              const panel = sec.querySelector(".content");
-              if (!btn || !panel) return;
-
-              const forceOpen = () => {
-                sec.classList.add("open");
-                btn.setAttribute("aria-expanded", "true");
-                panel.style.display = "block";
-                const h = panel.scrollHeight;
-                panel.style.height = h + "px";
-                const done = () => {
-                  if (btn.getAttribute("aria-expanded") === "true")
-                    panel.style.height = "auto";
-                  panel.removeEventListener("transitionend", done);
-                };
-                panel.addEventListener("transitionend", done);
-              };
-
-              const forceClose = () => {
-                sec.classList.remove("open");
-                btn.setAttribute("aria-expanded", "false");
-                const current = panel.scrollHeight;
-                panel.style.height = current + "px";
-                requestAnimationFrame(() => (panel.style.height = "0px"));
-              };
-
-              const toggle = (e) => {
-                try {
-                  e.preventDefault();
-                } catch (_) {}
-                e && e.stopPropagation && e.stopPropagation();
-                const isOpen = btn.getAttribute("aria-expanded") === "true";
-                if (isOpen) forceClose();
-                else forceOpen();
-              };
-
-              btn.addEventListener("click", toggle, { capture: true });
-              btn.addEventListener("keydown", (e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  toggle(e);
-                }
-              });
-              sec.dataset.detailsManualBound = "1";
-            } catch (_) {}
-          }
-
           // Close any other open collapsibles before opening this one
           closeAllCollapsiblesExcept(sec);
           openPanel();
