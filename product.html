@@ -277,10 +277,13 @@
         }
         #hero-track {
           height: 58vh !important;
-          /* Prevent image drag/pan on mobile */
-          touch-action: pan-y !important; /* allow vertical scroll only */
-          -ms-touch-action: pan-y !important;
+          /* Lock image: disable touch panning/scrolling completely */
+          touch-action: none !important;
+          -ms-touch-action: none !important;
           overscroll-behavior-x: none !important;
+          overflow-x: hidden !important;
+          scroll-snap-type: none !important;
+          -webkit-overflow-scrolling: auto !important;
         }
         #hero-track img {
           height: 100% !important;
@@ -288,6 +291,7 @@
           -webkit-user-drag: none !important;
           user-select: none !important;
           -webkit-touch-callout: none !important;
+          pointer-events: none !important; /* ignore drag on image */
         }
 
         /* Edge-to-edge layout for Recently Viewed and Best Sellers inside PDP */
@@ -1146,8 +1150,24 @@
             function () {
               requestAnimationFrame(setActive);
             },
+
             { passive: true }
           );
+        });
+      </script>
+      <script>
+        // Prevent any touch-drag on the hero track for mobile devices
+        document.addEventListener("DOMContentLoaded", function () {
+          var track = document.getElementById("hero-track");
+          if (!track) return;
+          if (window.innerWidth <= 768) {
+            var block = function (e) {
+              e.preventDefault();
+            };
+            ["touchstart", "touchmove"].forEach(function (ev) {
+              track.addEventListener(ev, block, { passive: false });
+            });
+          }
         });
       </script>
 
@@ -1166,6 +1186,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+
             gap: 12px;
           "
         >
