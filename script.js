@@ -392,8 +392,10 @@
                 () => (a.style.textDecoration = "none")
               );
             });
-          } else if (detailsSection) {
-            detailsSection.style.display = "none"; // hide when empty
+          } else {
+            // Keep the Details accordion visible even when description is empty
+            // Leave panel empty so the dropdown still shows above Shipping & Returns
+            if (detailsPanel) detailsPanel.innerHTML = "";
           }
         }
       } catch (e) {
