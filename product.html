@@ -360,6 +360,8 @@
               requestAnimationFrame(function () {
                 var t = document.querySelector(".p-details h1#product-title");
                 if (t && m.title) t.textContent = m.title;
+                var priceEl = document.querySelector(".p-details .p-price");
+                if (priceEl && m.price) priceEl.textContent = m.price;
                 var heroImg = document.querySelector(".gallery-main img");
                 if (heroImg && m.images && m.images[0]) {
                   heroImg.src = m.images[0];
@@ -397,6 +399,29 @@
               }
               if (html) {
                 requestAnimationFrame(function () {
+                  // Instant price paint from product handoff
+                  try {
+                    var priceEl = document.querySelector(".p-details .p-price");
+                    var priceText =
+                      p.price ||
+                      (p.priceRange &&
+                        p.priceRange.minVariantPrice &&
+                        p.priceRange.minVariantPrice.amount +
+                          (p.priceRange.minVariantPrice.currencyCode
+                            ? " " + p.priceRange.minVariantPrice.currencyCode
+                            : "")) ||
+                      (p.variants &&
+                        p.variants[0] &&
+                        (p.variants[0].price ||
+                          (p.variants[0].priceV2 &&
+                            p.variants[0].priceV2.amount +
+                              (p.variants[0].priceV2.currencyCode
+                                ? " " + p.variants[0].priceV2.currencyCode
+                                : "")))) ||
+                      "";
+                    if (priceEl && priceText) priceEl.textContent = priceText;
+                  } catch (_) {}
+                  // Instant description paint
                   var content = document.querySelector(
                     ".p-details .collapsible .content"
                   );

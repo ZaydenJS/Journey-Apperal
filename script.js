@@ -1390,6 +1390,35 @@
               requestAnimationFrame(function () {
                 normalizeCarouselMedia(section);
               });
+              // Prefetch PDP for visible cards to ensure instant PDP-to-PDP nav
+              try {
+                const cards = Array.from(
+                  section.querySelectorAll("article.card[data-href]")
+                );
+                cards.slice(0, 8).forEach(function (card) {
+                  const href = card.getAttribute("data-href") || "";
+                  const handle = __extractHandleFromHref(href);
+                  if (handle) __prefetchPDP(handle);
+                });
+                if ("IntersectionObserver" in window) {
+                  const io = new IntersectionObserver(
+                    function (entries) {
+                      entries.forEach(function (entry) {
+                        if (!entry.isIntersecting) return;
+                        const el = entry.target;
+                        const href = el.getAttribute("data-href") || "";
+                        const handle = __extractHandleFromHref(href);
+                        if (handle) __prefetchPDP(handle);
+                        io.unobserve(el);
+                      });
+                    },
+                    { rootMargin: "300px" }
+                  );
+                  cards.forEach(function (el) {
+                    io.observe(el);
+                  });
+                }
+              } catch (_) {}
             }
             renderPage();
             if (ctrls.prev) {
@@ -1425,6 +1454,35 @@
             requestAnimationFrame(function () {
               normalizeCarouselMedia(section);
             });
+            // Prefetch PDP for visible cards to ensure instant PDP-to-PDP nav
+            try {
+              const cards = Array.from(
+                section.querySelectorAll("article.card[data-href]")
+              );
+              cards.slice(0, 8).forEach(function (card) {
+                const href = card.getAttribute("data-href") || "";
+                const handle = __extractHandleFromHref(href);
+                if (handle) __prefetchPDP(handle);
+              });
+              if ("IntersectionObserver" in window) {
+                const io = new IntersectionObserver(
+                  function (entries) {
+                    entries.forEach(function (entry) {
+                      if (!entry.isIntersecting) return;
+                      const el = entry.target;
+                      const href = el.getAttribute("data-href") || "";
+                      const handle = __extractHandleFromHref(href);
+                      if (handle) __prefetchPDP(handle);
+                      io.unobserve(el);
+                    });
+                  },
+                  { rootMargin: "300px" }
+                );
+                cards.forEach(function (el) {
+                  io.observe(el);
+                });
+              }
+            } catch (_) {}
           }
         }
       }
@@ -1535,6 +1593,35 @@
           requestAnimationFrame(function () {
             normalizeCarouselMedia(bestSection);
           });
+          // Prefetch PDP for visible cards in Best Sellers
+          try {
+            const cards = Array.from(
+              bestSection.querySelectorAll("article.card[data-href]")
+            );
+            cards.slice(0, 8).forEach(function (card) {
+              const href = card.getAttribute("data-href") || "";
+              const handle = __extractHandleFromHref(href);
+              if (handle) __prefetchPDP(handle);
+            });
+            if ("IntersectionObserver" in window) {
+              const io = new IntersectionObserver(
+                function (entries) {
+                  entries.forEach(function (entry) {
+                    if (!entry.isIntersecting) return;
+                    const el = entry.target;
+                    const href = el.getAttribute("data-href") || "";
+                    const handle = __extractHandleFromHref(href);
+                    if (handle) __prefetchPDP(handle);
+                    io.unobserve(el);
+                  });
+                },
+                { rootMargin: "300px" }
+              );
+              cards.forEach(function (el) {
+                io.observe(el);
+              });
+            }
+          } catch (_) {}
         };
         renderPage();
         prevBtn.removeAttribute("onclick");
@@ -1920,16 +2007,24 @@
   function setupCardLinks() {
     if (window.__cardLinksBound) return;
     window.__cardLinksBound = true;
-    // Delegate clicks so it works for all cards (including dynamically added ones)
+    // Delegate clicks so it works for all cards and product links (including dynamically added ones)
     document.addEventListener("click", (e) => {
       // Ignore carousel controls and non-card buttons only; allow anchors inside cards
       if (e.target.closest(".ctrl,button")) return;
       const card = e.target.closest(".card[data-href]");
-      if (!card) return;
-      // If clicking an anchor inside the card, prevent default so we can write handoff first
-      const a = e.target.closest("a[href]");
-      if (a) e.preventDefault();
-      const href = card.getAttribute("data-href");
+      const anchor = e.target.closest(
+        'a[href*="product.html"], a[href*="/products/"]'
+      );
+      if (!card && !anchor) return;
+      // Always prevent default so we can write handoff first
+      e.preventDefault();
+      const href =
+        (card && card.getAttribute("data-href")) ||
+        (anchor && anchor.getAttribute("href")) ||
+        (card &&
+          card.querySelector("a[href]") &&
+          card.querySelector("a[href]").getAttribute("href")) ||
+        "";
       if (!href) return;
       // Before navigation: write handoff cache for zero-delay PDP render
       try {
@@ -1948,19 +2043,60 @@
             "pdp:variants:" + handle,
             10 * 60 * 1000
           );
-          if (cachedV)
+          if (cachedV) {
             sessionStorage.setItem(
               "handoff:variants:" + handle,
               JSON.stringify(cachedV)
             );
+          } else if (cachedP && cachedP.variants) {
+            try {
+              sessionStorage.setItem(
+                "handoff:variants:" + handle,
+                JSON.stringify({ variants: cachedP.variants })
+              );
+            } catch (_) {}
+          }
           // Also store minimal card meta in case product cache isn’t warm yet
           const img = card.querySelector(".img-wrap img");
           const titleEl = card.querySelector(
             "[data-title], .title, .name, span, h3, h2"
           );
+          // Derive price text from cached product or card UI
+          let priceText = "";
+          if (cachedP) {
+            try {
+              priceText =
+                cachedP.price ||
+                (cachedP.priceRange &&
+                  cachedP.priceRange.minVariantPrice?.amount +
+                    (cachedP.priceRange.minVariantPrice?.currencyCode
+                      ? " " + cachedP.priceRange.minVariantPrice.currencyCode
+                      : "")) ||
+                (cachedP.variants &&
+                  cachedP.variants[0] &&
+                  (cachedP.variants[0].price ||
+                    (cachedP.variants[0].priceV2 &&
+                      cachedP.variants[0].priceV2.amount +
+                        (cachedP.variants[0].priceV2.currencyCode
+                          ? " " + cachedP.variants[0].priceV2.currencyCode
+                          : "")))) ||
+                "";
+            } catch (_) {}
+          }
+          if (!priceText) {
+            const priceEl =
+              card &&
+              card.querySelector(
+                "[data-price], .price, .p-price, [data-price-text]"
+              );
+            priceText =
+              (priceEl && priceEl.textContent && priceEl.textContent.trim()) ||
+              "";
+          }
           const minimal = {
             handle,
             title: (titleEl && (titleEl.textContent || "").trim()) || "",
+            price: priceText,
             images: [img && img.getAttribute("src")].filter(Boolean),
           };
           sessionStorage.setItem(
@@ -2018,7 +2154,7 @@
     // Prefetch PDP data/images on hover/touch/mousedown so PDP renders instantly
     const trigger = (e) => {
       const el = e.target.closest(
-        '.card[data-href], a[href*="product.html?slug="]'
+        '.card[data-href], a[href*="product.html"], a[href*="/products/"]'
       );
       if (!el) return;
       const href =
