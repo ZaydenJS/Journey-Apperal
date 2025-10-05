@@ -198,6 +198,7 @@
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
     // Extra safety: ensure PDP Details toggles even if any prior wiring misses
     __safe("ensurePdpDetailsToggle", ensurePdpDetailsToggle);
+    __safe("bindDetailsDelegatedToggle", bindDetailsDelegatedToggle);
   });
 
   function setupSizeSelection() {
@@ -308,16 +309,20 @@
       return div.innerHTML;
     }
     function computeDescriptionHTML(p) {
+      // Prefer rich HTML fields from Shopify; fall back to plain text
       const rawPrimary =
         (p &&
           typeof p.descriptionHtml === "string" &&
           p.descriptionHtml.trim()) ||
+        (p && typeof p.bodyHtml === "string" && p.bodyHtml.trim()) ||
+        (p && typeof p.body_html === "string" && p.body_html.trim()) ||
         (p &&
           p.metafield &&
           typeof p.metafield.value === "string" &&
           p.metafield.value.trim()) ||
         "";
       if (rawPrimary) return sanitizeHTML(rawPrimary);
+
       const plain =
         (p && typeof p.description === "string" && p.description.trim()) ||
         (p &&
@@ -2717,7 +2722,11 @@
   // Extra safety: PDP Details manual toggle in case any other binding is missed
   function ensurePdpDetailsToggle() {
     try {
-      const sec = document.querySelector(".p-details .collapsible");
+      const sec = Array.from(
+        document.querySelectorAll(".p-details .collapsible")
+      ).find((s) =>
+        /details/i.test(s.querySelector("button")?.textContent || "")
+      );
       if (!sec || sec.dataset.detailsManualBound === "1") return;
       const btn = sec.querySelector("button");
       const panel = sec.querySelector(".content");
@@ -2759,10 +2768,60 @@
       btn.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
+
           toggle(e);
         }
       });
       sec.dataset.detailsManualBound = "1";
+    } catch (_) {}
+  }
+
+  // Global delegated click handler to guarantee Details toggles on PC + Mobile
+  function bindDetailsDelegatedToggle() {
+    try {
+      if (document.__detailsDelegatedToggleBound) return;
+      const onClick = (e) => {
+        const btn = e.target.closest(".p-details .collapsible > button");
+        if (!btn) return;
+        const sec = btn.closest(".collapsible");
+        const panel = sec && sec.querySelector(".content");
+        if (!sec || !panel) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const isOpen = btn.getAttribute("aria-expanded") === "true";
+        if (isOpen) {
+          // close
+          sec.classList.remove("open");
+          btn.setAttribute("aria-expanded", "false");
+          const current = panel.scrollHeight;
+          panel.style.height = current + "px";
+          requestAnimationFrame(() => (panel.style.height = "0px"));
+        } else {
+          // open
+          sec.classList.add("open");
+          btn.setAttribute("aria-expanded", "true");
+          panel.style.display = "block";
+          const h = panel.scrollHeight;
+          panel.style.height = h + "px";
+          const done = () => {
+            if (btn.getAttribute("aria-expanded") === "true")
+              panel.style.height = "auto";
+            panel.removeEventListener("transitionend", done);
+          };
+          panel.addEventListener("transitionend", done);
+        }
+      };
+      const onKey = (e) => {
+        const btn = e.target.closest(".p-details .collapsible > button");
+        if (!btn) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          btn.click();
+        }
+      };
+      document.addEventListener("click", onClick, true);
+      document.addEventListener("keydown", onKey, true);
+      document.__detailsDelegatedToggleBound = true;
     } catch (_) {}
   }
 
