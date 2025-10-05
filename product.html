@@ -298,6 +298,121 @@
         cursor: pointer !important;
       }
     </style>
+    <!-- Preconnect to reduce DNS/TLS latency for Shopify/CDN -->
+    <link rel="preconnect" href="https://cdn.shopify.com" crossorigin />
+    <link rel="preconnect" href="https://shopify.com" crossorigin />
+
+    <!-- Ultra-early PDP paint from sessionStorage handoff (title + hero + description) -->
+    <script id="pdp-instant-boot">
+      (function () {
+        try {
+          function getHandle() {
+            var u = new URL(window.location.href);
+            var slug = u.searchParams.get("slug");
+            if (slug) return slug;
+            var seg = u.pathname.split("/").filter(Boolean);
+            return seg[seg.length - 1] || "";
+          }
+          function escapeHTML(s) {
+            return String(s).replace(/[&<>"']/g, function (c) {
+              return {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              }[c];
+            });
+          }
+          function safeHTML(html) {
+            var div = document.createElement("div");
+            div.innerHTML = html || "";
+            div
+              .querySelectorAll("script,style,noscript,iframe,object,embed")
+              .forEach(function (el) {
+                el.remove();
+              });
+            div.querySelectorAll("*").forEach(function (el) {
+              Array.from(el.attributes).forEach(function (a) {
+                if (/^on/i.test(a.name)) el.removeAttribute(a.name);
+              });
+            });
+            return div.innerHTML;
+          }
+          var handle = getHandle();
+          if (!handle) return;
+
+          // Minimal card data handoff
+          var minRaw = sessionStorage.getItem("handoff:min:" + handle);
+          if (minRaw) {
+            try {
+              var m = JSON.parse(minRaw) || {};
+              if (m.title) document.title = m.title + " – Journey Apparel";
+              // Preload first image to eliminate delay
+              if (m.images && m.images[0]) {
+                var ln = document.createElement("link");
+                ln.rel = "preload";
+                ln.as = "image";
+                ln.href = m.images[0];
+                document.head.appendChild(ln);
+              }
+              // Paint as soon as nodes exist
+              requestAnimationFrame(function () {
+                var t = document.querySelector(".p-details h1#product-title");
+                if (t && m.title) t.textContent = m.title;
+                var heroImg = document.querySelector(".gallery-main img");
+                if (heroImg && m.images && m.images[0]) {
+                  heroImg.src = m.images[0];
+                  heroImg.decoding = "async";
+                  heroImg.loading = "eager";
+                  heroImg.setAttribute("fetchpriority", "high");
+                }
+              });
+            } catch (_) {}
+          }
+
+          // Full product handoff for instant description (sanitized)
+          var pRaw = sessionStorage.getItem("handoff:product:" + handle);
+          if (pRaw) {
+            try {
+              var p = JSON.parse(pRaw) || {};
+              var html =
+                (p.descriptionHtml && p.descriptionHtml.trim()) ||
+                (p.bodyHtml && p.bodyHtml.trim()) ||
+                (p.body_html && p.body_html.trim()) ||
+                "";
+              if (!html) {
+                var plain =
+                  (p.description && p.description.trim()) ||
+                  (p.seo && p.seo.description && p.seo.description.trim()) ||
+                  "";
+                if (plain) {
+                  html =
+                    "<p>" +
+                    escapeHTML(plain)
+                      .split(/\r?\n+/)
+                      .join("</p><p>") +
+                    "</p>";
+                }
+              }
+              if (html) {
+                requestAnimationFrame(function () {
+                  var content = document.querySelector(
+                    ".p-details .collapsible .content"
+                  );
+                  if (content) {
+                    content.innerHTML =
+                      '<div class="rich-desc" style="font-size:16.5px;line-height:1.6;color:#333;">' +
+                      safeHTML(html) +
+                      "</div>";
+                  }
+                });
+              }
+            } catch (_) {}
+          }
+        } catch (_) {}
+      })();
+    </script>
   </head>
   <body style="margin: 0; overflow-x: hidden">
     <div
