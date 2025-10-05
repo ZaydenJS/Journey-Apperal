@@ -372,6 +372,29 @@
               '<div class="rich-desc" style="font-size:16.5px; line-height:1.6; color:#333;"></div>';
             const wrapper = detailsPanel.firstElementChild;
             wrapper.innerHTML = html;
+            // ensure the section is visible and interactive
+            try {
+              detailsSection.style.display = "";
+              const btn = detailsSection.querySelector("button");
+              if (btn) {
+                btn.disabled = false;
+                btn.style.pointerEvents = "auto";
+              }
+              // If already open when content arrives, recompute height to reveal content
+              if (detailsSection.classList.contains("open")) {
+                requestAnimationFrame(() => {
+                  const h = detailsPanel.scrollHeight;
+                  detailsPanel.style.height = h + "px";
+                  const done = () => {
+                    if (btn && btn.getAttribute("aria-expanded") === "true") {
+                      detailsPanel.style.height = "auto";
+                    }
+                    detailsPanel.removeEventListener("transitionend", done);
+                  };
+                  detailsPanel.addEventListener("transitionend", done);
+                });
+              }
+            } catch (_) {}
             // spacing and list padding
             wrapper.querySelectorAll("p,ul,ol").forEach((el) => {
               el.style.margin = "12px 0";
