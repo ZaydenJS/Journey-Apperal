@@ -270,6 +270,19 @@
 
     <style id="mobile-pdp-fixes">
       @media (max-width: 768px) {
+        /* Bigger hero on mobile: more vertical height from first paint */
+        .gallery-main,
+        #hero-track {
+          min-height: 420px !important;
+        }
+        #hero-track {
+          height: 68vh !important;
+        }
+        #hero-track img {
+          height: 100% !important;
+          object-fit: cover !important;
+        }
+
         /* Edge-to-edge layout for Recently Viewed and Best Sellers inside PDP */
         .p-details #you-also-viewed,
         .p-details #featured-collection {
@@ -1038,8 +1051,8 @@
             var isDesktop = window.innerWidth >= 1024;
             var factor = isDesktop
               ? 0.78
-              : 0.55; /* make desktop gallery notably taller */
-            var minH = isDesktop ? 520 : 280;
+              : 0.72; /* mobile: increase vertical height */
+            var minH = isDesktop ? 520 : 420;
             var h = Math.max(
               minH,
               Math.round((window.innerHeight - headerH) * factor)
