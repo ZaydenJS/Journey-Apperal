@@ -191,6 +191,23 @@
           overflow: visible !important;
         }
       }
+      @media (min-width: 1024px) {
+        /* Match homepage full-bleed container on desktop for exact card widths */
+        #below-product-sections .container {
+          max-width: none !important;
+          width: 100% !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          margin: 0 !important;
+        }
+        /* Enforce identical card media aspect ratio to homepage */
+        #rv-desktop .card .img-wrap,
+        #bs-desktop .card .img-wrap {
+          aspect-ratio: 1/1.7 !important;
+          position: relative !important;
+          overflow: hidden !important;
+        }
+      }
     </style>
     <style id="mobile-pdp-fixes">
       @media (max-width: 768px) {
