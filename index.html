@@ -353,6 +353,11 @@
               class="header-item"
               >Journeys X Leyos</a
             >
+            <a
+              href="https://shop.journeysapparel.com/apps/loyalty"
+              class="header-item"
+              >Rewards</a
+            >
           </nav>
         </div>
         <h1 class="logo">
@@ -499,7 +504,11 @@
           >
         </div>
 
-        <a href="/account/register.html" class="row-item">Journey Sign Up</a>
+        <a
+          href="https://shopify.com/94836293942/account/login?return_url=https%3A%2F%2Fjourneysapparel.com%2Faccount.html"
+          class="row-item"
+          >Journey Sign Up</a
+        >
 
         <button class="row-item accordion" data-accordion aria-expanded="false">
           Support & Contact <span class="chev">›</span>
@@ -511,10 +520,17 @@
           <a href="contact.html">Contact</a>
           <a href="about.html">About</a>
         </div>
+        <a href="https://shop.journeysapparel.com/apps/loyalty" class="row-item"
+          >Rewards</a
+        >
       </nav>
 
       <div class="drawer-bottom">
-        <a href="/account/login.html" class="row-item">👤 Sign in or Join</a>
+        <a
+          href="https://shopify.com/94836293942/account/login?return_url=https%3A%2F%2Fjourneysapparel.com%2Faccount.html"
+          class="row-item"
+          >👤 Sign in or Join</a
+        >
       </div>
     </aside>
 
@@ -1463,6 +1479,19 @@
       </div>
     </section>
 
+    <!-- Join the Club Banner -->
+    <section class="section" style="padding: 0; margin: 0">
+      <div
+        data-rewards-banner
+        style="
+          position: relative;
+          width: 100%;
+          max-width: none;
+          margin: 0;
+          border-radius: 0px;
+          overflow: hidden;
+        "
+      >
         <img
           data-no-fallback
           src="CTA%20Image/Stacker%20-%20Pistachio%20Tee%20-%203.jpg"
@@ -1608,6 +1637,25 @@
             }
           });
 
+          // Ensure Join the Club banner is full-width on desktop and mobile
+          (function () {
+            var banner = document.querySelector("[data-rewards-banner]");
+            if (!banner) return;
+            var img = banner.querySelector("img");
+            if (isDesktop) {
+              banner.style.width = "100%";
+              banner.style.maxWidth = "none";
+              banner.style.margin = "0";
+              banner.style.borderRadius = "0px";
+              if (img) img.style.height = "clamp(360px, 56vh, 620px)";
+            } else {
+              banner.style.width = "100%";
+              banner.style.maxWidth = "none";
+              banner.style.margin = "0";
+              banner.style.borderRadius = "0px";
+              if (img) img.style.height = "clamp(360px, 56vh, 620px)";
+            }
+          })();
 
           var summer = document.querySelector(
             "#back-in-stock-promo .video-mobile"
@@ -1655,6 +1703,14 @@
         }
         #back-in-stock-promo .upper {
           line-height: 1.1 !important;
+        }
+      }
+    </style>
+    <style>
+      /* Desktop-only: adjust Join the Club banner crop (move image up ~30%) */
+      @media (min-width: 1024px) {
+        [data-rewards-banner] > img {
+          object-position: 50% 35% !important;
         }
       }
     </style>
@@ -1887,7 +1943,7 @@
                 Stay Connected
               </h4>
               <p style="color: #000; font-size: 14px; margin: 0 0 16px 0">
-                Get exclusive access to new drops and news.
+                Get exclusive access to new drops and member rewards.
               </p>
               <form
                 style="
@@ -1966,6 +2022,25 @@
       </div>
     </footer>
 
+    <!-- Premium Rewards Modal (Home only) -->
+    <div
+      id="promo-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden="true"
+      tabindex="-1"
+      style="
+        position: fixed;
+        inset: 0;
+        display: none;
+        z-index: 1200;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(2px);
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      "
+    >
       <div
         style="
           display: flex;
@@ -2115,6 +2190,8 @@
         >
           ×
         </button>
+      </div>
+    </div>
     <style>
       /* Mobile-only: ensure equal left/right spacing for promo input and CTA,
          and account for device safe areas (iOS notch, etc.). Desktop unaffected. */
@@ -2138,6 +2215,13 @@
       }
     </style>
 
+    <script>
+      (function () {
+        var KEY = "jrny_promo_next",
+          VER = "3",
+          VKEY = "jrny_promo_ver";
+        var now = Date.now();
+        function applyPromoLayout() {
           try {
             var shell = document.querySelector("#promo-modal > div");
             var form = document.getElementById("promo-form");
@@ -2297,6 +2381,11 @@
           var until = parseInt(localStorage.getItem(KEY) || "0", 10);
           if (!(until > now)) setTimeout(openM, 2500);
         }
+        if (document.readyState === "loading")
+          document.addEventListener("DOMContentLoaded", init);
+        else init();
+      })();
+    </script>
 
     <!-- Shopify integration with error handling -->
     <script src="data/products.js" defer></script>
