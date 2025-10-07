@@ -50,20 +50,16 @@ export const handler = async (event) => {
         },
       },
     });
-    const createData = handleGraphQLResponse(createResp);
-    const createPayload =
-      createData?.customerCreate ||
-      createResp?.data?.customerCreate ||
-      createResp?.body?.data?.customerCreate;
+    // Be defensive about response shapes and surface useful error messages
+    const createDataRaw = createResp?.data || createResp?.body?.data || {};
+    const createPayload = createDataRaw?.customerCreate;
+    const userErrMsg = createPayload?.userErrors?.[0]?.message;
 
-    if (!createPayload) {
+    if (!createPayload || userErrMsg) {
       const msg =
-        createResp?.errors?.[0]?.message || "Could not create account";
-      return createErrorResponse(msg, 400);
-    }
-    if (createPayload.userErrors?.length) {
-      const msg =
-        createPayload.userErrors[0]?.message || "Could not create account";
+        userErrMsg ||
+        createResp?.errors?.[0]?.message ||
+        "Could not create account";
       return createErrorResponse(msg, 400);
     }
 
