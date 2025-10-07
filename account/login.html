@@ -143,21 +143,6 @@
   </style>
 
   <body style="margin: 0; overflow-x: hidden; background: #fff; color: #111">
-    <script>
-      // Redirect this legacy route to Shopify's passwordless login
-      try {
-        window.location.replace(
-          "https://shopify.com/94836293942/account/login?return_url=https://journeysapparel.com/?logged_in=1"
-        );
-      } catch (e) {}
-    </script>
-    <noscript>
-      <meta
-        http-equiv="refresh"
-        content="0; url=https://shopify.com/94836293942/account/login?return_url=https://journeysapparel.com/?logged_in=1"
-      />
-    </noscript>
-
     <div
       class="announcement upper"
       style="position: sticky; top: 0; left: 0; right: 0; text-align: center"
@@ -883,7 +868,43 @@
           try {
             JAAccount.setHeaderProfileLink && JAAccount.setHeaderProfileLink();
           } catch (_) {}
-          // Local login is not used; page already redirects to Shopify New Customer Accounts
+
+          // Implement login form handler
+          JAAccount.attachFormHandler("login-form", async function (ctx) {
+            var email = ctx.get("email");
+            var password = ctx.get("password");
+
+            if (!email || !password) {
+              ctx.setMessage("Please enter both email and password.", "#c00");
+              return;
+            }
+
+            ctx.setMessage("Signing in...", "#666");
+
+            try {
+              var result = await JourneyAuth.login(email, password);
+              if (result && result.success) {
+                ctx.setMessage("Success! Redirecting...", "#0a0");
+                setTimeout(function () {
+                  location.href = "/account.html";
+                }, 500);
+              } else {
+                ctx.setMessage(
+                  result && result.message
+                    ? result.message
+                    : "Invalid email or password.",
+                  "#c00"
+                );
+              }
+            } catch (e) {
+              ctx.setMessage(
+                e && e.message
+                  ? e.message
+                  : "Could not sign in. Please try again.",
+                "#c00"
+              );
+            }
+          });
         });
       })();
     </script>

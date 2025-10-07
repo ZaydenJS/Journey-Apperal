@@ -139,21 +139,6 @@
   </style>
 
   <body style="margin: 0; overflow-x: hidden; background: #fff; color: #111">
-    <script>
-      // Redirect legacy register route to Shopify's passwordless login
-      try {
-        window.location.replace(
-          "https://shopify.com/94836293942/account/login?return_url=https://journeysapparel.com/?logged_in=1"
-        );
-      } catch (e) {}
-    </script>
-    <noscript>
-      <meta
-        http-equiv="refresh"
-        content="0; url=https://shopify.com/94836293942/account/login?return_url=https://journeysapparel.com/?logged_in=1"
-      />
-    </noscript>
-
     <div
       class="announcement upper"
       style="position: sticky; top: 0; left: 0; right: 0; text-align: center"
@@ -920,7 +905,58 @@
     <script>
       (function () {
         document.addEventListener("DOMContentLoaded", function () {
-          // Local registration is not used; this page immediately redirects to Shopify New Customer Accounts
+          try {
+            JAAccount.setHeaderProfileLink && JAAccount.setHeaderProfileLink();
+          } catch (_) {}
+
+          // Implement registration form handler
+          JAAccount.attachFormHandler("register-form", async function (ctx) {
+            var firstName = ctx.get("first");
+            var lastName = ctx.get("last");
+            var email = ctx.get("email");
+            var password = ctx.get("password");
+
+            if (!firstName || !lastName || !email || !password) {
+              ctx.setMessage("Please complete all fields.", "#c00");
+              return;
+            }
+
+            if (password.length < 5) {
+              ctx.setMessage("Password must be at least 5 characters.", "#c00");
+              return;
+            }
+
+            ctx.setMessage("Creating account...", "#666");
+
+            try {
+              var result = await JourneyAuth.register(
+                email,
+                password,
+                firstName,
+                lastName
+              );
+              if (result && result.success) {
+                ctx.setMessage("Success! Redirecting...", "#0a0");
+                setTimeout(function () {
+                  location.href = "/account.html";
+                }, 500);
+              } else {
+                ctx.setMessage(
+                  result && result.message
+                    ? result.message
+                    : "Could not create account.",
+                  "#c00"
+                );
+              }
+            } catch (e) {
+              ctx.setMessage(
+                e && e.message
+                  ? e.message
+                  : "Could not create account. Please try again.",
+                "#c00"
+              );
+            }
+          });
         });
       })();
     </script>

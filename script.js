@@ -2940,12 +2940,8 @@
       const FALLBACK = "/LOGO/Header.png";
       const attach = (img) => {
         if (!img || img.__fallbackBound) return;
-        // Opt-out: do not apply fallback on Rewards banner or any element marked no-fallback
-        if (
-          img.dataset.noFallback != null ||
-          img.closest("[data-rewards-banner]")
-        )
-          return;
+        // Opt-out: do not apply fallback on any element marked no-fallback
+        if (img.dataset.noFallback != null) return;
         img.__fallbackBound = true;
         img.addEventListener(
           "error",

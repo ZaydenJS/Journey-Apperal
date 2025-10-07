@@ -101,40 +101,289 @@
     }
   }
 
-  // Shopify Authentication Functions (client does not handle credentials)
-  async function login() {
-    console.warn("Use Shopify New Customer Accounts for authentication");
+  // Shopify Authentication Functions for Classic Customer Accounts
+  async function login(email, password) {
+    // Use Shopify Storefront API to authenticate with Classic Customer Accounts
+    var STOREFRONT_TOKEN = "e9f772f8551e9494e4d4695902f59e46";
+    var SHOP_DOMAIN = "7196su-vk.myshopify.com";
+
+    var mutation = `
+      mutation customerAccessTokenCreate($input: CustomerAccessTokenCreateInput!) {
+        customerAccessTokenCreate(input: $input) {
+          customerAccessToken {
+            accessToken
+            expiresAt
+          }
+          customerUserErrors {
+            code
+            field
+            message
+          }
+        }
+      }
+    `;
+
     try {
-      window.location.href = SHOPIFY_LOGIN_URL;
-    } catch (_) {
-      location.href = SHOPIFY_LOGIN_URL;
+      var response = await fetch(
+        `https://${SHOP_DOMAIN}/api/2024-01/graphql.json`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN,
+          },
+          body: JSON.stringify({
+            query: mutation,
+            variables: {
+              input: {
+                email: email,
+                password: password,
+              },
+            },
+          }),
+        }
+      );
+
+      var data = await response.json();
+
+      if (data.data && data.data.customerAccessTokenCreate) {
+        var result = data.data.customerAccessTokenCreate;
+
+        if (result.customerUserErrors && result.customerUserErrors.length > 0) {
+          return {
+            success: false,
+            message:
+              result.customerUserErrors[0].message ||
+              "Invalid email or password.",
+          };
+        }
+
+        if (result.customerAccessToken) {
+          var token = result.customerAccessToken.accessToken;
+          var expiresAt = result.customerAccessToken.expiresAt;
+
+          // Fetch customer data
+          var customer = await getCustomerData(token);
+
+          setAuth(token, expiresAt, customer);
+          setLoginFlag();
+          localStorage.setItem("ja_logged_in", "true");
+
+          return { success: true, customer: customer };
+        }
+      }
+
+      return { success: false, message: "Invalid email or password." };
+    } catch (error) {
+      console.error("Login error:", error);
+      return {
+        success: false,
+        message: "Could not sign in. Please try again.",
+      };
     }
-    return { redirected: true };
   }
 
-  async function register() {
-    console.warn("Use Shopify New Customer Accounts for registration");
+  async function register(email, password, firstName, lastName) {
+    // Use Shopify Storefront API to create a new customer
+    var STOREFRONT_TOKEN = "e9f772f8551e9494e4d4695902f59e46";
+    var SHOP_DOMAIN = "7196su-vk.myshopify.com";
+
+    var mutation = `
+      mutation customerCreate($input: CustomerCreateInput!) {
+        customerCreate(input: $input) {
+          customer {
+            id
+            email
+            firstName
+            lastName
+          }
+          customerUserErrors {
+            code
+            field
+            message
+          }
+        }
+      }
+    `;
+
     try {
-      window.location.href = SHOPIFY_LOGIN_URL;
-    } catch (_) {
-      location.href = SHOPIFY_LOGIN_URL;
+      var response = await fetch(
+        `https://${SHOP_DOMAIN}/api/2024-01/graphql.json`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN,
+          },
+          body: JSON.stringify({
+            query: mutation,
+            variables: {
+              input: {
+                email: email,
+                password: password,
+                firstName: firstName,
+                lastName: lastName,
+              },
+            },
+          }),
+        }
+      );
+
+      var data = await response.json();
+
+      if (data.data && data.data.customerCreate) {
+        var result = data.data.customerCreate;
+
+        if (result.customerUserErrors && result.customerUserErrors.length > 0) {
+          return {
+            success: false,
+            message:
+              result.customerUserErrors[0].message ||
+              "Could not create account.",
+          };
+        }
+
+        if (result.customer) {
+          // Auto-login after registration
+          return await login(email, password);
+        }
+      }
+
+      return { success: false, message: "Could not create account." };
+    } catch (error) {
+      console.error("Registration error:", error);
+      return {
+        success: false,
+        message: "Could not create account. Please try again.",
+      };
     }
-    return { redirected: true };
   }
 
-  async function recover() {
-    console.warn("Use Shopify New Customer Accounts for passwordless recovery");
+  async function recover(email) {
+    // Use Shopify Storefront API to send password reset email
+    var STOREFRONT_TOKEN = "e9f772f8551e9494e4d4695902f59e46";
+    var SHOP_DOMAIN = "7196su-vk.myshopify.com";
+
+    var mutation = `
+      mutation customerRecover($email: String!) {
+        customerRecover(email: $email) {
+          customerUserErrors {
+            code
+            field
+            message
+          }
+        }
+      }
+    `;
+
     try {
-      window.location.href = SHOPIFY_LOGIN_URL;
-    } catch (_) {
-      location.href = SHOPIFY_LOGIN_URL;
+      var response = await fetch(
+        `https://${SHOP_DOMAIN}/api/2024-01/graphql.json`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN,
+          },
+          body: JSON.stringify({
+            query: mutation,
+            variables: {
+              email: email,
+            },
+          }),
+        }
+      );
+
+      var data = await response.json();
+
+      if (data.data && data.data.customerRecover) {
+        var result = data.data.customerRecover;
+
+        if (result.customerUserErrors && result.customerUserErrors.length > 0) {
+          return {
+            success: false,
+            message:
+              result.customerUserErrors[0].message ||
+              "Could not send reset email.",
+          };
+        }
+
+        return { success: true };
+      }
+
+      return { success: false, message: "Could not send reset email." };
+    } catch (error) {
+      console.error("Recovery error:", error);
+      return {
+        success: false,
+        message: "Could not send reset email. Please try again.",
+      };
     }
-    return { redirected: true };
+  }
+
+  async function getCustomerData(accessToken) {
+    // Fetch customer data using access token
+    var STOREFRONT_TOKEN = "e9f772f8551e9494e4d4695902f59e46";
+    var SHOP_DOMAIN = "7196su-vk.myshopify.com";
+
+    var query = `
+      query getCustomer($customerAccessToken: String!) {
+        customer(customerAccessToken: $customerAccessToken) {
+          id
+          email
+          firstName
+          lastName
+          phone
+        }
+      }
+    `;
+
+    try {
+      var response = await fetch(
+        `https://${SHOP_DOMAIN}/api/2024-01/graphql.json`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN,
+          },
+          body: JSON.stringify({
+            query: query,
+            variables: {
+              customerAccessToken: accessToken,
+            },
+          }),
+        }
+      );
+
+      var data = await response.json();
+
+      if (data.data && data.data.customer) {
+        return data.data.customer;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Get customer data error:", error);
+      return null;
+    }
   }
 
   async function refreshCustomerData() {
-    // Not available client-side with New Customer Accounts; rely on Shopify UI
-    return null;
+    // Refresh customer data using the stored access token
+    var token = getAccessToken();
+    if (!token) return null;
+
+    try {
+      var customer = await getCustomerData(token);
+      if (customer) {
+        setUser(customer);
+      }
+      return customer;
+    } catch (error) {
+      console.error("Refresh customer data error:", error);
+      return null;
+    }
   }
 
   function logout() {
@@ -144,9 +393,9 @@
       localStorage.removeItem("ja_logged_in");
     } catch (_) {}
     try {
-      window.location.href = SHOPIFY_LOGOUT_URL;
+      window.location.href = "/index.html";
     } catch (e) {
-      location.href = SHOPIFY_LOGOUT_URL;
+      location.href = "/index.html";
     }
   }
 
@@ -163,7 +412,7 @@
       el.setAttribute("href", "/account.html");
       el.setAttribute("title", "Account");
     } else {
-      el.setAttribute("href", SHOPIFY_LOGIN_URL);
+      el.setAttribute("href", "/account/login.html");
       el.setAttribute("title", "Sign in or Join");
     }
     el.onclick = null;
@@ -220,8 +469,8 @@
     var signedIn = isLoginFlagActive();
 
     if (!signedIn) {
-      // Signed out → link to Shopify login with return_url
-      el.setAttribute("href", SHOPIFY_LOGIN_URL);
+      // Signed out → link to local login page
+      el.setAttribute("href", "/account/login.html");
       el.setAttribute("title", "Sign in or Join");
       el.onclick = null;
     } else {
