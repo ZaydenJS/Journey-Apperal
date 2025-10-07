@@ -384,6 +384,26 @@
               "
             />
           </label>
+          <label
+            style="
+              grid-column: 1 / -1;
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+            "
+            ><span style="font-size: 13px; color: #333"
+              >Address line 2 (optional)</span
+            >
+            <input
+              name="line2"
+              style="
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-size: 14px;
+              "
+            />
+          </label>
           <label style="display: flex; flex-direction: column; gap: 6px"
             ><span style="font-size: 13px; color: #333">City</span>
             <input
@@ -397,8 +417,8 @@
               "
             />
           </label>
-          <label style="display: flex; flex-direction: column; gap: 6px"
-            ><span style="font-size: 13px; color: #333">State</span>
+          <label style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 13px; color: #333">State/Province</span>
             <input
               name="state"
               required
@@ -409,6 +429,44 @@
                 font-size: 14px;
               "
             />
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 13px; color: #333">Country</span>
+            <input
+              name="country"
+              value="AU"
+              style="
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-size: 14px;
+              "
+            />
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 13px; color: #333">Phone (optional)</span>
+            <input
+              name="phone"
+              type="tel"
+              style="
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-size: 14px;
+              "
+            />
+          </label>
+          <label
+            style="
+              grid-column: 1 / -1;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              font-size: 13px;
+              color: #333;
+            "
+          >
+            <input type="checkbox" name="makeDefault" /> Set as default
           </label>
           <label style="display: flex; flex-direction: column; gap: 6px"
             ><span style="font-size: 13px; color: #333">Postcode</span>
@@ -654,95 +712,185 @@
     <script src="/assets/account.js" defer></script>
     <script>
       (function () {
-        JAAccount.guardAuthenticated();
-        var KEY = "ja_addresses";
-        function getList() {
-          try {
-            return JSON.parse(localStorage.getItem(KEY) || "[]");
-          } catch (_) {
-            return [];
-          }
-        }
-        function setList(arr) {
-          try {
-            localStorage.setItem(KEY, JSON.stringify(arr || []));
-          } catch (_) {}
-        }
-        function render() {
-          var list = getList();
+        async function render() {
+          await JAAccount.guardAuthenticated();
           var wrap = document.getElementById("addr-list");
           if (!wrap) return;
           wrap.innerHTML = "";
-          if (!list.length) {
+          try {
+            JAAccount.setHeaderProfileLink && JAAccount.setHeaderProfileLink();
+          } catch (_) {}
+          var resp;
+          try {
+            resp = await JourneyAuth.getAddresses();
+          } catch (e) {
+            var err = document.createElement("div");
+            err.textContent =
+              e && e.message ? e.message : "Failed to load addresses.";
+            err.style.cssText =
+              "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#c00";
+            wrap.appendChild(err);
+            return;
+          }
+          var addresses = (resp && resp.addresses) || [];
+          var defaultId = resp && resp.defaultAddressId;
+          if (!addresses.length) {
             var empty = document.createElement("div");
             empty.textContent = "No addresses yet.";
             empty.style.cssText =
               "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#666";
             wrap.appendChild(empty);
           }
-          list.forEach(function (a, idx) {
+          addresses.forEach(function (a) {
             var card = document.createElement("div");
             card.setAttribute("role", "listitem");
             card.style.cssText =
               "border:1px solid #e5e5e5;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px";
+            var name = (a.firstName || "") + " " + (a.lastName || "");
+            var line1 = a.address1 || "";
+            var line2 = a.address2
+              ? '<div style="color:#666">' + a.address2 + "</div>"
+              : "";
+            var city = [a.city, a.province, a.zip].filter(Boolean).join(", ");
+            var defBadge =
+              a.id === defaultId
+                ? ' <span style="background:#111;color:#fff;font-size:12px;border-radius:6px;padding:2px 6px;vertical-align:middle">Default</span>'
+                : "";
             card.innerHTML =
               '<div style="font-weight:700">' +
-              (a.firstName || "") +
-              " " +
-              (a.lastName || "") +
+              name +
+              defBadge +
               "</div>" +
               '<div style="color:#444">' +
-              (a.line1 || "") +
+              line1 +
               "</div>" +
+              line2 +
               '<div style="color:#444">' +
-              (a.city || "") +
-              ", " +
-              (a.state || "") +
-              " " +
-              (a.postcode || "") +
+              city +
+              (a.country ? ", " + a.country : "") +
               "</div>" +
               '<div style="display:flex;gap:8px;margin-top:6px;justify-content:flex-end">' +
-              '<button data-del style="padding:8px 10px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;cursor:pointer">Delete</button>' +
+              (a.id !== defaultId
+                ? '<button data-default style="padding:8px 10px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;cursor:pointer">Set default</button>'
+                : "") +
+              '<button data-edit style="padding:8px 10px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;cursor:pointer">Edit</button>' +
+              '<button data-del style="padding:8px 10px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;cursor:pointer;color:#c00">Delete</button>' +
               "</div>";
+            var setDefaultBtn = card.querySelector("[data-default]");
+            if (setDefaultBtn)
+              setDefaultBtn.addEventListener("click", async function () {
+                try {
+                  await JourneyAuth.setDefaultAddress(a.id);
+                  await render();
+                } catch (e) {
+                  alert((e && e.message) || "Failed to set default");
+                }
+              });
             card
               .querySelector("[data-del]")
-              .addEventListener("click", function () {
-                var arr = getList();
-                arr.splice(idx, 1);
-                setList(arr);
-                render();
+              .addEventListener("click", async function () {
+                if (!confirm("Delete this address?")) return;
+                try {
+                  await JourneyAuth.deleteAddress(a.id);
+                  await render();
+                } catch (e) {
+                  alert((e && e.message) || "Failed to delete");
+                }
+              });
+            card
+              .querySelector("[data-edit]")
+              .addEventListener("click", async function () {
+                // Minimal prompt-based edit
+                var address = {
+                  firstName:
+                    prompt("First name", a.firstName || "") || a.firstName,
+                  lastName: prompt("Last name", a.lastName || "") || a.lastName,
+                  address1:
+                    prompt("Address line 1", a.address1 || "") || a.address1,
+                  address2:
+                    prompt("Address line 2 (optional)", a.address2 || "") ||
+                    a.address2,
+                  city: prompt("City", a.city || "") || a.city,
+                  province:
+                    prompt("State/Province", a.province || "") || a.province,
+                  zip: prompt("Postcode", a.zip || "") || a.zip,
+                  country: prompt("Country", a.country || "AU") || a.country,
+                  phone: prompt("Phone (optional)", a.phone || "") || a.phone,
+                };
+                try {
+                  await JourneyAuth.updateAddress(a.id, address);
+                  await render();
+                } catch (e) {
+                  alert((e && e.message) || "Failed to update");
+                }
               });
             wrap.appendChild(card);
           });
         }
-        JAAccount.attachFormHandler("addr-form", function (ctx) {
-          var a = {
-            firstName: ctx.get("firstName"),
-            lastName: ctx.get("lastName"),
-            line1: ctx.get("line1"),
-            city: ctx.get("city"),
-            state: ctx.get("state"),
-            postcode: ctx.get("postcode"),
+
+        function mapFormToAddress(form) {
+          return {
+            firstName: form.firstName.value.trim(),
+            lastName: form.lastName.value.trim(),
+            address1: form.line1.value.trim(),
+            address2: ((form.line2 && form.line2.value) || "").trim(),
+            city: form.city.value.trim(),
+            province: form.state.value.trim(),
+            zip: form.postcode.value.trim(),
+            country: ((form.country && form.country.value) || "AU").trim(),
+            phone: ((form.phone && form.phone.value) || "").trim(),
           };
-          if (
-            !a.firstName ||
-            !a.lastName ||
-            !a.line1 ||
-            !a.city ||
-            !a.state ||
-            !a.postcode
-          ) {
-            ctx.setMessage("Please complete all fields.", "#c00");
-            return;
-          }
-          var arr = getList();
-          arr.push(a);
-          setList(arr);
-          ctx.form.reset();
-          ctx.setMessage("Address added.", "#0a0");
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
           render();
+          var form = document.getElementById("addr-form");
+          if (!form) return;
+          form.addEventListener("submit", async function (ev) {
+            ev.preventDefault();
+            var msgEl = document.querySelector("[data-form-message]");
+            if (msgEl) {
+              msgEl.textContent = "Saving...";
+              msgEl.style.color = "#666";
+            }
+            try {
+              var addr = mapFormToAddress(form);
+              if (
+                !addr.firstName ||
+                !addr.lastName ||
+                !addr.address1 ||
+                !addr.city ||
+                !addr.province ||
+                !addr.zip
+              )
+                throw new Error("Please complete all required fields.");
+              var created = await JourneyAuth.addAddress(addr);
+              try {
+                if (
+                  form.makeDefault &&
+                  form.makeDefault.checked &&
+                  created &&
+                  created.address &&
+                  created.address.id
+                ) {
+                  await JourneyAuth.setDefaultAddress(created.address.id);
+                }
+              } catch (_) {}
+              form.reset();
+              if (msgEl) {
+                msgEl.textContent = "Address added.";
+                msgEl.style.color = "#0a0";
+              }
+              await render();
+            } catch (e) {
+              if (msgEl) {
+                msgEl.textContent =
+                  (e && e.message) || "Failed to add address.";
+                msgEl.style.color = "#c00";
+              }
+            }
+          });
         });
-        render();
       })();
     </script>
     <script src="/script.js" defer></script>

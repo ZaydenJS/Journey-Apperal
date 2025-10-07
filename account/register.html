@@ -139,21 +139,6 @@
   </style>
 
   <body style="margin: 0; overflow-x: hidden; background: #fff; color: #111">
-    <script>
-      // Redirect legacy register route to Shopify's passwordless login
-      try {
-        window.location.replace(
-          "https://shopify.com/94836293942/account/login?return_url=https://journeysapparel.com/?logged_in=1"
-        );
-      } catch (e) {}
-    </script>
-    <noscript>
-      <meta
-        http-equiv="refresh"
-        content="0; url=https://shopify.com/94836293942/account/login?return_url=https://journeysapparel.com/?logged_in=1"
-      />
-    </noscript>
-
     <div
       class="announcement upper"
       style="position: sticky; top: 0; left: 0; right: 0; text-align: center"
@@ -469,11 +454,7 @@
             >Journeys X Leyos Collection</a
           >
         </div>
-        <a
-          href="https://shopify.com/94836293942/account/login?return_url=https%3A%2F%2Fjourneysapparel.com%2Faccount.html"
-          class="row-item"
-          >Journey Sign Up</a
-        >
+        <a href="/account/login.html" class="row-item">Journey Sign Up</a>
         <button class="row-item accordion" data-accordion aria-expanded="false">
           Support & Contact <span class="chev">›</span>
         </button>
@@ -486,11 +467,7 @@
         </div>
       </nav>
       <div class="drawer-bottom">
-        <a
-          href="https://shopify.com/94836293942/account/login?return_url=https%3A%2F%2Fjourneysapparel.com%2Faccount.html"
-          class="row-item"
-          >👤 Sign in or Join</a
-        >
+        <a href="/account/login.html" class="row-item">👤 Sign in or Join</a>
       </div>
     </aside>
 
@@ -638,11 +615,7 @@
           </button>
           <div style="font-size: 14px; text-align: center">
             Already have an account?
-            <a
-              href="https://shopify.com/94836293942/account/login"
-              style="color: #111"
-              >Sign in</a
-            >
+            <a href="/account/login.html" style="color: #111">Sign in</a>
           </div>
           <div
             data-form-message
@@ -920,7 +893,29 @@
     <script>
       (function () {
         document.addEventListener("DOMContentLoaded", function () {
-          // Local registration is not used; this page immediately redirects to Shopify New Customer Accounts
+          try {
+            JAAccount.setHeaderProfileLink();
+          } catch (_) {}
+          JAAccount.attachFormHandler("register-form", async function (ctx) {
+            var firstName = ctx.get("first");
+            var lastName = ctx.get("last");
+            var email = ctx.get("email");
+            var password = ctx.get("password");
+            if (!email || !password) {
+              ctx.setMessage("Email and password are required.", "#c00");
+              return;
+            }
+            ctx.setMessage("Creating your account…", "#666");
+            try {
+              await JourneyAuth.register(firstName, lastName, email, password);
+              JAAccount.redirectAfterAuth("/account/index.html");
+            } catch (e) {
+              ctx.setMessage(
+                e && e.message ? e.message : "Registration failed.",
+                "#c00"
+              );
+            }
+          });
         });
       })();
     </script>

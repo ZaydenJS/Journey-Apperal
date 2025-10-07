@@ -684,13 +684,16 @@
     <script src="/assets/account.js" defer></script>
     <script>
       (function () {
-        JAAccount.guardAuthenticated();
-        var u = JAAccount.getUser() || {};
-        var name = u.firstName || "Member";
-        var el = document.getElementById("account-greeting");
-        if (el) {
-          el.textContent = "Welcome back, " + name + ".";
+        async function run() {
+          await JAAccount.guardAuthenticated();
+          var u = JAAccount.getUser() || {};
+          var name = u.firstName || "Member";
+          var el = document.getElementById("account-greeting");
+          if (el) {
+            el.textContent = "Welcome back, " + name + ".";
+          }
         }
+        run();
       })();
     </script>
     <script src="/script.js" defer></script>
