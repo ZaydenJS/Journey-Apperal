@@ -62,10 +62,14 @@ export const handler = async (event) => {
       [];
 
     if (!createPayload || errs.length) {
-      const rawMsg =
+      let rawMsg =
         errs[0]?.message ||
         createResp?.errors?.[0]?.message ||
         "Could not create account";
+      if (!createPayload && (!errs || !errs.length)) {
+        rawMsg =
+          "Registration may be disabled for this shop or account type. Enable Classic customer accounts in Shopify admin.";
+      }
       const norm = String(rawMsg || "").toLowerCase();
       let status = 400;
       let msg = rawMsg;
@@ -80,7 +84,8 @@ export const handler = async (event) => {
       } else if (
         norm.includes("disabled") ||
         norm.includes("not enabled") ||
-        norm.includes("new customer accounts")
+        norm.includes("new customer accounts") ||
+        norm.includes("registration")
       ) {
         status = 503;
         msg =
@@ -90,6 +95,7 @@ export const handler = async (event) => {
         rawMsg,
         errs,
         graphErrors: createResp?.errors,
+        payload: createPayload,
       });
       return createErrorResponse(msg, status);
     }
