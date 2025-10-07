@@ -1,8 +1,15 @@
-import { createShopifyClient, handleGraphQLResponse, createApiResponse, createErrorResponse } from "./utils/shopify.js";
+import {
+  createShopifyClient,
+  handleGraphQLResponse,
+  createApiResponse,
+  createErrorResponse,
+} from "./utils/shopify.js";
 
 const setSessionCookie = (token, expiresAt) => {
   const expires = new Date(expiresAt);
-  const cookie = `ja_customer_token=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires.toUTCString()}`;
+  const cookie = `ja_customer_token=${encodeURIComponent(
+    token
+  )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires.toUTCString()}`;
   return cookie;
 };
 
@@ -33,13 +40,30 @@ export const handler = async (event) => {
     `;
 
     const createResp = await client.request(createMutation, {
-      variables: { input: { email, password, firstName, lastName, acceptsMarketing: false } },
+      variables: {
+        input: {
+          email,
+          password,
+          firstName,
+          lastName,
+          acceptsMarketing: false,
+        },
+      },
     });
     const createData = handleGraphQLResponse(createResp);
-    const createPayload = createData.customerCreate;
+    const createPayload =
+      createData?.customerCreate ||
+      createResp?.data?.customerCreate ||
+      createResp?.body?.data?.customerCreate;
 
-    if (!createPayload || createPayload.userErrors?.length) {
-      const msg = createPayload?.userErrors?.[0]?.message || "Could not create account";
+    if (!createPayload) {
+      const msg =
+        createResp?.errors?.[0]?.message || "Could not create account";
+      return createErrorResponse(msg, 400);
+    }
+    if (createPayload.userErrors?.length) {
+      const msg =
+        createPayload.userErrors[0]?.message || "Could not create account";
       return createErrorResponse(msg, 400);
     }
 
@@ -58,7 +82,8 @@ export const handler = async (event) => {
     const loginData = handleGraphQLResponse(loginResp);
     const payload = loginData.customerAccessTokenCreate;
     if (!payload || payload.userErrors?.length) {
-      const msg = payload?.userErrors?.[0]?.message || "Login failed after register";
+      const msg =
+        payload?.userErrors?.[0]?.message || "Login failed after register";
       return createErrorResponse(msg, 401);
     }
 
@@ -72,14 +97,18 @@ export const handler = async (event) => {
         }
       }
     `;
-    const meResp = await client.request(meQuery, { variables: { token: accessToken } });
+    const meResp = await client.request(meQuery, {
+      variables: { token: accessToken },
+    });
     const meData = handleGraphQLResponse(meResp);
 
-    const res = createApiResponse({ token: { accessToken, expiresAt }, customer: meData.customer }, 200);
+    const res = createApiResponse(
+      { token: { accessToken, expiresAt }, customer: meData.customer },
+      200
+    );
     res.headers["Set-Cookie"] = setSessionCookie(accessToken, expiresAt);
     return res;
   } catch (err) {
     return createErrorResponse(err.message || "Register failed", 500);
   }
 };
-
