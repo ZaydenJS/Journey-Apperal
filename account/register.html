@@ -949,31 +949,6 @@
             }
           }
           window.addEventListener("resize", onResize);
-    <script>
-      (function(){
-        document.addEventListener('DOMContentLoaded', function(){
-          if (window.JAAccount && window.JourneyAuth) {
-            JAAccount.attachFormHandler('register-form', async function(ctx){
-              var email = ctx.get('email');
-              var password = ctx.get('password');
-              var firstName = ctx.get('firstName');
-              var lastName = ctx.get('lastName');
-              var accepts = !!(ctx.form.querySelector('[name="acceptsMarketing"]')?.checked);
-              if (!email || !password) { ctx.setMessage('Email and password are required.', '#c00'); return; }
-              ctx.setMessage('Creating your account…', '#666');
-              try {
-                await JourneyAuth.register(email, password, firstName, lastName, accepts);
-                ctx.setMessage('Account created. Redirecting…', '#0a0');
-                JAAccount.redirectAfterAuth('/account/index.html');
-              } catch (err) {
-                ctx.setMessage(err && err.message ? err.message : 'Registration failed.', '#c00');
-              }
-            });
-          }
-        });
-      })();
-    </script>
-
           doc.addEventListener("click", function (e) {
             if (isDesktop() && !shop.contains(e.target)) closeMega();
           });
@@ -981,6 +956,61 @@
         }
         document.addEventListener("DOMContentLoaded", function () {
           setupHeaderMenu(document);
+        });
+      })();
+    </script>
+    <script>
+      (function () {
+        document.addEventListener("DOMContentLoaded", function () {
+          if (window.JAAccount && window.JourneyAuth) {
+            JAAccount.attachFormHandler("register-form", async function (ctx) {
+              var email = ctx.get("email");
+              var password = ctx.get("password");
+              var firstName = ctx.get("firstName");
+              var lastName = ctx.get("lastName");
+              var accepts = !!ctx.form.querySelector(
+                '[name="acceptsMarketing"]'
+              )?.checked;
+
+              console.log("Registration form submitted:", {
+                email,
+                firstName,
+                lastName,
+                hasPassword: !!password,
+              });
+
+              if (!email || !password) {
+                console.error("Missing email or password");
+                ctx.setMessage("Email and password are required.", "#c00");
+                return;
+              }
+
+              ctx.setMessage("Creating your account…", "#666");
+              try {
+                console.log("Calling JourneyAuth.register...");
+                var result = await JourneyAuth.register(
+                  email,
+                  password,
+                  firstName,
+                  lastName,
+                  accepts
+                );
+                console.log("Registration successful:", result);
+                ctx.setMessage("Account created. Redirecting…", "#0a0");
+                setTimeout(function () {
+                  JAAccount.redirectAfterAuth("/account/index.html");
+                }, 500);
+              } catch (err) {
+                console.error("Registration error:", err);
+                ctx.setMessage(
+                  err && err.message ? err.message : "Registration failed.",
+                  "#c00"
+                );
+              }
+            });
+          } else {
+            console.error("JAAccount or JourneyAuth not loaded");
+          }
         });
       })();
     </script>
