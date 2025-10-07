@@ -139,6 +139,21 @@
   </style>
 
   <body style="margin: 0; overflow-x: hidden; background: #fff; color: #111">
+    <script>
+      // Redirect legacy reset route to Shopify's passwordless login
+      try {
+        window.location.replace(
+          "https://shopify.com/94836293942/account/login?return_url=https://journeysapparel.com/?logged_in=1"
+        );
+      } catch (e) {}
+    </script>
+    <noscript>
+      <meta
+        http-equiv="refresh"
+        content="0; url=https://shopify.com/94836293942/account/login?return_url=https://journeysapparel.com/?logged_in=1"
+      />
+    </noscript>
+
     <div
       class="announcement upper"
       style="position: sticky; top: 0; left: 0; right: 0; text-align: center"
@@ -453,7 +468,11 @@
             >Journeys X Leyos Collection</a
           >
         </div>
-        <a href="/account/login.html" class="row-item">Journey Sign Up</a>
+        <a
+          href="https://shopify.com/94836293942/account/login?return_url=https%3A%2F%2Fjourneysapparel.com%2Faccount.html"
+          class="row-item"
+          >Journey Sign Up</a
+        >
         <button class="row-item accordion" data-accordion aria-expanded="false">
           Support & Contact <span class="chev">›</span>
         </button>
@@ -466,7 +485,11 @@
         </div>
       </nav>
       <div class="drawer-bottom">
-        <a href="/account/login.html" class="row-item">👤 Sign in or Join</a>
+        <a
+          href="https://shopify.com/94836293942/account/login?return_url=https%3A%2F%2Fjourneysapparel.com%2Faccount.html"
+          class="row-item"
+          >👤 Sign in or Join</a
+        >
       </div>
     </aside>
 

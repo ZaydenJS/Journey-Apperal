@@ -38,71 +38,6 @@
     }
   }
 
-  // Native legacy accounts API endpoints (Netlify Functions)
-  var API = {
-    login: "/.netlify/functions/customerLogin",
-    logout: "/.netlify/functions/customerLogout",
-    me: "/.netlify/functions/getCustomer",
-    register: "/.netlify/functions/customerRegister",
-    recover: "/.netlify/functions/customerRecover",
-    reset: "/.netlify/functions/customerReset",
-    orders: "/.netlify/functions/customerOrders",
-    order: "/.netlify/functions/customerOrder",
-    addresses: "/.netlify/functions/customerAddresses",
-    addressCreate: "/.netlify/functions/customerAddressCreate",
-    addressUpdate: "/.netlify/functions/customerAddressUpdate",
-    addressDelete: "/.netlify/functions/customerAddressDelete",
-    addressDefault: "/.netlify/functions/customerDefaultAddressUpdate",
-    customerUpdate: "/.netlify/functions/customerUpdate",
-  };
-
-  async function apiJson(url, options) {
-    var res = await fetch(
-      url,
-      Object.assign(
-        {
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        },
-        options || {}
-      )
-    );
-    var text = await res.text();
-    var data = {};
-    try {
-      data = text ? JSON.parse(text) : {};
-    } catch (_) {}
-    if (!res.ok) {
-      var msg =
-        (data && (data.error || data.message)) ||
-        "Request failed: " + res.status;
-      var err = new Error(msg);
-      err.status = res.status;
-      throw err;
-    }
-    return data;
-  }
-
-  async function fetchMe() {
-    try {
-      var data = await apiJson(API.me, { method: "GET" });
-      if (data && data.customer) {
-        setUser(data.customer);
-        try {
-          localStorage.setItem("ja_logged_in", "true");
-        } catch (_) {}
-        return data.customer;
-      }
-    } catch (e) {
-      try {
-        localStorage.removeItem("ja_logged_in");
-      } catch (_) {}
-      setUser(null);
-      throw e;
-    }
-    return null;
-  }
-
   function isAuthed() {
     try {
       var token = localStorage.getItem(AUTH_KEY);
@@ -166,147 +101,153 @@
     }
   }
 
-  // Shopify Authentication Functions (legacy customer accounts via Netlify Functions)
-  async function login(email, password) {
-    if (!email || !password) throw new Error("Email and password are required");
-    var data = await apiJson(API.login, {
-      method: "POST",
-      body: JSON.stringify({
-        email: String(email).trim(),
-        password: String(password),
-      }),
-    });
-    if (data && data.customer) {
-      setUser(data.customer);
-      try {
-        localStorage.setItem("ja_logged_in", "true");
-      } catch (_) {}
-      // Store token soft signals for compatibility
-      try {
-        localStorage.setItem(
-          "shopify_access_token",
-          data.token?.accessToken || ""
-        );
-        localStorage.setItem(
-          "shopify_token_expiry",
-          data.token?.expiresAt || ""
-        );
-      } catch (_) {}
+  // Shopify Authentication Functions (client does not handle credentials)
+  async function login() {
+    console.warn("Use Shopify New Customer Accounts for authentication");
+    try {
+      window.location.href = SHOPIFY_LOGIN_URL;
+    } catch (_) {
+      location.href = SHOPIFY_LOGIN_URL;
     }
-    return data;
+    return { redirected: true };
   }
 
-  async function register(firstName, lastName, email, password) {
-    if (!email || !password) throw new Error("Email and password are required");
-    var data = await apiJson(API.register, {
-      method: "POST",
-      body: JSON.stringify({
-        firstName,
-        lastName,
-        email: String(email).trim(),
-        password: String(password),
-      }),
-    });
-    if (data && data.customer) {
-      setUser(data.customer);
-      try {
-        localStorage.setItem("ja_logged_in", "true");
-      } catch (_) {}
-      try {
-        localStorage.setItem(
-          "shopify_access_token",
-          data.token?.accessToken || ""
-        );
-        localStorage.setItem(
-          "shopify_token_expiry",
-          data.token?.expiresAt || ""
-        );
-      } catch (_) {}
+  async function register() {
+    console.warn("Use Shopify New Customer Accounts for registration");
+    try {
+      window.location.href = SHOPIFY_LOGIN_URL;
+    } catch (_) {
+      location.href = SHOPIFY_LOGIN_URL;
     }
-    return data;
+    return { redirected: true };
   }
 
-  async function recover(email) {
-    if (!email) throw new Error("Email is required");
-    await apiJson(API.recover, {
-      method: "POST",
-      body: JSON.stringify({ email: String(email).trim() }),
-    });
-    return { ok: true };
+  async function recover() {
+    console.warn("Use Shopify New Customer Accounts for passwordless recovery");
+    try {
+      window.location.href = SHOPIFY_LOGIN_URL;
+    } catch (_) {
+      location.href = SHOPIFY_LOGIN_URL;
+    }
+    return { redirected: true };
   }
 
   async function refreshCustomerData() {
-    try {
-      return await fetchMe();
-    } catch (_) {
-      return null;
-    }
+    // Not available client-side with New Customer Accounts; rely on Shopify UI
+    return null;
   }
 
   function logout() {
-    try {
-      apiJson(API.logout, { method: "POST" }).catch(function () {});
-    } catch (_) {}
     clearAuth();
     clearLoginFlag();
     try {
       localStorage.removeItem("ja_logged_in");
     } catch (_) {}
     try {
-      window.location.replace("/account/login.html");
-    } catch (_) {
-      location.replace("/account/login.html");
+      window.location.href = SHOPIFY_LOGOUT_URL;
+    } catch (e) {
+      location.href = SHOPIFY_LOGOUT_URL;
     }
   }
 
-  async function resetPassword(params) {
-    // params: { resetUrl, password } OR { id, resetToken, password }
-    if (!params || !params.password) throw new Error("Password is required");
-    var data = await apiJson(API.reset, {
-      method: "POST",
-      body: JSON.stringify(params),
-    });
-    if (data && data.customer) {
-      setUser(data.customer);
-
-      try {
-        localStorage.setItem("ja_logged_in", "true");
-      } catch (_) {}
-    }
-    return data;
-  }
-
-  // Update header profile icon link to login or account dashboard (native)
+  // Update header profile icon link to login or account dashboard
   function setHeaderProfileLink() {
     var el = document.getElementById("headerProfileLink");
     if (!el) return;
+    // Set header link based on signed-in flag
     var signed = false;
     try {
       signed = localStorage.getItem("ja_logged_in") === "true";
     } catch (_) {}
     if (signed) {
-      el.setAttribute("href", "/account/index.html");
+      el.setAttribute("href", "/account.html");
       el.setAttribute("title", "Account");
-      el.onclick = null;
     } else {
-      el.setAttribute("href", "/account/login.html");
+      el.setAttribute("href", SHOPIFY_LOGIN_URL);
+      el.setAttribute("title", "Sign in or Join");
+    }
+    el.onclick = null;
+    return;
+
+    // Ensure a profile menu exists (created once) for the signed-in state
+    var menuId = "ja-profile-menu";
+    var menu = document.getElementById(menuId);
+    if (!menu) {
+      menu = document.createElement("div");
+      menu.id = menuId;
+      menu.setAttribute("role", "menu");
+      menu.style.position = "absolute";
+      menu.style.minWidth = "160px";
+      menu.style.background = "#fff";
+      menu.style.border = "1px solid rgba(0,0,0,0.12)";
+      menu.style.boxShadow = "0 12px 30px rgba(0,0,0,0.12)";
+      menu.style.borderRadius = "8px";
+      menu.style.padding = "6px";
+      menu.style.display = "none";
+      menu.style.zIndex = "1001";
+
+      var myAcc = document.createElement("a");
+      myAcc.href = SHOPIFY_ACCOUNT_URL;
+      myAcc.textContent = "My Account";
+      myAcc.style.display = "block";
+      myAcc.style.padding = "10px 12px";
+      myAcc.style.color = "#111";
+      myAcc.style.textDecoration = "none";
+
+      var signOut = document.createElement("a");
+      signOut.href = SHOPIFY_LOGOUT_URL;
+      signOut.textContent = "Sign out";
+      signOut.style.display = "block";
+      signOut.style.padding = "10px 12px";
+      signOut.style.color = "#111";
+      signOut.style.textDecoration = "none";
+      signOut.addEventListener("click", function () {
+        clearLoginFlag();
+      });
+
+      menu.appendChild(myAcc);
+      menu.appendChild(signOut);
+      document.body.appendChild(menu);
+
+      document.addEventListener("click", function (e) {
+        if (menu.style.display === "none") return;
+        if (e.target === el || el.contains(e.target) || menu.contains(e.target))
+          return;
+        menu.style.display = "none";
+      });
+    }
+
+    var signedIn = isLoginFlagActive();
+
+    if (!signedIn) {
+      // Signed out → link to Shopify login with return_url
+      el.setAttribute("href", SHOPIFY_LOGIN_URL);
       el.setAttribute("title", "Sign in or Join");
       el.onclick = null;
+    } else {
+      // Signed in → show small menu on click
+      el.setAttribute("href", SHOPIFY_ACCOUNT_URL);
+      el.setAttribute("title", "My Account");
+      el.onclick = function (evt) {
+        evt.preventDefault();
+        // Position menu under the icon
+        var rect = el.getBoundingClientRect();
+        menu.style.left = Math.round(rect.left + window.scrollX) + "px";
+        menu.style.top = Math.round(rect.bottom + window.scrollY + 8) + "px";
+        menu.style.display = menu.style.display === "none" ? "block" : "none";
+      };
     }
   }
 
-  // Route guard: redirect unauthenticated users to native login
-  async function guardAuthenticated() {
+  // Route guard: redirect unauthenticated users to login
+  function guardAuthenticated() {
+    // For New Customer Accounts, we can't validate session client-side.
+    // Send users to Shopify's login; after logging in, they can access the account there.
+    var from = location.pathname + location.search + location.hash;
     try {
-      await fetchMe();
-      setHeaderProfileLink();
-    } catch (e) {
-      var from = location.pathname + location.search + location.hash;
-      try {
-        sessionStorage.setItem("ja_redirect_after_login", from);
-      } catch (_) {}
-      location.replace("/account/login.html");
-    }
+      sessionStorage.setItem("ja_redirect_after_login", from);
+    } catch (_) {}
+    location.replace("/account.html");
   }
 
   // After successful login/registration, redirect back if a prior page saved
@@ -330,7 +271,6 @@
     if (!msg) {
       msg = document.createElement("div");
       msg.setAttribute("data-form-message", "");
-
       msg.setAttribute("role", "status");
       msg.setAttribute("aria-live", "polite");
       msg.style.margin = "8px 0 0 0";
@@ -357,60 +297,6 @@
         });
       }
     });
-  }
-
-  // Profile & Addresses CRUD
-  async function updateProfile(fields) {
-    var payload = {};
-    if (fields && typeof fields.firstName === "string")
-      payload.firstName = fields.firstName;
-    if (fields && typeof fields.lastName === "string")
-      payload.lastName = fields.lastName;
-    if (fields && typeof fields.phone === "string")
-      payload.phone = fields.phone;
-    var data = await apiJson(API.customerUpdate, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-    if (data && data.customer) setUser(data.customer);
-    return data;
-  }
-
-  async function getAddresses() {
-    return await apiJson(API.addresses, { method: "GET" });
-  }
-
-  async function addAddress(address) {
-    return await apiJson(API.addressCreate, {
-      method: "POST",
-      body: JSON.stringify(address || {}),
-    });
-  }
-
-  async function updateAddress(id, address) {
-    return await apiJson(API.addressUpdate, {
-      method: "POST",
-      body: JSON.stringify({ id: id, address: address || {} }),
-    });
-  }
-
-  async function deleteAddress(id) {
-    return await apiJson(API.addressDelete, {
-      method: "POST",
-      body: JSON.stringify({ id: id }),
-    });
-  }
-
-  async function setDefaultAddress(addressId) {
-    return await apiJson(API.addressDefault, {
-      method: "POST",
-      body: JSON.stringify({ addressId: addressId }),
-    });
-  }
-
-  async function fetchOrder(orderId) {
-    var url = API.order + "?id=" + encodeURIComponent(orderId);
-    return await apiJson(url, { method: "GET" });
   }
 
   // Public API
@@ -442,7 +328,6 @@
     login: login,
     register: register,
     recover: recover,
-    resetPassword: resetPassword,
     logout: logout,
     getUser: getUser,
     getAccessToken: getAccessToken,
@@ -450,14 +335,6 @@
     guardAuthenticated: guardAuthenticated,
     redirectAfterAuth: redirectAfterAuth,
     attachFormHandler: attachFormHandler,
-    // New CRUD and order helpers
-    updateProfile: updateProfile,
-    getAddresses: getAddresses,
-    addAddress: addAddress,
-    updateAddress: updateAddress,
-    deleteAddress: deleteAddress,
-    setDefaultAddress: setDefaultAddress,
-    fetchOrder: fetchOrder,
   };
 
   onReady(function () {
@@ -474,7 +351,6 @@
           (location.pathname === "/" || location.pathname === "/index.html")
         ) {
           url.searchParams.delete("logged_in");
-
           history.replaceState(
             {},
             document.title,

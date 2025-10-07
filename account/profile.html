@@ -367,21 +367,6 @@
               "
             />
           </label>
-          <label style="display: flex; flex-direction: column; gap: 6px"
-            ><span style="font-size: 13px; color: #333">Phone</span>
-            <input
-              name="phone"
-              type="tel"
-              autocomplete="tel"
-              style="
-                padding: 12px;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                font-size: 14px;
-              "
-            />
-          </label>
-
           <button
             type="submit"
             style="
@@ -403,6 +388,70 @@
             style="font-size: 14px"
           ></div>
         </form>
+      </section>
+
+      <section
+        aria-label="Join Journey"
+        style="
+          max-width: 980px;
+          margin: 36px auto 0;
+          padding: 28px 20px;
+          border: 1px solid #e5e5e5;
+          border-radius: 12px;
+          background: #fff;
+          text-align: center;
+        "
+      >
+        <div
+          class="upper"
+          style="
+            font-weight: 800;
+            font-size: 24px;
+            letter-spacing: 0.5px;
+            margin: 0 0 8px 0;
+            color: #111;
+          "
+        >
+          JOIN JOURNEY
+        </div>
+        <div
+          style="
+            width: 64px;
+            height: 2px;
+            background: #111;
+            opacity: 0.1;
+            margin: 0 auto 14px;
+          "
+        ></div>
+        <p
+          style="
+            color: #444;
+            font-size: 15px;
+            line-height: 1.6;
+            margin: 0 0 18px 0;
+          "
+        >
+          Become a member for points, early access and exclusive perks every
+          time you shop.
+        </p>
+        <a
+          href="/collection.html?collection=best-sellers"
+          style="
+            display: inline-block;
+            width: min(420px, 90%);
+            background: #fff;
+            color: #111;
+            padding: 14px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            border: 1px solid #111;
+          "
+          onmouseover="this.style.background='#f7f7f7'"
+          onmouseout="this.style.background='#fff'"
+          >Explore Best Sellers</a
+        >
       </section>
     </main>
 
@@ -528,7 +577,7 @@
                 Stay Connected
               </h4>
               <p style="color: #000; font-size: 14px; margin: 0 0 16px 0">
-                Get exclusive access to new drops.
+                Get exclusive access to new drops and member rewards.
               </p>
               <form
                 style="
@@ -607,50 +656,25 @@
     <script src="/assets/account.js" defer></script>
     <script>
       (function () {
-        async function run() {
-          await JAAccount.guardAuthenticated();
-          try {
-            JAAccount.setHeaderProfileLink && JAAccount.setHeaderProfileLink();
-          } catch (_) {}
-          var form = document.getElementById("profile-form");
-          if (!form) return;
-          try {
-            var me = await JourneyAuth.refreshCustomerData();
-            if (me) {
-              if (form.first) form.first.value = me.firstName || "";
-              if (form.last) form.last.value = me.lastName || "";
-              if (form.email) form.email.value = me.email || "";
-              if (form.phone) form.phone.value = me.phone || "";
-            }
-          } catch (_) {}
-          form.addEventListener("submit", async function (ev) {
-            ev.preventDefault();
-            var msgEl = document.querySelector("[data-form-message]");
-            if (msgEl) {
-              msgEl.textContent = "Saving...";
-              msgEl.style.color = "#666";
-            }
-            try {
-              var payload = {
-                firstName: form.first.value.trim(),
-                lastName: form.last.value.trim(),
-                phone: ((form.phone && form.phone.value) || "").trim(),
-              };
-              var res = await JourneyAuth.updateProfile(payload);
-              if (msgEl) {
-                msgEl.textContent = "Profile updated.";
-                msgEl.style.color = "#0a0";
-              }
-            } catch (e) {
-              if (msgEl) {
-                msgEl.textContent =
-                  e && e.message ? e.message : "Failed to update.";
-                msgEl.style.color = "#c00";
-              }
-            }
-          });
+        JAAccount.guardAuthenticated();
+        var u = JAAccount.getUser() || {};
+        var form = document.getElementById("profile-form");
+        if (form) {
+          form.first.value = u.firstName || "";
+          form.last.value = u.lastName || "";
+          form.email.value = u.email || "";
         }
-        document.addEventListener("DOMContentLoaded", run);
+        JAAccount.attachFormHandler("profile-form", function (ctx) {
+          var first = ctx.get("first"),
+            last = ctx.get("last"),
+            email = ctx.get("email");
+          if (!first || !last || !email) {
+            ctx.setMessage("Please complete all fields.", "#c00");
+            return;
+          }
+          JAAccount.setUser({ firstName: first, lastName: last, email: email });
+          ctx.setMessage("Saved. Your profile has been updated.", "#0a0");
+        });
       })();
     </script>
     <script src="/script.js" defer></script>

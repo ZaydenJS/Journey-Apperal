@@ -152,9 +152,11 @@
                   : "."
               }</p>
               <div class="actions" style="margin-bottom:8px">
+                <a class="btn secondary" href="/rewards.html">Rewards</a>
                 <a class="btn secondary" target="_blank" rel="noopener" href="https://shopify.com/94836293942/account/orders">Orders</a>
                 <a id="signOutLink" class="btn" href="https://shopify.com/94836293942/account/logout?return_url=https://journeysapparel.com/">Sign out</a>
               </div>
+              <p id="pointsLine" style="margin:0 0 16px; color:#666;">Points: <strong id="pointsBalance">—</strong></p>
               <div class="card" style="border-radius:8px; padding:16px; border:1px solid #eee; margin-bottom:12px;">
                 <h2 class="upper" style="margin:0 0 8px; font-size:18px; font-weight:800; letter-spacing:0.5px;">Recent orders</h2>
                 <div id="ordersPreview" style="color:#666;">Loading your recent orders…</div>
@@ -184,6 +186,11 @@
                   "No recent orders found. View all orders in your Shopify account.";
             } catch (e) {}
 
+            // Fetch rewards points (placeholder)
+            try {
+              // Loyalty points UI is handled by the Shopify/Yotpo widgets after Shopify login
+            } catch (e) {}
+
             if (out)
               out.addEventListener("click", function () {
                 try {
@@ -193,7 +200,7 @@
           } else {
             card.innerHTML = `
               <h1 class="upper" style="margin:0 0 8px; font-size:26px; font-weight:900; letter-spacing:0.5px;">Account</h1>
-              <p style="margin:0 0 16px; color:#666;">Sign in to view your orders.</p>
+              <p style="margin:0 0 16px; color:#666;">Sign in to view your orders and rewards.</p>
               <div class="actions">
                 <a class="btn" href="https://shopify.com/94836293942/account/login?return_url=https://journeysapparel.com/?logged_in=1">Sign in / Join</a>
               </div>`;
