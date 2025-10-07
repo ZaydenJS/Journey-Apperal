@@ -62,11 +62,36 @@ export const handler = async (event) => {
       [];
 
     if (!createPayload || errs.length) {
-      const msg =
+      const rawMsg =
         errs[0]?.message ||
         createResp?.errors?.[0]?.message ||
         "Could not create account";
-      return createErrorResponse(msg, 400);
+      const norm = String(rawMsg || "").toLowerCase();
+      let status = 400;
+      let msg = rawMsg;
+      if (
+        norm.includes("already") ||
+        norm.includes("taken") ||
+        norm.includes("exists")
+      ) {
+        status = 409;
+        msg =
+          "An account with this email already exists. Try signing in or reset your password.";
+      } else if (
+        norm.includes("disabled") ||
+        norm.includes("not enabled") ||
+        norm.includes("new customer accounts")
+      ) {
+        status = 503;
+        msg =
+          "Customer account registration is disabled on this store. Please enable Classic customer accounts in Shopify admin.";
+      }
+      console.error("customerRegister failure", {
+        rawMsg,
+        errs,
+        graphErrors: createResp?.errors,
+      });
+      return createErrorResponse(msg, status);
     }
 
     // Auto-login after register
