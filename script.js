@@ -2940,7 +2940,7 @@
       const FALLBACK = "/LOGO/Header.png";
       const attach = (img) => {
         if (!img || img.__fallbackBound) return;
-        // Opt-out: do not apply fallback on any element marked no-fallback
+        // Opt-out: allow explicit no-fallback via data-no-fallback
         if (img.dataset.noFallback != null) return;
         img.__fallbackBound = true;
         img.addEventListener(

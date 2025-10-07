@@ -454,11 +454,7 @@
             >Journeys X Leyos Collection</a
           >
         </div>
-        <a
-          href="https://shopify.com/94836293942/account/login?return_url=https%3A%2F%2Fjourneysapparel.com%2Faccount.html"
-          class="row-item"
-          >Journey Sign Up</a
-        >
+        <a href="/account/register.html" class="row-item">Journey Sign Up</a>
         <button class="row-item accordion" data-accordion aria-expanded="false">
           Support & Contact <span class="chev">›</span>
         </button>
@@ -471,11 +467,7 @@
         </div>
       </nav>
       <div class="drawer-bottom">
-        <a
-          href="https://shopify.com/94836293942/account/login?return_url=https%3A%2F%2Fjourneysapparel.com%2Faccount.html"
-          class="row-item"
-          >👤 Sign in or Join</a
-        >
+        <a href="/account/login.html" class="row-item">👤 Sign in or Join</a>
       </div>
     </aside>
 
@@ -623,11 +615,7 @@
           </button>
           <div style="font-size: 14px; text-align: center">
             Already have an account?
-            <a
-              href="https://shopify.com/94836293942/account/login"
-              style="color: #111"
-              >Sign in</a
-            >
+            <a href="/account/login.html" style="color: #111">Sign in</a>
           </div>
           <div
             data-form-message
@@ -825,7 +813,7 @@
                 Stay Connected
               </h4>
               <p style="color: #000; font-size: 14px; margin: 0 0 16px 0">
-                Get exclusive access to new drops and member rewards.
+                Get exclusive access to new drops and news.
               </p>
               <form
                 style="
@@ -905,58 +893,7 @@
     <script>
       (function () {
         document.addEventListener("DOMContentLoaded", function () {
-          try {
-            JAAccount.setHeaderProfileLink && JAAccount.setHeaderProfileLink();
-          } catch (_) {}
-
-          // Implement registration form handler
-          JAAccount.attachFormHandler("register-form", async function (ctx) {
-            var firstName = ctx.get("first");
-            var lastName = ctx.get("last");
-            var email = ctx.get("email");
-            var password = ctx.get("password");
-
-            if (!firstName || !lastName || !email || !password) {
-              ctx.setMessage("Please complete all fields.", "#c00");
-              return;
-            }
-
-            if (password.length < 5) {
-              ctx.setMessage("Password must be at least 5 characters.", "#c00");
-              return;
-            }
-
-            ctx.setMessage("Creating account...", "#666");
-
-            try {
-              var result = await JourneyAuth.register(
-                email,
-                password,
-                firstName,
-                lastName
-              );
-              if (result && result.success) {
-                ctx.setMessage("Success! Redirecting...", "#0a0");
-                setTimeout(function () {
-                  location.href = "/account.html";
-                }, 500);
-              } else {
-                ctx.setMessage(
-                  result && result.message
-                    ? result.message
-                    : "Could not create account.",
-                  "#c00"
-                );
-              }
-            } catch (e) {
-              ctx.setMessage(
-                e && e.message
-                  ? e.message
-                  : "Could not create account. Please try again.",
-                "#c00"
-              );
-            }
-          });
+          // Local registration is not used; this page immediately redirects to Shopify New Customer Accounts
         });
       })();
     </script>
@@ -1012,6 +949,31 @@
             }
           }
           window.addEventListener("resize", onResize);
+    <script>
+      (function(){
+        document.addEventListener('DOMContentLoaded', function(){
+          if (window.JAAccount && window.JourneyAuth) {
+            JAAccount.attachFormHandler('register-form', async function(ctx){
+              var email = ctx.get('email');
+              var password = ctx.get('password');
+              var firstName = ctx.get('firstName');
+              var lastName = ctx.get('lastName');
+              var accepts = !!(ctx.form.querySelector('[name="acceptsMarketing"]')?.checked);
+              if (!email || !password) { ctx.setMessage('Email and password are required.', '#c00'); return; }
+              ctx.setMessage('Creating your account…', '#666');
+              try {
+                await JourneyAuth.register(email, password, firstName, lastName, accepts);
+                ctx.setMessage('Account created. Redirecting…', '#0a0');
+                JAAccount.redirectAfterAuth('/account/index.html');
+              } catch (err) {
+                ctx.setMessage(err && err.message ? err.message : 'Registration failed.', '#c00');
+              }
+            });
+          }
+        });
+      })();
+    </script>
+
           doc.addEventListener("click", function (e) {
             if (isDesktop() && !shop.contains(e.target)) closeMega();
           });

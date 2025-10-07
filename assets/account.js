@@ -4,17 +4,12 @@
   var USER_KEY = "shopify_customer";
   var TOKEN_EXPIRY_KEY = "shopify_token_expiry";
 
-  // Shopify New Customer Accounts URLs (passwordless) with return_url back to our site
-  var RETURN_TO_ACCOUNT = "https://journeysapparel.com/account.html";
-  var RETURN_TO_HOME = "https://journeysapparel.com/";
-  var SHOPIFY_LOGIN_URL =
-    "https://shopify.com/94836293942/account/login?return_url=" +
-    encodeURIComponent(RETURN_TO_HOME + "?logged_in=1");
-  // Local account landing page (when signed in)
-  var SHOPIFY_ACCOUNT_URL = "/account.html";
-  var SHOPIFY_LOGOUT_URL =
-    "https://shopify.com/94836293942/account/logout?return_url=" +
-    encodeURIComponent(RETURN_TO_HOME);
+  // Legacy Accounts API endpoints and routes
+  var API_BASE = "/.netlify/functions";
+  var LOGIN_PAGE = "/account/login.html";
+  var REGISTER_PAGE = "/account/register.html";
+  var ACCOUNT_PAGE = "/account/index.html";
+  var LOGOUT_REDIRECT = "/";
 
   // Lightweight signed-in signal (best-effort) with TTL
   var LOGIN_FLAG_KEY = "ja_logged_in_until";
@@ -101,301 +96,100 @@
     }
   }
 
-  // Shopify Authentication Functions for Classic Customer Accounts
+  // Legacy Accounts Authentication via Netlify functions
   async function login(email, password) {
-    // Use Shopify Storefront API to authenticate with Classic Customer Accounts
-    var STOREFRONT_TOKEN = "e9f772f8551e9494e4d4695902f59e46";
-    var SHOP_DOMAIN = "7196su-vk.myshopify.com";
-
-    var mutation = `
-      mutation customerAccessTokenCreate($input: CustomerAccessTokenCreateInput!) {
-        customerAccessTokenCreate(input: $input) {
-          customerAccessToken {
-            accessToken
-            expiresAt
-          }
-          customerUserErrors {
-            code
-            field
-            message
-          }
-        }
-      }
-    `;
-
+    if (!email || !password) throw new Error("Email and password are required");
+    var resp = await fetch(API_BASE + "/customerLogin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), password: password }),
+    });
+    var data = await resp.json().catch(function () {
+      return {};
+    });
+    if (!resp.ok) throw new Error(data.error || data.message || "Login failed");
     try {
-      var response = await fetch(
-        `https://${SHOP_DOMAIN}/api/2024-01/graphql.json`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN,
-          },
-          body: JSON.stringify({
-            query: mutation,
-            variables: {
-              input: {
-                email: email,
-                password: password,
-              },
-            },
-          }),
-        }
-      );
-
-      var data = await response.json();
-
-      if (data.data && data.data.customerAccessTokenCreate) {
-        var result = data.data.customerAccessTokenCreate;
-
-        if (result.customerUserErrors && result.customerUserErrors.length > 0) {
-          return {
-            success: false,
-            message:
-              result.customerUserErrors[0].message ||
-              "Invalid email or password.",
-          };
-        }
-
-        if (result.customerAccessToken) {
-          var token = result.customerAccessToken.accessToken;
-          var expiresAt = result.customerAccessToken.expiresAt;
-
-          // Fetch customer data
-          var customer = await getCustomerData(token);
-
-          setAuth(token, expiresAt, customer);
-          setLoginFlag();
-          localStorage.setItem("ja_logged_in", "true");
-
-          return { success: true, customer: customer };
-        }
-      }
-
-      return { success: false, message: "Invalid email or password." };
-    } catch (error) {
-      console.error("Login error:", error);
-      return {
-        success: false,
-        message: "Could not sign in. Please try again.",
-      };
-    }
+      localStorage.setItem("ja_logged_in", "true");
+      if (data.customer) setUser(data.customer);
+    } catch (_) {}
+    return data;
   }
 
-  async function register(email, password, firstName, lastName) {
-    // Use Shopify Storefront API to create a new customer
-    var STOREFRONT_TOKEN = "e9f772f8551e9494e4d4695902f59e46";
-    var SHOP_DOMAIN = "7196su-vk.myshopify.com";
-
-    var mutation = `
-      mutation customerCreate($input: CustomerCreateInput!) {
-        customerCreate(input: $input) {
-          customer {
-            id
-            email
-            firstName
-            lastName
-          }
-          customerUserErrors {
-            code
-            field
-            message
-          }
-        }
-      }
-    `;
-
+  async function register(
+    email,
+    password,
+    firstName,
+    lastName,
+    acceptsMarketing
+  ) {
+    if (!email || !password) throw new Error("Email and password are required");
+    var resp = await fetch(API_BASE + "/customerRegister", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email.trim(),
+        password,
+        firstName,
+        lastName,
+        acceptsMarketing: !!acceptsMarketing,
+      }),
+    });
+    var data = await resp.json().catch(function () {
+      return {};
+    });
+    if (!resp.ok)
+      throw new Error(data.error || data.message || "Registration failed");
     try {
-      var response = await fetch(
-        `https://${SHOP_DOMAIN}/api/2024-01/graphql.json`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN,
-          },
-          body: JSON.stringify({
-            query: mutation,
-            variables: {
-              input: {
-                email: email,
-                password: password,
-                firstName: firstName,
-                lastName: lastName,
-              },
-            },
-          }),
-        }
-      );
-
-      var data = await response.json();
-
-      if (data.data && data.data.customerCreate) {
-        var result = data.data.customerCreate;
-
-        if (result.customerUserErrors && result.customerUserErrors.length > 0) {
-          return {
-            success: false,
-            message:
-              result.customerUserErrors[0].message ||
-              "Could not create account.",
-          };
-        }
-
-        if (result.customer) {
-          // Auto-login after registration
-          return await login(email, password);
-        }
-      }
-
-      return { success: false, message: "Could not create account." };
-    } catch (error) {
-      console.error("Registration error:", error);
-      return {
-        success: false,
-        message: "Could not create account. Please try again.",
-      };
-    }
+      localStorage.setItem("ja_logged_in", "true");
+      if (data.customer) setUser(data.customer);
+    } catch (_) {}
+    return data;
   }
 
   async function recover(email) {
-    // Use Shopify Storefront API to send password reset email
-    var STOREFRONT_TOKEN = "e9f772f8551e9494e4d4695902f59e46";
-    var SHOP_DOMAIN = "7196su-vk.myshopify.com";
-
-    var mutation = `
-      mutation customerRecover($email: String!) {
-        customerRecover(email: $email) {
-          customerUserErrors {
-            code
-            field
-            message
-          }
-        }
-      }
-    `;
-
-    try {
-      var response = await fetch(
-        `https://${SHOP_DOMAIN}/api/2024-01/graphql.json`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN,
-          },
-          body: JSON.stringify({
-            query: mutation,
-            variables: {
-              email: email,
-            },
-          }),
-        }
-      );
-
-      var data = await response.json();
-
-      if (data.data && data.data.customerRecover) {
-        var result = data.data.customerRecover;
-
-        if (result.customerUserErrors && result.customerUserErrors.length > 0) {
-          return {
-            success: false,
-            message:
-              result.customerUserErrors[0].message ||
-              "Could not send reset email.",
-          };
-        }
-
-        return { success: true };
-      }
-
-      return { success: false, message: "Could not send reset email." };
-    } catch (error) {
-      console.error("Recovery error:", error);
-      return {
-        success: false,
-        message: "Could not send reset email. Please try again.",
-      };
-    }
-  }
-
-  async function getCustomerData(accessToken) {
-    // Fetch customer data using access token
-    var STOREFRONT_TOKEN = "e9f772f8551e9494e4d4695902f59e46";
-    var SHOP_DOMAIN = "7196su-vk.myshopify.com";
-
-    var query = `
-      query getCustomer($customerAccessToken: String!) {
-        customer(customerAccessToken: $customerAccessToken) {
-          id
-          email
-          firstName
-          lastName
-          phone
-        }
-      }
-    `;
-
-    try {
-      var response = await fetch(
-        `https://${SHOP_DOMAIN}/api/2024-01/graphql.json`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN,
-          },
-          body: JSON.stringify({
-            query: query,
-            variables: {
-              customerAccessToken: accessToken,
-            },
-          }),
-        }
-      );
-
-      var data = await response.json();
-
-      if (data.data && data.data.customer) {
-        return data.data.customer;
-      }
-
-      return null;
-    } catch (error) {
-      console.error("Get customer data error:", error);
-      return null;
-    }
+    if (!email) throw new Error("Email is required");
+    var resp = await fetch(API_BASE + "/customerRecover", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim() }),
+    });
+    var data = await resp.json().catch(function () {
+      return {};
+    });
+    if (!resp.ok)
+      throw new Error(data.error || data.message || "Recovery failed");
+    return data;
   }
 
   async function refreshCustomerData() {
-    // Refresh customer data using the stored access token
-    var token = getAccessToken();
-    if (!token) return null;
-
     try {
-      var customer = await getCustomerData(token);
-      if (customer) {
-        setUser(customer);
-      }
-      return customer;
-    } catch (error) {
-      console.error("Refresh customer data error:", error);
+      var resp = await fetch(API_BASE + "/getCustomer", {
+        credentials: "same-origin",
+      });
+      if (!resp.ok) return null;
+      var data = await resp.json().catch(function () {
+        return {};
+      });
+      if (data && data.customer) setUser(data.customer);
+      return data && data.customer ? data.customer : null;
+    } catch (_) {
       return null;
     }
   }
 
-  function logout() {
+  async function logout() {
     clearAuth();
     clearLoginFlag();
     try {
       localStorage.removeItem("ja_logged_in");
     } catch (_) {}
     try {
-      window.location.href = "/index.html";
-    } catch (e) {
-      location.href = "/index.html";
+      await fetch(API_BASE + "/customerLogout", { method: "POST" });
+    } catch (_) {}
+    try {
+      window.location.replace(LOGOUT_REDIRECT);
+    } catch (_) {
+      location.replace(LOGOUT_REDIRECT);
     }
   }
 
@@ -403,100 +197,41 @@
   function setHeaderProfileLink() {
     var el = document.getElementById("headerProfileLink");
     if (!el) return;
-    // Set header link based on signed-in flag
     var signed = false;
     try {
       signed = localStorage.getItem("ja_logged_in") === "true";
     } catch (_) {}
-    if (signed) {
-      el.setAttribute("href", "/account.html");
-      el.setAttribute("title", "Account");
-    } else {
-      el.setAttribute("href", "/account/login.html");
-      el.setAttribute("title", "Sign in or Join");
-    }
+    el.setAttribute("href", signed ? ACCOUNT_PAGE : LOGIN_PAGE);
+    el.setAttribute("title", signed ? "Account" : "Sign in or Join");
     el.onclick = null;
-    return;
-
-    // Ensure a profile menu exists (created once) for the signed-in state
-    var menuId = "ja-profile-menu";
-    var menu = document.getElementById(menuId);
-    if (!menu) {
-      menu = document.createElement("div");
-      menu.id = menuId;
-      menu.setAttribute("role", "menu");
-      menu.style.position = "absolute";
-      menu.style.minWidth = "160px";
-      menu.style.background = "#fff";
-      menu.style.border = "1px solid rgba(0,0,0,0.12)";
-      menu.style.boxShadow = "0 12px 30px rgba(0,0,0,0.12)";
-      menu.style.borderRadius = "8px";
-      menu.style.padding = "6px";
-      menu.style.display = "none";
-      menu.style.zIndex = "1001";
-
-      var myAcc = document.createElement("a");
-      myAcc.href = SHOPIFY_ACCOUNT_URL;
-      myAcc.textContent = "My Account";
-      myAcc.style.display = "block";
-      myAcc.style.padding = "10px 12px";
-      myAcc.style.color = "#111";
-      myAcc.style.textDecoration = "none";
-
-      var signOut = document.createElement("a");
-      signOut.href = SHOPIFY_LOGOUT_URL;
-      signOut.textContent = "Sign out";
-      signOut.style.display = "block";
-      signOut.style.padding = "10px 12px";
-      signOut.style.color = "#111";
-      signOut.style.textDecoration = "none";
-      signOut.addEventListener("click", function () {
-        clearLoginFlag();
-      });
-
-      menu.appendChild(myAcc);
-      menu.appendChild(signOut);
-      document.body.appendChild(menu);
-
-      document.addEventListener("click", function (e) {
-        if (menu.style.display === "none") return;
-        if (e.target === el || el.contains(e.target) || menu.contains(e.target))
-          return;
-        menu.style.display = "none";
-      });
-    }
-
-    var signedIn = isLoginFlagActive();
-
-    if (!signedIn) {
-      // Signed out → link to local login page
-      el.setAttribute("href", "/account/login.html");
-      el.setAttribute("title", "Sign in or Join");
-      el.onclick = null;
-    } else {
-      // Signed in → show small menu on click
-      el.setAttribute("href", SHOPIFY_ACCOUNT_URL);
-      el.setAttribute("title", "My Account");
-      el.onclick = function (evt) {
-        evt.preventDefault();
-        // Position menu under the icon
-        var rect = el.getBoundingClientRect();
-        menu.style.left = Math.round(rect.left + window.scrollX) + "px";
-        menu.style.top = Math.round(rect.bottom + window.scrollY + 8) + "px";
-        menu.style.display = menu.style.display === "none" ? "block" : "none";
-      };
-    }
   }
 
   // Route guard: redirect unauthenticated users to login
-  function guardAuthenticated() {
-    // For New Customer Accounts, we can't validate session client-side.
-    // Send users to Shopify's login; after logging in, they can access the account there.
-    var from = location.pathname + location.search + location.hash;
+  async function guardAuthenticated() {
     try {
-      sessionStorage.setItem("ja_redirect_after_login", from);
+      var resp = await fetch(API_BASE + "/getCustomer", {
+        credentials: "same-origin",
+      });
+      if (resp.ok) {
+        var data = await resp.json().catch(function () {
+          return {};
+        });
+        if (data && data.customer) {
+          setUser(data.customer);
+          try {
+            localStorage.setItem("ja_logged_in", "true");
+          } catch (_) {}
+          return; // allow page to render
+        }
+      }
     } catch (_) {}
-    location.replace("/account.html");
+    try {
+      sessionStorage.setItem(
+        "ja_redirect_after_login",
+        location.pathname + location.search + location.hash
+      );
+    } catch (_) {}
+    location.replace(LOGIN_PAGE);
   }
 
   // After successful login/registration, redirect back if a prior page saved
@@ -587,30 +322,7 @@
   };
 
   onReady(function () {
-    // Mark signed-in if we just returned from Shopify or URL has logged_in=1
-    try {
-      var ref = document.referrer || "";
-      var fromShopify = ref.indexOf("accounts.shopify.com") !== -1;
-      var url = new URL(window.location.href);
-      if (fromShopify || url.searchParams.get("logged_in") === "1") {
-        localStorage.setItem("ja_logged_in", "true");
-        // Clean ?logged_in=1 on home page only
-        if (
-          url.searchParams.get("logged_in") === "1" &&
-          (location.pathname === "/" || location.pathname === "/index.html")
-        ) {
-          url.searchParams.delete("logged_in");
-          history.replaceState(
-            {},
-            document.title,
-            url.pathname + (url.search ? "?" + url.search : "") + url.hash
-          );
-        }
-      }
-    } catch (_) {}
-
     setHeaderProfileLink();
-    // Update header link if signed-in flag changes in another tab
     window.addEventListener("storage", function (e) {
       if (!e) return;
       if (e.key === "ja_logged_in" || e.key === AUTH_KEY)
