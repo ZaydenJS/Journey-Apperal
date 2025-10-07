@@ -34,6 +34,7 @@ export const handler = async (event) => {
       mutation Register($input: CustomerCreateInput!) {
         customerCreate(input: $input) {
           customer { id email firstName lastName }
+          customerUserErrors { message field code }
           userErrors { message field code }
         }
       }
@@ -53,11 +54,16 @@ export const handler = async (event) => {
     // Be defensive about response shapes and surface useful error messages
     const createDataRaw = createResp?.data || createResp?.body?.data || {};
     const createPayload = createDataRaw?.customerCreate;
-    const userErrMsg = createPayload?.userErrors?.[0]?.message;
+    const errs =
+      (createPayload &&
+        (createPayload.customerUserErrors?.length
+          ? createPayload.customerUserErrors
+          : createPayload.userErrors)) ||
+      [];
 
-    if (!createPayload || userErrMsg) {
+    if (!createPayload || errs.length) {
       const msg =
-        userErrMsg ||
+        errs[0]?.message ||
         createResp?.errors?.[0]?.message ||
         "Could not create account";
       return createErrorResponse(msg, 400);
