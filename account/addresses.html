@@ -845,6 +845,23 @@
         }
 
         JAAccount.attachFormHandler("addr-form", function (ctx) {
+          var submitBtn = form.querySelector("button[type='submit']");
+          // reset field error styles
+          [
+            "firstName",
+            "lastName",
+            "address1",
+            "address2",
+            "city",
+            "province",
+            "zip",
+            "country",
+            "phone",
+          ].forEach(function (n) {
+            var el = form.querySelector('[name="' + n + '"]');
+            if (el) el.style.borderColor = "#ddd";
+          });
+
           var addr = {
             firstName: ctx.get("firstName"),
             lastName: ctx.get("lastName"),
@@ -856,6 +873,7 @@
             country: ctx.get("country"),
             phone: ctx.get("phone"),
           };
+
           if (
             !addr.firstName ||
             !addr.lastName ||
@@ -868,6 +886,13 @@
             ctx.setMessage("Please complete all required fields.", "#c00");
             return;
           }
+
+          // disable while loading
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = editingId ? "Saving..." : "Adding...";
+          }
+
           var setDefault = !!form.querySelector('[name="setDefault"]').checked;
           var op = editingId
             ? fetch("/.netlify/functions/customerAddressUpdate", {
@@ -882,6 +907,7 @@
                 credentials: "same-origin",
                 body: JSON.stringify(addr),
               });
+
           op.then(function (r) {
             return r.json().then(function (j) {
               return { ok: r.ok, j: j };
@@ -889,14 +915,39 @@
           })
             .then(function (res) {
               if (!res.ok) {
-                ctx.setMessage(res.j.error || "Save failed.", "#c00");
+                // Try to highlight likely field from error text
+                var msg =
+                  (res.j && (res.j.error || res.j.message)) || "Save failed.";
+                var hint = String(msg).toLowerCase();
+                var map = {
+                  country: "country",
+                  province: "province",
+                  state: "province",
+                  city: "city",
+                  postcode: "zip",
+                  zip: "zip",
+                  address: "address1",
+                  firstname: "firstName",
+                  lastname: "lastName",
+                  phone: "phone",
+                };
+                Object.keys(map).some(function (k) {
+                  if (hint.indexOf(k) !== -1) {
+                    var el = form.querySelector('[name="' + map[k] + '"]');
+                    if (el) el.style.borderColor = "#c00";
+                    return true;
+                  }
+                  return false;
+                });
+                ctx.setMessage(msg, "#c00");
                 return Promise.reject(new Error("Save failed"));
               }
+
               var newId = editingId || res.j.addressId;
               editingId = null;
               form.reset();
-              form.querySelector("button[type='submit']").textContent =
-                "Add address";
+              if (submitBtn) submitBtn.textContent = "Add address";
+
               if (setDefault && newId) {
                 return fetch(
                   "/.netlify/functions/customerDefaultAddressUpdate",
@@ -915,6 +966,9 @@
             })
             .catch(function () {
               // message already set on failure
+            })
+            .finally(function () {
+              if (submitBtn) submitBtn.disabled = false;
             });
         });
 
