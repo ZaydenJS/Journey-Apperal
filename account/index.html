@@ -6,6 +6,121 @@
     <title>My Account — Journey Apparel</title>
     <meta name="description" content="Account dashboard for Journey Apparel." />
     <link rel="stylesheet" href="/styles.css" />
+    <style id="desktop-overrides">
+      @media (min-width: 1024px) {
+        /* Hide mobile hero overlay, show desktop version */
+        .hero-overlay.mobile-only {
+          display: none !important;
+        }
+        #hero-overlay-desktop {
+          display: flex !important;
+        }
+        /* New Arrivals: 5x1 on desktop */
+        .arrivals-carousel .carousel-row.bottom {
+          display: none !important;
+        }
+        .arrivals-carousel .carousel-track {
+          grid-auto-columns: calc(
+            (100% - 64px) / 5
+          ) !important; /* 5 across, fill edge-to-edge */
+          gap: 16px !important;
+          justify-content: start !important;
+        }
+        /* Best Sellers: keep 4-up */
+        #best-sellers .carousel-track {
+          grid-auto-columns: 25% !important;
+        }
+        /* Category row: 4-up — fill width exactly on desktop */
+        #categories .category-carousel .carousel-track {
+          /* Explicit 4-up grid filling the full row */
+          grid-template-columns: repeat(4, 1fr) !important;
+          grid-auto-columns: unset !important;
+          /* Let inline gap control spacing on mobile; desktop can use px gaps from CSS if needed */
+          justify-content: stretch !important;
+          overflow-x: hidden !important;
+        }
+        /* Desktop-only: Category padding and sizing without affecting mobile */
+        #categories {
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
+        #categories .category-carousel {
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
+        #categories .category-carousel .carousel-track.panels {
+          gap: 0.5% !important;
+        }
+        #categories .category-carousel .panel img {
+          height: clamp(380px, 36vw, 620px) !important;
+        }
+
+        /* Desktop: stabilize header layering and layout */
+        header.header {
+          background: #fff !important;
+          position: sticky !important;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 500 !important;
+          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+        }
+        header.header .header-inner {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        header.header .nav-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        header.header .menu-toggle {
+          display: none !important;
+        }
+        header.header .nav {
+          display: flex !important;
+          gap: 14px;
+          overflow: visible !important;
+        }
+        header.header .nav .header-item {
+          padding: 8px 6px !important;
+          color: #111 !important;
+          text-decoration: none !important;
+        }
+        header.header .nav .header-item .mega {
+          z-index: 600 !important;
+          top: calc(100% + 12px) !important;
+        }
+        header.header .nav .header-item .shop-hamburger {
+          display: inline-flex !important;
+        }
+
+        /* Desktop: premium mega menu: show on hover/focus, desktop-only */
+        header.header .nav .header-item:hover .mega,
+        header.header .nav .header-item:focus-within .mega {
+          display: block !important;
+        }
+
+        /* Back in Stock (desktop): use video block, hide split images */
+        #back-in-stock-promo .split-desktop {
+          display: none !important;
+          grid-template-columns: 1fr 1fr;
+          gap: 0;
+          position: relative;
+          height: 78vh !important; /* 78% of desktop screen */
+          overflow: hidden !important;
+        }
+        #back-in-stock-promo .video-mobile {
+          display: block !important;
+        }
+        .shop-hamburger {
+          display: inline-flex !important;
+        }
+      }
+    </style>
   </head>
   <body
     style="
@@ -158,22 +273,23 @@
                   <div>
                     <h4 class="upper">Shop by Category</h4>
                     <div class="links">
-                      <a href="/collection.html?collection=tops">Tees</a
-                      ><a href="/collection.html?collection=hoodies">Hoodies</a
-                      ><a href="/collection.html?collection=bottoms">Bottoms</a
-                      ><a href="/collection.html?collection=hats">Hats</a>
+                      <a href="collection.html?collection=tops">Tees</a>
+                      <a href="collection.html?collection=hoodies">Hoodies</a>
+                      <a href="collection.html?collection=bottoms">Bottoms</a>
+                      <a href="collection.html?collection=hats">Hats</a>
                     </div>
                   </div>
                   <div>
                     <h4 class="upper">Shop by Collection</h4>
                     <div class="links">
                       <a
-                        href="/collection.html?collection=journeys-x-leyos-collection"
+                        href="collection.html?collection=journeys-x-leyos-collection"
                         >Journeys X Leyos Collection</a
-                      ><a href="/collection.html">AeroLite</a
-                      ><a href="/collection.html">Journey</a
-                      ><a href="/collection.html">Core365</a
-                      ><a href="/collection.html">Black Label</a>
+                      >
+                      <a href="collection.html">AeroLite</a>
+                      <a href="collection.html">Journey</a>
+                      <a href="collection.html">Core365</a>
+                      <a href="collection.html">Black Label</a>
                     </div>
                   </div>
                 </div>
