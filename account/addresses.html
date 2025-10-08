@@ -1083,6 +1083,8 @@
             })
             .catch(function () {
               // message already set on failure
+              if (submitBtn)
+                submitBtn.textContent = editingId ? "Save" : "Add address";
             })
             .finally(function () {
               if (submitBtn) submitBtn.disabled = false;

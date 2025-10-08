@@ -42,7 +42,7 @@ export const handler = async (event) => {
       mutation AddressCreate($token: String!, $address: MailingAddressInput!) {
         customerAddressCreate(customerAccessToken: $token, address: $address) {
           customerAddress { id }
-          userErrors { message field code }
+          customerUserErrors { message field code }
         }
       }
     `;
@@ -50,16 +50,24 @@ export const handler = async (event) => {
     const respCreate = await client.request(mutationCreate, {
       variables: { token, address: addrInput },
     });
-    const dataCreate = handleGraphQLResponse(respCreate).customerAddressCreate;
-    if (dataCreate.userErrors?.length) {
-      const e = dataCreate.userErrors[0];
+    const dataRoot = handleGraphQLResponse(respCreate) || {};
+    const payload = dataRoot.customerAddressCreate || null;
+    if (!payload) {
+      return createErrorResponse(
+        "Unexpected response from Shopify (customerAddressCreate missing)",
+        500
+      );
+    }
+    const errs = payload.customerUserErrors || payload.userErrors || [];
+    if (errs.length) {
+      const e = errs[0];
       if (String(e?.code || "").toUpperCase() === "UNAUTHORIZED") {
         return createErrorResponse(e?.message || "Unauthorized", 401);
       }
       return createErrorResponse(e?.message || "Failed to create address", 400);
     }
 
-    const newId = dataCreate.customerAddress?.id || null;
+    const newId = payload.customerAddress?.id || null;
     if (!newId) return createErrorResponse("Failed to create address", 500);
 
     // Optionally set default
