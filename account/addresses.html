@@ -971,6 +971,12 @@
           }
 
           var setDefault = !!form.querySelector('[name="setDefault"]').checked;
+          var token = null;
+          try {
+            if (window.JourneyAuth && JourneyAuth.getAccessToken)
+              token = JourneyAuth.getAccessToken();
+          } catch (_) {}
+
           var op = editingId
             ? fetch("/.netlify/functions/customerAddressUpdate", {
                 method: "POST",
@@ -978,11 +984,14 @@
                 credentials: "same-origin",
                 body: JSON.stringify({ id: editingId, address: addr }),
               })
-            : fetch("/.netlify/functions/customerAddressCreate", {
+            : fetch("/.netlify/functions/addAddress", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "same-origin",
-                body: JSON.stringify(addr),
+                body: JSON.stringify({
+                  token: token,
+                  address: Object.assign({}, addr, { default: setDefault }),
+                }),
               });
 
           op.then(function (r) {
@@ -1040,12 +1049,17 @@
                 return Promise.reject(new Error("Save failed"));
               }
 
-              var newId = editingId || res.j.addressId;
+              var newId =
+                (res.j && res.j.address && res.j.address.id) ||
+                editingId ||
+                res.j.addressId;
+              var wasEditing = !!editingId;
               editingId = null;
               form.reset();
               if (submitBtn) submitBtn.textContent = "Add address";
 
-              if (setDefault && newId) {
+              // If we used the legacy update path and user asked default, set it now.
+              if (setDefault && newId && wasEditing) {
                 return fetch(
                   "/.netlify/functions/customerDefaultAddressUpdate",
                   {
@@ -1063,10 +1077,7 @@
                   JAAccount.attachBuyerToCart();
               } catch (_) {}
               try {
-                sessionStorage.setItem(
-                  "ja_toast",
-                  "Address saved successfully"
-                );
+                sessionStorage.setItem("ja_toast", "Address saved");
               } catch (_) {}
               location.replace("/account/addresses.html");
             })
