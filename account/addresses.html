@@ -14,6 +14,7 @@
         /* Addresses form: single-column layout and full-width controls */
         #addr-form {
           grid-template-columns: 1fr !important;
+          align-items: stretch !important;
         }
         #addr-form label {
           grid-column: auto !important;
@@ -525,9 +526,17 @@
               display: flex;
               gap: 8px;
               align-items: center;
+              justify-content: flex-start;
             "
             ><input type="checkbox" name="setDefault" />
-            <span style="font-size: 13px; color: #333"
+            <span
+              style="
+                font-size: 13px;
+                color: #333;
+                margin: 0;
+                flex: 0 0 auto;
+                white-space: nowrap;
+              "
               >Set as default address</span
             >
           </label>
