@@ -122,15 +122,6 @@
           }
         }
         function render() {
-          var url = new URL(window.location.href);
-          var fromShopify =
-            document.referrer &&
-            document.referrer.indexOf("accounts.shopify.com") !== -1;
-          if (url.searchParams.get("logged_in") === "1" || fromShopify) {
-            try {
-              localStorage.setItem("ja_logged_in", "true");
-            } catch (e) {}
-          }
           var signedIn = false;
           try {
             signedIn = localStorage.getItem("ja_logged_in") === "true";
@@ -160,7 +151,7 @@
               <div class="card" style="border-radius:8px; padding:16px; border:1px solid #eee; margin-bottom:12px;">
                 <h2 class="upper" style="margin:0 0 8px; font-size:18px; font-weight:800; letter-spacing:0.5px;">Recent orders</h2>
                 <div id="ordersPreview" style="color:#666;">Loading your recent orders…</div>
-                <div style="margin-top:12px"><a class="btn secondary" target="_blank" rel="noopener" href="https://shopify.com/94836293942/account/orders">View all orders</a></div>
+                <div style="margin-top:12px"><a class="btn secondary" target="_blank" rel="noopener" href="https://shop.journeysapparel.com/account">View all orders</a></div>
               </div>
               <div class="card" style="border-radius:8px; padding:16px; border:1px solid #eee;">
                 <h2 class="upper" style="margin:0 0 8px; font-size:18px; font-weight:800; letter-spacing:0.5px;">Settings</h2>
