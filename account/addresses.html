@@ -432,7 +432,7 @@
           </label>
           <label style="display: flex; flex-direction: column; gap: 6px"
             ><span style="font-size: 13px; color: #333">State</span>
-            <input
+            <select
               name="province"
               required
               style="
@@ -440,8 +440,19 @@
                 border: 1px solid #ddd;
                 border-radius: 8px;
                 font-size: 14px;
+                background: #fff;
               "
-            />
+            >
+              <option value="">Select a state</option>
+              <option value="NSW">New South Wales (NSW)</option>
+              <option value="VIC">Victoria (VIC)</option>
+              <option value="QLD">Queensland (QLD)</option>
+              <option value="SA">South Australia (SA)</option>
+              <option value="WA">Western Australia (WA)</option>
+              <option value="TAS">Tasmania (TAS)</option>
+              <option value="ACT">Australian Capital Territory (ACT)</option>
+              <option value="NT">Northern Territory (NT)</option>
+            </select>
           </label>
           <label style="display: flex; flex-direction: column; gap: 6px"
             ><span style="font-size: 13px; color: #333">Postcode</span>
@@ -778,8 +789,7 @@
           listEl.innerHTML = "";
           if (!addresses.length) {
             var empty = document.createElement("div");
-            empty.textContent =
-              "No saved addresses yet. Add one to speed up checkout.";
+            empty.textContent = "No saved addresses yet.";
             empty.style.cssText =
               "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#666";
             listEl.appendChild(empty);
@@ -919,6 +929,15 @@
             var el = form.querySelector('[name="' + n + '"]');
             if (el) el.style.borderColor = "#ddd";
           });
+          // remove previous per-field errors
+          try {
+            var __errs = form.querySelectorAll(".field-error");
+            if (__errs && __errs.length) {
+              __errs.forEach(function (e) {
+                e.remove();
+              });
+            }
+          } catch (_) {}
 
           var addr = {
             firstName: ctx.get("firstName"),
@@ -992,7 +1011,20 @@
                 Object.keys(map).some(function (k) {
                   if (hint.indexOf(k) !== -1) {
                     var el = form.querySelector('[name="' + map[k] + '"]');
-                    if (el) el.style.borderColor = "#c00";
+                    if (el) {
+                      el.style.borderColor = "#c00";
+                      try {
+                        var holder = el.parentElement;
+                        if (holder) {
+                          var err = document.createElement("div");
+                          err.className = "field-error";
+                          err.style.cssText =
+                            "color:#c00;font-size:12px;margin-top:2px";
+                          err.textContent = msg;
+                          holder.appendChild(err);
+                        }
+                      } catch (_) {}
+                    }
                     return true;
                   }
                   return false;
@@ -1024,7 +1056,7 @@
                   JAAccount.attachBuyerToCart();
               } catch (_) {}
               try {
-                sessionStorage.setItem("ja_toast", "Address saved");
+                sessionStorage.setItem("ja_toast", "Address saved!");
               } catch (_) {}
               location.replace("/account/addresses.html");
             })
