@@ -35,6 +35,21 @@
         body {
           overflow-x: hidden !important;
         }
+
+        /* Align default checkbox row next to left edge and keep text beside it */
+        #addr-form [data-default-row] {
+          width: fit-content !important;
+          justify-content: flex-start !important;
+          text-align: left !important;
+          margin-left: 0 !important;
+        }
+        #addr-form [data-default-row] > span {
+          margin-left: 8px !important;
+          white-space: nowrap !important;
+        }
+        #addr-form input[name="setDefault"] {
+          margin: 0 !important;
+        }
       }
     </style>
   </head>
@@ -521,6 +536,7 @@
             />
           </label>
           <label
+            data-default-row="1"
             style="
               grid-column: 1 / -1;
               display: flex;
