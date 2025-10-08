@@ -1763,6 +1763,19 @@
       isOpen ? close() : open();
     });
 
+    // Mobile: tapping Account icon opens the same drawer menu as the hamburger
+    try {
+      $$('[aria-label="Account"]').forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          if (window.innerWidth < 1024 && drawer) {
+            e.preventDefault();
+            e.stopPropagation();
+            open();
+          }
+        });
+      });
+    } catch (_) {}
+
     overlay && overlay.addEventListener("click", close);
     closeBtn && closeBtn.addEventListener("click", close);
     document.addEventListener("keyup", (e) => {

@@ -9,6 +9,31 @@
       content="Edit your Journey Apparel profile (UI-only)."
     />
     <link rel="stylesheet" href="/styles.css" />
+    <style id="mobile-account-fixes">
+      @media (max-width: 768px) {
+        /* Profile form: stack inputs and prevent right-edge overflow */
+        #profile-form > div {
+          grid-template-columns: 1fr !important;
+        }
+        #profile-form input,
+        #profile-form button {
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+
+        /* Safe padding on mobile */
+        main.container.section {
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+
+        /* Global guard */
+        body {
+          overflow-x: hidden !important;
+        }
+      }
+    </style>
   </head>
   <body
     style="

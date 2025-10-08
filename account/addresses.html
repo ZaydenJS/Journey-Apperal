@@ -9,6 +9,33 @@
       content="Manage your Journey Apparel address book."
     />
     <link rel="stylesheet" href="/styles.css" />
+    <style id="mobile-account-fixes">
+      @media (max-width: 768px) {
+        /* Addresses form: single-column layout and full-width controls */
+        #addr-form {
+          grid-template-columns: 1fr !important;
+        }
+        #addr-form label {
+          grid-column: auto !important;
+        }
+        #addr-form input,
+        #addr-form select,
+        #addr-form button {
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+
+        /* Keep cards and forms within viewport */
+        main.container.section {
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+        body {
+          overflow-x: hidden !important;
+        }
+      }
+    </style>
   </head>
   <body
     style="
