@@ -316,7 +316,7 @@
             text-align: center;
           "
         >
-          Placeholder order history. This is a UI-only mock with local data.
+          Your recent orders will appear below.
         </p>
         <div
           id="orders"
@@ -534,56 +534,92 @@
     <script>
       (function () {
         JAAccount.guardAuthenticated();
-        var data = [
-          {
-            id: "#1007",
-            date: "2025-08-14",
-            total: "$176.00",
-            items: "2 items",
-            status: "Delivered",
-          },
-          {
-            id: "#1006",
-            date: "2025-06-03",
-            total: "$98.00",
-            items: "1 item",
-            status: "Delivered",
-          },
-          {
-            id: "#1005",
-            date: "2025-03-22",
-            total: "$146.00",
-            items: "3 items",
-            status: "Refunded",
-          },
-        ];
         var list = document.getElementById("orders");
-        if (list) {
-          data.forEach(function (o) {
-            var card = document.createElement("article");
-            card.setAttribute("role", "listitem");
-            card.style.cssText =
-              "border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px";
-            card.innerHTML =
-              '<div style="display:flex;flex-direction:column;gap:4px"><strong style="font-weight:700">Order ' +
-              o.id +
-              '</strong><span style="color:#666;font-size:13px">' +
-              o.date +
-              "</span></div>" +
-              '<div style="color:#111">' +
-              o.items +
-              "</div>" +
-              '<div style="color:#111">' +
-              o.total +
-              "</div>" +
-              '<div style="color:#111">' +
-              o.status +
-              "</div>" +
-              '<div style="flex:1 1 100%"></div>' +
-              '<button style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;cursor:pointer">View details</button>';
-            list.appendChild(card);
+        if (!list) return;
+        list.innerHTML =
+          '<div style="color:#666;text-align:center">Loading your orders…</div>';
+
+        fetch("/.netlify/functions/customerOrders?first=20", {
+          credentials: "same-origin",
+        })
+          .then(async function (resp) {
+            if (resp.status === 401) {
+              location.replace("/account/login.html");
+              return null;
+            }
+            var data = await resp.json().catch(function () {
+              return {};
+            });
+            if (!resp.ok)
+              throw new Error(
+                data.error || data.message || "Failed to load orders"
+              );
+            return data;
+          })
+          .then(function (data) {
+            if (!data) return;
+            var orders = Array.isArray(data.orders) ? data.orders : [];
+            list.innerHTML = "";
+            if (!orders.length) {
+              var empty = document.createElement("div");
+              empty.textContent = "You haven’t placed any orders yet.";
+              empty.style.cssText =
+                "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#666";
+              list.appendChild(empty);
+              return;
+            }
+
+            orders.forEach(function (o) {
+              var total =
+                o.total && typeof o.total.amount !== "undefined"
+                  ? o.total
+                  : null;
+              var amount = total ? parseFloat(total.amount).toFixed(2) : "-";
+              var currency = total ? total.currencyCode || "" : "";
+              var when = o.date ? new Date(o.date) : null;
+              var dateStr = when ? when.toLocaleDateString() : "";
+              var itemsCount = (o.items || []).reduce(function (n, li) {
+                return n + (li.quantity || 0);
+              }, 0);
+
+              var card = document.createElement("article");
+              card.setAttribute("role", "listitem");
+              card.style.cssText =
+                "border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px";
+              card.innerHTML =
+                '<div style="display:flex;flex-direction:column;gap:4px"><strong style="font-weight:700">Order #' +
+                (o.orderNumber || "") +
+                '</strong><span style="color:#666;font-size:13px">' +
+                dateStr +
+                "</span></div>" +
+                '<div style="color:#111">' +
+                (itemsCount || 0) +
+                " " +
+                (itemsCount === 1 ? "item" : "items") +
+                "</div>" +
+                '<div style="color:#111">' +
+                (total ? "$" + amount + " " + currency : "-") +
+                "</div>" +
+                '<div style="color:#111">' +
+                (o.financialStatus || "-") +
+                " / " +
+                (o.fulfillmentStatus || "-") +
+                "</div>" +
+                '<div style="flex:1 1 100%"></div>' +
+                (o.statusUrl
+                  ? '<a href="' +
+                    o.statusUrl +
+                    '" target="_blank" rel="noopener" class="btn secondary" style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;text-decoration:none">View Order</a>'
+                  : '<button disabled style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#f6f6f6;color:#999;cursor:not-allowed">View Order</button>');
+              list.appendChild(card);
+            });
+          })
+          .catch(function (err) {
+            list.innerHTML =
+              '<div style="color:#c00;text-align:center">Could not load orders: ' +
+              (err && err.message ? err.message : "Unknown error") +
+              "</div>";
           });
-        }
       })();
     </script>
     <script src="/script.js" defer></script>

@@ -1,4 +1,9 @@
-import { createShopifyClient, handleGraphQLResponse, createApiResponse, createErrorResponse } from "./utils/shopify.js";
+import {
+  createShopifyClient,
+  handleGraphQLResponse,
+  createApiResponse,
+  createErrorResponse,
+} from "./utils/shopify.js";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -19,7 +24,9 @@ export const handler = async (event) => {
     return createErrorResponse("Method not allowed", 405);
   }
 
-  const token = getTokenFromCookie(event.headers.cookie || event.headers.Cookie);
+  const token = getTokenFromCookie(
+    event.headers.cookie || event.headers.Cookie
+  );
   if (!token) return createErrorResponse("Unauthorized", 401);
 
   const params = event.queryStringParameters || {};
@@ -36,14 +43,18 @@ export const handler = async (event) => {
               cursor
               node {
                 id
-                name
                 orderNumber
+                name
                 processedAt
                 financialStatus
                 fulfillmentStatus
-                totalPriceSet { shopMoney { amount currencyCode } }
-                lineItems(first: 5) {
-                  edges { node { title quantity } }
+                totalPriceSet {
+                  presentmentMoney { amount currencyCode }
+                  shopMoney { amount currencyCode }
+                }
+                statusUrl
+                lineItems(first: 50) {
+                  edges { node { title quantity variant { title sku } } }
                 }
               }
             }
@@ -53,7 +64,9 @@ export const handler = async (event) => {
       }
     `;
 
-    const resp = await client.request(query, { variables: { token, first, after } });
+    const resp = await client.request(query, {
+      variables: { token, first, after },
+    });
     const data = handleGraphQLResponse(resp);
     const ordersConn = data.customer?.orders;
     if (!ordersConn) return createErrorResponse("No orders", 200);
@@ -65,8 +78,12 @@ export const handler = async (event) => {
       date: node.processedAt,
       financialStatus: node.financialStatus,
       fulfillmentStatus: node.fulfillmentStatus,
-      total: node.totalPriceSet?.shopMoney || null,
-      items: node.lineItems?.edges?.map(e => e.node) || [],
+      total:
+        node.totalPriceSet?.presentmentMoney ||
+        node.totalPriceSet?.shopMoney ||
+        null,
+      statusUrl: node.statusUrl || null,
+      items: (node.lineItems?.edges || []).map((e) => e.node) || [],
     }));
 
     return createApiResponse({ orders, pageInfo: ordersConn.pageInfo }, 200);
@@ -74,4 +91,3 @@ export const handler = async (event) => {
     return createErrorResponse(err.message || "Failed to load orders", 500);
   }
 };
-
