@@ -11,6 +11,22 @@
     <link rel="stylesheet" href="/styles.css" />
     <style id="desktop-overrides">
       @media (min-width: 1024px) {
+        /* Center logo on desktop for account pages */
+        .header-inner {
+          position: relative !important;
+        }
+        .header .logo {
+          position: absolute !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          margin: 0 !important;
+        }
+        .nav-left {
+          justify-content: flex-start !important;
+        }
+        .nav-right {
+          justify-content: flex-end !important;
+        }
         /* Hide mobile hero overlay, show desktop version */
         .hero-overlay.mobile-only {
           display: none !important;
