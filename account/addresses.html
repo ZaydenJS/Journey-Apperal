@@ -734,7 +734,7 @@
 
     <script src="/assets/account.js" defer></script>
     <script>
-      (function () {
+      window.addEventListener("DOMContentLoaded", function () {
         JAAccount.guardAuthenticated();
         var listEl = document.getElementById("addr-list");
         var form = document.getElementById("addr-form");
@@ -1090,7 +1090,7 @@
         });
 
         fetchList();
-      })();
+      });
     </script>
     <script src="/script.js" defer></script>
   </body>
