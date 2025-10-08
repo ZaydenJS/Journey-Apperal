@@ -319,6 +319,20 @@
           Manage your shipping and billing addresses.
         </p>
         <div
+          id="addr-toast"
+          style="
+            display: none;
+            margin: 0 0 12px 0;
+            padding: 10px;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            background: #f6fff6;
+            color: #0a0;
+            text-align: center;
+          "
+        ></div>
+
+        <div
           id="addr-list"
           role="list"
           aria-label="Saved addresses"
@@ -371,7 +385,7 @@
               flex-direction: column;
               gap: 6px;
             "
-            ><span style="font-size: 13px; color: #333">Address line 1</span>
+            ><span style="font-size: 13px; color: #333">Address</span>
             <input
               name="address1"
               required
@@ -391,7 +405,7 @@
               gap: 6px;
             "
             ><span style="font-size: 13px; color: #333"
-              >Address line 2 (optional)</span
+              >Apartment (optional)</span
             >
             <input
               name="address2"
@@ -417,7 +431,7 @@
             />
           </label>
           <label style="display: flex; flex-direction: column; gap: 6px"
-            ><span style="font-size: 13px; color: #333">State/Province</span>
+            ><span style="font-size: 13px; color: #333">State</span>
             <input
               name="province"
               required
@@ -430,7 +444,7 @@
             />
           </label>
           <label style="display: flex; flex-direction: column; gap: 6px"
-            ><span style="font-size: 13px; color: #333">ZIP / Postcode</span>
+            ><span style="font-size: 13px; color: #333">Postcode</span>
             <input
               name="zip"
               required
@@ -716,6 +730,31 @@
         var editingId = null;
         var defaultId = null;
 
+        // Toast helper and initial setup (page scope)
+        var toastEl = document.getElementById("addr-toast");
+        function showToast(msg, ok) {
+          if (!toastEl) return;
+          toastEl.textContent = msg || "";
+          toastEl.style.display = "block";
+          toastEl.style.background = ok === false ? "#fff6f6" : "#f6fff6";
+          toastEl.style.color = ok === false ? "#c00" : "#0a0";
+          setTimeout(function () {
+            if (toastEl) toastEl.style.display = "none";
+          }, 4000);
+        }
+        try {
+          var __t = sessionStorage.getItem("ja_toast");
+          if (__t) {
+            showToast(__t, true);
+            sessionStorage.removeItem("ja_toast");
+          }
+        } catch (_) {}
+        // Default country (AU)
+        try {
+          if (form && form.country && !form.country.value)
+            form.country.value = "Australia";
+        } catch (_) {}
+
         function fetchList() {
           return fetch("/.netlify/functions/customerAddresses", {
             credentials: "same-origin",
@@ -739,7 +778,8 @@
           listEl.innerHTML = "";
           if (!addresses.length) {
             var empty = document.createElement("div");
-            empty.textContent = "No addresses yet.";
+            empty.textContent =
+              "No saved addresses yet. Add one to speed up checkout.";
             empty.style.cssText =
               "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#666";
             listEl.appendChild(empty);
@@ -774,6 +814,10 @@
               " " +
               (a.zip || "") +
               "</div>" +
+              (a.country
+                ? '<div style="color:#444">' + a.country + "</div>"
+                : "") +
+              (a.phone ? '<div style="color:#444">' + a.phone + "</div>" : "") +
               '<div style="display:flex;gap:8px;margin-top:6px;justify-content:flex-end">' +
               '<button data-edit style="padding:8px 10px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;cursor:pointer">Edit</button>' +
               '<button data-del style="padding:8px 10px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;cursor:pointer">Delete</button>' +
@@ -809,14 +853,19 @@
                   body: JSON.stringify({ id: a.id }),
                 })
                   .then(function (r) {
-                    return r.ok
-                      ? fetchList()
-                      : r.json().then(function (j) {
-                          throw new Error(j.error || "Delete failed");
-                        });
+                    if (!r.ok) {
+                      return r.json().then(function (j) {
+                        throw new Error(j.error || "Delete failed");
+                      });
+                    }
+                    return fetchList().then(function () {
+                      if (typeof showToast === "function")
+                        showToast("Address removed", true);
+                    });
                   })
                   .catch(function (err) {
-                    alert(err.message || "Delete failed.");
+                    if (typeof showToast === "function")
+                      showToast(err.message || "Delete failed.", false);
                   });
               });
             var defBtn = card.querySelector("[data-default]");
@@ -829,14 +878,23 @@
                   body: JSON.stringify({ addressId: a.id }),
                 })
                   .then(function (r) {
-                    return r.ok
-                      ? fetchList()
-                      : r.json().then(function (j) {
-                          throw new Error(j.error || "Failed to set default");
-                        });
+                    if (!r.ok) {
+                      return r.json().then(function (j) {
+                        throw new Error(j.error || "Failed to set default");
+                      });
+                    }
+                    return fetchList().then(function () {
+                      try {
+                        if (window.JAAccount && JAAccount.attachBuyerToCart)
+                          JAAccount.attachBuyerToCart();
+                      } catch (_) {}
+                      if (typeof showToast === "function")
+                        showToast("Default address updated", true);
+                    });
                   })
                   .catch(function (err) {
-                    alert(err.message || "Failed to set default.");
+                    if (typeof showToast === "function")
+                      showToast(err.message || "Failed to set default.", false);
                   });
               });
             }
@@ -961,8 +1019,14 @@
               }
             })
             .then(function () {
-              ctx.setMessage("Saved.", "#0a0");
-              return fetchList();
+              try {
+                if (window.JAAccount && JAAccount.attachBuyerToCart)
+                  JAAccount.attachBuyerToCart();
+              } catch (_) {}
+              try {
+                sessionStorage.setItem("ja_toast", "Address saved");
+              } catch (_) {}
+              location.replace("/account/addresses.html");
             })
             .catch(function () {
               // message already set on failure
