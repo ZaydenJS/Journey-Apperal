@@ -5,6 +5,15 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
+function getTokenFromCookie(cookieHeader) {
+  if (!cookieHeader) return null;
+  const parts = String(cookieHeader).split(/;\s*/);
+  for (const p of parts)
+    if (p.startsWith("ja_customer_token="))
+      return decodeURIComponent(p.split("=")[1] || "");
+  return null;
+}
+
 export const handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return createApiResponse({}, 200);
   if (event.httpMethod !== "POST")
@@ -12,7 +21,11 @@ export const handler = async (event) => {
 
   try {
     const body = event.body ? JSON.parse(event.body) : {};
-    const token = body.token || "";
+    let token = body.token || "";
+    const cookieToken = getTokenFromCookie(
+      event.headers.cookie || event.headers.Cookie
+    );
+    if (!token && cookieToken) token = cookieToken;
     const address = body.address || {};
 
     if (!token) return createErrorResponse("Unauthorized", 401);
