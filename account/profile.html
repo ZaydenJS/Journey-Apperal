@@ -316,7 +316,7 @@
             text-align: center;
           "
         >
-          UI-only profile editor. Changes are saved to your browser.
+          Update your profile details below. Email address is read-only.
         </p>
         <form
           id="profile-form"
@@ -359,11 +359,15 @@
               type="email"
               required
               autocomplete="email"
+              readonly
+              disabled
               style="
                 padding: 12px;
                 border: 1px solid #ddd;
                 border-radius: 8px;
                 font-size: 14px;
+                background: #f7f7f7;
+                color: #666;
               "
             />
           </label>
@@ -657,23 +661,56 @@
     <script>
       (function () {
         JAAccount.guardAuthenticated();
-        var u = JAAccount.getUser() || {};
         var form = document.getElementById("profile-form");
-        if (form) {
-          form.first.value = u.firstName || "";
-          form.last.value = u.lastName || "";
-          form.email.value = u.email || "";
-        }
+        // Load current profile from Shopify
+        fetch("/.netlify/functions/getCustomer", { credentials: "same-origin" })
+          .then(function (r) {
+            if (r.status === 401) {
+              location.replace("/account/login.html");
+              return null;
+            }
+            return r.json();
+          })
+          .then(function (d) {
+            if (!d || !d.customer || !form) return;
+            var u = d.customer;
+            form.first.value = u.firstName || "";
+            form.last.value = u.lastName || "";
+            form.email.value = u.email || "";
+          })
+          .catch(function () {});
+
         JAAccount.attachFormHandler("profile-form", function (ctx) {
           var first = ctx.get("first"),
-            last = ctx.get("last"),
-            email = ctx.get("email");
-          if (!first || !last || !email) {
-            ctx.setMessage("Please complete all fields.", "#c00");
+            last = ctx.get("last");
+          if (!first || !last) {
+            ctx.setMessage("Please complete first and last name.", "#c00");
             return;
           }
-          JAAccount.setUser({ firstName: first, lastName: last, email: email });
-          ctx.setMessage("Saved. Your profile has been updated.", "#0a0");
+          fetch("/.netlify/functions/customerUpdate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ firstName: first, lastName: last }),
+          })
+            .then(function (r) {
+              return r.json().then(function (j) {
+                return { ok: r.ok, j: j };
+              });
+            })
+            .then(function (res) {
+              if (!res.ok) {
+                ctx.setMessage(res.j.error || "Update failed.", "#c00");
+                return;
+              }
+              if (res.j && res.j.customer) {
+                JAAccount.setUser(res.j.customer);
+              }
+              ctx.setMessage("Changes saved.", "#0a0");
+            })
+            .catch(function () {
+              ctx.setMessage("Update failed.", "#c00");
+            });
         });
       })();
     </script>

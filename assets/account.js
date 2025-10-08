@@ -111,6 +111,9 @@
     try {
       localStorage.setItem("ja_logged_in", "true");
       if (data.customer) setUser(data.customer);
+      try {
+        attachBuyerToCart();
+      } catch (_) {}
     } catch (_) {}
     return data;
   }
@@ -142,6 +145,9 @@
     try {
       localStorage.setItem("ja_logged_in", "true");
       if (data.customer) setUser(data.customer);
+      try {
+        attachBuyerToCart();
+      } catch (_) {}
     } catch (_) {}
     return data;
   }
@@ -172,6 +178,26 @@
       });
       if (data && data.customer) setUser(data.customer);
       return data && data.customer ? data.customer : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Associate Shopify Cart with the logged-in customer to enable checkout autofill
+  async function attachBuyerToCart() {
+    try {
+      var cartId = null;
+      try {
+        cartId = localStorage.getItem("ja_cart_id");
+      } catch (_) {}
+      if (!cartId) return null;
+      var resp = await fetch(API_BASE + "/cartBuyerIdentityUpdate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ cartId: cartId }),
+      });
+      return resp.ok;
     } catch (_) {
       return null;
     }
@@ -319,10 +345,14 @@
     guardAuthenticated: guardAuthenticated,
     redirectAfterAuth: redirectAfterAuth,
     attachFormHandler: attachFormHandler,
+    attachBuyerToCart: attachBuyerToCart,
   };
 
   onReady(function () {
     setHeaderProfileLink();
+    try {
+      if (isAuthed()) attachBuyerToCart();
+    } catch (_) {}
     window.addEventListener("storage", function (e) {
       if (!e) return;
       if (e.key === "ja_logged_in" || e.key === AUTH_KEY)

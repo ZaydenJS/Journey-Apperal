@@ -316,8 +316,7 @@
             text-align: center;
           "
         >
-          Manage your shipping and billing addresses. UI-only — no external
-          calls.
+          Manage your shipping and billing addresses.
         </p>
         <div
           id="addr-list"
@@ -372,10 +371,30 @@
               flex-direction: column;
               gap: 6px;
             "
-            ><span style="font-size: 13px; color: #333">Address</span>
+            ><span style="font-size: 13px; color: #333">Address line 1</span>
             <input
-              name="line1"
+              name="address1"
               required
+              style="
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-size: 14px;
+              "
+            />
+          </label>
+          <label
+            style="
+              grid-column: 1 / -1;
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+            "
+            ><span style="font-size: 13px; color: #333"
+              >Address line 2 (optional)</span
+            >
+            <input
+              name="address2"
               style="
                 padding: 12px;
                 border: 1px solid #ddd;
@@ -398,9 +417,9 @@
             />
           </label>
           <label style="display: flex; flex-direction: column; gap: 6px"
-            ><span style="font-size: 13px; color: #333">State</span>
+            ><span style="font-size: 13px; color: #333">State/Province</span>
             <input
-              name="state"
+              name="province"
               required
               style="
                 padding: 12px;
@@ -411,9 +430,9 @@
             />
           </label>
           <label style="display: flex; flex-direction: column; gap: 6px"
-            ><span style="font-size: 13px; color: #333">Postcode</span>
+            ><span style="font-size: 13px; color: #333">ZIP / Postcode</span>
             <input
-              name="postcode"
+              name="zip"
               required
               style="
                 padding: 12px;
@@ -422,6 +441,43 @@
                 font-size: 14px;
               "
             />
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px"
+            ><span style="font-size: 13px; color: #333">Country</span>
+            <input
+              name="country"
+              required
+              style="
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-size: 14px;
+              "
+            />
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px"
+            ><span style="font-size: 13px; color: #333">Phone (optional)</span>
+            <input
+              name="phone"
+              style="
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-size: 14px;
+              "
+            />
+          </label>
+          <label
+            style="
+              grid-column: 1 / -1;
+              display: flex;
+              gap: 8px;
+              align-items: center;
+            "
+            ><input type="checkbox" name="setDefault" />
+            <span style="font-size: 13px; color: #333"
+              >Set as default address</span
+            >
           </label>
           <button
             type="submit"
@@ -655,94 +711,214 @@
     <script>
       (function () {
         JAAccount.guardAuthenticated();
-        var KEY = "ja_addresses";
-        function getList() {
-          try {
-            return JSON.parse(localStorage.getItem(KEY) || "[]");
-          } catch (_) {
-            return [];
-          }
+        var listEl = document.getElementById("addr-list");
+        var form = document.getElementById("addr-form");
+        var editingId = null;
+        var defaultId = null;
+
+        function fetchList() {
+          return fetch("/.netlify/functions/customerAddresses", {
+            credentials: "same-origin",
+          })
+            .then(function (r) {
+              if (r.status === 401) {
+                location.replace("/account/login.html");
+                return null;
+              }
+              return r.json();
+            })
+            .then(function (d) {
+              if (!d) return;
+              defaultId = d.defaultAddressId || null;
+              render(d.addresses || []);
+            })
+            .catch(function () {});
         }
-        function setList(arr) {
-          try {
-            localStorage.setItem(KEY, JSON.stringify(arr || []));
-          } catch (_) {}
-        }
-        function render() {
-          var list = getList();
-          var wrap = document.getElementById("addr-list");
-          if (!wrap) return;
-          wrap.innerHTML = "";
-          if (!list.length) {
+
+        function render(addresses) {
+          listEl.innerHTML = "";
+          if (!addresses.length) {
             var empty = document.createElement("div");
             empty.textContent = "No addresses yet.";
             empty.style.cssText =
               "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#666";
-            wrap.appendChild(empty);
+            listEl.appendChild(empty);
+            return;
           }
-          list.forEach(function (a, idx) {
+          addresses.forEach(function (a) {
             var card = document.createElement("div");
             card.setAttribute("role", "listitem");
             card.style.cssText =
               "border:1px solid #e5e5e5;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px";
+            var badge =
+              a.id === defaultId
+                ? ' <span style="margin-left:6px;font-size:12px;color:#0a0;border:1px solid #0a0;border-radius:6px;padding:2px 6px;">Default</span>'
+                : "";
             card.innerHTML =
               '<div style="font-weight:700">' +
               (a.firstName || "") +
               " " +
               (a.lastName || "") +
+              badge +
               "</div>" +
               '<div style="color:#444">' +
-              (a.line1 || "") +
+              (a.address1 || "") +
               "</div>" +
+              (a.address2
+                ? '<div style="color:#444">' + a.address2 + "</div>"
+                : "") +
               '<div style="color:#444">' +
               (a.city || "") +
               ", " +
-              (a.state || "") +
+              (a.province || "") +
               " " +
-              (a.postcode || "") +
+              (a.zip || "") +
               "</div>" +
               '<div style="display:flex;gap:8px;margin-top:6px;justify-content:flex-end">' +
+              '<button data-edit style="padding:8px 10px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;cursor:pointer">Edit</button>' +
               '<button data-del style="padding:8px 10px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;cursor:pointer">Delete</button>' +
+              (a.id !== defaultId
+                ? '<button data-default style="padding:8px 10px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;cursor:pointer">Set default</button>'
+                : "") +
               "</div>";
+            card
+              .querySelector("[data-edit]")
+              .addEventListener("click", function () {
+                editingId = a.id;
+                form.firstName.value = a.firstName || "";
+                form.lastName.value = a.lastName || "";
+                form.address1.value = a.address1 || "";
+                form.address2.value = a.address2 || "";
+                form.city.value = a.city || "";
+                form.province.value = a.province || "";
+                form.zip.value = a.zip || "";
+                form.country.value = a.country || "";
+                form.phone.value = a.phone || "";
+                form.querySelector("button[type='submit']").textContent =
+                  "Save changes";
+                form.scrollIntoView({ behavior: "smooth", block: "center" });
+              });
             card
               .querySelector("[data-del]")
               .addEventListener("click", function () {
-                var arr = getList();
-                arr.splice(idx, 1);
-                setList(arr);
-                render();
+                if (!confirm("Delete this address?")) return;
+                fetch("/.netlify/functions/customerAddressDelete", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "same-origin",
+                  body: JSON.stringify({ id: a.id }),
+                })
+                  .then(function (r) {
+                    return r.ok
+                      ? fetchList()
+                      : r.json().then(function (j) {
+                          throw new Error(j.error || "Delete failed");
+                        });
+                  })
+                  .catch(function (err) {
+                    alert(err.message || "Delete failed.");
+                  });
               });
-            wrap.appendChild(card);
+            var defBtn = card.querySelector("[data-default]");
+            if (defBtn) {
+              defBtn.addEventListener("click", function () {
+                fetch("/.netlify/functions/customerDefaultAddressUpdate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "same-origin",
+                  body: JSON.stringify({ addressId: a.id }),
+                })
+                  .then(function (r) {
+                    return r.ok
+                      ? fetchList()
+                      : r.json().then(function (j) {
+                          throw new Error(j.error || "Failed to set default");
+                        });
+                  })
+                  .catch(function (err) {
+                    alert(err.message || "Failed to set default.");
+                  });
+              });
+            }
+            listEl.appendChild(card);
           });
         }
+
         JAAccount.attachFormHandler("addr-form", function (ctx) {
-          var a = {
+          var addr = {
             firstName: ctx.get("firstName"),
             lastName: ctx.get("lastName"),
-            line1: ctx.get("line1"),
+            address1: ctx.get("address1"),
+            address2: ctx.get("address2"),
             city: ctx.get("city"),
-            state: ctx.get("state"),
-            postcode: ctx.get("postcode"),
+            province: ctx.get("province"),
+            zip: ctx.get("zip"),
+            country: ctx.get("country"),
+            phone: ctx.get("phone"),
           };
           if (
-            !a.firstName ||
-            !a.lastName ||
-            !a.line1 ||
-            !a.city ||
-            !a.state ||
-            !a.postcode
+            !addr.firstName ||
+            !addr.lastName ||
+            !addr.address1 ||
+            !addr.city ||
+            !addr.province ||
+            !addr.zip ||
+            !addr.country
           ) {
-            ctx.setMessage("Please complete all fields.", "#c00");
+            ctx.setMessage("Please complete all required fields.", "#c00");
             return;
           }
-          var arr = getList();
-          arr.push(a);
-          setList(arr);
-          ctx.form.reset();
-          ctx.setMessage("Address added.", "#0a0");
-          render();
+          var setDefault = !!form.querySelector('[name="setDefault"]').checked;
+          var op = editingId
+            ? fetch("/.netlify/functions/customerAddressUpdate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "same-origin",
+                body: JSON.stringify({ id: editingId, address: addr }),
+              })
+            : fetch("/.netlify/functions/customerAddressCreate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "same-origin",
+                body: JSON.stringify(addr),
+              });
+          op.then(function (r) {
+            return r.json().then(function (j) {
+              return { ok: r.ok, j: j };
+            });
+          })
+            .then(function (res) {
+              if (!res.ok) {
+                ctx.setMessage(res.j.error || "Save failed.", "#c00");
+                return Promise.reject(new Error("Save failed"));
+              }
+              var newId = editingId || res.j.addressId;
+              editingId = null;
+              form.reset();
+              form.querySelector("button[type='submit']").textContent =
+                "Add address";
+              if (setDefault && newId) {
+                return fetch(
+                  "/.netlify/functions/customerDefaultAddressUpdate",
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "same-origin",
+                    body: JSON.stringify({ addressId: newId }),
+                  }
+                );
+              }
+            })
+            .then(function () {
+              ctx.setMessage("Saved.", "#0a0");
+              return fetchList();
+            })
+            .catch(function () {
+              // message already set on failure
+            });
         });
-        render();
+
+        fetchList();
       })();
     </script>
     <script src="/script.js" defer></script>
