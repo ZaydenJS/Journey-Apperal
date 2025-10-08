@@ -184,21 +184,31 @@
   }
 
   // Associate Shopify Cart with the logged-in customer to enable checkout autofill
+  var __attachingBuyer = false;
+
   async function attachBuyerToCart() {
+    if (__attachingBuyer) return null;
+    __attachingBuyer = true;
     try {
       var cartId = null;
       try {
         cartId = localStorage.getItem("ja_cart_id");
       } catch (_) {}
-      if (!cartId) return null;
+      if (!cartId) {
+        __attachingBuyer = false;
+        return null;
+      }
       var resp = await fetch(API_BASE + "/cartBuyerIdentityUpdate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         body: JSON.stringify({ cartId: cartId }),
       });
-      return resp.ok;
+      var ok = resp.ok;
+      __attachingBuyer = false;
+      return ok;
     } catch (_) {
+      __attachingBuyer = false;
       return null;
     }
   }
@@ -357,6 +367,11 @@
       if (!e) return;
       if (e.key === "ja_logged_in" || e.key === AUTH_KEY)
         setHeaderProfileLink();
+      if (e.key === "ja_cart_id" && isAuthed() && e.newValue) {
+        try {
+          attachBuyerToCart();
+        } catch (_) {}
+      }
     });
   });
 })();

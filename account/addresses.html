@@ -789,7 +789,7 @@
           listEl.innerHTML = "";
           if (!addresses.length) {
             var empty = document.createElement("div");
-            empty.textContent = "No saved addresses yet.";
+            empty.textContent = "You haven't saved any addresses yet.";
             empty.style.cssText =
               "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#666";
             listEl.appendChild(empty);
@@ -987,11 +987,15 @@
 
           op.then(function (r) {
             return r.json().then(function (j) {
-              return { ok: r.ok, j: j };
+              return { ok: r.ok, status: r.status, j: j };
             });
           })
             .then(function (res) {
               if (!res.ok) {
+                if (res.status === 401) {
+                  location.replace("/account/login.html");
+                  return Promise.reject(new Error("Unauthorized"));
+                }
                 // Try to highlight likely field from error text
                 var msg =
                   (res.j && (res.j.error || res.j.message)) || "Save failed.";
@@ -1030,6 +1034,9 @@
                   return false;
                 });
                 ctx.setMessage(msg, "#c00");
+                try {
+                  if (typeof showToast === "function") showToast(msg, false);
+                } catch (_) {}
                 return Promise.reject(new Error("Save failed"));
               }
 
@@ -1056,7 +1063,10 @@
                   JAAccount.attachBuyerToCart();
               } catch (_) {}
               try {
-                sessionStorage.setItem("ja_toast", "Address saved!");
+                sessionStorage.setItem(
+                  "ja_toast",
+                  "Address saved successfully"
+                );
               } catch (_) {}
               location.replace("/account/addresses.html");
             })
