@@ -110,7 +110,7 @@
           </button>
           <nav class="nav" aria-label="Primary">
             <a
-              href="#"
+              href="/collection.html?section=shop-all"
               class="header-item"
               aria-haspopup="true"
               aria-expanded="false"
@@ -293,17 +293,95 @@
             id="headerProfileLink"
             class="icon-btn"
             aria-label="Account"
-            href="#"
+            href="/account.html"
             style="order: 1"
             >👤</a
           >
-          <button class="icon-btn" aria-label="Search" style="order: 2">
+          <button
+            class="icon-btn"
+            aria-label="Search"
+            style="order: 2; cursor: pointer !important"
+          >
             🔍
           </button>
-          <a class="icon-btn" aria-label="Cart" href="#" style="order: 3">🛒</a>
+          <a
+            class="icon-btn"
+            aria-label="Cart"
+            href="#"
+            style="
+              order: 3;
+              position: relative;
+              z-index: 21;
+              pointer-events: auto;
+            "
+            onclick="event.preventDefault(); if(window.openCart){ window.openCart(); }"
+            >🛒</a
+          >
         </div>
       </div>
     </header>
+
+    <!-- Mobile Drawer & Overlay -->
+    <div id="drawer-overlay" class="drawer-overlay" aria-hidden="true"></div>
+    <aside
+      id="mobile-drawer"
+      class="drawer"
+      aria-hidden="true"
+      aria-label="Mobile navigation drawer"
+    >
+      <div class="drawer-top">
+        <button class="drawer-close" aria-label="Close menu">×</button>
+        <a href="#" class="cart-link" aria-label="Cart"
+          >Cart <span id="cart-count">0</span> 🛒</a
+        >
+      </div>
+      <nav class="drawer-nav" aria-label="Mobile navigation">
+        <a href="collection.html?section=new-arrivals" class="row-item"
+          >New Arrivals</a
+        >
+        <a href="collection.html?section=back-in-stock" class="row-item"
+          >Back in Stock</a
+        >
+        <a href="collection.html?section=shop-all" class="row-item">Shop All</a>
+
+        <button class="row-item accordion" data-accordion aria-expanded="false">
+          Shop by Category <span class="chev">›</span>
+        </button>
+        <div class="sub">
+          <a href="collection.html?collection=tops">Tees</a>
+          <a href="collection.html?collection=hoodies">Hoodies</a>
+          <a href="collection.html?collection=shorts">Shorts</a>
+          <a href="collection.html?collection=hats">Hats</a>
+        </div>
+
+        <button class="row-item accordion" data-accordion aria-expanded="false">
+          Shop by Collection <span class="chev">›</span>
+        </button>
+        <div class="sub">
+          <a href="collection.html?collection=best-sellers">Best Sellers</a>
+          <a href="collection.html?collection=journeys-x-leyos-collection"
+            >Journeys X Leyos Collection</a
+          >
+        </div>
+
+        <a href="/account/register.html" class="row-item">Journey Sign Up</a>
+
+        <button class="row-item accordion" data-accordion aria-expanded="false">
+          Support & Contact <span class="chev">›</span>
+        </button>
+        <div class="sub">
+          <a href="returns.html">Exchanges & Returns</a>
+          <a href="shipping.html">Shipping</a>
+          <a href="policies.html">Policies</a>
+          <a href="contact.html">Contact</a>
+          <a href="about.html">About</a>
+        </div>
+      </nav>
+
+      <div class="drawer-bottom">
+        <a href="/account/login.html" class="row-item">👤 Sign in or Join</a>
+      </div>
+    </aside>
 
     <main
       class="container section"
