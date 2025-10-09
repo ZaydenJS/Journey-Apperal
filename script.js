@@ -25,30 +25,30 @@
               <div>
                 <h4 class="upper">Shop by Category</h4>
                 <div class="links">
-                  <a href="collection.html?collection=tops">Tees</a>
-                  <a href="collection.html?collection=hoodies">Hoodies</a>
-                  <a href="collection.html?collection=bottoms">Bottoms</a>
-                  <a href="collection.html?collection=accessories">Accessories</a>
+                  <a href="/collection.html?collection=tops">Tees</a>
+                  <a href="/collection.html?collection=hoodies">Hoodies</a>
+                  <a href="/collection.html?collection=bottoms">Bottoms</a>
+                  <a href="/collection.html?collection=accessories">Accessories</a>
                 </div>
               </div>
               <div>
                 <h4 class="upper">Shop by Collection</h4>
                 <div class="links">
-                  <a href="collection.html">AeroLite</a>
-                  <a href="collection.html">Journey</a>
-                  <a href="collection.html">Core365</a>
-                  <a href="collection.html">Black Label</a>
+                  <a href="/collection.html">AeroLite</a>
+                  <a href="/collection.html">Journey</a>
+                  <a href="/collection.html">Core365</a>
+                  <a href="/collection.html">Black Label</a>
                 </div>
               </div>
             </div>
           </div>
         </a>
-        <a href="collection.html" class="header-item">Collections</a>
-        <a href="collection.html" class="header-item">New In</a>
-        <a href="collection.html" class="header-item">Sale<span class="badge">-20%</span></a>
+        <a href="/collection.html" class="header-item">Collections</a>
+        <a href="/collection.html" class="header-item">New In</a>
+        <a href="/collection.html" class="header-item">Sale<span class="badge">-20%</span></a>
       </nav>
     </div>
-    <h1 class="logo"><a href="index.html" aria-label="Journey Apparel Home">JOURNEY</a></h1>
+    <h1 class="logo"><a href="/" aria-label="Journey Apparel Home">JOURNEY</a></h1>
     <div id="site-search" style="position: fixed; inset: 0 0 auto 0; top: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(2px); z-index: 1000; display: none; padding: 12px 16px;">
       <form id="site-search-form" style="max-width: 800px; margin: 0 auto; display: flex; gap: 8px">
         <input id="site-search-input" type="search" placeholder="Search pages or sections (e.g., New Arrivals, Best Sellers, Pair It With, Cart)" style="flex:1; padding:12px; border-radius:8px; border:1px solid #ddd; font-size:16px; background:#fff" />
@@ -83,24 +83,24 @@
     <a href="#" class="cart-link" aria-label="Cart">Cart <span id="cart-count">0</span> 🛒</a>
   </div>
   <nav class="drawer-nav" aria-label="Mobile navigation">
-    <a href="collection.html?section=new-arrivals" class="row-item">New Arrivals</a>
-    <a href="collection.html?section=back-in-stock" class="row-item">Back in Stock</a>
-    <a href="collection.html?section=shop-all" class="row-item">Shop All</a>
+    <a href="/collection.html?section=new-arrivals" class="row-item">New Arrivals</a>
+    <a href="/collection.html?section=back-in-stock" class="row-item">Back in Stock</a>
+    <a href="/collection.html?section=shop-all" class="row-item">Shop All</a>
     <button class="row-item accordion" data-accordion aria-expanded="false">Shop by Category <span class="chev">›</span></button>
     <div class="sub">
-      <a href="collection.html?collection=tops">Tees</a>
-      <a href="collection.html?collection=hoodies">Hoodies</a>
-      <a href="collection.html?collection=shorts">Shorts</a>
-      <a href="collection.html?collection=pants">Pants</a>
-      <a href="collection.html?collection=accessories">Accessories</a>
+      <a href="/collection.html?collection=tops">Tees</a>
+      <a href="/collection.html?collection=hoodies">Hoodies</a>
+      <a href="/collection.html?collection=shorts">Shorts</a>
+      <a href="/collection.html?collection=pants">Pants</a>
+      <a href="/collection.html?collection=accessories">Accessories</a>
     </div>
     <button class="row-item accordion" data-accordion aria-expanded="false">Shop by Collection <span class="chev">›</span></button>
     <div class="sub">
-      <a href="collection.html?collection=best-sellers">Best Sellers</a>
-      <a href="collection.html?collection=ss25">SS/25</a>
-      <a href="collection.html?collection=lightweight">Lightweight</a>
-      <a href="collection.html?collection=boxing">Boxing</a>
-      <a href="collection.html?collection=womens-activewear">Women’s Activewear</a>
+      <a href="/collection.html?collection=best-sellers">Best Sellers</a>
+      <a href="/collection.html?collection=ss25">SS/25</a>
+      <a href="/collection.html?collection=lightweight">Lightweight</a>
+      <a href="/collection.html?collection=boxing">Boxing</a>
+      <a href="/collection.html?collection=womens-activewear">Women’s Activewear</a>
     </div>
     <a href="#" class="row-item">Gift Cards</a>
     <a href="/account/register.html" class="row-item">Journey Sign Up</a>
