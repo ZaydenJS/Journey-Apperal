@@ -106,13 +106,13 @@
     <a href="/account/register.html" class="row-item">Journey Sign Up</a>
     <button class="row-item accordion" data-accordion aria-expanded="false">Customer Care <span class="chev">›</span></button>
     <div class="sub">
-      <a href="#">Exchanges & Returns</a>
-      <a href="#">Shipping</a>
-      <a href="#">Policies</a>
-      <a href="#">Contact</a>
+      <a href="/returns.html">Exchanges & Returns</a>
+      <a href="/shipping.html">Shipping</a>
+      <a href="/policies.html">Policies</a>
+      <a href="/contact.html">Contact</a>
     </div>
   </nav>
-  <div class="drawer-bottom"><a href="#" class="row-item">👤 Log in / Create Account</a></div>
+  <div class="drawer-bottom"><a href="/account/login.html" class="row-item">👤 Sign in or Join</a></div>
 </aside>`;
     document.body.insertAdjacentHTML("afterbegin", tpl);
   }
@@ -197,6 +197,8 @@
     __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
     __safe("syncDrawerLoginState", syncDrawerLoginState);
+    __safe("syncHeaderProfileLink", syncHeaderProfileLink);
+    __safe("fixAccountHeaderLinks", fixAccountHeaderLinks);
     __safe("setupHeroAutoplay", setupHeroAutoplay);
     __safe("setupIOSInputZoomFix", setupIOSInputZoomFix);
     // Clean single binding: rely on setupCollapsibles only for PDP Details
@@ -217,10 +219,53 @@
       el.textContent = signed ? "👤 My Account" : "👤 Sign in or Join";
     } catch (e) {}
   }
+
+  function syncHeaderProfileLink() {
+    try {
+      const acc = document.getElementById("headerProfileLink");
+      if (!acc) return;
+      let signed = false;
+      try {
+        signed = localStorage.getItem("ja_logged_in") === "true";
+      } catch (_) {}
+      acc.setAttribute(
+        "href",
+        signed ? "/account/index.html" : "/account/login.html"
+      );
+    } catch (e) {}
+  }
+
+  function fixAccountHeaderLinks() {
+    try {
+      const sels = [
+        ".header .nav a[href]",
+        ".header .mega a[href]",
+        "#mobile-drawer .drawer-nav a[href]",
+      ];
+      sels.forEach((sel) => {
+        document.querySelectorAll(sel).forEach((a) => {
+          const href = a.getAttribute("href");
+          if (!href) return;
+          const isAbsolute =
+            href.startsWith("/") ||
+            href.startsWith("http") ||
+            href.startsWith("mailto:") ||
+            href.startsWith("tel:");
+          if (!isAbsolute && href !== "#") {
+            a.setAttribute("href", "/" + href.replace(/^\/+/, ""));
+          }
+        });
+      });
+      // Also normalize the account icon now
+      syncHeaderProfileLink();
+    } catch (_) {}
+  }
+
   window.addEventListener("storage", function (e) {
     if (e && e.key === "ja_logged_in") {
       try {
         syncDrawerLoginState();
+        syncHeaderProfileLink();
       } catch (_) {}
     }
 
