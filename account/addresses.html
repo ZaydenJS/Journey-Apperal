@@ -167,7 +167,7 @@
           overflow-x: hidden !important;
         }
 
-        /* Align default checkbox row next to left edge and keep text beside it */
+        /* Align default checkbox row next to left edge and keep text directly beside it (mobile only) */
         #addr-form [data-default-row] {
           width: fit-content !important;
           display: flex !important;
@@ -176,10 +176,19 @@
           text-align: left !important;
           margin: 8px 0 0 0 !important;
           gap: 6px !important;
+          justify-self: start !important;
+        }
+        #addr-form [data-default-row] input[type="checkbox"] {
+          flex: 0 0 auto !important;
+          margin: 0 !important;
+          order: 1 !important;
         }
         #addr-form [data-default-row] > span {
           margin-left: 0 !important;
           white-space: nowrap !important;
+          flex: 0 0 auto !important;
+          text-align: left !important;
+          order: 2 !important;
         }
         #addr-form input[name="setDefault"] {
           margin: 0 !important;
