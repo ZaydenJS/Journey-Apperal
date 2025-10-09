@@ -197,6 +197,8 @@
     __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
     __safe("syncDrawerLoginState", syncDrawerLoginState);
+    __safe("setupHeroAutoplay", setupHeroAutoplay);
+    __safe("setupIOSInputZoomFix", setupIOSInputZoomFix);
     // Clean single binding: rely on setupCollapsibles only for PDP Details
   });
 
@@ -219,6 +221,95 @@
     if (e && e.key === "ja_logged_in") {
       try {
         syncDrawerLoginState();
+      } catch (_) {}
+    }
+
+    // Ensure hero/background videos autoplay inline on mobile Safari and loop
+    function setupHeroAutoplay() {
+      try {
+        const vids = Array.from(
+          document.querySelectorAll(
+            "#hero video, .hero video, video[autoplay][muted][playsinline]"
+          )
+        );
+        if (!vids.length) return;
+        vids.forEach((v) => {
+          try {
+            // iOS requirements
+            v.muted = true;
+            v.autoplay = true;
+            v.loop = true;
+            v.playsInline = true; // property
+            v.setAttribute("playsinline", ""); // attribute
+
+            const tryPlay = () => {
+              const p = v.play();
+              if (p && typeof p.catch === "function") p.catch(() => {});
+            };
+
+            if (v.readyState >= 2) tryPlay();
+            else v.addEventListener("canplay", tryPlay, { once: true });
+
+            // Resume when returning to tab
+            document.addEventListener("visibilitychange", () => {
+              if (!document.hidden && v.paused) tryPlay();
+            });
+
+            // Last-resort: first interaction
+            const resume = () => {
+              if (v.paused) tryPlay();
+              window.removeEventListener("touchstart", resume);
+              window.removeEventListener("click", resume);
+            };
+            window.addEventListener("touchstart", resume, { once: true });
+            window.addEventListener("click", resume, { once: true });
+          } catch (_) {}
+        });
+      } catch (_) {}
+    }
+
+    // iOS Safari: prevent sticky zoom after leaving inputs by toggling viewport scale
+    function setupIOSInputZoomFix() {
+      try {
+        const isIOS =
+          /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+          /Apple/i.test(navigator.vendor || "");
+        if (!isIOS) return;
+        const vp = document.querySelector('meta[name="viewport"]');
+        if (!vp) return;
+        const base =
+          vp.getAttribute("content") || "width=device-width, initial-scale=1";
+        const clamp = () => vp.setAttribute("content", base);
+        const disableZoom = () =>
+          vp.setAttribute(
+            "content",
+            base + ", maximum-scale=1, user-scalable=no"
+          );
+
+        document.addEventListener("focusin", (e) => {
+          if (
+            e.target &&
+            (e.target.tagName === "INPUT" ||
+              e.target.tagName === "TEXTAREA" ||
+              e.target.tagName === "SELECT")
+          ) {
+            disableZoom();
+          }
+        });
+        document.addEventListener("focusout", (e) => {
+          if (
+            e.target &&
+            (e.target.tagName === "INPUT" ||
+              e.target.tagName === "TEXTAREA" ||
+              e.target.tagName === "SELECT")
+          ) {
+            setTimeout(() => {
+              clamp();
+              // Nudge scroll to force layout reflow back to normal scale
+              window.scrollTo({ top: window.scrollY, left: 0 });
+            }, 50);
+          }
+        });
       } catch (_) {}
     }
   });

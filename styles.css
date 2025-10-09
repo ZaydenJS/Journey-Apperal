@@ -1154,3 +1154,14 @@ input {
     transition: none !important;
   }
 }
+
+
+/* iOS Safari: prevent input-focus zoom and keep scale stable */
+html { -webkit-text-size-adjust: 100%; }
+@media (max-width: 1024px) {
+  input, textarea, select, button { font-size: 16px !important; }
+}
+@supports (-webkit-touch-callout: none) {
+  /* Extra guard for iOS */
+  input, textarea, select, button { font-size: 16px !important; }
+}
