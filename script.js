@@ -199,6 +199,8 @@
     __safe("syncDrawerLoginState", syncDrawerLoginState);
     __safe("syncHeaderProfileLink", syncHeaderProfileLink);
     __safe("fixAccountHeaderLinks", fixAccountHeaderLinks);
+    __safe("normalizePageInternalLinks", normalizePageInternalLinks);
+
     __safe("setupHeroAutoplay", setupHeroAutoplay);
     __safe("setupIOSInputZoomFix", setupIOSInputZoomFix);
     // Clean single binding: rely on setupCollapsibles only for PDP Details
@@ -238,6 +240,7 @@
   function fixAccountHeaderLinks() {
     try {
       const sels = [
+        ".header a[href]",
         ".header .nav a[href]",
         ".header .mega a[href]",
         "#mobile-drawer .drawer-nav a[href]",
@@ -259,6 +262,26 @@
       // Also normalize the account icon now
       syncHeaderProfileLink();
     } catch (_) {}
+
+    function normalizePageInternalLinks() {
+      try {
+        const anchors = document.querySelectorAll(
+          'a[href^="collection.html"], a[href^="index.html"], a[href^="./collection.html"], a[href^="./index.html"]'
+        );
+        anchors.forEach((a) => {
+          const href = a.getAttribute("href");
+          if (!href) return;
+          const isAbsolute =
+            href.startsWith("/") ||
+            href.startsWith("http") ||
+            href.startsWith("mailto:") ||
+            href.startsWith("tel:");
+          if (!isAbsolute && href !== "#") {
+            a.setAttribute("href", "/" + href.replace(/^\/+/, ""));
+          }
+        });
+      } catch (_) {}
+    }
   }
 
   window.addEventListener("storage", function (e) {
