@@ -594,7 +594,7 @@
             color: #111;
           "
         >
-          JOIN JOURNEY
+          SUBSCRIBE
         </div>
         <div
           style="
@@ -613,29 +613,56 @@
             margin: 0 0 18px 0;
           "
         >
-          Become a member for points, early access and exclusive perks every
-          time you shop.
+          Get the latest drops, exclusive offers, and style inspiration
+          delivered to your inbox.
         </p>
-        <a
-          href="register.html"
-          style="
-            display: inline-block;
-            width: min(420px, 90%);
-            background: #fff;
-            color: #111;
-            padding: 14px 18px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            border: 1px solid #111;
-            transition: background 0.15s ease;
-          "
-          onmouseover="this.style.background='#f7f7f7'"
-          onmouseout="this.style.background='#fff'"
-        >
-          JOIN NOW
-        </a>
+        <div class="newsletter" style="display: block">
+          <form
+            style="
+              display: flex;
+              gap: 8px;
+              width: min(420px, 90%);
+              margin: 0 auto;
+              justify-content: center;
+            "
+          >
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              required
+              style="
+                flex: 1;
+                padding: 14px 18px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 15px;
+                background: #fff;
+                color: #111;
+              "
+            />
+            <button
+              type="submit"
+              style="
+                padding: 14px 18px;
+                border-radius: 6px;
+                background: #111;
+                color: #fff;
+                border: 1px solid #111;
+                font-weight: 600;
+                letter-spacing: 0.3px;
+                white-space: nowrap;
+                cursor: pointer;
+              "
+            >
+              Subscribe
+            </button>
+          </form>
+          <div
+            data-newsletter-msg
+            style="margin-top: 10px; font-size: 13px; color: #111"
+          ></div>
+        </div>
       </section>
     </main>
 
