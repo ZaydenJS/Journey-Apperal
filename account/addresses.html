@@ -169,14 +169,16 @@
 
         /* Align default checkbox row next to left edge and keep text directly beside it (mobile only) */
         #addr-form [data-default-row] {
-          width: fit-content !important;
-          display: flex !important;
+          display: inline-flex !important; /* shrink to content width */
+          width: auto !important;
+          max-width: max-content !important;
           align-items: center !important;
           justify-content: flex-start !important;
           text-align: left !important;
           margin: 8px 0 0 0 !important;
           gap: 6px !important;
           justify-self: start !important;
+          align-self: start !important;
         }
         #addr-form [data-default-row] input[type="checkbox"] {
           flex: 0 0 auto !important;
@@ -184,6 +186,8 @@
           order: 1 !important;
         }
         #addr-form [data-default-row] > span {
+          display: inline-block !important;
+          width: auto !important;
           margin-left: 0 !important;
           white-space: nowrap !important;
           flex: 0 0 auto !important;
