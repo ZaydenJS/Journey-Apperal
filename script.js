@@ -268,48 +268,78 @@
       } catch (_) {}
     }
 
-    // iOS Safari: prevent sticky zoom after leaving inputs by toggling viewport scale
+    // iOS Safari: reliably restore zoom after keyboard dismiss
     function setupIOSInputZoomFix() {
       try {
+        const ua = navigator.userAgent || "";
         const isIOS =
-          /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+          /(iPad|iPhone|iPod)/.test(ua) &&
           /Apple/i.test(navigator.vendor || "");
         if (!isIOS) return;
         const vp = document.querySelector('meta[name="viewport"]');
         if (!vp) return;
         const base =
           vp.getAttribute("content") || "width=device-width, initial-scale=1";
-        const clamp = () => vp.setAttribute("content", base);
-        const disableZoom = () =>
-          vp.setAttribute(
-            "content",
-            base + ", maximum-scale=1, user-scalable=no"
-          );
+        const set = (s) => vp.setAttribute("content", s);
+        const disable = () => set(base + ", maximum-scale=1, user-scalable=no");
+        const enable = () =>
+          set(base + ", maximum-scale=10, user-scalable=yes");
+        const isFormEl = (el) =>
+          !!el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
 
-        document.addEventListener("focusin", (e) => {
-          if (
-            e.target &&
-            (e.target.tagName === "INPUT" ||
-              e.target.tagName === "TEXTAREA" ||
-              e.target.tagName === "SELECT")
-          ) {
-            disableZoom();
-          }
-        });
-        document.addEventListener("focusout", (e) => {
-          if (
-            e.target &&
-            (e.target.tagName === "INPUT" ||
-              e.target.tagName === "TEXTAREA" ||
-              e.target.tagName === "SELECT")
-          ) {
-            setTimeout(() => {
-              clamp();
-              // Nudge scroll to force layout reflow back to normal scale
-              window.scrollTo({ top: window.scrollY, left: 0 });
-            }, 50);
-          }
-        });
+        // On focus, prevent any zoom-in
+        document.addEventListener(
+          "focusin",
+          (e) => {
+            if (isFormEl(e.target)) disable();
+          },
+          true
+        );
+
+        const restore = () => {
+          // Give iOS time to close keyboard and settle layout
+          setTimeout(() => {
+            enable();
+            // Second pass to be extra sure
+            setTimeout(() => set(base), 50);
+            // If VisualViewport exists and we're still zoomed, nudge layout
+            try {
+              if (
+                window.visualViewport &&
+                window.visualViewport.scale > 1 &&
+                !isFormEl(document.activeElement)
+              ) {
+                window.scrollTo({ top: window.scrollY + 1, left: 0 });
+                window.scrollTo({ top: window.scrollY, left: 0 });
+              }
+            } catch (_) {}
+          }, 150);
+        };
+
+        // On blur/focusout, restore zoom
+        document.addEventListener(
+          "blur",
+          (e) => {
+            if (isFormEl(e.target)) restore();
+          },
+          true
+        );
+        document.addEventListener(
+          "focusout",
+          (e) => {
+            if (isFormEl(e.target)) restore();
+          },
+          true
+        );
+
+        // Also watch viewport changes; when no input focused, clamp back to base
+        if (window.visualViewport) {
+          const vvClamp = () => {
+            if (!isFormEl(document.activeElement)) set(base);
+          };
+          window.visualViewport.addEventListener("resize", vvClamp);
+          window.visualViewport.addEventListener("scroll", vvClamp);
+        }
       } catch (_) {}
     }
   });
