@@ -196,7 +196,31 @@
     __safe("ensureShopClickToggle", ensureShopClickToggle);
     __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
+    __safe("syncDrawerLoginState", syncDrawerLoginState);
     // Clean single binding: rely on setupCollapsibles only for PDP Details
+  });
+
+  function syncDrawerLoginState() {
+    try {
+      const el = document.querySelector(".drawer-bottom a.row-item");
+      if (!el) return;
+      let signed = false;
+      try {
+        signed = localStorage.getItem("ja_logged_in") === "true";
+      } catch (_) {}
+      el.setAttribute(
+        "href",
+        signed ? "/account/index.html" : "/account/login.html"
+      );
+      el.textContent = signed ? "👤 My Account" : "👤 Sign in or Join";
+    } catch (e) {}
+  }
+  window.addEventListener("storage", function (e) {
+    if (e && e.key === "ja_logged_in") {
+      try {
+        syncDrawerLoginState();
+      } catch (_) {}
+    }
   });
 
   function setupSizeSelection() {

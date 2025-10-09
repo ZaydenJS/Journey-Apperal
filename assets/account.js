@@ -242,6 +242,18 @@
     el.onclick = null;
   }
 
+  // Update mobile drawer bottom link to reflect login state
+  function setDrawerBottomLink() {
+    var el = document.querySelector(".drawer-bottom a.row-item");
+    if (!el) return;
+    var signed = false;
+    try {
+      signed = localStorage.getItem("ja_logged_in") === "true";
+    } catch (_) {}
+    el.setAttribute("href", signed ? ACCOUNT_PAGE : LOGIN_PAGE);
+    el.textContent = signed ? "👤 My Account" : "👤 Sign in or Join";
+  }
+
   // Route guard: redirect unauthenticated users to login
   async function guardAuthenticated() {
     try {
@@ -326,6 +338,7 @@
     getUser: getUser,
     setUser: setUser,
     setHeaderProfileLink: setHeaderProfileLink,
+    setDrawerBottomLink: setDrawerBottomLink,
     guardAuthenticated: guardAuthenticated,
     redirectAfterAuth: redirectAfterAuth,
     attachFormHandler: attachFormHandler,
@@ -360,13 +373,16 @@
 
   onReady(function () {
     setHeaderProfileLink();
+    setDrawerBottomLink();
     try {
       if (isAuthed()) attachBuyerToCart();
     } catch (_) {}
     window.addEventListener("storage", function (e) {
       if (!e) return;
-      if (e.key === "ja_logged_in" || e.key === AUTH_KEY)
+      if (e.key === "ja_logged_in" || e.key === AUTH_KEY) {
         setHeaderProfileLink();
+        setDrawerBottomLink();
+      }
       if (e.key === "ja_cart_id" && isAuthed() && e.newValue) {
         try {
           attachBuyerToCart();
