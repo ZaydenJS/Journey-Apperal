@@ -202,6 +202,10 @@
     __safe("fixAccountHeaderLinks", fixAccountHeaderLinks);
     __safe("normalizePageInternalLinks", normalizePageInternalLinks);
 
+    // Ensure PDP Details dropdown always toggles
+    __safe("ensurePdpDetailsToggle", ensurePdpDetailsToggle);
+    __safe("bindDetailsDelegatedToggle", bindDetailsDelegatedToggle);
+
     __safe("setupHeroAutoplay", setupHeroAutoplay);
     __safe("setupIOSInputZoomFix", setupIOSInputZoomFix);
     // Clean single binding: rely on setupCollapsibles only for PDP Details
