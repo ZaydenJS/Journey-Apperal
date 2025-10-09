@@ -651,6 +651,11 @@
       try {
         setupCollapsibles();
       } catch (_) {}
+      // Extra safety: ensure Details toggle bound even if other wiring missed
+      try {
+        ensurePdpDetailsToggle();
+        bindDetailsDelegatedToggle();
+      } catch (_) {}
 
       // New gallery (preferred)
       const mainGalleryImg = document.querySelector(".gallery-main img");
@@ -3006,11 +3011,17 @@
         sec.classList.add("open");
         btn.setAttribute("aria-expanded", "true");
         panel.style.display = "block";
-        const h = panel.scrollHeight;
+        let h = panel.scrollHeight;
+        if (!h || h < 2) {
+          // Fallback: if content not measurable, show immediately
+          panel.style.height = "auto";
+          return;
+        }
         panel.style.height = h + "px";
         const done = () => {
-          if (btn.getAttribute("aria-expanded") === "true")
+          if (btn.getAttribute("aria-expanded") === "true") {
             panel.style.height = "auto";
+          }
           panel.removeEventListener("transitionend", done);
         };
         panel.addEventListener("transitionend", done);
@@ -3021,8 +3032,33 @@
         btn.setAttribute("aria-expanded", "false");
         const current = panel.scrollHeight;
         panel.style.height = current + "px";
-        requestAnimationFrame(() => (panel.style.height = "0px"));
+        requestAnimationFrame(() => {
+          panel.style.height = "0px";
+        });
+        const done = () => {
+          if (btn.getAttribute("aria-expanded") !== "true") {
+            // keep display state; height is 0 so it's hidden
+          }
+          panel.removeEventListener("transitionend", done);
+        };
+        panel.addEventListener("transitionend", done);
       };
+
+      // Ensure the Details button is always clickable (z-index/pointer-events safety)
+      function ensurePdpDetailsClickable() {
+        try {
+          document
+            .querySelectorAll(".p-details .collapsible > button")
+            .forEach((b) => {
+              b.style.pointerEvents = "auto";
+              b.style.position = "relative";
+              b.style.zIndex = "3";
+            });
+        } catch (_) {}
+      }
+
+      // Apply clickable safeguards now
+      ensurePdpDetailsClickable();
 
       const toggle = (e) => {
         try {
