@@ -175,6 +175,7 @@
     __safe("setupLiveSizePicker", setupLiveSizePicker);
     // Prefetch collection data on click for instant paints
     __safe("setupCollectionLinkPrefetch", setupCollectionLinkPrefetch);
+    __safe("setupCollectionHoverPrefetch", setupCollectionHoverPrefetch);
     __safe("setupSizeSelection", setupSizeSelection);
     __safe("setupWishlist", setupWishlist);
 
@@ -3820,6 +3821,14 @@
 
       // Update cache and UI if changed
       __cacheSet(cacheKey, products);
+      // Seed collection caches so navigating to collection pages paints instantly
+      try {
+        if (section === "best-sellers") {
+          __cacheSet("collection:best-sellers:-", products.slice());
+        } else if (section === "new-arrivals") {
+          __cacheSet("collection:all:-", products.slice());
+        }
+      } catch (_) {}
       const currentHandles = Array.from(
         container.querySelectorAll("article.card[data-href]")
       ).map((el) =>
@@ -5846,6 +5855,7 @@ document.addEventListener("DOMContentLoaded", () => {
         location.hostname === "localhost" ||
         location.hostname === "127.0.0.1" ||
         location.protocol === "file:";
+
       if (isLocalhost) {
         console.log(
           "🚧 Running in development mode - Shopify features limited"
@@ -5906,4 +5916,56 @@ function setupCollectionLinkPrefetch() {
     },
     true
   ); // capture to run before default nav
+}
+
+// Hover/focus prefetch for collection links to ensure zero-delay navigation
+function setupCollectionHoverPrefetch() {
+  if (window.__collectionHoverPrefetchBound) return;
+  window.__collectionHoverPrefetchBound = true;
+  const prefetched = new Set();
+  const handler = function (e) {
+    const a =
+      e.target &&
+      e.target.closest &&
+      e.target.closest('a[href*="collection.html"]');
+    if (!a) return;
+    const href = a.getAttribute("href") || "";
+    if (!href) return;
+    let u;
+    try {
+      u = new URL(href, location.href);
+    } catch (_) {
+      return;
+    }
+    const coll = u.searchParams.get("collection");
+    if (!coll) return; // skip heavy section-based links on hover
+    const handle = (coll || "").toLowerCase().replace(/\s+/g, "-");
+    const key = `collection:${handle}:-`;
+    if (prefetched.has(key)) return;
+    const has = __cacheGetFresh(key, 10 * 60 * 1000);
+    if (has && Array.isArray(has) && has.length) {
+      prefetched.add(key);
+      return;
+    }
+    if (
+      window.shopifyAPI &&
+      typeof window.shopifyAPI.getCollection === "function"
+    ) {
+      prefetched.add(key);
+      window.shopifyAPI
+        .getCollection(handle)
+        .then(function (res) {
+          if (res && Array.isArray(res.products)) {
+            __cacheSet(key, res.products);
+          }
+        })
+        .catch(function () {});
+    }
+  };
+  document.addEventListener("mouseenter", handler, true);
+  document.addEventListener("focusin", handler, true);
+  document.addEventListener("touchstart", handler, {
+    passive: true,
+    capture: true,
+  });
 }

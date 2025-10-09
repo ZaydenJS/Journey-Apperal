@@ -888,7 +888,16 @@
       (function () {
         JAAccount.guardAuthenticated();
         var form = document.getElementById("profile-form");
-        // Load current profile from Shopify
+        // Instant prefill from local customer cache for zero-delay display
+        try {
+          var cachedUser = (window.JAAccount && JAAccount.getUser && JAAccount.getUser()) || null;
+          if (cachedUser && form) {
+            if (form.first && !form.first.value) form.first.value = cachedUser.firstName || "";
+            if (form.last && !form.last.value) form.last.value = cachedUser.lastName || "";
+            if (form.email && !form.email.value) form.email.value = cachedUser.email || "";
+          }
+        } catch (_) {}
+        // Load current profile from Shopify (authoritative)
         fetch("/.netlify/functions/getCustomer", { credentials: "same-origin" })
           .then(function (r) {
             if (r.status === 401) {
@@ -900,9 +909,9 @@
           .then(function (d) {
             if (!d || !d.customer || !form) return;
             var u = d.customer;
-            form.first.value = u.firstName || "";
-            form.last.value = u.lastName || "";
-            form.email.value = u.email || "";
+            if (form.first) form.first.value = u.firstName || "";
+            if (form.last) form.last.value = u.lastName || "";
+            if (form.email) form.email.value = u.email || "";
           })
           .catch(function () {});
 
