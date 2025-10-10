@@ -179,6 +179,8 @@
     __safe("setupSizeSelection", setupSizeSelection);
     __safe("setupWishlist", setupWishlist);
 
+    __safe("setupIdleWarmCollections", setupIdleWarmCollections);
+
     // New: sitewide search and cart
     __safe("setupSearch", setupSearch);
     __safe("setupSearchHover", setupSearchHover);
@@ -2370,8 +2372,67 @@
           }
         }
       } catch (_) {}
-      // Instant navigation; do not await prefetch to avoid any delay
-      window.location.href = href;
+      // Fast-nav with micro prefetch window (<=120ms) to ensure PDP has variants
+      (function () {
+        var navigated = false;
+        var go = function () {
+          if (!navigated) {
+            navigated = true;
+            window.location.href = href;
+          }
+        };
+        // Hard cap at 120ms to avoid noticeable delay
+        setTimeout(go, 120);
+        try {
+          var handle = (function () {
+            try {
+              var u = new URL(href, location.href);
+              return u.searchParams.get("slug");
+            } catch (_) {
+              return null;
+            }
+          })();
+          if (handle) {
+            // Seed variants cache + handoff if missing; race against 120ms cap
+            (function () {
+              try {
+                var key = "pdp:variants:" + handle;
+                var has = __cacheGetFresh(key, 10 * 60 * 1000);
+                if (!has) {
+                  fetch(
+                    "/.netlify/functions/product-variants?handle=" +
+                      encodeURIComponent(handle)
+                  )
+                    .then(function (r) {
+                      return r.ok ? r.json() : null;
+                    })
+                    .then(function (v) {
+                      if (v && v.variants) {
+                        try {
+                          sessionStorage.setItem(
+                            "handoff:variants:" + handle,
+                            JSON.stringify(v)
+                          );
+                          __cacheSet(key, v);
+                        } catch (_) {}
+                      }
+                    })
+                    .catch(function () {})
+                    .finally(go);
+                } else {
+                  go();
+                }
+              } catch (_) {
+                go();
+              }
+            })();
+          } else {
+            go();
+          }
+        } catch (_) {
+          go();
+        }
+      })();
     });
 
     // Prefetch PDP data/images on hover/touch/mousedown so PDP renders instantly
@@ -6148,6 +6209,7 @@ function setupCollectionLinkPrefetch() {
             }
           }
         } catch (_) {}
+
         window.location.href = href;
       })();
     },
@@ -6205,4 +6267,49 @@ function setupCollectionHoverPrefetch() {
     passive: true,
     capture: true,
   });
+}
+
+// Idle warm: seed popular collections so collection pages paint instantly
+function setupIdleWarmCollections() {
+  try {
+    var warm = ["tees", "hoodies", "shorts", "hats", "all"];
+    var doWarm = function () {
+      if (
+        !window.shopifyAPI ||
+        typeof window.shopifyAPI.getCollection !== "function"
+      )
+        return;
+      warm.forEach(function (handle) {
+        try {
+          var key = "collection:" + handle + ":-";
+          var has = __cacheGetFresh(key, 10 * 60 * 1000);
+          if (has && Array.isArray(has) && has.length) return;
+          window.shopifyAPI
+            .getCollection(handle)
+            .then(function (res) {
+              if (res && Array.isArray(res.products)) {
+                __cacheSet(key, res.products);
+                try {
+                  var first = res.products.slice(0, 8);
+                  var imgs = [];
+                  first.forEach(function (p) {
+                    if (p && p.handle) __cacheSet("pdp:product:" + p.handle, p);
+                    var u =
+                      p && p.images && (p.images[0]?.url || p.images[0]?.src);
+                    if (u) imgs.push(u);
+                  });
+                  __prewarmImages(imgs);
+                } catch (_) {}
+              }
+            })
+            .catch(function () {});
+        } catch (_) {}
+      });
+    };
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(doWarm, { timeout: 1200 });
+    } else {
+      setTimeout(doWarm, 400);
+    }
+  } catch (_) {}
 }
