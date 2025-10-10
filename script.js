@@ -1264,6 +1264,24 @@
             chosenId = pressed.dataset.variantId;
           }
         }
+        // Final fallback: derive from selected size text against product.variants
+        if (!chosenId) {
+          const pressed = document.querySelector(
+            '#size-grid .size[aria-pressed="true"]'
+          );
+          const sizeLabel =
+            (pressed && pressed.textContent && pressed.textContent.trim()) ||
+            "";
+          if (sizeLabel && Array.isArray(product.variants)) {
+            const candidate = product.variants.find((v) => {
+              const so = (v.selectedOptions || []).find(
+                (o) => (o.name || "").toLowerCase() === "size"
+              );
+              return so && String(so.value).trim() === sizeLabel;
+            });
+            if (candidate && candidate.id) chosenId = candidate.id;
+          }
+        }
         let selectedVariant = null;
         if (chosenId) {
           selectedVariant = (product.variants || []).find(
@@ -2976,11 +2994,118 @@
   const pad = (x) => String(x).padStart(2, "0");
 
   function setupNewsletter() {
-    $$(".newsletter form").forEach((form) => {
+    const MC = {
+      base: "https://journeysapparel.us5.list-manage.com/subscribe/post-json",
+      u: "de14f9e1de5e70d726b870a4e",
+      id: "49f5f16177",
+    };
+
+    const bindForm = (form) => {
+      if (!form || form.dataset.mcBound === "1") return;
+      const emailInput = form.querySelector(
+        "input[type='email'], input[name='EMAIL'], input[name='email']"
+      );
+      if (!emailInput) return;
+      form.dataset.mcBound = "1";
+      const submitBtn = form.querySelector(
+        "button[type='submit'], input[type='submit'], button"
+      );
+
+      const resolveMessageEl = () => {
+        // Prefer dedicated CTA message container if present
+        const fromId = document.getElementById("subscribe-cta-message");
+        if (
+          fromId &&
+          (form.id === "subscribe-cta-form" || form.contains(fromId))
+        ) {
+          return fromId;
+        }
+        // Else reuse or create a lightweight, unstyled message node after the form
+        if (!form._mcMsgEl) {
+          const el = document.createElement("div");
+          el.className = "mc-message";
+          el.setAttribute("role", "status");
+          form.insertAdjacentElement("afterend", el);
+          form._mcMsgEl = el;
+        }
+        return form._mcMsgEl;
+      };
+
+      const showMsg = (text) => {
+        const node = resolveMessageEl();
+        if (node) node.textContent = text;
+      };
+
       form.addEventListener("submit", (e) => {
         e.preventDefault();
-        alert("Thanks for joining!");
+        const email = (emailInput.value || "").trim();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+          showMsg("Please enter a valid email.");
+          return;
+        }
+        if (submitBtn) submitBtn.disabled = true;
+
+        const cbName =
+          "__mc_cb_" + Date.now() + "_" + Math.floor(Math.random() * 1e6);
+        let script;
+        function cleanup() {
+          try {
+            delete window[cbName];
+          } catch (_) {}
+          if (script && script.parentNode)
+            script.parentNode.removeChild(script);
+        }
+        window[cbName] = function (resp) {
+          try {
+            if (resp && resp.result === "success") {
+              showMsg("Thanks for subscribing!");
+              try {
+                form.reset();
+              } catch (_) {}
+            } else {
+              const raw =
+                (resp && resp.msg) || "Subscription failed. Please try again.";
+              // Mailchimp can respond with HTML entities; show a clean text
+              const tmp = document.createElement("div");
+              tmp.innerHTML = raw;
+              showMsg(tmp.textContent || tmp.innerText || raw);
+            }
+          } finally {
+            if (submitBtn) submitBtn.disabled = false;
+            cleanup();
+          }
+        };
+
+        const url = `${MC.base}?u=${encodeURIComponent(
+          MC.u
+        )}&id=${encodeURIComponent(
+          MC.id
+        )}&c=${cbName}&EMAIL=${encodeURIComponent(email)}`;
+        script = document.createElement("script");
+        script.async = true;
+        script.src = url;
+        script.onerror = function () {
+          showMsg("Network error. Please try again.");
+          if (submitBtn) submitBtn.disabled = false;
+          cleanup();
+        };
+        document.body.appendChild(script);
       });
+    };
+
+    // Bind explicit newsletter forms first
+    $$(".newsletter form, form#subscribe-cta-form").forEach(bindForm);
+
+    // Heuristic: bind other Subscribe forms (e.g., footer) without changing styles
+    $$("form").forEach((form) => {
+      if (form.dataset.mcBound === "1") return;
+      const emailInput = form.querySelector("input[type='email']");
+      if (!emailInput) return;
+      const hasSubscribeButton = !!Array.from(
+        form.querySelectorAll("button, input[type='submit']")
+      ).find((b) => /subscribe/i.test((b.value || b.textContent || "").trim()));
+      if (!hasSubscribeButton) return;
+      bindForm(form);
     });
   }
 
@@ -5884,10 +6009,25 @@
       const image =
         document.querySelector(".gallery-main img")?.getAttribute("src") || "";
 
+      // Try to carry the exact variant id for checkout integrity
+      const hiddenInput = document.querySelector(
+        "input[name='variantId'], input[name='variant_id']"
+      );
+      let chosenId = hiddenInput && hiddenInput.value ? hiddenInput.value : "";
+      if (
+        !chosenId &&
+        selected &&
+        selected.dataset &&
+        selected.dataset.variantId
+      ) {
+        chosenId = selected.dataset.variantId;
+      }
+
       const items = (window.__cart?.getCart && window.__cart.getCart()) || [];
       const existing = items.find((it) => it.name === name && it.size === size);
       if (existing) existing.qty = (existing.qty || 1) + 1;
-      else items.push({ name, price, size, image, qty: 1 });
+      else
+        items.push({ name, price, size, image, qty: 1, variantGid: chosenId });
       window.__cart?.setCart && window.__cart.setCart(items);
       // Open cart (initialize on-demand if still missing)
       try {
