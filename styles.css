@@ -225,6 +225,14 @@ input {
   padding: 12px 8px;
   border-bottom: 1px solid var(--border);
   font-weight: 600;
+
+}
+
+/* Force bold header nav items across all pages (matches index header weight) */
+header.header .nav a,
+header.header .header-item,
+.header .nav a {
+  font-weight: 600 !important;
 }
 
 /* Mega menu (desktop) */

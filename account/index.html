@@ -14,6 +14,40 @@
         }
       }
     </style>
+    <style id="account-desktop-tree">
+      @media (min-width: 1024px) {
+        /* PC-only: horizontal connector line + vertical branches to each tile */
+        section[aria-label="Account navigation"] {
+          position: relative !important;
+          padding-top: 28px !important; /* space for the top line */
+          grid-template-columns: repeat(4, 1fr) !important; /* ensure 4-up */
+          align-items: start !important;
+        }
+        section[aria-label="Account navigation"]::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 5%;
+          right: 5%;
+          height: 2px;
+          background: #e5e5e5;
+        }
+        section[aria-label="Account navigation"] > a {
+          position: relative;
+        }
+        section[aria-label="Account navigation"] > a::before {
+          content: "";
+          position: absolute;
+          top: -28px; /* connects up to the top line */
+          left: 50%;
+          transform: translateX(-50%);
+          width: 2px;
+          height: 28px;
+          background: #e5e5e5;
+        }
+      }
+    </style>
+
     <style id="desktop-overrides">
       @media (min-width: 1024px) {
         /* Center logo on desktop for account landing page */

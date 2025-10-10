@@ -595,7 +595,7 @@
               required
               autocomplete="email"
               readonly
-              disabled
+              aria-readonly="true"
               style="
                 padding: 12px;
                 border: 1px solid #ddd;
@@ -603,6 +603,7 @@
                 font-size: 14px;
                 background: #f7f7f7;
                 color: #666;
+                pointer-events: none;
               "
             />
           </label>
@@ -912,7 +913,17 @@
             if (form.first) form.first.value = u.firstName || "";
             if (form.last) form.last.value = u.lastName || "";
             if (form.email) form.email.value = u.email || "";
+            // Fallback: if email still empty after API, try cached/local values
+            try {
+              if (form && form.email && !form.email.value) {
+                var fallbackEmail = (cachedUser && cachedUser.email) ||
+                  (window.JAAccount && JAAccount.getUser && JAAccount.getUser() && JAAccount.getUser().email) ||
+                  (localStorage.getItem("ja_customer_email") || localStorage.getItem("mailchimp_last_email") || sessionStorage.getItem("mailchimp_last_email"));
+                if (fallbackEmail) form.email.value = fallbackEmail;
+              }
+            } catch (_) {}
           })
+
           .catch(function () {});
 
         JAAccount.attachFormHandler("profile-form", function (ctx) {
