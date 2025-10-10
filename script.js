@@ -994,19 +994,41 @@
 
     const renderFrom = (data) => {
       if (!data || !data.variants) return;
-      // Build a map from Size value -> variant meta
+      // Build a map from Size value -> best available variant across colors
       const bySize = new Map();
+      const candidates = new Map(); // size -> [{id, available, qty}]
       (data.variants || []).forEach((v) => {
         const so = (v.selectedOptions || []).find(
           (o) => (o.name || "").toLowerCase() === "size"
         );
-        if (so)
-          bySize.set(so.value, {
-            id: v.id,
-            available: !!v.availableForSale,
-            qty: v.quantityAvailable ?? null,
-          });
+        if (!so) return;
+        const arr = candidates.get(so.value) || [];
+        arr.push({
+          id: v.id,
+          available: !!v.availableForSale,
+          qty: v.quantityAvailable ?? null,
+        });
+        candidates.set(so.value, arr);
       });
+      // choose best candidate per size: any available variant (qty null or >0); otherwise first
+      for (const [sizeVal, arr] of candidates.entries()) {
+        let best = null;
+        for (const c of arr) {
+          if (c.available && (typeof c.qty !== "number" || c.qty > 0)) {
+            best = c;
+            break;
+          }
+        }
+        if (!best) best = arr[0];
+        const hasAnyAvailable = arr.some(
+          (c) => c.available && (typeof c.qty !== "number" || c.qty > 0)
+        );
+        bySize.set(sizeVal, {
+          id: best && best.id,
+          available: hasAnyAvailable,
+          qty: best ? best.qty : null,
+        });
+      }
 
       const values =
         (data.options || []).find(
