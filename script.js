@@ -3031,9 +3031,19 @@
         return form._mcMsgEl;
       };
 
-      const showMsg = (text) => {
+      const showMsg = (text, timeoutMs = 4000) => {
         const node = resolveMessageEl();
-        if (node) node.textContent = text;
+        if (node) {
+          node.textContent = text;
+        }
+        if (form._mcHideTimer) clearTimeout(form._mcHideTimer);
+        if (text) {
+          form._mcHideTimer = setTimeout(() => {
+            try {
+              if (node) node.textContent = "";
+            } catch (_) {}
+          }, timeoutMs);
+        }
       };
 
       form.addEventListener("submit", (e) => {
