@@ -3036,7 +3036,13 @@
         if (node) node.textContent = text;
         // Also update the dedicated CTA message area if present (homepage hero)
         const ctaMsgEl = document.getElementById("subscribe-cta-message");
-        if (ctaMsgEl) ctaMsgEl.textContent = text;
+        if (ctaMsgEl) {
+          ctaMsgEl.textContent = text;
+          // Ensure it's visible above overlays without changing theme CSS
+          ctaMsgEl.style.display = "block";
+          ctaMsgEl.style.position = ctaMsgEl.style.position || "relative";
+          ctaMsgEl.style.zIndex = ctaMsgEl.style.zIndex || "2";
+        }
 
         if (form._mcHideTimer) clearTimeout(form._mcHideTimer);
         if (text) {
