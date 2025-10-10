@@ -1,19 +1,25 @@
-import { createShopifyClient, handleGraphQLResponse, createApiResponse, createErrorResponse } from './utils/shopify.js';
+import {
+  createShopifyClient,
+  handleGraphQLResponse,
+  createApiResponse,
+  createCachedApiResponse,
+  createErrorResponse,
+} from "./utils/shopify.js";
 
 export const handler = async (event, context) => {
   // CORS preflight
-  if (event.httpMethod === 'OPTIONS') {
+  if (event.httpMethod === "OPTIONS") {
     return createApiResponse({}, 200);
   }
 
-  if (event.httpMethod !== 'GET') {
-    return createErrorResponse('Method not allowed', 405);
+  if (event.httpMethod !== "GET") {
+    return createErrorResponse("Method not allowed", 405);
   }
 
   try {
     const { handle } = event.queryStringParameters || {};
     if (!handle) {
-      return createErrorResponse('Product handle is required', 400);
+      return createErrorResponse("Product handle is required", 400);
     }
 
     const client = createShopifyClient();
@@ -40,15 +46,16 @@ export const handler = async (event, context) => {
     const data = handleGraphQLResponse(response);
 
     if (!data || !data.product) {
-      return createErrorResponse('Product not found', 404);
+      return createErrorResponse("Product not found", 404);
     }
 
     const options = data.product.options || [];
-    const variants = (data.product.variants?.edges || []).map((e:any) => e.node);
+    const variants = (data.product.variants?.edges || []).map(
+      (e: any) => e.node
+    );
 
-    return createApiResponse({ ok: true, options, variants }, 200);
-  } catch (error:any) {
-    return createErrorResponse(error.message || 'Unexpected error', 500);
+    return createCachedApiResponse({ ok: true, options, variants }, 200, 90);
+  } catch (error: any) {
+    return createErrorResponse(error.message || "Unexpected error", 500);
   }
 };
-

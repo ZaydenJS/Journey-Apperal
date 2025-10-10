@@ -4,6 +4,7 @@ import {
   COLLECTION_FRAGMENT,
   handleGraphQLResponse,
   createApiResponse,
+  createCachedApiResponse,
   createErrorResponse,
 } from "./utils/shopify.js";
 
@@ -135,19 +136,23 @@ export const handler = async (event, context) => {
       slug: edge.node.handle, // For compatibility with your existing frontend
     }));
 
-    return createApiResponse({
-      collection,
-      products,
-      pageInfo:
-        data.collection &&
-        data.collection.products &&
-        data.collection.products.pageInfo
-          ? data.collection.products.pageInfo
-          : data.products
-          ? data.products.pageInfo
-          : null,
-      total: products.length,
-    });
+    return createCachedApiResponse(
+      {
+        collection,
+        products,
+        pageInfo:
+          data.collection &&
+          data.collection.products &&
+          data.collection.products.pageInfo
+            ? data.collection.products.pageInfo
+            : data.products
+            ? data.products.pageInfo
+            : null,
+        total: products.length,
+      },
+      200,
+      180
+    );
   } catch (error) {
     return createErrorResponse(error.message);
   }

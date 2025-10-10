@@ -3,6 +3,7 @@ import {
   PRODUCT_FRAGMENT,
   handleGraphQLResponse,
   createApiResponse,
+  createCachedApiResponse,
   createErrorResponse,
 } from "./utils/shopify.js";
 
@@ -65,7 +66,7 @@ export const handler = async (event, context) => {
       slug: data.product.handle, // For compatibility with your existing frontend
     };
 
-    return createApiResponse({ product });
+    return createCachedApiResponse({ product }, 200, 300);
   } catch (error) {
     return createErrorResponse(error.message);
   }

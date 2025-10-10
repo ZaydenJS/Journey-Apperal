@@ -3658,17 +3658,9 @@
       let products = [];
       if (window.shopifyAPI) {
         if (collectionHandle === "all") {
-          // Load all products from all collections (parallel)
-          const collections = await window.shopifyAPI.getCollections();
-          const handles = (collections && collections.collections) || [];
-          const results = await Promise.all(
-            handles.map((c) =>
-              window.shopifyAPI
-                .getCollection(c.handle, tag)
-                .catch(() => ({ products: [] }))
-            )
-          );
-          products = results.flatMap((r) => r.products || []);
+          // Fast path: fetch products across the store in a single request
+          const data = await window.shopifyAPI.getCollection("all", tag);
+          products = data.products || [];
         } else if (collectionHandle === "best-sellers") {
           // Special-case: mirror homepage logic — available products across all
           const collections = await window.shopifyAPI.getCollections();
@@ -6186,26 +6178,46 @@ function setupCollectionLinkPrefetch() {
       }
       const params = u.searchParams;
       const coll = params.get("collection");
-      if (!coll) return; // skip non-collection links
+      const section = params.get("section");
+      if (!coll && section !== "shop-all") return; // skip non-collection and non Shop All links
       e.preventDefault();
       (async function () {
         try {
-          const handle = (coll || "").toLowerCase().replace(/\s+/g, "-");
-          const tag = params.get("tag") || null;
-          const cacheKey = `collection:${handle}:${tag || "-"}`;
-          const has = __cacheGetFresh(cacheKey, 10 * 60 * 1000);
-          if (
-            !has &&
-            window.shopifyAPI &&
-            typeof window.shopifyAPI.getCollection === "function"
-          ) {
-            const timeout = new Promise((r) => setTimeout(r, 140));
-            const data = await Promise.race([
-              window.shopifyAPI.getCollection(handle, tag).catch(() => null),
-              timeout,
-            ]);
-            if (data && Array.isArray(data.products)) {
-              __cacheSet(cacheKey, data.products);
+          if (coll) {
+            const handle = (coll || "").toLowerCase().replace(/\s+/g, "-");
+            const tag = params.get("tag") || null;
+            const cacheKey = `collection:${handle}:${tag || "-"}`;
+            const has = __cacheGetFresh(cacheKey, 10 * 60 * 1000);
+            if (
+              !has &&
+              window.shopifyAPI &&
+              typeof window.shopifyAPI.getCollection === "function"
+            ) {
+              const timeout = new Promise((r) => setTimeout(r, 140));
+              const data = await Promise.race([
+                window.shopifyAPI.getCollection(handle, tag).catch(() => null),
+                timeout,
+              ]);
+              if (data && Array.isArray(data.products)) {
+                __cacheSet(cacheKey, data.products);
+              }
+            }
+          } else if (section === "shop-all") {
+            const cacheKey = "collection:all:-";
+            const has = __cacheGetFresh(cacheKey, 10 * 60 * 1000);
+            if (
+              !has &&
+              window.shopifyAPI &&
+              typeof window.shopifyAPI.getCollection === "function"
+            ) {
+              const timeout = new Promise((r) => setTimeout(r, 140));
+              const data = await Promise.race([
+                window.shopifyAPI.getCollection("all").catch(() => null),
+                timeout,
+              ]);
+              if (data && Array.isArray(data.products)) {
+                __cacheSet(cacheKey, data.products);
+              }
             }
           }
         } catch (_) {}
@@ -6237,7 +6249,34 @@ function setupCollectionHoverPrefetch() {
       return;
     }
     const coll = u.searchParams.get("collection");
-    if (!coll) return; // skip heavy section-based links on hover
+    const section = u.searchParams.get("section");
+    if (!coll && section !== "shop-all") return; // skip heavy section-based links on hover
+
+    if (section === "shop-all" && !coll) {
+      const keyAll = `collection:all:-`;
+      if (prefetched.has(keyAll)) return;
+      const hasAll = __cacheGetFresh(keyAll, 10 * 60 * 1000);
+      if (hasAll && Array.isArray(hasAll) && hasAll.length) {
+        prefetched.add(keyAll);
+        return;
+      }
+      if (
+        window.shopifyAPI &&
+        typeof window.shopifyAPI.getCollection === "function"
+      ) {
+        prefetched.add(keyAll);
+        window.shopifyAPI
+          .getCollection("all")
+          .then(function (res) {
+            if (res && Array.isArray(res.products)) {
+              __cacheSet(keyAll, res.products);
+            }
+          })
+          .catch(function () {});
+      }
+      return;
+    }
+
     const handle = (coll || "").toLowerCase().replace(/\s+/g, "-");
     const key = `collection:${handle}:-`;
     if (prefetched.has(key)) return;

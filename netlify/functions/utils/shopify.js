@@ -153,6 +153,34 @@ export const createApiResponse = (data, status = 200) => {
   };
 };
 
+// Cached API response helper for CDN-friendly caching of read-only endpoints
+export const createCachedApiResponse = (
+  data,
+  status = 200,
+  cacheSeconds = 120
+) => {
+  const cacheControl = `public, max-age=${Math.max(
+    0,
+    Math.floor(cacheSeconds / 2)
+  )}, s-maxage=${Math.max(0, cacheSeconds)}, stale-while-revalidate=${Math.max(
+    0,
+    cacheSeconds
+  )}`;
+  return {
+    statusCode: status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      // Encourage Netlify CDN caching
+      "Cache-Control": cacheControl,
+      "Netlify-CDN-Cache-Control": cacheControl,
+    },
+    body: JSON.stringify(data),
+  };
+};
+
 // Helper function to handle API errors
 export const createErrorResponse = (message, status = 500) => {
   console.error("API Error:", message);

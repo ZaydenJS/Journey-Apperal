@@ -3,6 +3,7 @@ import {
   COLLECTION_FRAGMENT,
   handleGraphQLResponse,
   createApiResponse,
+  createCachedApiResponse,
   createErrorResponse,
 } from "./utils/shopify.js";
 
@@ -57,10 +58,14 @@ export const handler = async (event, context) => {
       productCount: edge.node.products.edges.length,
     }));
 
-    return createApiResponse({
-      collections,
-      total: collections.length,
-    });
+    return createCachedApiResponse(
+      {
+        collections,
+        total: collections.length,
+      },
+      200,
+      300
+    );
   } catch (error) {
     return createErrorResponse(error.message);
   }

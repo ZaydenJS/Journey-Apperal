@@ -85,6 +85,12 @@ class ShopifyAPI {
   }
 
   async getCollection(handle, tag = null) {
+    // Fast path: "Shop All" — fetch products directly in one request
+    if ((handle || "").toLowerCase() === "all") {
+      const params = new URLSearchParams();
+      if (tag) params.append("tag", tag);
+      return this.request(`listProducts?${params}`);
+    }
     const params = new URLSearchParams({ handle });
     if (tag) params.append("tag", tag);
     return this.request(`getCollection?${params}`);
