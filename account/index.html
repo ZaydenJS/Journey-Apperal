@@ -5,7 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>My Account — Journey Apparel</title>
     <meta name="description" content="Account dashboard for Journey Apparel." />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="../styles.css" />
+    <style id="mobile-account-center">
+      @media (max-width: 768px) {
+        /* Center account tiles text on mobile */
+        section[aria-label="Account navigation"] a {
+          text-align: center !important;
+        }
+      }
+    </style>
     <style id="desktop-overrides">
       @media (min-width: 1024px) {
         /* Center logo on desktop for account landing page */
