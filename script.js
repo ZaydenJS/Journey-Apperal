@@ -3033,14 +3033,17 @@
 
       const showMsg = (text, timeoutMs = 4000) => {
         const node = resolveMessageEl();
-        if (node) {
-          node.textContent = text;
-        }
+        if (node) node.textContent = text;
+        // Also update the dedicated CTA message area if present (homepage hero)
+        const ctaMsgEl = document.getElementById("subscribe-cta-message");
+        if (ctaMsgEl) ctaMsgEl.textContent = text;
+
         if (form._mcHideTimer) clearTimeout(form._mcHideTimer);
         if (text) {
           form._mcHideTimer = setTimeout(() => {
             try {
               if (node) node.textContent = "";
+              if (ctaMsgEl) ctaMsgEl.textContent = "";
             } catch (_) {}
           }, timeoutMs);
         }
