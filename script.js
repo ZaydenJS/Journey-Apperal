@@ -4511,6 +4511,7 @@
           };
           let anyStock = !!product.availableForSale;
           const stockBySize = new Map();
+          const vIndex = [];
           variants.forEach((v) => {
             const opts = Array.isArray(v.selectedOptions)
               ? v.selectedOptions
@@ -4538,50 +4539,12 @@
                 String(sz),
                 stockBySize.get(String(sz)) || false || avail
               );
+            vIndex.push({
+              size: sz ? String(sz) : null,
+              colorLower: col ? String(col).toLowerCase() : null,
+              available: avail,
+            });
           });
-          // Fallbacks: derive color from product tags or title if variants don't expose it
-          if (colors.size === 0) {
-            try {
-              const palette = [
-                "black",
-                "white",
-                "gray",
-                "grey",
-                "navy",
-                "red",
-                "blue",
-                "green",
-                "beige",
-                "brown",
-                "cream",
-                "khaki",
-                "tan",
-                "maroon",
-                "purple",
-                "pink",
-                "orange",
-                "yellow",
-                "silver",
-                "gold",
-              ];
-              const tags = (product.tags || []).map((t) =>
-                String(t).toLowerCase()
-              );
-              palette.forEach((c) => {
-                if (tags.includes(c)) addColor(c);
-              });
-              if (colors.size === 0) {
-                const hay = (
-                  (product.title || "") +
-                  " " +
-                  (product.handle || "")
-                ).toLowerCase();
-                palette.forEach((c) => {
-                  if (hay.includes(c)) addColor(c);
-                });
-              }
-            } catch (_) {}
-          }
 
           const priceNum =
             parseFloat(
@@ -4602,6 +4565,7 @@
             sizes,
             anyStock,
             stockBySize,
+            vIndex,
             priceNum,
             dateNum,
           };
@@ -4629,22 +4593,28 @@
               );
               if (!hasColor) return false;
             }
-            // Size + Availability combo
+            // Size presence
             if (sizeSel.size) {
               const hasSize = Array.from(sizeSel).some((s) => it.sizes.has(s));
               if (!hasSize) return false;
-              if (availabilitySel.size && availabilitySel.has("In stock")) {
-                // require at least one in-stock variant among selected sizes
-                const ok = Array.from(sizeSel).some((s) =>
-                  it.stockBySize.get(s)
-                );
-                if (!ok) return false;
-              }
-            } else if (
-              availabilitySel.size &&
-              availabilitySel.has("In stock")
-            ) {
-              if (!it.anyStock) return false;
+            }
+            // Availability intersection using variant index (supports size/color combos)
+            if (availabilitySel.size && availabilitySel.has("In stock")) {
+              const selColorsLower = new Set(
+                Array.from(colorSel, (c) => String(c).toLowerCase())
+              );
+              const ok = it.vIndex.some((v) => {
+                if (!v.available) return false;
+                if (sizeSel.size && !(v.size && sizeSel.has(v.size)))
+                  return false;
+                if (
+                  colorSel.size &&
+                  !(v.colorLower && selColorsLower.has(v.colorLower))
+                )
+                  return false;
+                return true;
+              });
+              if (!ok) return false;
             }
             return true;
           });
