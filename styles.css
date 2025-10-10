@@ -235,6 +235,22 @@ header.header .header-item,
   font-weight: 600 !important;
 }
 
+/* Header typography consistency (desktop): match index header exactly */
+@media (min-width: 1024px) {
+  header.header .nav a,
+  header.header .header-item {
+    font-size: 14px !important;
+    letter-spacing: 0.3px !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  }
+  /* Announcement strip above header */
+  .announcement {
+    font-size: 12px !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  }
+}
+
+
 /* Mega menu (desktop) */
 .mega {
   display: none;
