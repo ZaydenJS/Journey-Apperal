@@ -3515,8 +3515,16 @@
       if (!list || !list.length) {
         showEmptyState(container, "No products found in this collection.");
         if (countElement) countElement.textContent = "0 products";
+        // Reset live dataset
+        window.__COLLECTION_PRODUCTS = [];
+        window.__COLLECTION_PRODUCTS_NORM = null;
+        window.__COLLECTION_PRODUCTS_NORM_SRC = null;
         return;
       }
+      // Publish live dataset for filters
+      window.__COLLECTION_PRODUCTS = list.slice();
+      window.__COLLECTION_PRODUCTS_NORM = null;
+      window.__COLLECTION_PRODUCTS_NORM_SRC = null;
       // Render cards immediately
       container.innerHTML = list.map((p) => renderProductCard(p)).join("");
       if (countElement)
@@ -4083,10 +4091,12 @@
 
     // Premium chip dropdowns: Size, Color, Product type, Availability
     const chipMenus = {
-      size: ["XS", "S", "M", "L", "XL"],
+      // Size Guide authoritative list
+      size: ["2XS", "XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      // Seed colors; can be extended dynamically from loaded products
       color: ["Black", "White", "Gray", "Blue", "Green"],
-      // Align product type categories with collection page spec
-      type: ["Tees", "Bottoms", "Outerwear", "Accessories"],
+      // Align exactly with site categories
+      type: ["Tees", "Hoodies", "Bottoms", "Hats"],
 
       availability: ["In stock"],
     };
@@ -4451,13 +4461,172 @@
       }
 
       function apply() {
-        let filtered = allProducts.slice();
         const sizeSel = chipState.size; // Set
         const colorSel = chipState.color;
         const typeSel = chipState.type;
+        const availabilitySel = chipState.availability;
 
-        // availability currently single option "In stock"; all are in stock
+        const gridEl = document.querySelector(".grid.products");
+        const countEl = document.querySelector("main .muted");
 
+        // Prefer live Shopify products loaded on the page
+        const live = Array.isArray(window.__COLLECTION_PRODUCTS)
+          ? window.__COLLECTION_PRODUCTS
+          : null;
+
+        // Helper: normalize product to filterable shape
+        const norm = (product) => {
+          const typeRaw = (
+            product.productType ||
+            product.type ||
+            ""
+          ).toLowerCase();
+          const mapType = () => {
+            if (/hood/i.test(typeRaw) || /hoodie/i.test(typeRaw))
+              return "Hoodies";
+            if (/tee|t\-?shirt|top/i.test(typeRaw)) return "Tees";
+            if (/short|pant|bottom/i.test(typeRaw)) return "Bottoms";
+            if (/hat|cap/i.test(typeRaw)) return "Hats";
+            // fallback from collections/tags if missing
+            const tags = (product.tags || []).join(" ").toLowerCase();
+            if (/hood/i.test(tags)) return "Hoodies";
+            if (/tee|shirt|top/i.test(tags)) return "Tees";
+            if (/short|pant|bottom/i.test(tags)) return "Bottoms";
+            if (/hat|cap/i.test(tags)) return "Hats";
+            return "";
+          };
+
+          const variants = Array.isArray(product.variants)
+            ? product.variants
+            : [];
+          const sizes = new Set();
+          const colors = new Set();
+          let anyStock = !!product.availableForSale;
+          const stockBySize = new Map();
+          variants.forEach((v) => {
+            const opts = Array.isArray(v.selectedOptions)
+              ? v.selectedOptions
+              : [];
+            const sz = (
+              opts.find((o) => (o.name || "").toLowerCase() === "size") || {}
+            ).value;
+            const col = (
+              opts.find((o) => (o.name || "").toLowerCase() === "color") || {}
+            ).value;
+            if (sz) sizes.add(String(sz));
+            if (col) colors.add(String(col));
+            const avail = !!v.availableForSale;
+            if (avail) anyStock = true;
+            if (sz)
+              stockBySize.set(
+                String(sz),
+                stockBySize.get(String(sz)) || false || avail
+              );
+          });
+
+          const priceNum =
+            parseFloat(
+              (product.priceRange &&
+                product.priceRange.minVariantPrice &&
+                product.priceRange.minVariantPrice.amount) ||
+                0
+            ) || 0;
+          const dateStr =
+            product.publishedAt || product.createdAt || product.updatedAt || "";
+          const dateNum = dateStr ? Date.parse(dateStr) || 0 : 0;
+
+          return {
+            product,
+            type: mapType(),
+            colors,
+            sizes,
+            anyStock,
+            stockBySize,
+            priceNum,
+            dateNum,
+          };
+        };
+
+        if (live) {
+          // Build normalized cache once per dataset
+          if (
+            !window.__COLLECTION_PRODUCTS_NORM ||
+            window.__COLLECTION_PRODUCTS_NORM_SRC !== live
+          ) {
+            window.__COLLECTION_PRODUCTS_NORM = live.map(norm);
+            window.__COLLECTION_PRODUCTS_NORM_SRC = live;
+          }
+          let items = window.__COLLECTION_PRODUCTS_NORM.slice();
+
+          // Apply filters
+          items = items.filter((it) => {
+            // Product Type
+            if (typeSel.size && !typeSel.has(it.type)) return false;
+            // Color (match any selected color)
+            if (colorSel.size) {
+              const hasColor = Array.from(colorSel).some((c) =>
+                it.colors.has(c)
+              );
+              if (!hasColor) return false;
+            }
+            // Size + Availability combo
+            if (sizeSel.size) {
+              const hasSize = Array.from(sizeSel).some((s) => it.sizes.has(s));
+              if (!hasSize) return false;
+              if (availabilitySel.size && availabilitySel.has("In stock")) {
+                // require at least one in-stock variant among selected sizes
+                const ok = Array.from(sizeSel).some((s) =>
+                  it.stockBySize.get(s)
+                );
+                if (!ok) return false;
+              }
+            } else if (
+              availabilitySel.size &&
+              availabilitySel.has("In stock")
+            ) {
+              if (!it.anyStock) return false;
+            }
+            return true;
+          });
+
+          // Sort
+          const sort = currentSort;
+          if (sort === "price-asc")
+            items.sort((a, b) => a.priceNum - b.priceNum);
+          else if (sort === "price-desc")
+            items.sort((a, b) => b.priceNum - a.priceNum);
+          else if (sort === "newest")
+            items.sort((a, b) => b.dateNum - a.dateNum);
+          // bestselling/featured fall back to current order
+
+          // Render using live renderer
+          const list = items.map((it) => it.product);
+          if (gridEl)
+            gridEl.innerHTML = list.map((p) => renderProductCard(p)).join("");
+          if (countEl)
+            countEl.textContent = `${list.length} product${
+              list.length !== 1 ? "s" : ""
+            }`;
+          // Re-enable hover swaps and prefetching on new cards
+          try {
+            setupCardLinks();
+            const cards = Array.from(
+              gridEl.querySelectorAll("article.card[data-href]")
+            );
+            cards.slice(0, 8).forEach((card) => {
+              const href =
+                card.getAttribute("data-href") ||
+                card.querySelector("a[href]")?.getAttribute("href") ||
+                "";
+              const handle = __extractHandleFromHref(href);
+              if (handle) __prefetchPDP(handle);
+            });
+          } catch (_) {}
+          return;
+        }
+
+        // Fallback: legacy demo catalog
+        let filtered = allProducts.slice();
         filtered = filtered.filter((p) => {
           if (sizeSel.size) {
             const has = Array.from(sizeSel).some((s) => p.sizes.includes(s));
@@ -4465,7 +4634,6 @@
           }
           if (colorSel.size && !colorSel.has(p.color)) return false;
           if (typeSel.size && !typeSel.has(p.type)) return false;
-
           return true;
         });
 
@@ -4476,14 +4644,13 @@
             (a[k] - b[k]) * dir;
         const byDate = (a, b) => b.date - a.date;
         const byIndex = (a, b) => a.index - b.index;
-        if (sort === "none") {
-          // no additional sort; keep current order
-        } else if (sort === "price-asc") filtered.sort(byNum("price", +1));
+        if (sort === "price-asc") filtered.sort(byNum("price", +1));
         else if (sort === "price-desc") filtered.sort(byNum("price", -1));
         else if (sort === "newest") filtered.sort(byDate);
-        else if (sort === "bestselling")
-          filtered.sort(byNum("pop", +1)); // lower pop = better
-        else filtered.sort(byIndex); // featured/original
+        else if (sort === "bestselling") filtered.sort(byNum("pop", +1));
+        else if (sort === "none") {
+          // keep
+        } else filtered.sort(byIndex);
 
         render(filtered);
       }
