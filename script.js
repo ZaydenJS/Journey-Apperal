@@ -1036,10 +1036,9 @@
         )?.values || Array.from(bySize.keys());
       if (!values || !values.length) return;
 
-      // Ensure hidden input exists for variantId
-      let hidden = document.querySelector(
-        "input[name='variantId'], input[name='variant_id']"
-      );
+      // Ensure hidden inputs exist for variant id (both names for compatibility)
+      let hidden = document.querySelector("input[name='variantId']");
+      let hiddenLegacy = document.querySelector("input[name='variant_id']");
       if (!hidden) {
         hidden = document.createElement("input");
         hidden.type = "hidden";
@@ -1048,6 +1047,15 @@
           document.querySelector(".p-details .cta-row") ||
           document.querySelector(".p-details");
         if (ctaRow) ctaRow.insertAdjacentElement("afterbegin", hidden);
+      }
+      if (!hiddenLegacy) {
+        hiddenLegacy = document.createElement("input");
+        hiddenLegacy.type = "hidden";
+        hiddenLegacy.name = "variant_id";
+        const ctaRow =
+          document.querySelector(".p-details .cta-row") ||
+          document.querySelector(".p-details");
+        if (ctaRow) ctaRow.insertAdjacentElement("afterbegin", hiddenLegacy);
       }
 
       const saved = (() => {
@@ -1065,6 +1073,8 @@
         const btn = document.createElement("button");
         btn.className = "size";
         btn.textContent = val;
+        // attach variant id on the button for robust fallback
+        if (meta && meta.id) btn.dataset.variantId = String(meta.id);
         const disabled =
           meta.available === false ||
           (typeof meta.qty === "number" && meta.qty <= 0);
@@ -1094,6 +1104,10 @@
           const meta2 = bySize.get(val) || {};
           if (meta2.id && hidden) {
             hidden.value = meta2.id;
+            if (typeof hiddenLegacy !== "undefined" && hiddenLegacy) {
+              hiddenLegacy.value = meta2.id;
+            }
+            btn.dataset.variantId = String(meta2.id);
             try {
               localStorage.setItem("pdp:lastSize:" + handle, val);
             } catch (e) {}
@@ -1239,8 +1253,17 @@
         const hiddenInput = document.querySelector(
           "input[name='variantId'], input[name='variant_id']"
         );
-        const chosenId =
+        let chosenId =
           hiddenInput && hiddenInput.value ? hiddenInput.value : "";
+        // Fallback: read pressed size button's data-variant-id
+        if (!chosenId) {
+          const pressed = document.querySelector(
+            '#size-grid .size[aria-pressed="true"]'
+          );
+          if (pressed && pressed.dataset && pressed.dataset.variantId) {
+            chosenId = pressed.dataset.variantId;
+          }
+        }
         let selectedVariant = null;
         if (chosenId) {
           selectedVariant = (product.variants || []).find(
