@@ -4501,6 +4501,14 @@
             : [];
           const sizes = new Set();
           const colors = new Set();
+          const colorsLower = new Set();
+          const addColor = (raw) => {
+            if (!raw) return;
+            const c = String(raw).trim();
+            if (!c) return;
+            colors.add(c);
+            colorsLower.add(c.toLowerCase());
+          };
           let anyStock = !!product.availableForSale;
           const stockBySize = new Map();
           variants.forEach((v) => {
@@ -4510,11 +4518,19 @@
             const sz = (
               opts.find((o) => (o.name || "").toLowerCase() === "size") || {}
             ).value;
-            const col = (
-              opts.find((o) => (o.name || "").toLowerCase() === "color") || {}
-            ).value;
+            // Support common color option name variants
+            const colorOpt = opts.find((o) => {
+              const n = (o.name || "").toLowerCase().replace(/\s+/g, "");
+              return (
+                n === "color" ||
+                n === "colour" ||
+                n === "colorway" ||
+                n === "colourway"
+              );
+            });
+            const col = colorOpt && colorOpt.value;
             if (sz) sizes.add(String(sz));
-            if (col) colors.add(String(col));
+            if (col) addColor(col);
             const avail = !!v.availableForSale;
             if (avail) anyStock = true;
             if (sz)
@@ -4523,6 +4539,49 @@
                 stockBySize.get(String(sz)) || false || avail
               );
           });
+          // Fallbacks: derive color from product tags or title if variants don't expose it
+          if (colors.size === 0) {
+            try {
+              const palette = [
+                "black",
+                "white",
+                "gray",
+                "grey",
+                "navy",
+                "red",
+                "blue",
+                "green",
+                "beige",
+                "brown",
+                "cream",
+                "khaki",
+                "tan",
+                "maroon",
+                "purple",
+                "pink",
+                "orange",
+                "yellow",
+                "silver",
+                "gold",
+              ];
+              const tags = (product.tags || []).map((t) =>
+                String(t).toLowerCase()
+              );
+              palette.forEach((c) => {
+                if (tags.includes(c)) addColor(c);
+              });
+              if (colors.size === 0) {
+                const hay = (
+                  (product.title || "") +
+                  " " +
+                  (product.handle || "")
+                ).toLowerCase();
+                palette.forEach((c) => {
+                  if (hay.includes(c)) addColor(c);
+                });
+              }
+            } catch (_) {}
+          }
 
           const priceNum =
             parseFloat(
@@ -4539,6 +4598,7 @@
             product,
             type: mapType(),
             colors,
+            colorsLower,
             sizes,
             anyStock,
             stockBySize,
@@ -4562,10 +4622,10 @@
           items = items.filter((it) => {
             // Product Type
             if (typeSel.size && !typeSel.has(it.type)) return false;
-            // Color (match any selected color)
+            // Color (match any selected color, case-insensitive)
             if (colorSel.size) {
               const hasColor = Array.from(colorSel).some((c) =>
-                it.colors.has(c)
+                it.colorsLower.has(String(c).toLowerCase())
               );
               if (!hasColor) return false;
             }
