@@ -3058,6 +3058,7 @@
         const cbName =
           "__mc_cb_" + Date.now() + "_" + Math.floor(Math.random() * 1e6);
         let script;
+        let watchdog;
         function cleanup() {
           try {
             delete window[cbName];
@@ -3081,6 +3082,7 @@
               showMsg(tmp.textContent || tmp.innerText || raw);
             }
           } finally {
+            if (watchdog) clearTimeout(watchdog);
             if (submitBtn) submitBtn.disabled = false;
             cleanup();
           }
@@ -3097,8 +3099,15 @@
         script.onerror = function () {
           showMsg("Network error. Please try again.");
           if (submitBtn) submitBtn.disabled = false;
+          if (watchdog) clearTimeout(watchdog);
           cleanup();
         };
+        // Watchdog: if JSONP callback never fires (e.g., blocked), fail gracefully
+        watchdog = setTimeout(() => {
+          showMsg("We couldn't confirm your subscription. Please try again.");
+          if (submitBtn) submitBtn.disabled = false;
+          cleanup();
+        }, 10000);
         document.body.appendChild(script);
       });
     };
