@@ -2997,10 +2997,8 @@
   // Extra safety: PDP Details manual toggle in case any other binding is missed
   function ensurePdpDetailsToggle() {
     try {
-      const sec = Array.from(
-        document.querySelectorAll(".p-details .collapsible")
-      ).find((s) =>
-        /details/i.test(s.querySelector("button")?.textContent || "")
+      const sec = Array.from(document.querySelectorAll(".collapsible")).find(
+        (s) => /details/i.test(s.querySelector("button")?.textContent || "")
       );
       if (!sec || sec.dataset.detailsManualBound === "1") return;
       const btn = sec.querySelector("button");
@@ -3047,13 +3045,11 @@
       // Ensure the Details button is always clickable (z-index/pointer-events safety)
       function ensurePdpDetailsClickable() {
         try {
-          document
-            .querySelectorAll(".p-details .collapsible > button")
-            .forEach((b) => {
-              b.style.pointerEvents = "auto";
-              b.style.position = "relative";
-              b.style.zIndex = "3";
-            });
+          document.querySelectorAll(".collapsible > button").forEach((b) => {
+            b.style.pointerEvents = "auto";
+            b.style.position = "relative";
+            b.style.zIndex = "3";
+          });
         } catch (_) {}
       }
 
@@ -3087,8 +3083,10 @@
     try {
       if (document.__detailsDelegatedToggleBound) return;
       const onClick = (e) => {
-        const btn = e.target.closest(".p-details .collapsible > button");
+        const btn = e.target.closest(".collapsible > button");
         if (!btn) return;
+        const label = (btn.textContent || "").trim();
+        if (!/details/i.test(label)) return;
         const sec = btn.closest(".collapsible");
         const panel = sec && sec.querySelector(".content");
         if (!sec || !panel) return;
@@ -3118,8 +3116,10 @@
         }
       };
       const onKey = (e) => {
-        const btn = e.target.closest(".p-details .collapsible > button");
+        const btn = e.target.closest(".collapsible > button");
         if (!btn) return;
+        const label = (btn.textContent || "").trim();
+        if (!/details/i.test(label)) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           btn.click();
