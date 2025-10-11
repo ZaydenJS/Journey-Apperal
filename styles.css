@@ -254,6 +254,15 @@ header.header .header-item,
   }
 }
 
+/* Sitewide: make all header text bold (desktop and mobile) */
+header.header .logo a,
+header.header .header-item,
+header.header nav a,
+.header .nav a,
+.announcement {
+  font-weight: 700 !important;
+}
+
 
 /* Mega menu (desktop) */
 .mega {
