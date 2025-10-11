@@ -1246,7 +1246,12 @@
     ).filter((b) => /add\s*to\s*cart/i.test(b.textContent || ""));
 
     addToCartBtns.forEach((btn) => {
-      btn.onclick = async (e) => {
+      try {
+        if (!btn.getAttribute("type")) btn.setAttribute("type", "button");
+      } catch (_) {}
+      if (btn.dataset.addHandlerAttached === "1") return;
+      btn.dataset.addHandlerAttached = "1";
+      btn.addEventListener("click", async (e) => {
         e.preventDefault();
 
         // Get selected variant (prefer hidden variantId set by Size picker)
@@ -1475,7 +1480,7 @@
             alert("Failed to add item to cart. Please try again.");
           }
         }
-      };
+      });
     });
   }
 
