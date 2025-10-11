@@ -236,7 +236,7 @@ header.header .logo a { font-size: 1em !important; letter-spacing: 2px !importan
 header.header .nav a,
 header.header .header-item,
 .header .nav a {
-  font-weight: 600 !important;
+  font-weight: 700 !important; /* unify with global bold */
 }
 
 /* Header typography consistency (desktop): match index header exactly */
@@ -265,7 +265,7 @@ header.header nav a,
 
 
 /* Sitewide: slightly enlarge header text (desktop + mobile) */
-header.header .logo a { font-size: 1.05em !important; letter-spacing: 2.1px !important; }
+/* desktop sizing handled below; keep mobile logo sizing unchanged */
 header.header .header-item,
 header.header nav a,
 .header .nav a { font-size: 15px !important; }
@@ -273,7 +273,8 @@ header.header nav a,
 /* Mega dropdown links */
 .header .mega .links a, .mega .links a { font-weight: 700 !important; font-size: 15px !important; }
 /* Mobile drawer menu */
-.drawer-nav .row-item, .drawer-nav a { font-weight: 700 !important; font-size: 16px !important; }
+/* keep mobile drawer sizes unchanged */
+/* .drawer-nav .row-item, .drawer-nav a { font-weight: 700 !important; font-size: 16px !important; } */
 
 
 /* Mega menu (desktop) */
