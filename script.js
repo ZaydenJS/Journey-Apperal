@@ -1246,8 +1246,11 @@
     ).filter((b) => /add\s*to\s*cart/i.test(b.textContent || ""));
 
     addToCartBtns.forEach((btn) => {
-      btn.onclick = async (e) => {
+      if (btn.dataset.addHandlerAttached === "1") return;
+      btn.dataset.addHandlerAttached = "1";
+      const __addHandler = async (e) => {
         e.preventDefault();
+        if (e && typeof e.stopPropagation === "function") e.stopPropagation();
 
         // Get selected variant (prefer hidden variantId set by Size picker)
         const hiddenInput = document.querySelector(
@@ -1457,6 +1460,8 @@
           }
         }
       };
+      btn.onclick = __addHandler;
+      btn.addEventListener("click", __addHandler);
     });
   }
 
