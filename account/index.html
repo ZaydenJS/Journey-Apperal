@@ -20,13 +20,14 @@
         section[aria-label="Account navigation"] {
           position: relative !important;
           padding-top: 28px !important; /* space for the top line */
-          grid-template-columns: repeat(
-            2,
-            1fr
-          ) !important; /* 2-up for centered Orders + Sign Out */
+          grid-template-columns: auto auto !important; /* cards use content width so they sit next to each other */
           justify-content: center !important; /* center the two columns within the container */
-          justify-items: center !important; /* center items within their grid cells */
           align-items: start !important;
+          justify-items: center !important; /* center items within their grid cells */
+          gap: 24px !important; /* comfortable spacing between cards */
+          max-width: 760px !important; /* keep the two cards clustered */
+          margin-left: auto !important;
+          margin-right: auto !important;
         }
         /* Single family-tree line (connected to branches). Remove standalone header divider below. */
         section[aria-label="Account navigation"]::before {
@@ -41,6 +42,8 @@
         section[aria-label="Account navigation"] > a {
           position: relative;
           text-align: center !important;
+          width: 340px; /* fixed width so grid columns hug content */
+          max-width: 100%;
         }
         section[aria-label="Account navigation"] > a::before {
           content: "";
