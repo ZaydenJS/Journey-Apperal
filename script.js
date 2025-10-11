@@ -1264,31 +1264,16 @@
             chosenId = pressed.dataset.variantId;
           }
         }
-        // Final fallback: derive from selected size text against product.variants
+        // Final fallback: require a selected variant id
         if (!chosenId) {
-          const pressed = document.querySelector(
-            '#size-grid .size[aria-pressed="true"]'
-          );
-          const sizeLabel =
-            (pressed && pressed.textContent && pressed.textContent.trim()) ||
-            "";
-          if (sizeLabel && Array.isArray(product.variants)) {
-            const candidate = product.variants.find((v) => {
-              const so = (v.selectedOptions || []).find(
-                (o) => (o.name || "").toLowerCase() === "size"
-              );
-              return so && String(so.value).trim() === sizeLabel;
-            });
-            if (candidate && candidate.id) chosenId = candidate.id;
-          }
+          alert("Please choose a size.");
+          return;
         }
-        let selectedVariant = null;
-        if (chosenId) {
-          selectedVariant = (product.variants || []).find(
-            (v) => v.id === chosenId
-          ) || { id: chosenId };
-        } else {
-          selectedVariant = getSelectedVariant(product);
+        // Build a minimal selectedVariant object; enrich if product data is available
+        let selectedVariant = { id: chosenId };
+        if (product && Array.isArray(product.variants)) {
+          const found = product.variants.find((v) => v.id === chosenId);
+          if (found) selectedVariant = found;
         }
 
         if (!selectedVariant || !selectedVariant.id) {
