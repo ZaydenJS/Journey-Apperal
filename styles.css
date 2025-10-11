@@ -1212,9 +1212,9 @@ header.header nav a,
   header.header .logo a { font-weight: 900 !important; font-size: 1.12em !important; letter-spacing: 2.2px !important; }
   /* Larger, deeper bold for primary nav items */
   header.header .header-item,
-  header.header .nav a { font-weight: 800 !important; font-size: 18px !important; }
+  header.header .nav a { font-weight: 800 !important; font-size: 26px !important; }
   /* Mega dropdown links match nav scale */
-  .header .mega .links a, .mega .links a { font-weight: 800 !important; font-size: 18px !important; }
+  .header .mega .links a, .mega .links a { font-weight: 800 !important; font-size: 26px !important; }
 }
 
 
