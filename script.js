@@ -103,7 +103,7 @@
       <a href="/collection.html?collection=womens-activewear">Women’s Activewear</a>
     </div>
     <a href="#" class="row-item">Gift Cards</a>
-    <a href="/account/register.html" class="row-item">Journey Sign Up</a>
+
     <button class="row-item accordion" data-accordion aria-expanded="false">Customer Care <span class="chev">›</span></button>
     <div class="sub">
       <a href="/returns.html">Exchanges & Returns</a>
