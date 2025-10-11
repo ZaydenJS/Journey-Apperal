@@ -19,14 +19,15 @@
         /* PC-only: horizontal connector line + vertical branches to each tile */
         section[aria-label="Account navigation"] {
           position: relative !important;
-          padding-top: 32px !important; /* space for the top line */
+          padding-top: 28px !important; /* space for the top line */
           grid-template-columns: repeat(4, 1fr) !important; /* ensure 4-up */
           align-items: start !important;
         }
+        /* Single family-tree line (connected to branches). Remove standalone header divider below. */
         section[aria-label="Account navigation"]::before {
           content: "";
           position: absolute;
-          top: -12px; /* nudge line closer to "Welcome back" */
+          top: 0;
           left: 5%;
           right: 5%;
           height: 2px;
@@ -38,12 +39,16 @@
         section[aria-label="Account navigation"] > a::before {
           content: "";
           position: absolute;
-          top: -32px; /* connects up to the top line */
+          top: -28px; /* connects up to the top line */
           left: 50%;
           transform: translateX(-50%);
           width: 2px;
-          height: 32px;
+          height: 28px;
           background: #e5e5e5;
+        }
+        /* Remove the extra standalone line below the page heading on desktop */
+        section[aria-label="Account header"] {
+          border-bottom: 0 !important;
         }
       }
     </style>

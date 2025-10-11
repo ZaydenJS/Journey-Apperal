@@ -84,6 +84,10 @@ input {
   display: inline-block;
   padding: 8px 10px;
 }
+/* Ensure consistent logo styling across all pages (match index) */
+header.header .logo, .logo { font-weight: 800 !important; letter-spacing: 2px !important; }
+header.header .logo a { font-size: 1em !important; letter-spacing: 2px !important; }
+
 .icon-btn {
   background: none;
   border: 0;
