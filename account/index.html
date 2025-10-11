@@ -21,9 +21,11 @@
           position: relative !important;
           padding-top: 28px !important; /* space for the top line */
           grid-template-columns: repeat(
-            3,
+            2,
             1fr
-          ) !important; /* switched to 3-up */
+          ) !important; /* 2-up for centered Orders + Sign Out */
+          justify-content: center !important; /* center the two columns within the container */
+          justify-items: center !important; /* center items within their grid cells */
           align-items: start !important;
         }
         /* Single family-tree line (connected to branches). Remove standalone header divider below. */
@@ -31,8 +33,8 @@
           content: "";
           position: absolute;
           top: 0;
-          left: 5%;
-          right: 5%;
+          left: 10%; /* centered, shorter line to connect just the two cards */
+          right: 10%;
           height: 2px;
           background: #e5e5e5;
         }
@@ -595,26 +597,6 @@
           </div>
           <div style="color: #555; font-size: 14px">
             View order history and details
-          </div>
-        </a>
-
-        <a
-          href="/account/addresses.html"
-          style="
-            display: block;
-            border: 1px solid #e5e5e5;
-            border-radius: 12px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
-            padding: 16px;
-            text-decoration: none;
-            color: #111;
-          "
-        >
-          <div class="upper" style="font-weight: 800; margin-bottom: 6px">
-            Addresses
-          </div>
-          <div style="color: #555; font-size: 14px">
-            Manage your address book
           </div>
         </a>
 
