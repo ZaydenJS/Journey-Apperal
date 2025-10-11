@@ -185,7 +185,8 @@
     __safe("setupSearch", setupSearch);
     __safe("setupSearchHover", setupSearchHover);
     __safe("setupCart", setupCart);
-    __safe("setupAddToCart", setupAddToCart);
+    // Bind a UI-only add-to-cart fallback on initial load; PDP will rebind with product later
+    __safe("setupAddToCartUI", setupAddToCartUI);
 
     __safe("setupAddToCartGuard", setupAddToCartGuard);
     __safe("normalizeTitleAndAnnouncement", normalizeTitleAndAnnouncement);
