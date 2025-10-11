@@ -1340,105 +1340,101 @@
             );
           } else {
             lines.push({ variantGid: selectedVariant.id, quantity: 1 });
+          }
 
-            // Also update mini-cart UI and open the cart drawer
+          // Update mini-cart UI and open the cart drawer (for both new and existing lines)
+          try {
+            const nameEl = document.querySelector(
+              ".p-details .upper, .p-details .title, h1, .product-title"
+            );
+            const name =
+              (nameEl && nameEl.textContent.trim()) ||
+              (product && product.title) ||
+              "";
+            let price = "";
             try {
-              const nameEl = document.querySelector(
-                ".p-details .upper, .p-details .title, h1, .product-title"
-              );
-              const name =
-                (nameEl && nameEl.textContent.trim()) ||
-                (product && product.title) ||
-                "";
-              let price = "";
-              try {
-                if (
-                  selectedVariant &&
-                  selectedVariant.price &&
-                  selectedVariant.price.amount
+              if (
+                selectedVariant &&
+                selectedVariant.price &&
+                selectedVariant.price.amount
+              ) {
+                price = `$${parseFloat(selectedVariant.price.amount).toFixed(
+                  2
+                )}`;
+              } else {
+                const priceNode =
+                  document.querySelector(".p-details .p-price") ||
+                  document.querySelector(
+                    ".price .current, .product-price .current, .p-details .price .current"
+                  );
+                if (priceNode && priceNode.textContent) {
+                  price = priceNode.textContent.trim();
+                } else if (
+                  product &&
+                  product.priceRange &&
+                  product.priceRange.minVariantPrice &&
+                  product.priceRange.minVariantPrice.amount
                 ) {
-                  price = `$${parseFloat(selectedVariant.price.amount).toFixed(
-                    2
-                  )}`;
-                } else {
-                  const priceNode =
-                    document.querySelector(".p-details .p-price") ||
-                    document.querySelector(
-                      ".price .current, .product-price .current, .p-details .price .current"
-                    );
-                  if (priceNode && priceNode.textContent) {
-                    price = priceNode.textContent.trim();
-                  } else if (
-                    product &&
-                    product.priceRange &&
-                    product.priceRange.minVariantPrice &&
+                  price = `$${parseFloat(
                     product.priceRange.minVariantPrice.amount
-                  ) {
-                    price = `$${parseFloat(
-                      product.priceRange.minVariantPrice.amount
-                    ).toFixed(2)}`;
-                  }
+                  ).toFixed(2)}`;
                 }
-              } catch (_) {}
-              const size =
-                (selectedVariant &&
-                Array.isArray(selectedVariant.selectedOptions)
-                  ? (
-                      selectedVariant.selectedOptions.find(function (o) {
-                        return String(o.name || "").toLowerCase() === "size";
-                      }) || {}
-                    ).value
-                  : "") || "";
-              const image =
-                (document.querySelector(".gallery-main img") &&
-                  document
-                    .querySelector(".gallery-main img")
-                    .getAttribute("src")) ||
-                (product &&
-                  product.images &&
-                  product.images[0] &&
-                  product.images[0].src) ||
-                "";
-
-              // Initialize mini-cart if needed
-              if (
-                typeof window.openCart !== "function" &&
-                typeof window.setupCart === "function"
-              ) {
-                try {
-                  window.setupCart();
-                } catch (_) {}
-              }
-
-              const items =
-                window.__cart && typeof window.__cart.getCart === "function"
-                  ? window.__cart.getCart()
-                  : [];
-              const existing = items.find(function (it) {
-                return it.name === name && it.size === size;
-              });
-              if (existing) existing.qty = (existing.qty || 1) + 1;
-              else
-                items.push({
-                  name: name,
-                  price: price,
-                  size: size,
-                  image: image,
-                  qty: 1,
-                  variantGid: (selectedVariant && selectedVariant.id) || "",
-                });
-
-              if (
-                window.__cart &&
-                typeof window.__cart.setCart === "function"
-              ) {
-                window.__cart.setCart(items);
-              }
-              if (typeof window.openCart === "function") {
-                window.openCart();
               }
             } catch (_) {}
-          }
+            const size =
+              (selectedVariant && Array.isArray(selectedVariant.selectedOptions)
+                ? (
+                    selectedVariant.selectedOptions.find(function (o) {
+                      return String(o.name || "").toLowerCase() === "size";
+                    }) || {}
+                  ).value
+                : "") || "";
+            const image =
+              (document.querySelector(".gallery-main img") &&
+                document
+                  .querySelector(".gallery-main img")
+                  .getAttribute("src")) ||
+              (product &&
+                product.images &&
+                product.images[0] &&
+                product.images[0].src) ||
+              "";
+
+            // Initialize mini-cart if needed
+            if (
+              typeof window.openCart !== "function" &&
+              typeof window.setupCart === "function"
+            ) {
+              try {
+                window.setupCart();
+              } catch (_) {}
+            }
+
+            const items =
+              window.__cart && typeof window.__cart.getCart === "function"
+                ? window.__cart.getCart()
+                : [];
+            const existing = items.find(function (it) {
+              return it.name === name && it.size === size;
+            });
+            if (existing) existing.qty = (existing.qty || 1) + 1;
+            else
+              items.push({
+                name: name,
+                price: price,
+                size: size,
+                image: image,
+                qty: 1,
+                variantGid: (selectedVariant && selectedVariant.id) || "",
+              });
+
+            if (window.__cart && typeof window.__cart.setCart === "function") {
+              window.__cart.setCart(items);
+            }
+            if (typeof window.openCart === "function") {
+              window.openCart();
+            }
+          } catch (_) {}
           setLines(lines);
 
           btn.textContent = "Added!";
