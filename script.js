@@ -6104,9 +6104,191 @@
       }
     } catch (_) {}
     if (typeof window.openCart === "function") {
+      // Delegated fallback for Add to Cart: ensures desktop works even if direct binding misses
+      (function () {
+        if (window.__addToCartDelegatedBound) return;
+        window.__addToCartDelegatedBound = true;
+        document.addEventListener("click", function (e) {
+          try {
+            const btn =
+              e.target &&
+              e.target.closest &&
+              e.target.closest(".p-details .btn");
+            if (!btn) return;
+            if (!/add\s*to\s*cart/i.test(btn.textContent || "")) return;
+            // If a direct handler is attached, let it handle the click
+            if (btn.dataset && btn.dataset.addHandlerAttached === "1") return;
+            // Robust guard: require a size selection
+            const selected = document.querySelector(
+              '#size-grid .size[aria-pressed="true"]'
+            );
+            if (!selected) {
+              e.preventDefault();
+              alert("Please select a size first.");
+              return;
+            }
+            e.preventDefault();
+            // Debounce
+            if (btn.dataset && btn.dataset.isAdding === "1") return;
+            if (btn.dataset) btn.dataset.isAdding = "1";
+            try {
+              if (!btn.getAttribute("type")) btn.setAttribute("type", "button");
+            } catch (_) {}
+
+            // Ensure cart is initialized
+            if (!window.__cart || typeof window.__cart.setCart !== "function") {
+              try {
+                if (typeof window.setupCart === "function") window.setupCart();
+              } catch (_) {}
+            }
+
+            const name = (
+              document.querySelector(".p-details h1")?.textContent || ""
+            ).trim();
+            const price = (
+              document.querySelector(".p-details .p-price")?.textContent || ""
+            ).trim();
+            const size = selected?.textContent?.trim() || "";
+            const image =
+              document
+                .querySelector(".gallery-main img")
+                ?.getAttribute("src") || "";
+
+            // Prefer exact variant id
+            const hiddenInput = document.querySelector(
+              "input[name='variantId'], input[name='variant_id']"
+            );
+            let chosenId =
+              hiddenInput && hiddenInput.value ? hiddenInput.value : "";
+            if (
+              !chosenId &&
+              selected &&
+              selected.dataset &&
+              selected.dataset.variantId
+            ) {
+              chosenId = selected.dataset.variantId;
+            }
+
+            const items =
+              (window.__cart?.getCart && window.__cart.getCart()) || [];
+            const existing = items.find(
+              (it) => it.name === name && it.size === size
+            );
+            if (existing) existing.qty = (existing.qty || 1) + 1;
+            else
+              items.push({
+                name,
+                price,
+                size,
+                image,
+                qty: 1,
+                variantGid: chosenId,
+              });
+            window.__cart?.setCart && window.__cart.setCart(items);
+
+            try {
+              if (
+                typeof window.openCart !== "function" &&
+                typeof window.setupCart === "function"
+              ) {
+                window.setupCart();
+              }
+            } catch (_) {}
+            window.openCart && window.openCart();
+
+            setTimeout(function () {
+              if (btn.dataset) btn.dataset.isAdding = "0";
+            }, 300);
+          } catch (err) {
+            console.error("Delegated Add to Cart failed:", err);
+          }
+        });
+      })();
+
       try {
         window.openCart();
       } catch (_) {}
+    }
+  });
+})();
+
+// Delegated fallback for Add to Cart (global) — runs even if no direct handler attached
+(function () {
+  if (window.__addToCartDelegatedBound) return;
+  window.__addToCartDelegatedBound = true;
+  document.addEventListener("click", function (e) {
+    try {
+      const btn =
+        e.target && e.target.closest && e.target.closest(".p-details .btn");
+      if (!btn) return;
+      if (!/add\s*to\s*cart/i.test(btn.textContent || "")) return;
+      if (btn.dataset && btn.dataset.addHandlerAttached === "1") return;
+      const selected = document.querySelector(
+        '#size-grid .size[aria-pressed="true"]'
+      );
+      if (!selected) {
+        e.preventDefault();
+        alert("Please select a size first.");
+        return;
+      }
+      e.preventDefault();
+      if (btn.dataset && btn.dataset.isAdding === "1") return;
+      if (btn.dataset) btn.dataset.isAdding = "1";
+      try {
+        if (!btn.getAttribute("type")) btn.setAttribute("type", "button");
+      } catch (_) {}
+
+      if (!window.__cart || typeof window.__cart.setCart !== "function") {
+        try {
+          if (typeof window.setupCart === "function") window.setupCart();
+        } catch (_) {}
+      }
+
+      const name = (
+        document.querySelector(".p-details h1")?.textContent || ""
+      ).trim();
+      const price = (
+        document.querySelector(".p-details .p-price")?.textContent || ""
+      ).trim();
+      const size = selected?.textContent?.trim() || "";
+      const image =
+        document.querySelector(".gallery-main img")?.getAttribute("src") || "";
+
+      const hiddenInput = document.querySelector(
+        "input[name='variantId'], input[name='variant_id']"
+      );
+      let chosenId = hiddenInput && hiddenInput.value ? hiddenInput.value : "";
+      if (
+        !chosenId &&
+        selected &&
+        selected.dataset &&
+        selected.dataset.variantId
+      ) {
+        chosenId = selected.dataset.variantId;
+      }
+
+      const items = (window.__cart?.getCart && window.__cart.getCart()) || [];
+      const existing = items.find((it) => it.name === name && it.size === size);
+      if (existing) existing.qty = (existing.qty || 1) + 1;
+      else
+        items.push({ name, price, size, image, qty: 1, variantGid: chosenId });
+      window.__cart?.setCart && window.__cart.setCart(items);
+
+      try {
+        if (
+          typeof window.openCart !== "function" &&
+          typeof window.setupCart === "function"
+        ) {
+          window.setupCart();
+        }
+      } catch (_) {}
+      window.openCart && window.openCart();
+
+      setTimeout(function () {
+        if (btn.dataset) btn.dataset.isAdding = "0";
+      }, 300);
+    } catch (err) {
+      console.error("Delegated Add to Cart failed:", err);
     }
   });
 })();
