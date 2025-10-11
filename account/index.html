@@ -20,10 +20,7 @@
         section[aria-label="Account navigation"] {
           position: relative !important;
           padding-top: 28px !important; /* space for the top line */
-          grid-template-columns: repeat(
-            3,
-            1fr
-          ) !important; /* ensure 3-up after removing Profile */
+          grid-template-columns: repeat(4, 1fr) !important; /* ensure 4-up */
           align-items: start !important;
         }
         /* Single family-tree line (connected to branches). Remove standalone header divider below. */
@@ -598,7 +595,25 @@
             View order history and details
           </div>
         </a>
-
+        <a
+          href="/account/profile.html"
+          style="
+            display: block;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+            padding: 16px;
+            text-decoration: none;
+            color: #111;
+          "
+        >
+          <div class="upper" style="font-weight: 800; margin-bottom: 6px">
+            Profile
+          </div>
+          <div style="color: #555; font-size: 14px">
+            Edit your name and email
+          </div>
+        </a>
         <a
           href="/account/addresses.html"
           style="
