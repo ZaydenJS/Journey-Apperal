@@ -1205,6 +1205,18 @@ header.header nav a,
 }
 
 
+/* Desktop: stronger, larger header logo + nav */
+@media (min-width: 1024px) {
+  /* Thicker JOURNEYS logo */
+  header.header .logo a { font-weight: 900 !important; font-size: 1.12em !important; letter-spacing: 2.2px !important; }
+  /* Larger, deeper bold for primary nav items */
+  header.header .header-item,
+  header.header .nav a { font-weight: 800 !important; font-size: 16px !important; }
+  /* Mega dropdown links match nav scale */
+  .header .mega .links a, .mega .links a { font-weight: 800 !important; font-size: 16px !important; }
+}
+
+
 /* iOS Safari: prevent input-focus zoom and keep scale stable */
 html { -webkit-text-size-adjust: 100%; }
 @media (max-width: 1024px) {
