@@ -6010,12 +6010,16 @@
       (b) => /add\s*to\s*cart/i.test(b.textContent || "")
     );
     if (!btn) return;
+    try {
+      if (!btn.getAttribute("type")) btn.setAttribute("type", "button");
+    } catch (_) {}
 
     // Avoid attaching duplicate handlers (which can cause +2 quantity)
     if (btn.dataset.addHandlerAttached === "1") return;
     btn.dataset.addHandlerAttached = "1";
 
     btn.addEventListener("click", (e) => {
+      e.preventDefault();
       // allow guard to run; if size not selected it will alert
       const selected = document.querySelector(
         '#size-grid .size[aria-pressed="true"]'
