@@ -1210,6 +1210,20 @@
         document.addEventListener("DOMContentLoaded", function () {
           var track = document.getElementById("hero-track");
           if (!track) return;
+          // Desktop: lock wheel/trackpad scrolling on hero image so page scrolls normally
+          if (window.innerWidth >= 1024) {
+            try {
+              track.style.overflowX = "hidden";
+              track.addEventListener(
+                "wheel",
+                function (e) {
+                  e.preventDefault();
+                  window.scrollBy({ top: e.deltaY || 0, behavior: "auto" });
+                },
+                { passive: false }
+              );
+            } catch (_) {}
+          }
 
           // ensure no gaps and no rounding
           track.style.gap = "0px";

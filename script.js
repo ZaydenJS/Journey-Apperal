@@ -1222,18 +1222,23 @@
       const cached = __cacheGetFresh("pdp:variants:" + handle, 10 * 60 * 1000);
       if (cached && cached.variants) renderFrom(cached);
 
-      // Fetch fresh in background and update if needed
+      // Fetch fresh in background and update if needed (use full product to avoid second round-trip)
       const resp = await fetch(
-        `/.netlify/functions/product-variants?handle=${encodeURIComponent(
-          handle
-        )}`
+        `/.netlify/functions/getProduct?handle=${encodeURIComponent(handle)}`
       );
-
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
-      if (!data || !data.variants) throw new Error("No variant data");
-      __cacheSet("pdp:variants:" + handle, data);
-      renderFrom(data);
+      const product =
+        data && (data.product || data.product === null ? data.product : null);
+      if (!product || !Array.isArray(product.variants))
+        throw new Error("No product/variant data");
+      const payload = {
+        variants: product.variants,
+        options: product.options || [],
+      };
+      __cacheSet("pdp:product:" + handle, product);
+      __cacheSet("pdp:variants:" + handle, payload);
+      renderFrom(payload);
     } catch (e) {
       console.warn("Failed to load product-variants", e);
     }
@@ -2287,13 +2292,18 @@
     } catch (_) {}
     try {
       const r = await fetch(
-        `/.netlify/functions/product-variants?handle=${encodeURIComponent(
-          handle
-        )}`
+        `/.netlify/functions/getProduct?handle=${encodeURIComponent(handle)}`
       );
       if (r && r.ok) {
         const data = await r.json();
-        if (data) __cacheSet("pdp:variants:" + handle, data);
+        const product = data && data.product;
+        if (product) {
+          __cacheSet("pdp:product:" + handle, product);
+          __cacheSet("pdp:variants:" + handle, {
+            variants: product.variants,
+            options: product.options || [],
+          });
+        }
       }
     } catch (_) {}
   }
@@ -2469,19 +2479,29 @@
                 var has = __cacheGetFresh(key, 10 * 60 * 1000);
                 if (!has) {
                   fetch(
-                    "/.netlify/functions/product-variants?handle=" +
+                    "/.netlify/functions/getProduct?handle=" +
                       encodeURIComponent(handle)
                   )
                     .then(function (r) {
                       return r.ok ? r.json() : null;
                     })
-                    .then(function (v) {
-                      if (v && v.variants) {
+                    .then(function (res) {
+                      var p = res && res.product;
+                      if (p && p.variants) {
                         try {
+                          sessionStorage.setItem(
+                            "handoff:product:" + handle,
+                            JSON.stringify(p)
+                          );
+                          var v = {
+                            variants: p.variants,
+                            options: p.options || [],
+                          };
                           sessionStorage.setItem(
                             "handoff:variants:" + handle,
                             JSON.stringify(v)
                           );
+                          __cacheSet("pdp:product:" + handle, p);
                           __cacheSet(key, v);
                         } catch (_) {}
                       }
@@ -5312,32 +5332,84 @@
       if (e.target === overlay) close();
     });
 
-    // Live suggestions
-    input.addEventListener("input", () => {
+    // Live suggestions (debounced, server-backed)
+    const debounce = (fn, ms) => {
+      let t;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), ms);
+      };
+    };
+    const runSearch = async () => {
       const q = input.value || "";
       if (!q.trim()) {
         list.style.display = "none";
         list.innerHTML = "";
+        currentItems = [];
+        activeIdx = 0;
         return;
       }
-      currentItems = filterIndex(q);
-      activeIdx = 0;
-      renderSuggestions(currentItems, activeIdx);
-      // Wire click for items (delegate)
-      list.querySelectorAll("a").forEach((a, i) => {
-        a.addEventListener("click", (ev) => {
-          ev.preventDefault();
-          const dest = currentItems[i]?.url;
-          if (!dest) return;
-          if (dest === "#cart") {
-            openCart();
-            close();
-          } else {
-            location.href = dest;
-          }
+      try {
+        const url = `/.netlify/functions/search?q=${encodeURIComponent(
+          q
+        )}&limit=10`;
+        const resp = await fetch(url, {
+          headers: { Accept: "application/json" },
         });
-      });
-    });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const items = Array.isArray(data.items) ? data.items : [];
+        currentItems = items;
+        activeIdx = 0;
+        if (!items.length) {
+          const suggestions = Array.isArray(data.suggestions)
+            ? data.suggestions
+            : [];
+          const emptyHtml = [
+            '<div style="padding:12px 12px 8px 12px;border-bottom:1px solid #eee;"><strong>No results</strong></div>',
+            suggestions
+              .slice(0, 5)
+              .map(
+                (s) =>
+                  `<a href="${
+                    s.url
+                  }" style="display:flex;align-items:center;gap:10px;padding:10px 12px;color:#111;text-decoration:none;">
+                <div style="flex:1;">
+                  <div style="font-weight:600;font-size:14px;">${s.label}</div>
+                  <div style="opacity:.6;font-size:12px;">${s.meta || ""}</div>
+                </div>
+              </a>`
+              )
+              .join(""),
+          ].join("");
+          list.innerHTML = emptyHtml;
+          list.style.display = "block";
+          list.querySelectorAll("a").forEach((a) => {
+            a.addEventListener("click", (ev) => {
+              /* allow nav */ close();
+            });
+          });
+          return;
+        }
+        renderSuggestions(currentItems, activeIdx);
+        list.querySelectorAll("a").forEach((a, i) => {
+          a.addEventListener("click", (ev) => {
+            ev.preventDefault();
+            const dest = currentItems[i]?.url;
+            if (!dest) return;
+            if (dest === "#cart") {
+              openCart();
+              close();
+            } else {
+              location.href = dest;
+            }
+          });
+        });
+      } catch (_) {
+        // Silent fail, keep previous state
+      }
+    };
+    input.addEventListener("input", debounce(runSearch, 200));
 
     // Submit fallback (if no suggestions)
     form.addEventListener("submit", (e) => {
