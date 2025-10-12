@@ -477,6 +477,170 @@
         } catch (_) {}
       })();
     </script>
+    <script id="pdp-instant-sizes">
+      (function () {
+        try {
+          function getHandle() {
+            var u = new URL(window.location.href);
+            var slug = u.searchParams.get("slug");
+            if (slug) return slug;
+            var seg = u.pathname.split("/").filter(Boolean);
+            return seg[seg.length - 1] || "";
+          }
+          function onReady(fn) {
+            if (document.readyState !== "loading") fn();
+            else document.addEventListener("DOMContentLoaded", fn);
+          }
+          var handle = getHandle();
+          if (!handle) return;
+
+          // Try to get variants from handoff caches (set on card click/hover)
+          var payload = null;
+          try {
+            var hv = sessionStorage.getItem("handoff:variants:" + handle);
+            if (hv) payload = JSON.parse(hv);
+          } catch (_) {}
+          if (!payload || !payload.variants) {
+            try {
+              var hp = sessionStorage.getItem("handoff:product:" + handle);
+              if (hp) {
+                var p = JSON.parse(hp) || {};
+                if (Array.isArray(p.variants) && p.variants.length) {
+                  payload = { variants: p.variants, options: p.options || [] };
+                }
+              }
+            } catch (_) {}
+          }
+          if (!payload || !payload.variants) return;
+
+          function render() {
+            var grid = document.getElementById("size-grid");
+            if (!grid) return false;
+
+            // Build size -> best candidate map
+            var bySize = Object.create(null);
+            (payload.variants || []).forEach(function (v) {
+              var so = (v.selectedOptions || []).find(function (o) {
+                return String(o.name || "").toLowerCase() === "size";
+              });
+              if (!so) return;
+              var rec = bySize[so.value] || { cands: [] };
+              rec.cands.push({
+                id: v.id,
+                available: !!v.availableForSale,
+                qty: v.quantityAvailable == null ? null : +v.quantityAvailable,
+              });
+              bySize[so.value] = rec;
+            });
+
+            var order = (payload.options || []).find(function (o) {
+              return String(o.name || "").toLowerCase() === "size";
+            });
+            var values = (order && order.values) || Object.keys(bySize);
+
+            // Ensure hidden inputs exist
+            var cta =
+              document.querySelector(".p-details .cta-row") ||
+              document.querySelector(".p-details");
+            var hidden = document.querySelector('input[name="variantId"]');
+            if (!hidden && cta) {
+              hidden = document.createElement("input");
+              hidden.type = "hidden";
+              hidden.name = "variantId";
+              cta.insertAdjacentElement("afterbegin", hidden);
+            }
+            var hiddenLegacy = document.querySelector(
+              'input[name="variant_id"]'
+            );
+            if (!hiddenLegacy && cta) {
+              hiddenLegacy = document.createElement("input");
+              hiddenLegacy.type = "hidden";
+              hiddenLegacy.name = "variant_id";
+              cta.insertAdjacentElement("afterbegin", hiddenLegacy);
+            }
+
+            var saved = "";
+            try {
+              saved = localStorage.getItem("pdp:lastSize:" + handle) || "";
+            } catch (_) {}
+
+            grid.innerHTML = "";
+            var firstBtn = null;
+            values.forEach(function (val) {
+              var rec = bySize[val] || { cands: [] };
+              var best = null;
+              var hasAvail = false;
+              rec.cands.forEach(function (c) {
+                if (!best && c.available && (c.qty == null || c.qty > 0))
+                  best = c;
+                if (c.available && (c.qty == null || c.qty > 0))
+                  hasAvail = true;
+              });
+              if (!best) best = rec.cands[0] || null;
+
+              var btn = document.createElement("button");
+              btn.className = "size";
+              btn.textContent = val;
+              if (best && best.id) btn.dataset.variantId = String(best.id);
+              var disabled = !hasAvail;
+              if (disabled) {
+                btn.disabled = true;
+                btn.style.opacity = "0.5";
+                btn.style.cursor = "not-allowed";
+              }
+
+              btn.addEventListener("click", function (e) {
+                e.preventDefault();
+                if (btn.disabled) return;
+                Array.from(
+                  grid.querySelectorAll('.size[aria-pressed="true"]')
+                ).forEach(function (b) {
+                  b.setAttribute("aria-pressed", "false");
+                });
+                btn.setAttribute("aria-pressed", "true");
+                if (best && best.id) {
+                  if (hidden) hidden.value = best.id;
+                  if (hiddenLegacy) hiddenLegacy.value = best.id;
+                  try {
+                    localStorage.setItem("pdp:lastSize:" + handle, val);
+                  } catch (_) {}
+                  var addBtn = Array.from(
+                    document.querySelectorAll(".p-details .btn, .add-to-cart")
+                  ).find(function (b) {
+                    return /add\s*to\s*cart/i.test(b.textContent || "");
+                  });
+                  if (addBtn) addBtn.disabled = false;
+                }
+              });
+
+              grid.appendChild(btn);
+
+              if (!disabled && !firstBtn) firstBtn = btn;
+              if (
+                saved &&
+                String(val || "")
+                  .trim()
+                  .toUpperCase() === saved.toUpperCase() &&
+                !disabled
+              )
+                firstBtn = btn;
+            });
+
+            if (firstBtn) firstBtn.click();
+            grid.setAttribute("data-instant-sizes", "1");
+            return true;
+          }
+
+          onReady(function () {
+            var tries = 0;
+            (function tick() {
+              if (render()) return;
+              if (++tries < 40) setTimeout(tick, 25);
+            })();
+          });
+        } catch (_) {}
+      })();
+    </script>
   </head>
   <body style="margin: 0; overflow-x: hidden">
     <div
