@@ -843,7 +843,7 @@
 
     // Instant render from cache when available
     try {
-      const cached = __cacheGetFresh("pdp:product:" + slug, 10 * 60 * 1000);
+      const cached = __cacheGetFresh("pdp:product:" + slug, 60 * 1000);
       if (cached) renderFrom(cached);
     } catch (_) {}
 
@@ -909,10 +909,20 @@
           localStorage.setItem("recentlyViewedV1", JSON.stringify(rv));
         } catch (_) {}
       } else {
-        // Fallback to original product loading logic if Shopify not available
-        console.log(
-          "Shopify API not available, using fallback product loading"
-        );
+        // Fallback: fetch via Netlify function to ensure fresh product data
+        try {
+          const r = await fetch(
+            `/.netlify/functions/getProduct?handle=${encodeURIComponent(slug)}`
+          );
+          if (r && r.ok) {
+            const data = await r.json();
+            const p = data && data.product;
+            if (p) {
+              __cacheSet("pdp:product:" + slug, p);
+              renderFrom(p);
+            }
+          }
+        } catch (_) {}
       }
     } catch (error) {
       console.error("Failed to load product:", error);
@@ -1659,6 +1669,56 @@
             section.style.display = "none";
           } catch (_) {}
         }
+
+        // Lightly refresh Recently Viewed item names from cache, then background network refresh
+        try {
+          items.forEach(function (it) {
+            var h = __extractHandleFromHref(it.href || "");
+            if (!h) return;
+            var p = __cacheGetFresh("pdp:product:" + h, 5 * 60 * 1000);
+            if (p && p.title && it.name !== p.title) it.name = p.title;
+          });
+          (items.slice(0, Math.min(items.length, 8)) || []).forEach(function (
+            it
+          ) {
+            var href = it.href || "";
+            var h = __extractHandleFromHref(href);
+            if (!h) return;
+            fetch(
+              "/.netlify/functions/getProduct?handle=" + encodeURIComponent(h)
+            )
+              .then(function (r) {
+                return r.ok ? r.json() : null;
+              })
+              .then(function (res) {
+                var p = res && res.product;
+                if (!p || !p.title) return;
+                // Update storage
+                try {
+                  var rv =
+                    JSON.parse(
+                      localStorage.getItem("recentlyViewedV1") || "[]"
+                    ) || [];
+                  rv = rv.map(function (x) {
+                    return x && (x.href || "") === href
+                      ? Object.assign({}, x, { name: p.title })
+                      : x;
+                  });
+                  localStorage.setItem("recentlyViewedV1", JSON.stringify(rv));
+                } catch (_) {}
+                // Update on-screen card if present
+                try {
+                  var h3 =
+                    section &&
+                    section.querySelector(
+                      'article.card[data-href="' + href + '"] h3'
+                    );
+                  if (h3) h3.textContent = p.title;
+                } catch (_) {}
+              })
+              .catch(function () {});
+          });
+        } catch (_) {}
 
         if (items && items.length) {
           // remove placeholder text blocks
