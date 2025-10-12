@@ -1882,57 +1882,23 @@
           "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
       }
 
-      const best = [
-        {
-          name: "City Hoodie",
-          price: "$98.00 AUD",
-          main: "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=city-hoodie",
-        },
-        {
-          name: "Aero Tee",
-          price: "$48.00 AUD",
-          main: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1528701800489-20be0b02f47e?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=aero-tee",
-        },
-        {
-          name: "Tech Tee",
-          price: "$48.00 AUD",
-          main: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=tech-tee",
-        },
-        {
-          name: "Aero Jogger",
-          price: "$78.00 AUD",
-          main: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=aero-jogger",
-        },
-        {
-          name: "City Hoodie",
-          price: "$98.00 AUD",
-          main: "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=city-hoodie",
-        },
-        {
-          name: "Ultra Short",
-          price: "$58.00 AUD",
-          main: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=ultra-short",
-        },
-        {
-          name: "Aero Jogger",
-          price: "$78.00 AUD",
-          main: "https://images.unsplash.com/photo-1520975922324-c2e5a62b2398?q=80&w=800&auto=format&fit=crop",
-          alt: "https://images.unsplash.com/photo-1535530992830-e25d07cfa780?q=80&w=800&auto=format&fit=crop",
-          href: "product.html?slug=aero-jogger",
-        },
-      ];
+      // Build real Best Sellers list (no placeholders)
+      let best = [];
+      const toCard = (p) => {
+        const priceObj = p?.priceRange?.minVariantPrice || p?.minPrice || {};
+        const amount = parseFloat(priceObj.amount || 0);
+        const code = priceObj.currencyCode || "USD";
+        const price = amount ? `$${amount.toFixed(2)} ${code}` : "";
+        const main = (p.images && (p.images[0]?.url || p.images[0]?.src)) || "";
+        const alt = (p.images && (p.images[1]?.url || p.images[1]?.src)) || "";
+        return {
+          name: p.title || "",
+          price,
+          main,
+          alt,
+          href: `product.html?slug=${p.handle}`,
+        };
+      };
 
       const __bsCtrls = ensureArrows(bestSection);
       const prevBtn = __bsCtrls.prev;
@@ -1944,15 +1910,13 @@
         const renderPage = () => {
           if (!best.length) return;
           const out = [];
-          for (let i = 0; i < pageSize; i++) {
+          for (let i = 0; i < pageSize; i++)
             out.push(best[(idx + i) % best.length]);
-          }
           bestTrack.innerHTML = out.map(cardHTML).join("");
           normalizeCarouselMedia(bestSection);
           requestAnimationFrame(function () {
             normalizeCarouselMedia(bestSection);
           });
-          // Prefetch PDP for visible cards in Best Sellers
           try {
             const cards = Array.from(
               bestSection.querySelectorAll("article.card[data-href]")
@@ -1982,6 +1946,91 @@
             }
           } catch (_) {}
         };
+
+        // 1) Seed from caches for instant paint
+        try {
+          const cachedA =
+            __cacheGetFresh("collection:best-sellers:-", 10 * 60 * 1000) || [];
+          const cachedB =
+            __cacheGetFresh("home:best-sellers", 10 * 60 * 1000) || [];
+          const seed = (cachedA.length ? cachedA : cachedB).slice(
+            0,
+            pageSize * 2
+          );
+          best = seed.map(toCard);
+          if (best.length) renderPage();
+        } catch (_) {}
+
+        // 2) Fetch fresh in background
+        (async function fetchBestSellers() {
+          try {
+            let list = [];
+            if (
+              window.shopifyAPI &&
+              typeof window.shopifyAPI.getCollection === "function"
+            ) {
+              // Try explicit best-sellers collection first
+              try {
+                const data = await window.shopifyAPI.getCollection(
+                  "best-sellers"
+                );
+                if (
+                  data &&
+                  Array.isArray(data.products) &&
+                  data.products.length
+                ) {
+                  list = data.products;
+                }
+              } catch (_) {}
+              if (!list.length) {
+                // Fallback: merge across all collections and filter available
+                const collections = await window.shopifyAPI
+                  .getCollections()
+                  .catch(() => ({ collections: [] }));
+                const cols = (collections && collections.collections) || [];
+                const results = await Promise.all(
+                  cols.map((c) =>
+                    window.shopifyAPI
+                      .getCollection(c.handle)
+                      .catch(() => ({ products: [] }))
+                  )
+                );
+                list = results
+                  .flatMap((r) => r.products || [])
+                  .filter((p) => p && p.availableForSale);
+              }
+              // Dedupe by handle and limit
+              const seen = new Set();
+              list = list.filter((p) =>
+                p?.handle && !seen.has(p.handle)
+                  ? (seen.add(p.handle), true)
+                  : false
+              );
+              list = list.slice(0, pageSize * 3);
+              const mapped = list.map(toCard);
+              // Only re-render if changed
+              const currentHandles = Array.from(
+                bestSection.querySelectorAll("article.card[data-href]")
+              ).map((el) =>
+                __extractHandleFromHref(el.getAttribute("data-href") || "")
+              );
+              const nextHandles = mapped.map((x) =>
+                __extractHandleFromHref(x.href || "")
+              );
+              const changed =
+                currentHandles.length !== nextHandles.length ||
+                currentHandles.some((h, i) => h !== nextHandles[i]);
+              if (changed) {
+                best = mapped;
+                idx = 0;
+                renderPage();
+              }
+            }
+          } catch (e) {
+            console.warn("Best Sellers fetch failed", e);
+          }
+        })();
+
         renderPage();
         prevBtn.removeAttribute("onclick");
         prevBtn.addEventListener("click", (e) => {
@@ -1995,7 +2044,6 @@
           idx = (idx + pageSize) % best.length;
           renderPage();
         });
-        // Re-render on resize to switch 2-up/4-up
         let bsResizeTO;
         window.addEventListener("resize", function () {
           clearTimeout(bsResizeTO);
@@ -2006,6 +2054,13 @@
         });
       } else {
         // No controls: render all
+        try {
+          const cached =
+            __cacheGetFresh("collection:best-sellers:-", 10 * 60 * 1000) ||
+            __cacheGetFresh("home:best-sellers", 10 * 60 * 1000) ||
+            [];
+          best = cached.slice(0, 8).map(toCard);
+        } catch (_) {}
         bestTrack.innerHTML = best.map(cardHTML).join("");
         normalizeCarouselMedia(bestSection);
         requestAnimationFrame(function () {
