@@ -1151,6 +1151,9 @@
       }
     };
 
+    // Track whether we rendered sizes instantly to avoid duplicate fetch during initial render
+    let __instantRendered = false;
+
     // Instant render from product object (if it already includes variants)
     try {
       if (
@@ -1168,6 +1171,7 @@
           options: product.options || [],
         };
         renderFrom(quick);
+        __instantRendered = true;
       }
     } catch (_) {}
 
@@ -1189,6 +1193,7 @@
               options: p.options || [],
             };
             renderFrom(quick);
+            __instantRendered = true;
           }
         } catch (_) {}
       }
@@ -1213,6 +1218,7 @@
             options: cachedP.options || [],
           };
           renderFrom(quick);
+          __instantRendered = true;
         }
       } catch (_) {}
     } catch (_) {}
@@ -1223,32 +1229,48 @@
         const h = sessionStorage.getItem("handoff:variants:" + handle);
         if (h) {
           const d = JSON.parse(h);
-          if (d && d.variants) renderFrom(d);
+          if (d && d.variants) {
+            renderFrom(d);
+            __instantRendered = true;
+          }
           sessionStorage.removeItem("handoff:variants:" + handle);
         }
       } catch (_) {}
 
       // Priority B: Cache-first render for instant size grid
       const cached = __cacheGetFresh("pdp:variants:" + handle, 10 * 60 * 1000);
-      if (cached && cached.variants) renderFrom(cached);
+      if (cached && cached.variants) {
+        renderFrom(cached);
+        __instantRendered = true;
+      }
 
-      // Fetch fresh in background and update if needed (use full product to avoid second round-trip)
-      const resp = await fetch(
-        `/.netlify/functions/getProduct?handle=${encodeURIComponent(handle)}`
-      );
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      const product =
-        data && (data.product || data.product === null ? data.product : null);
-      if (!product || !Array.isArray(product.variants))
-        throw new Error("No product/variant data");
-      const payload = {
-        variants: product.variants,
-        options: product.options || [],
+      // Fetch fresh and update cache. If we already rendered instantly, defer to avoid duplicate request in the initial render window.
+      const doFetch = async () => {
+        const resp = await fetch(
+          `/.netlify/functions/getProduct?handle=${encodeURIComponent(handle)}`
+        );
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const product =
+          data && (data.product || data.product === null ? data.product : null);
+        if (!product || !Array.isArray(product.variants))
+          throw new Error("No product/variant data");
+        const payload = {
+          variants: product.variants,
+          options: product.options || [],
+        };
+        __cacheSet("pdp:product:" + handle, product);
+        __cacheSet("pdp:variants:" + handle, payload);
+        renderFrom(payload);
       };
-      __cacheSet("pdp:product:" + handle, product);
-      __cacheSet("pdp:variants:" + handle, payload);
-      renderFrom(payload);
+
+      if (__instantRendered) {
+        setTimeout(() => {
+          doFetch().catch((e) => console.warn("Deferred refresh failed", e));
+        }, 1500);
+      } else {
+        await doFetch();
+      }
     } catch (e) {
       console.warn("Failed to load product-variants", e);
     }

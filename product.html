@@ -414,6 +414,26 @@
                   heroImg.decoding = "async";
                   heroImg.loading = "eager";
                   heroImg.setAttribute("fetchpriority", "high");
+                  try {
+                    console.log(
+                      "[RUM] PDP:min-painted",
+                      Number(performance.now()).toFixed(1),
+                      "ms"
+                    );
+                    console.log(
+                      "[RUM] PDP:hero:request",
+                      Number(performance.now()).toFixed(1),
+                      "ms"
+                    );
+                    if (heroImg.decode)
+                      heroImg.decode().then(function () {
+                        console.log(
+                          "[RUM] PDP:hero:decoded",
+                          Number(performance.now()).toFixed(1),
+                          "ms"
+                        );
+                      });
+                  } catch (_) {}
                 }
               });
             } catch (_) {}
@@ -635,15 +655,38 @@
 
             if (firstBtn) firstBtn.click();
             grid.setAttribute("data-instant-sizes", "1");
+            try {
+              console.log(
+                "[RUM] PDP:sizes:instant",
+                Number(performance.now()).toFixed(1),
+                "ms"
+              );
+            } catch (_) {}
             return true;
           }
 
-          onReady(function () {
-            var tries = 0;
-            (function tick() {
-              if (render()) return;
-              if (++tries < 40) setTimeout(tick, 25);
-            })();
+          var __rvDone = false;
+          var tries = 0;
+          (function tick() {
+            if (__rvDone) return;
+            if (render()) {
+              __rvDone = true;
+              return;
+            }
+            if (++tries < 40) setTimeout(tick, 25);
+          })();
+          document.addEventListener("DOMContentLoaded", function () {
+            if (!__rvDone) {
+              tries = 0;
+              (function tick2() {
+                if (__rvDone) return;
+                if (render()) {
+                  __rvDone = true;
+                  return;
+                }
+                if (++tries < 40) setTimeout(tick2, 25);
+              })();
+            }
           });
         } catch (_) {}
       })();
