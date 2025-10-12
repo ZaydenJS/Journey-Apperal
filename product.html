@@ -156,8 +156,18 @@
           box-sizing: border-box !important; /* include padding within width */
           margin-left: auto !important;
           margin-right: auto !important; /* center inside the right column for even whitespace */
-          align-self: start !important; /* fix jump: always start at top */
+          margin-top: clamp(
+            40px,
+            18vh,
+            220px
+          ) !important; /* stable vertical position ~below middle */
+          align-self: start !important; /* pin from first paint to avoid jump */
         }
+        /* Reserve stable space for sizes to prevent jump on first paint */
+        .p-details #size-grid {
+          min-height: 72px !important;
+        }
+
         /* Desktop: place price under product title */
         .p-details > .row:first-child {
           flex-direction: column !important;
