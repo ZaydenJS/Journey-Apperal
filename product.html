@@ -1238,7 +1238,9 @@
                 ? announce.offsetHeight || 0
                 : 0);
             var isDesktop = window.innerWidth >= 1024;
-            var factor = isDesktop ? 0.78 : 0.62; /* mobile: reduce ~15% */
+            var factor = isDesktop
+              ? 1.0
+              : 0.62; /* desktop: full viewport height */
             var minH = isDesktop ? 520 : 360;
             var h = Math.max(
               minH,
