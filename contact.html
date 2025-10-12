@@ -459,7 +459,7 @@
             Email
           </div>
           <p style="margin: 0; color: #444; text-align: center">
-            support@journey.apparel
+            journeysapparel@outlook.com
           </p>
         </div>
         <div
@@ -631,6 +631,64 @@
           window.addEventListener("resize", adjust);
         })();
       </script>
+      <script>
+        (function () {
+          var form = document.getElementById("contact-form");
+          if (!form) return;
+          var statusEl = document.getElementById("contact-status");
+          var submitBtn = form.querySelector('button[type="submit"]');
+          form.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            if (statusEl) {
+              statusEl.style.color = "#444";
+              statusEl.textContent = "Sending...";
+            }
+            if (submitBtn) {
+              submitBtn.disabled = true;
+              submitBtn.style.opacity = "0.6";
+            }
+            try {
+              var fd = new FormData(form);
+              if (!fd.get("to")) fd.set("to", "journeysapparel@outlook.com");
+              const res = await fetch("https://api.web3forms.com/submit", {
+                method: "POST",
+                headers: { Accept: "application/json" },
+                body: fd,
+              });
+              const data = await res.json().catch(function () {
+                return {};
+              });
+              if (res.ok && (data.success === true || data.status === 200)) {
+                if (statusEl) {
+                  statusEl.style.color = "#0a0";
+                  statusEl.textContent = "Thanks! Your message has been sent.";
+                }
+                form.reset();
+              } else {
+                var msg =
+                  (data && (data.message || data.error)) ||
+                  "Submission failed. Please try again.";
+                throw new Error(msg);
+              }
+            } catch (err) {
+              if (statusEl) {
+                statusEl.style.color = "#b00020";
+                statusEl.textContent =
+                  "Sorry, something went wrong. Please try again.";
+              }
+              console.error("Web3Forms submission error:", err);
+            } finally {
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = "1";
+              }
+              setTimeout(function () {
+                if (statusEl) statusEl.textContent = "";
+              }, 5000);
+            }
+          });
+        })();
+      </script>
 
       <style>
         @media (min-width: 1024px) {
@@ -671,66 +729,7 @@
             background: #111;
           "
         />
-          (function () {
-            var form = document.getElementById("contact-form");
-            if (!form) return;
-            var statusEl = document.getElementById("contact-status");
-            var submitBtn = form.querySelector('button[type="submit"]');
-            form.addEventListener("submit", async function (e) {
-              e.preventDefault();
-              if (statusEl) {
-                statusEl.style.color = "#444";
-                statusEl.textContent = "Sending...";
-              }
-              if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.style.opacity = "0.6";
-              }
-              try {
-                var fd = new FormData(form);
-                if (!fd.get("to")) fd.set("to", "journeysapparel@outlook.com");
-                const res = await fetch("https://api.web3forms.com/submit", {
-                  method: "POST",
-                  headers: { Accept: "application/json" },
-                  body: fd,
-                });
-                const data = await res.json().catch(function () {
-                  return {};
-                });
-                if (res.ok && (data.success === true || data.status === 200)) {
-                  if (statusEl) {
-                    statusEl.style.color = "#0a0";
-                    statusEl.textContent =
-                      "Thanks! Your message has been sent.";
-                  }
-                  form.reset();
-                } else {
-                  var msg =
-                    (data && (data.message || data.error)) ||
-                    "Submission failed. Please try again.";
-                  throw new Error(msg);
-                }
-              } catch (err) {
-                if (statusEl) {
-                  statusEl.style.color = "#b00020";
-                  statusEl.textContent =
-                    "Sorry, something went wrong. Please try again.";
-                }
-                console.error("Web3Forms submission error:", err);
-              } finally {
-                if (submitBtn) {
-                  submitBtn.disabled = false;
-                  submitBtn.style.opacity = "1";
-                }
-                setTimeout(function () {
-                  if (statusEl) statusEl.textContent = "";
-                }, 5000);
-              }
-            });
-          })();
-        </script>
 
-        background: #111; " />
         <div
           style="
             position: absolute;
@@ -1130,7 +1129,6 @@
               "
             >
               <span style="color: #000; font-size: 14px"
-
                 >© 2025 Journey Apparel. All rights reserved.</span
               >
             </div>
@@ -1138,41 +1136,6 @@
         </div>
       </div>
     </footer>
-
-    <script>
-      (function(){
-        var form = document.getElementById('contact-form');
-        if(!form) return;
-        var statusEl = document.getElementById('contact-status');
-        var submitBtn = form.querySelector('button[type="submit"]');
-        form.addEventListener('submit', async function(e){
-          e.preventDefault();
-          if (statusEl) { statusEl.style.color = '#444'; statusEl.textContent = 'Sending...'; }
-          if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.6'; }
-          try {
-            var fd = new FormData(form);
-            if (!fd.get('to')) fd.set('to','journeysapparel@outlook.com');
-            const res = await fetch('https://api.web3forms.com/submit', {
-              method: 'POST', headers: { 'Accept': 'application/json' }, body: fd
-            });
-            const data = await res.json().catch(function(){ return {}; });
-            if (res.ok && (data.success === true || data.status === 200)) {
-              if (statusEl) { statusEl.style.color = '#0a0'; statusEl.textContent = 'Thanks! Your message has been sent.'; }
-              form.reset();
-            } else {
-              var msg = (data && (data.message || data.error)) || 'Submission failed. Please try again.';
-              throw new Error(msg);
-            }
-          } catch (err) {
-            if (statusEl) { statusEl.style.color = '#b00020'; statusEl.textContent = 'Sorry, something went wrong. Please try again.'; }
-            console.error('Web3Forms submission error:', err);
-          } finally {
-            if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; }
-            setTimeout(function(){ if (statusEl) statusEl.textContent = ''; }, 5000);
-          }
-        });
-      })();
-    </script>
 
     <script src="script.js" defer></script>
   </body>
