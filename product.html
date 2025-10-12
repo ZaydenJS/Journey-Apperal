@@ -142,6 +142,7 @@
         #hero-track img {
           height: 100% !important;
           object-fit: cover !important;
+          object-position: center center !important;
         }
 
         .p-gallery {
@@ -154,12 +155,8 @@
           width: 80% !important; /* set right panel to 80% of its column width */
           box-sizing: border-box !important; /* include padding within width */
           margin-left: auto !important;
-          margin-right: auto !important; /* center inside the right column for equal whitespace */
-          /* Prevent initial jump: center vertically by CSS from first paint */
-          align-self: center !important;
-          transform: translateY(
-            -120px
-          ) !important; /* match previous visual offset */
+          margin-right: auto !important; /* center inside the right column for even whitespace */
+          align-self: start !important; /* fix jump: always start at top */
         }
         /* Desktop: place price under product title */
         .p-details > .row:first-child {
@@ -1251,6 +1248,7 @@
               img.style.height = h + "px";
               img.style.width = "100%";
               img.style.objectFit = "cover";
+              img.style.objectPosition = "center center";
               img.style.borderRadius = "0";
               img.style.pointerEvents = "none"; // disable hover effects on images
               img.style.transition = "none";
