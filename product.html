@@ -141,8 +141,8 @@
         }
         #hero-track img {
           height: 100% !important;
-          object-fit: cover !important;
-          object-position: center 40% !important;
+          object-fit: contain !important;
+          object-position: center center !important;
         }
 
         .p-gallery {
@@ -294,8 +294,8 @@
         }
         #hero-track img {
           height: 100% !important;
-          object-fit: cover !important;
-          object-position: center 40% !important;
+          object-fit: contain !important;
+          object-position: center center !important;
           -webkit-user-drag: none !important;
           user-select: none !important;
           -webkit-touch-callout: none !important;
@@ -1106,8 +1106,8 @@
                   width: 100%;
                   height: 100%;
                   border-radius: 0;
-                  object-fit: cover;
-                  object-position: center 40%;
+                  object-fit: contain;
+                  object-position: center center;
                   scroll-snap-align: center;
                   pointer-events: none;
                   transition: none;
@@ -1121,8 +1121,8 @@
                   width: 100%;
                   height: 100%;
                   border-radius: 0;
-                  object-fit: cover;
-                  object-position: center 40%;
+                  object-fit: contain;
+                  object-position: center center;
                   scroll-snap-align: center;
                   pointer-events: none;
                   transition: none;
@@ -1135,7 +1135,8 @@
                   width: 100%;
                   height: 100%;
                   border-radius: 0;
-                  object-fit: cover;
+                  object-fit: contain;
+                  object-position: center center;
                   scroll-snap-align: center;
                   pointer-events: none;
                   transition: none;
@@ -1260,8 +1261,8 @@
             Array.from(track.querySelectorAll("img")).forEach(function (img) {
               img.style.height = h + "px";
               img.style.width = "100%";
-              img.style.objectFit = "cover";
-              img.style.objectPosition = "center 40%";
+              img.style.objectFit = "contain";
+              img.style.objectPosition = "center center";
               img.style.borderRadius = "0";
               img.style.pointerEvents = "none"; // disable hover effects on images
               img.style.transition = "none";
