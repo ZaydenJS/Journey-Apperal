@@ -289,6 +289,7 @@
           -ms-touch-action: pan-y !important;
           overscroll-behavior-x: none !important;
           overflow-x: auto !important; /* allow programmatic scrollTo left/right */
+          overflow-y: hidden !important; /* prevent vertical inner scroll */
           scroll-snap-type: none !important; /* we handle snapping ourselves */
           -webkit-overflow-scrolling: auto !important;
         }
@@ -1424,6 +1425,7 @@
           (function enableSwipe() {
             var startX = 0,
               startY = 0,
+              startScrollX = 0,
               mode = null, // 'h' for horizontal, 'v' for vertical
               moved = false;
 
@@ -1439,6 +1441,7 @@
                 var t = e.touches[0];
                 startX = t.clientX;
                 startY = t.clientY;
+                startScrollX = track.scrollLeft;
                 resetLock();
               },
               { passive: true }
@@ -1466,22 +1469,27 @@
                   e.preventDefault();
                   moved = true;
                 } else {
-                  // Vertical: allow page to scroll naturally
-                  // Do not preventDefault
+                  // Vertical gesture: keep the carousel fixed
+                  track.scrollLeft = startScrollX; // freeze horizontal position
+                  // Let the page scroll naturally; do not preventDefault
                 }
               },
               { passive: false }
             );
 
-            track.addEventListener("touchend", function (e) {
-              if (mode === "h" && moved) {
-                var dx = e.changedTouches[0].clientX - startX;
-                var threshold = 40;
-                if (dx < -threshold) goTo(currentIdx + 1, "smooth");
-                else if (dx > threshold) goTo(currentIdx - 1, "smooth");
-              }
-              resetLock();
-            });
+            track.addEventListener(
+              "touchend",
+              function (e) {
+                if (mode === "h" && moved) {
+                  var dx = e.changedTouches[0].clientX - startX;
+                  var threshold = 40;
+                  if (dx < -threshold) goTo(currentIdx + 1, "smooth");
+                  else if (dx > threshold) goTo(currentIdx - 1, "smooth");
+                }
+                resetLock();
+              },
+              { passive: true }
+            );
 
             track.addEventListener("touchcancel", resetLock, { passive: true });
           })();
