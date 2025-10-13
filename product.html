@@ -148,12 +148,6 @@
         .p-gallery {
           margin: 0 !important;
         }
-        /* Ensure no inner left padding that would create a gap */
-        section.gallery.p-gallery,
-        .gallery-main {
-          padding-left: 0 !important;
-        }
-
         .p-details {
           background: transparent !important;
           border: 0 !important;
@@ -1282,24 +1276,17 @@
             track.style.alignItems = "start"; // allow vertical alignment
             var slug = new URLSearchParams(location.search).get("slug") || "";
             var needsHeadroom = slug === "black-tiger-hoodie"; // Can't Catch Us Hoodie
-            // Desktop: ensure the gallery bleeds to the left viewport edge
+            // Desktop: bleed the left column flush to the viewport (no crop/zoom)
             if (isDesktop) {
               var outer = document.querySelector("section.gallery.p-gallery");
-              var gm = document.querySelector(".gallery-main");
-              var heroWrap = document.querySelector(".hero-carousel");
-              var trackEl = document.getElementById("hero-track");
-              function bleedToLeft(el) {
-                if (!el) return;
-                var left = Math.round(el.getBoundingClientRect().left);
-                el.style.boxSizing = "border-box";
-                el.style.marginLeft = (left ? -left : 0) + "px";
-                el.style.width = "calc(100% + " + (left || 0) + "px)";
-                el.style.overflow = "visible";
+              var target = outer || document.querySelector(".gallery-main");
+              if (target) {
+                var rect = target.getBoundingClientRect();
+                var left = Math.round(rect.left);
+                target.style.boxSizing = "border-box";
+                target.style.marginLeft = (left ? -left : 0) + "px";
+                target.style.width = "calc(100% + " + (left || 0) + "px)";
               }
-              bleedToLeft(outer);
-              bleedToLeft(gm);
-              bleedToLeft(heroWrap);
-              bleedToLeft(trackEl);
             } else {
               // Mobile: flush gallery to both left and right edges (no crop/zoom)
               var mOuter = document.querySelector("section.gallery.p-gallery");
