@@ -735,7 +735,7 @@
             img.style.width = "100%";
             img.style.height = "100%";
             img.style.borderRadius = "0";
-            img.style.objectFit = "cover";
+            img.style.objectFit = "contain";
             img.style.objectPosition = "center center";
             img.style.scrollSnapAlign = "center";
             img.style.pointerEvents = "none";
