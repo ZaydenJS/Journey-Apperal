@@ -141,7 +141,7 @@
         }
         #hero-track img {
           height: 100% !important;
-          object-fit: contain !important;
+          object-fit: cover !important;
           object-position: center center !important;
         }
 
@@ -294,8 +294,7 @@
         }
         #hero-track img {
           height: 100% !important;
-          object-fit: contain !important;
-          object-position: center center !important;
+          object-fit: cover !important;
           -webkit-user-drag: none !important;
           user-select: none !important;
           -webkit-touch-callout: none !important;
@@ -415,26 +414,6 @@
                   heroImg.decoding = "async";
                   heroImg.loading = "eager";
                   heroImg.setAttribute("fetchpriority", "high");
-                  try {
-                    console.log(
-                      "[RUM] PDP:min-painted",
-                      Number(performance.now()).toFixed(1),
-                      "ms"
-                    );
-                    console.log(
-                      "[RUM] PDP:hero:request",
-                      Number(performance.now()).toFixed(1),
-                      "ms"
-                    );
-                    if (heroImg.decode)
-                      heroImg.decode().then(function () {
-                        console.log(
-                          "[RUM] PDP:hero:decoded",
-                          Number(performance.now()).toFixed(1),
-                          "ms"
-                        );
-                      });
-                  } catch (_) {}
                 }
               });
             } catch (_) {}
@@ -656,38 +635,15 @@
 
             if (firstBtn) firstBtn.click();
             grid.setAttribute("data-instant-sizes", "1");
-            try {
-              console.log(
-                "[RUM] PDP:sizes:instant",
-                Number(performance.now()).toFixed(1),
-                "ms"
-              );
-            } catch (_) {}
             return true;
           }
 
-          var __rvDone = false;
-          var tries = 0;
-          (function tick() {
-            if (__rvDone) return;
-            if (render()) {
-              __rvDone = true;
-              return;
-            }
-            if (++tries < 40) setTimeout(tick, 25);
-          })();
-          document.addEventListener("DOMContentLoaded", function () {
-            if (!__rvDone) {
-              tries = 0;
-              (function tick2() {
-                if (__rvDone) return;
-                if (render()) {
-                  __rvDone = true;
-                  return;
-                }
-                if (++tries < 40) setTimeout(tick2, 25);
-              })();
-            }
+          onReady(function () {
+            var tries = 0;
+            (function tick() {
+              if (render()) return;
+              if (++tries < 40) setTimeout(tick, 25);
+            })();
           });
         } catch (_) {}
       })();
@@ -1149,8 +1105,7 @@
                   width: 100%;
                   height: 100%;
                   border-radius: 0;
-                  object-fit: contain;
-                  object-position: center center;
+                  object-fit: cover;
                   scroll-snap-align: center;
                   pointer-events: none;
                   transition: none;
@@ -1164,8 +1119,7 @@
                   width: 100%;
                   height: 100%;
                   border-radius: 0;
-                  object-fit: contain;
-                  object-position: center center;
+                  object-fit: cover;
                   scroll-snap-align: center;
                   pointer-events: none;
                   transition: none;
@@ -1178,8 +1132,7 @@
                   width: 100%;
                   height: 100%;
                   border-radius: 0;
-                  object-fit: contain;
-                  object-position: center center;
+                  object-fit: cover;
                   scroll-snap-align: center;
                   pointer-events: none;
                   transition: none;
@@ -1304,7 +1257,7 @@
             Array.from(track.querySelectorAll("img")).forEach(function (img) {
               img.style.height = h + "px";
               img.style.width = "100%";
-              img.style.objectFit = "contain";
+              img.style.objectFit = "cover";
               img.style.objectPosition = "center center";
               img.style.borderRadius = "0";
               img.style.pointerEvents = "none"; // disable hover effects on images
