@@ -283,7 +283,8 @@
           min-height: 360px !important;
         }
         #hero-track {
-          height: 75vh !important; /* ~75% of screen height on mobile */
+          height: 75vh !important; /* fallback */
+          height: 75svh !important; /* prefer stable viewport height on iOS */
           /* Allow vertical page scroll; prevent horizontal swipe from hijacking */
           touch-action: pan-y !important;
           -ms-touch-action: pan-y !important;
@@ -1268,8 +1269,9 @@
               track.style.setProperty("height", "auto", "important");
               track.style.setProperty("min-height", h + "px", "important");
             } else {
-              track.style.setProperty("height", h + "px", "important");
-              track.style.setProperty("min-height", h + "px", "important");
+              // Mobile: rely on CSS (svh/vh) to avoid dynamic height jumps on scroll
+              track.style.removeProperty("height");
+              track.style.removeProperty("min-height");
             }
             track.style.alignItems = "start"; // allow vertical alignment
             var slug = new URLSearchParams(location.search).get("slug") || "";
