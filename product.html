@@ -1268,35 +1268,25 @@
               var outer = document.querySelector("section.gallery.p-gallery");
               var target = outer || document.querySelector(".gallery-main");
               if (target) {
-                if (needsHeadroom) {
-                  var rect = target.getBoundingClientRect();
-                  var left = Math.round(rect.left);
-                  target.style.boxSizing = "border-box";
-                  target.style.marginLeft = (left ? -left : 0) + "px";
-                  target.style.width = "calc(100% + " + (left || 0) + "px)";
-                } else {
-                  target.style.marginLeft = "0px";
-                  target.style.removeProperty("width");
-                }
+                var rect = target.getBoundingClientRect();
+                var left = Math.round(rect.left);
+                target.style.boxSizing = "border-box";
+                target.style.marginLeft = (left ? -left : 0) + "px";
+                target.style.width = "calc(100% + " + (left || 0) + "px)";
               }
             } else {
               // Mobile: flush gallery to both left and right edges (no crop/zoom)
               var mOuter = document.querySelector("section.gallery.p-gallery");
               var mTarget = mOuter || document.querySelector(".gallery-main");
               if (mTarget) {
-                if (needsHeadroom) {
-                  var mRect = mTarget.getBoundingClientRect();
-                  var vw = Math.round(window.innerWidth);
-                  var mLeft = Math.round(mRect.left);
-                  var mRightGap = Math.max(0, vw - Math.round(mRect.right));
-                  mTarget.style.boxSizing = "border-box";
-                  mTarget.style.marginLeft = (mLeft ? -mLeft : 0) + "px";
-                  mTarget.style.width =
-                    "calc(100% + " + (mLeft + mRightGap) + "px)";
-                } else {
-                  mTarget.style.marginLeft = "0px";
-                  mTarget.style.removeProperty("width");
-                }
+                var mRect = mTarget.getBoundingClientRect();
+                var vw = Math.round(window.innerWidth);
+                var mLeft = Math.round(mRect.left);
+                var mRightGap = Math.max(0, vw - Math.round(mRect.right));
+                mTarget.style.boxSizing = "border-box";
+                mTarget.style.marginLeft = (mLeft ? -mLeft : 0) + "px";
+                mTarget.style.width =
+                  "calc(100% + " + (mLeft + mRightGap) + "px)";
               }
             }
 
