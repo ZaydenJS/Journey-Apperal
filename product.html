@@ -1327,6 +1327,8 @@
             window.addEventListener(
               "scroll",
               function () {
+                // Do not resize hero on mobile scroll; avoids image moving vertically
+                if (window.innerWidth < 1024) return;
                 if (!ticking) {
                   ticking = true;
                   requestAnimationFrame(function () {
