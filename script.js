@@ -735,8 +735,7 @@
             img.style.width = "100%";
             img.style.height = "100%";
             img.style.borderRadius = "0";
-            img.style.objectFit = "contain";
-            img.style.objectPosition = "top center";
+            img.style.objectFit = "cover";
             img.style.scrollSnapAlign = "center";
             img.style.pointerEvents = "none";
             img.style.transition = "none";
@@ -744,7 +743,7 @@
           }
           // Rebuild dots to match new image count
           const dotsWrap = document.getElementById("hero-dots");
-          if (dotsWrap && !window.__pdpHeroBound) {
+          if (dotsWrap) {
             dotsWrap.innerHTML = "";
             const imgsNow = Array.from(heroTrack.querySelectorAll("img"));
             imgsNow.forEach((_, i) => {
@@ -787,27 +786,25 @@
           heroTrack.scrollTo({ left: target * slideW(), behavior: "smooth" });
         };
 
-        if (!window.__pdpHeroBound) {
-          if (prev) {
-            prev.addEventListener(
-              "click",
-              (e) => {
-                e.preventDefault();
-                goTo(idx() - 1);
-              },
-              { passive: false }
-            );
-          }
-          if (next) {
-            next.addEventListener(
-              "click",
-              (e) => {
-                e.preventDefault();
-                goTo(idx() + 1);
-              },
-              { passive: false }
-            );
-          }
+        if (prev) {
+          prev.addEventListener(
+            "click",
+            (e) => {
+              e.preventDefault();
+              goTo(idx() - 1);
+            },
+            { passive: false }
+          );
+        }
+        if (next) {
+          next.addEventListener(
+            "click",
+            (e) => {
+              e.preventDefault();
+              goTo(idx() + 1);
+            },
+            { passive: false }
+          );
         }
 
         // Instant render from sessionStorage handoff (from collection click)

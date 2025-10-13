@@ -433,8 +433,7 @@ header.header nav a,
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center center;
+  object-fit: cover;
   opacity: 0;
   transition: opacity 180ms ease;
   pointer-events: none;
@@ -719,13 +718,11 @@ header.header nav a,
 }
 .arrivals-carousel .card .img-wrap {
   aspect-ratio: 3/4;
-  background: #f5f5f5;
 }
 .arrivals-carousel .card .img-wrap img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center center;
+  object-fit: cover;
 }
 
 /* Position four arrows to align with each row */
@@ -743,13 +740,11 @@ header.header nav a,
 /* Best Sellers carousel: uniform image size */
 .best-sellers .card .img-wrap {
   aspect-ratio: 3/4;
-  background: #f5f5f5;
 }
 .best-sellers .card .img-wrap img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center center;
+  object-fit: cover;
 }
 
 /* Sections */
