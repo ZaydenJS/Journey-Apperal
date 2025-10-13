@@ -1286,15 +1286,20 @@
             if (isDesktop) {
               var outer = document.querySelector("section.gallery.p-gallery");
               var gm = document.querySelector(".gallery-main");
+              var heroWrap = document.querySelector(".hero-carousel");
+              var trackEl = document.getElementById("hero-track");
               function bleedToLeft(el) {
                 if (!el) return;
                 var left = Math.round(el.getBoundingClientRect().left);
                 el.style.boxSizing = "border-box";
                 el.style.marginLeft = (left ? -left : 0) + "px";
                 el.style.width = "calc(100% + " + (left || 0) + "px)";
+                el.style.overflow = "visible";
               }
               bleedToLeft(outer);
               bleedToLeft(gm);
+              bleedToLeft(heroWrap);
+              bleedToLeft(trackEl);
             } else {
               // Mobile: flush gallery to both left and right edges (no crop/zoom)
               var mOuter = document.querySelector("section.gallery.p-gallery");
