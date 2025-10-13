@@ -284,11 +284,11 @@
         }
         #hero-track {
           height: 75vh !important; /* ~75% of screen height on mobile */
-          /* Lock default panning but allow programmatic slide */
-          touch-action: none !important;
-          -ms-touch-action: none !important;
+          /* Allow vertical page scroll; prevent horizontal swipe from hijacking */
+          touch-action: pan-y !important;
+          -ms-touch-action: pan-y !important;
           overscroll-behavior-x: none !important;
-          overflow-x: auto !important; /* allow scrollTo */
+          overflow-x: auto !important; /* allow programmatic scrollTo left/right */
           scroll-snap-type: none !important; /* we handle snapping ourselves */
           -webkit-overflow-scrolling: auto !important;
         }
