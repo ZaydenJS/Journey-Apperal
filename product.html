@@ -14,7 +14,7 @@
         }
         /* Remove any page gutters that can create a left gap on desktop */
         body {
-          overflow-x: visible !important;
+          overflow-x: hidden !important;
         }
 
         /* Hide mobile hero overlay, show desktop version */
@@ -158,6 +158,18 @@
         .p-gallery {
           margin: 0 !important;
         }
+        /* Full-bleed gallery left on desktop */
+        section.gallery.p-gallery {
+          margin-left: calc(50% - 50vw) !important;
+          width: 100vw !important;
+          max-width: none !important;
+        }
+        /* Remove any inner left padding that could create a gap */
+        section.gallery.p-gallery,
+        .gallery-main {
+          padding-left: 0 !important;
+        }
+
         .p-details {
           background: transparent !important;
           border: 0 !important;
@@ -1289,14 +1301,24 @@
             // Desktop: bleed the left column flush to the viewport (no crop/zoom)
             if (isDesktop) {
               var outer = document.querySelector("section.gallery.p-gallery");
-              var target = outer || document.querySelector(".gallery-main");
-              if (target) {
-                var rect = target.getBoundingClientRect();
-                var left = Math.round(rect.left);
-                target.style.boxSizing = "border-box";
-                target.style.marginLeft = (left ? -left : 0) + "px";
-                target.style.width = "calc(100% + " + (left || 0) + "px)";
+              var gm = document.querySelector(".gallery-main");
+              var heroWrap = document.querySelector(".hero-carousel");
+              var trackEl = document.getElementById("hero-track");
+              if (outer) {
+                outer.style.boxSizing = "border-box";
+                outer.style.marginLeft = "calc(50% - 50vw)";
+                outer.style.width = "100vw";
+                outer.style.maxWidth = "none";
+                outer.style.paddingLeft = "0";
               }
+              [gm, heroWrap, trackEl].forEach(function (el) {
+                if (!el) return;
+                el.style.boxSizing = "border-box";
+                el.style.marginLeft = "0";
+                el.style.width = "100%";
+                el.style.maxWidth = "none";
+                el.style.paddingLeft = "0";
+              });
             } else {
               // Mobile: flush gallery to both left and right edges (no crop/zoom)
               var mOuter = document.querySelector("section.gallery.p-gallery");
