@@ -292,6 +292,11 @@
           scroll-snap-type: none !important; /* we handle snapping ourselves */
           -webkit-overflow-scrolling: auto !important;
         }
+        /* During vertical gestures, freeze horizontal scroll */
+        #hero-track.no-hscroll {
+          overflow-x: hidden !important;
+        }
+
         #hero-track img {
           height: 100% !important;
           object-fit: cover !important; /* Fill width on mobile */
@@ -1415,41 +1420,70 @@
               goTo(currentIdx + 1, "smooth");
             });
 
-          // Mobile swipe: detect horizontal swipe and snap
+          // Mobile swipe: direction-aware. Vertical scroll passes to page; horizontal swipe changes image.
           (function enableSwipe() {
             var startX = 0,
               startY = 0,
+              mode = null, // 'h' for horizontal, 'v' for vertical
               moved = false;
+
+            function resetLock() {
+              track.classList.remove("no-hscroll");
+              mode = null;
+              moved = false;
+            }
+
             track.addEventListener(
               "touchstart",
               function (e) {
                 var t = e.touches[0];
                 startX = t.clientX;
                 startY = t.clientY;
-                moved = false;
+                resetLock();
               },
               { passive: true }
             );
+
             track.addEventListener(
               "touchmove",
               function (e) {
                 var t = e.touches[0];
                 var dx = t.clientX - startX;
                 var dy = t.clientY - startY;
-                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+                var adx = Math.abs(dx);
+                var ady = Math.abs(dy);
+
+                if (!mode && (adx > 10 || ady > 10)) {
+                  mode = adx > ady * 1.2 ? "h" : "v";
+                  if (mode === "v") {
+                    // Lock out horizontal scroll during vertical gestures
+                    track.classList.add("no-hscroll");
+                  }
+                }
+
+                if (mode === "h") {
+                  // Handle horizontal swipe ourselves; prevent native scroll
                   e.preventDefault();
                   moved = true;
+                } else {
+                  // Vertical: allow page to scroll naturally
+                  // Do not preventDefault
                 }
               },
               { passive: false }
             );
+
             track.addEventListener("touchend", function (e) {
-              if (!moved) return;
-              var dx = e.changedTouches[0].clientX - startX;
-              var threshold = 40;
-              if (dx < -threshold) goTo(currentIdx + 1, "smooth");
-              else if (dx > threshold) goTo(currentIdx - 1, "smooth");
+              if (mode === "h" && moved) {
+                var dx = e.changedTouches[0].clientX - startX;
+                var threshold = 40;
+                if (dx < -threshold) goTo(currentIdx + 1, "smooth");
+                else if (dx > threshold) goTo(currentIdx - 1, "smooth");
+              }
+              resetLock();
             });
+
+            track.addEventListener("touchcancel", resetLock, { passive: true });
           })();
 
           setActive();
