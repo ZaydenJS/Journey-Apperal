@@ -283,7 +283,7 @@
           min-height: 360px !important;
         }
         #hero-track {
-          height: 58vh !important;
+          height: 85vh !important; /* ~85% of screen height on mobile */
           /* Lock default panning but allow programmatic slide */
           touch-action: none !important;
           -ms-touch-action: none !important;
@@ -1250,16 +1250,21 @@
                 ? announce.offsetHeight || 0
                 : 0);
             var isDesktop = window.innerWidth >= 1024;
-            var factor = isDesktop
-              ? 1.0
-              : 0.62; /* desktop: full viewport height */
+            var factor = isDesktop ? 1.0 : 0.85; /* mobile: ~85% of viewport */
             var minH = isDesktop ? 520 : 360;
             var h = Math.max(
               minH,
-              Math.round((window.innerHeight - headerH) * factor)
+              Math.round(
+                (window.innerHeight - (isDesktop ? headerH : 0)) * factor
+              )
             );
-            track.style.setProperty("height", "auto", "important");
-            track.style.setProperty("min-height", h + "px", "important");
+            if (isDesktop) {
+              track.style.setProperty("height", "auto", "important");
+              track.style.setProperty("min-height", h + "px", "important");
+            } else {
+              track.style.setProperty("height", h + "px", "important");
+              track.style.setProperty("min-height", h + "px", "important");
+            }
             track.style.alignItems = "start"; // allow vertical alignment
             var slug = new URLSearchParams(location.search).get("slug") || "";
             var needsHeadroom = slug === "black-tiger-hoodie"; // Can't Catch Us Hoodie
