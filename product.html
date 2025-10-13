@@ -1262,22 +1262,13 @@
             track.style.alignItems = "start"; // allow vertical alignment
             var slug = new URLSearchParams(location.search).get("slug") || "";
             var needsHeadroom = slug === "black-tiger-hoodie"; // Can't Catch Us Hoodie
-            if (needsHeadroom) {
-              // For this product, let width drive height so it can expand full-width without crop
-              track.style.height = "auto";
-              track.style.minHeight = h + "px";
-            } else {
-              track.style.height = h + "px";
-              track.style.removeProperty("min-height");
-            }
-
             Array.from(track.querySelectorAll("img")).forEach(function (img) {
               img.style.width = "100%";
               img.style.objectFit = "contain";
               if (needsHeadroom) {
-                // Full-width without cropping: let width=100% and height auto
+                // Show entire image smaller with vertical headroom, aligned to top
                 img.style.setProperty("height", "auto", "important");
-                img.style.removeProperty("max-height");
+                img.style.setProperty("max-height", h + "px", "important");
                 img.style.objectPosition = "top center";
                 img.style.alignSelf = "start";
               } else {
