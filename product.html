@@ -294,7 +294,7 @@
         }
         #hero-track img {
           height: 100% !important;
-          object-fit: contain !important;
+          object-fit: cover !important; /* Fill width on mobile */
           object-position: center center !important;
           -webkit-user-drag: none !important;
           user-select: none !important;
@@ -1287,18 +1287,30 @@
             }
 
             Array.from(track.querySelectorAll("img")).forEach(function (img) {
-              img.style.width = "100%";
-              img.style.objectFit = "contain";
-              // All devices: full width, auto height, no crop/zoom
-              img.style.setProperty("height", "auto", "important");
-              img.style.setProperty("max-height", h + "px", "important");
-              img.style.objectPosition = needsHeadroom
-                ? "top center"
-                : "center center";
-              img.style.alignSelf = needsHeadroom ? "start" : "center";
+              // Common resets
               img.style.borderRadius = "0";
               img.style.pointerEvents = "none"; // disable hover effects on images
               img.style.transition = "none";
+
+              if (isDesktop) {
+                // Desktop: keep full image visible
+                img.style.width = "100%";
+                img.style.objectFit = "contain";
+                img.style.setProperty("height", "auto", "important");
+                img.style.setProperty("max-height", h + "px", "important");
+                img.style.objectPosition = needsHeadroom
+                  ? "top center"
+                  : "center center";
+                img.style.alignSelf = needsHeadroom ? "start" : "center";
+              } else {
+                // Mobile: fill edge-to-edge horizontally and vertically
+                img.style.width = "100%";
+                img.style.setProperty("height", "100%", "important");
+                img.style.removeProperty("max-height");
+                img.style.objectFit = "cover"; // ensure no white bars left/right
+                img.style.objectPosition = "center center";
+                img.style.alignSelf = "center";
+              }
             });
           }
           sizeHero();
