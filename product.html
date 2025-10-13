@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="styles.css?v=pcnav26" />
     <style id="desktop-overrides">
       @media (min-width: 1024px) {
+        html,
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        /* Remove any page gutters that can create a left gap on desktop */
+        body {
+          overflow-x: visible !important;
+        }
+
         /* Hide mobile hero overlay, show desktop version */
         .hero-overlay.mobile-only {
           display: none !important;
