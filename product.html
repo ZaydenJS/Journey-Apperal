@@ -1259,15 +1259,23 @@
               Math.round((window.innerHeight - headerH) * factor)
             );
             track.style.height = h + "px";
+            track.style.alignItems = "start"; // allow vertical alignment
             var slug = new URLSearchParams(location.search).get("slug") || "";
             var needsHeadroom = slug === "black-tiger-hoodie"; // Can't Catch Us Hoodie
             Array.from(track.querySelectorAll("img")).forEach(function (img) {
-              img.style.height = h + "px";
               img.style.width = "100%";
               img.style.objectFit = "contain";
-              img.style.objectPosition = needsHeadroom
-                ? "center 20%"
-                : "center center";
+              if (needsHeadroom) {
+                // Show entire image smaller with vertical headroom, aligned to top
+                img.style.setProperty("height", "auto", "important");
+                img.style.setProperty("max-height", h + "px", "important");
+                img.style.objectPosition = "top center";
+                img.style.alignSelf = "start";
+              } else {
+                img.style.setProperty("height", h + "px", "important");
+                img.style.removeProperty("max-height");
+                img.style.objectPosition = "center center";
+              }
               img.style.borderRadius = "0";
               img.style.pointerEvents = "none"; // disable hover effects on images
               img.style.transition = "none";
