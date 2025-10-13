@@ -1279,14 +1279,10 @@
               var mOuter = document.querySelector("section.gallery.p-gallery");
               var mTarget = mOuter || document.querySelector(".gallery-main");
               if (mTarget) {
-                var mRect = mTarget.getBoundingClientRect();
-                var vw = Math.round(window.innerWidth);
-                var mLeft = Math.round(mRect.left);
-                var mRightGap = Math.max(0, vw - Math.round(mRect.right));
                 mTarget.style.boxSizing = "border-box";
-                mTarget.style.marginLeft = (mLeft ? -mLeft : 0) + "px";
-                mTarget.style.width =
-                  "calc(100% + " + (mLeft + mRightGap) + "px)";
+                // Use viewport-based full-bleed to ensure true edge-to-edge on all devices
+                mTarget.style.marginLeft = "calc(50% - 50vw)";
+                mTarget.style.width = "100vw";
               }
             }
 
