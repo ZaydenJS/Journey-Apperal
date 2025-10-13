@@ -283,7 +283,7 @@
           min-height: 360px !important;
         }
         #hero-track {
-          height: 65vh !important; /* ~65% of screen height on mobile */
+          height: 75vh !important; /* ~75% of screen height on mobile */
           /* Lock default panning but allow programmatic slide */
           touch-action: none !important;
           -ms-touch-action: none !important;
@@ -1250,7 +1250,7 @@
                 ? announce.offsetHeight || 0
                 : 0);
             var isDesktop = window.innerWidth >= 1024;
-            var factor = isDesktop ? 1.0 : 0.65; /* mobile: ~65% of viewport */
+            var factor = isDesktop ? 1.0 : 0.75; /* mobile: ~75% of viewport */
             var minH = isDesktop ? 520 : 360;
             var h = Math.max(
               minH,
