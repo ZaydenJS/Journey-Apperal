@@ -1969,10 +1969,11 @@
               window.shopifyAPI &&
               typeof window.shopifyAPI.getCollection === "function"
             ) {
-              // Try explicit best-sellers collection first
+              // Fetch by tag 'bestsellers' across the store (authoritative)
               try {
                 const data = await window.shopifyAPI.getCollection(
-                  "best-sellers"
+                  "all",
+                  "tag:bestsellers"
                 );
                 if (
                   data &&
@@ -1982,22 +1983,22 @@
                   list = data.products;
                 }
               } catch (_) {}
+              // Fallback: explicit 'best-sellers' collection filtered by tag just in case
               if (!list.length) {
-                // Fallback: merge across all collections and filter available
-                const collections = await window.shopifyAPI
-                  .getCollections()
-                  .catch(() => ({ collections: [] }));
-                const cols = (collections && collections.collections) || [];
-                const results = await Promise.all(
-                  cols.map((c) =>
-                    window.shopifyAPI
-                      .getCollection(c.handle)
-                      .catch(() => ({ products: [] }))
-                  )
-                );
-                list = results
-                  .flatMap((r) => r.products || [])
-                  .filter((p) => p && p.availableForSale);
+                try {
+                  const alt = await window.shopifyAPI.getCollection(
+                    "best-sellers"
+                  );
+                  if (alt && Array.isArray(alt.products)) {
+                    list = alt.products.filter(
+                      (p) =>
+                        Array.isArray(p.tags) &&
+                        p.tags.some(
+                          (t) => String(t).toLowerCase() === "bestsellers"
+                        )
+                    );
+                  }
+                } catch (_) {}
               }
               // Dedupe by handle and limit
               const seen = new Set();
@@ -2127,6 +2128,7 @@
         nav.classList.add("open");
       }
       toggle.setAttribute("aria-expanded", "true");
+      toggle.classList.add("active");
     };
     const close = () => {
       if (drawer) {
@@ -2167,6 +2169,7 @@
         nav.classList.remove("open");
       }
       toggle.setAttribute("aria-expanded", "false");
+      toggle.classList.remove("active");
     };
 
     toggle.setAttribute("aria-expanded", "false");
@@ -4001,19 +4004,19 @@
           const data = await window.shopifyAPI.getCollection("all", tag);
           products = data.products || [];
         } else if (collectionHandle === "best-sellers") {
-          // Special-case: mirror homepage logic — available products across all
-          const collections = await window.shopifyAPI.getCollections();
-          const handles = (collections && collections.collections) || [];
-          const results = await Promise.all(
-            handles.map((c) =>
-              window.shopifyAPI
-                .getCollection(c.handle)
-                .catch(() => ({ products: [] }))
-            )
+          // Best Sellers collection should strictly be products tagged 'bestsellers'
+          const data = await window.shopifyAPI.getCollection(
+            "all",
+            "tag:bestsellers"
           );
-          products = results
-            .flatMap((r) => r.products || [])
-            .filter((p) => p.availableForSale);
+          products = (data.products || []).filter((p) => p.availableForSale);
+          // Dedupe by handle
+          const seen = new Set();
+          products = products.filter((p) =>
+            p?.handle && !seen.has(p.handle)
+              ? (seen.add(p.handle), true)
+              : false
+          );
         } else {
           // Specific collection
           const data = await window.shopifyAPI.getCollection(
@@ -4255,7 +4258,16 @@
       if (section === "new-arrivals") {
         products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       } else if (section === "best-sellers") {
-        products = products.filter((p) => p.availableForSale);
+        products = products.filter(
+          (p) =>
+            Array.isArray(p.tags) &&
+            p.tags.some((t) => String(t).toLowerCase() === "bestsellers")
+        );
+        // Dedupe by handle
+        const seen = new Set();
+        products = products.filter((p) =>
+          p?.handle && !seen.has(p.handle) ? (seen.add(p.handle), true) : false
+        );
       }
       products = products.slice(0, limit);
 
