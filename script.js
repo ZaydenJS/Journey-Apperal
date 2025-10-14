@@ -1911,8 +1911,13 @@
         const renderPage = () => {
           if (!best.length) return;
           const out = [];
-          for (let i = 0; i < pageSize; i++)
-            out.push(best[(idx + i) % best.length]);
+          const count = Math.min(pageSize, best.length);
+          if (best.length >= pageSize) {
+            for (let i = 0; i < count; i++)
+              out.push(best[(idx + i) % best.length]);
+          } else {
+            for (let i = 0; i < count; i++) out.push(best[i]);
+          }
           bestTrack.innerHTML = out.map(cardHTML).join("");
           normalizeCarouselMedia(bestSection);
           requestAnimationFrame(function () {
