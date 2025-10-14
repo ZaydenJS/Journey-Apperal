@@ -128,7 +128,7 @@
     </style>
 
     <style id="desktop-product-overrides">
-      @media (min-width: 1024px) {
+      @media (min-width: 992px) {
         /* Side-by-side product layout: images left, details right */
         main.container.section.product {
           display: grid !important;
@@ -1256,7 +1256,7 @@
           var track = document.getElementById("hero-track");
           if (!track) return;
           // Desktop: lock wheel/trackpad scrolling on hero image so page scrolls normally
-          if (window.innerWidth >= 1024) {
+          if (window.innerWidth >= 992) {
             try {
               track.style.overflowX = "hidden";
               track.addEventListener(
@@ -1282,7 +1282,7 @@
               (announce && getComputedStyle(announce).position !== "static"
                 ? announce.offsetHeight || 0
                 : 0);
-            var isDesktop = window.innerWidth >= 1024;
+            var isDesktop = window.innerWidth >= 992;
             var factor = isDesktop ? 1.0 : 0.75; /* mobile: ~75% of viewport */
             var minH = isDesktop ? 520 : 360;
             var h = Math.max(
