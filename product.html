@@ -132,7 +132,7 @@
         /* Side-by-side product layout: images left, details right */
         main.container.section.product {
           display: grid !important;
-          grid-template-columns: 50vw 1fr !important;
+          grid-template-columns: 40vw 1fr !important;
           align-items: start !important;
           gap: 32px !important;
           padding-top: 0 !important;
@@ -151,14 +151,16 @@
         }
         /* Desktop: render at final height immediately to prevent jump */
         #hero-track {
-          height: 95vh !important; /* increase desktop hero height to boost contained image width */
-          height: 95svh !important; /* prefer stable viewport units when available */
+          width: 100% !important;
+          height: auto !important;
+          aspect-ratio: 4 / 5 !important; /* uniform portrait box (industry standard for fashion PDPs) */
+          max-height: 92vh !important; /* never exceed viewport height */
         }
         #hero-track img {
+          width: 100% !important;
           height: 100% !important;
-          object-fit: contain !important;
-          /* Desktop: align image content to the left edge while preserving contain */
-          object-position: left center !important;
+          object-fit: cover !important; /* fill the uniform box; allows cropping where needed */
+          object-position: left center !important; /* stay flush-left (1) */
         }
 
         .p-gallery {
