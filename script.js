@@ -149,6 +149,7 @@
     };
 
     __safe("setupMobileNav", setupMobileNav);
+    __safe("injectShippingNote", injectShippingNote);
     __safe("setupMegaMenuHoverIntent", setupMegaMenuHoverIntent);
 
     __safe("setupCarousel", setupCarousel);
@@ -1969,10 +1970,11 @@
               window.shopifyAPI &&
               typeof window.shopifyAPI.getCollection === "function"
             ) {
-              // Try explicit best-sellers collection first
+              // Prefer tag-based fetch across the store first
               try {
                 const data = await window.shopifyAPI.getCollection(
-                  "best-sellers"
+                  "all",
+                  "bestsellers"
                 );
                 if (
                   data &&
@@ -1983,21 +1985,33 @@
                 }
               } catch (_) {}
               if (!list.length) {
-                // Fallback: merge across all collections and filter available
-                const collections = await window.shopifyAPI
-                  .getCollections()
-                  .catch(() => ({ collections: [] }));
-                const cols = (collections && collections.collections) || [];
-                const results = await Promise.all(
-                  cols.map((c) =>
-                    window.shopifyAPI
-                      .getCollection(c.handle)
-                      .catch(() => ({ products: [] }))
-                  )
-                );
-                list = results
-                  .flatMap((r) => r.products || [])
-                  .filter((p) => p && p.availableForSale);
+                // Try explicit best-sellers collection next
+                try {
+                  const data = await window.shopifyAPI.getCollection(
+                    "best-sellers"
+                  );
+                  if (
+                    data &&
+                    Array.isArray(data.products) &&
+                    data.products.length
+                  ) {
+                    list = data.products;
+                  }
+                } catch (_) {}
+              }
+              if (list.length) {
+                // Enforce tag filter and availability
+                list = list.filter((p) => {
+                  const tags = (p.tags || []).map((t) =>
+                    String(t || "").toLowerCase()
+                  );
+                  return (
+                    (tags.includes("bestsellers") ||
+                      tags.includes("best sellers") ||
+                      tags.includes("best-sellers")) &&
+                    p.availableForSale !== false
+                  );
+                });
               }
               // Dedupe by handle and limit
               const seen = new Set();
@@ -2127,6 +2141,11 @@
         nav.classList.add("open");
       }
       toggle.setAttribute("aria-expanded", "true");
+      toggle.classList.add("open");
+      try {
+        const h = document.querySelector(".shop-hamburger, .menu-toggle");
+        if (h) h.classList.add("open");
+      } catch (_) {}
     };
     const close = () => {
       if (drawer) {
@@ -2167,6 +2186,11 @@
         nav.classList.remove("open");
       }
       toggle.setAttribute("aria-expanded", "false");
+      toggle.classList.remove("open");
+      try {
+        const h = document.querySelector(".shop-hamburger, .menu-toggle");
+        if (h) h.classList.remove("open");
+      } catch (_) {}
     };
 
     toggle.setAttribute("aria-expanded", "false");
@@ -2199,6 +2223,28 @@
     });
 
     setupDrawerAccordions();
+  }
+
+  // Inject shipping details text into Support/Contact accordion across pages
+  function injectShippingNote() {
+    try {
+      const text =
+        "Standard shipping: $11 | Express shipping: $15 | Orders $100+ ship free.";
+      const accordions = Array.from(
+        document.querySelectorAll(".drawer .accordion")
+      );
+      accordions
+        .filter((btn) => /support|customer care/i.test(btn.textContent || ""))
+        .forEach((btn) => {
+          const sub = btn.nextElementSibling;
+          if (!sub || !sub.classList?.contains("sub")) return;
+          if (sub.querySelector(".shipping-note")) return; // avoid duplicates
+          const note = document.createElement("div");
+          note.className = "shipping-note";
+          note.textContent = text;
+          sub.appendChild(note);
+        });
+    } catch (_) {}
   }
 
   function setupMegaMenuHoverIntent() {
@@ -4001,19 +4047,30 @@
           const data = await window.shopifyAPI.getCollection("all", tag);
           products = data.products || [];
         } else if (collectionHandle === "best-sellers") {
-          // Special-case: mirror homepage logic — available products across all
-          const collections = await window.shopifyAPI.getCollections();
-          const handles = (collections && collections.collections) || [];
-          const results = await Promise.all(
-            handles.map((c) =>
-              window.shopifyAPI
-                .getCollection(c.handle)
-                .catch(() => ({ products: [] }))
-            )
+          // Strict: only products tagged "bestsellers", deduped by handle
+          const data = await window.shopifyAPI.getCollection(
+            "all",
+            "bestsellers"
           );
-          products = results
-            .flatMap((r) => r.products || [])
-            .filter((p) => p.availableForSale);
+          products = (
+            data && Array.isArray(data.products) ? data.products : []
+          ).filter((p) => {
+            const tags = (p.tags || []).map((t) =>
+              String(t || "").toLowerCase()
+            );
+            return (
+              (tags.includes("bestsellers") ||
+                tags.includes("best sellers") ||
+                tags.includes("best-sellers")) &&
+              p.availableForSale !== false
+            );
+          });
+          const seen = new Set();
+          products = products.filter((p) =>
+            p?.handle && !seen.has(p.handle)
+              ? (seen.add(p.handle), true)
+              : false
+          );
         } else {
           // Specific collection
           const data = await window.shopifyAPI.getCollection(
@@ -4206,47 +4263,70 @@
     try {
       let products = [];
       if (window.shopifyAPI) {
-        const collections = await window.shopifyAPI.getCollections();
-        const cols = (collections && collections.collections) || [];
+        if (section === "best-sellers") {
+          // Strictly load only products tagged "bestsellers" and dedupe by handle
+          const data = await window.shopifyAPI.getCollection(
+            "all",
+            "bestsellers"
+          );
+          products = (
+            data && Array.isArray(data.products) ? data.products : []
+          ).filter((p) => {
+            const tags = (p.tags || []).map((t) =>
+              String(t || "").toLowerCase()
+            );
+            return (
+              (tags.includes("bestsellers") ||
+                tags.includes("best sellers") ||
+                tags.includes("best-sellers")) &&
+              p.availableForSale !== false
+            );
+          });
+          const seen = new Set();
+          products = products.filter((p) =>
+            p?.handle && !seen.has(p.handle)
+              ? (seen.add(p.handle), true)
+              : false
+          );
+        } else {
+          const collections = await window.shopifyAPI.getCollections();
+          const cols = (collections && collections.collections) || [];
 
-        // Accumulate products as results arrive; paint early when we have enough
-        let earlyPainted = false;
-        let acc = [];
+          // Accumulate products as results arrive; paint early when we have enough
+          let earlyPainted = false;
+          let acc = [];
 
-        await Promise.all(
-          cols.map((c, idx) =>
-            window.shopifyAPI
-              .getCollection(c.handle)
-              .then((res) => {
-                const prods = (res && res.products) || [];
-                // For section-specific filtering
-                let chunk = prods.slice();
-                if (section === "best-sellers") {
-                  chunk = chunk.filter((p) => p.availableForSale);
-                }
-                acc = acc.concat(chunk);
-                // Early paint once we have enough and no cache was shown
-                if (!earlyPainted && acc.length >= limit && !cached?.length) {
-                  earlyPainted = true;
-                  const firstSlice =
-                    section === "new-arrivals"
-                      ? acc
-                          .slice()
-                          .sort(
-                            (a, b) =>
-                              new Date(b.createdAt) - new Date(a.createdAt)
-                          )
-                          .slice(0, limit)
-                      : acc.slice(0, limit);
-                  __cacheSet(cacheKey, firstSlice);
-                  renderList(firstSlice);
-                }
-              })
-              .catch(() => {})
-          )
-        );
+          await Promise.all(
+            cols.map((c, idx) =>
+              window.shopifyAPI
+                .getCollection(c.handle)
+                .then((res) => {
+                  const prods = (res && res.products) || [];
+                  let chunk = prods.slice();
+                  acc = acc.concat(chunk);
+                  // Early paint once we have enough and no cache was shown
+                  if (!earlyPainted && acc.length >= limit && !cached?.length) {
+                    earlyPainted = true;
+                    const firstSlice =
+                      section === "new-arrivals"
+                        ? acc
+                            .slice()
+                            .sort(
+                              (a, b) =>
+                                new Date(b.createdAt) - new Date(a.createdAt)
+                            )
+                            .slice(0, limit)
+                        : acc.slice(0, limit);
+                    __cacheSet(cacheKey, firstSlice);
+                    renderList(firstSlice);
+                  }
+                })
+                .catch(() => {})
+            )
+          );
 
-        products = acc;
+          products = acc;
+        }
       } else {
         console.log("Shopify API not available for homepage products");
       }
@@ -4255,7 +4335,16 @@
       if (section === "new-arrivals") {
         products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       } else if (section === "best-sellers") {
-        products = products.filter((p) => p.availableForSale);
+        // Already filtered above; enforce tag and availability again for safety
+        products = products.filter((p) => {
+          const tags = (p.tags || []).map((t) => String(t || "").toLowerCase());
+          return (
+            (tags.includes("bestsellers") ||
+              tags.includes("best sellers") ||
+              tags.includes("best-sellers")) &&
+            p.availableForSale !== false
+          );
+        });
       }
       products = products.slice(0, limit);
 
