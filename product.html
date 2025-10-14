@@ -167,6 +167,18 @@
           margin-left: 0 !important;
           width: 100% !important;
           max-width: none !important;
+          /* Override global two-column gallery (thumbs + main) to a single column */
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          grid-auto-flow: row !important;
+        }
+        /* Ensure the main hero occupies the first (and only) column */
+        .gallery-main {
+          grid-column: 1 !important;
+        }
+        /* Hide any thumbnail rail on desktop PDP */
+        .thumbs {
+          display: none !important;
         }
         /* Remove any inner left padding that could create a gap */
         section.gallery.p-gallery,
