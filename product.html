@@ -151,7 +151,8 @@
         }
         /* Desktop: render at final height immediately to prevent jump */
         #hero-track {
-          height: 86vh !important;
+          height: 95vh !important; /* increase desktop hero height to boost contained image width */
+          height: 95svh !important; /* prefer stable viewport units when available */
         }
         #hero-track img {
           height: 100% !important;
