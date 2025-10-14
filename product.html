@@ -1082,7 +1082,17 @@
         padding-right: 0;
       "
     >
-      <section class="gallery p-gallery" style="padding: 0; margin: 0">
+      <section
+        class="gallery p-gallery"
+        style="
+          padding: 0;
+          margin: 0;
+          display: grid;
+          grid-template-columns: 1fr;
+          width: 100%;
+          max-width: none;
+        "
+      >
         <div
           class="gallery-main"
           style="
@@ -1090,6 +1100,8 @@
             background: transparent;
             margin: 0;
             padding: 0;
+            grid-column: 1;
+            width: 100%;
           "
         >
           <div class="carousel hero-carousel" style="position: relative">
