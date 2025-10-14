@@ -1974,7 +1974,7 @@
               try {
                 const data = await window.shopifyAPI.getCollection(
                   "all",
-                  "bestsellers"
+                  "best sellers"
                 );
                 if (
                   data &&
@@ -4050,7 +4050,7 @@
           // Strict: only products tagged "bestsellers", deduped by handle
           const data = await window.shopifyAPI.getCollection(
             "all",
-            "bestsellers"
+            "best sellers"
           );
           products = (
             data && Array.isArray(data.products) ? data.products : []
@@ -4267,7 +4267,7 @@
           // Strictly load only products tagged "bestsellers" and dedupe by handle
           const data = await window.shopifyAPI.getCollection(
             "all",
-            "bestsellers"
+            "best sellers"
           );
           products = (
             data && Array.isArray(data.products) ? data.products : []
