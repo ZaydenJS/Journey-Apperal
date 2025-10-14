@@ -1328,8 +1328,9 @@
               )
             );
             if (isDesktop) {
-              track.style.setProperty("height", "auto", "important");
-              track.style.setProperty("min-height", h + "px", "important");
+              // Desktop: fit hero between sticky header/announcement and bottom of the viewport
+              track.style.setProperty("height", h + "px", "important");
+              track.style.removeProperty("min-height");
             } else {
               // Mobile: rely on CSS (svh/vh) to avoid dynamic height jumps on scroll
               track.style.removeProperty("height");
@@ -1358,6 +1359,8 @@
                 el.style.width = "100%";
                 el.style.maxWidth = "none";
                 el.style.paddingLeft = "0";
+                // Ensure wrappers match the computed hero height
+                el.style.setProperty("height", h + "px", "important");
               });
             } else {
               // Mobile: flush gallery to both left and right edges (no crop/zoom)
@@ -1378,15 +1381,13 @@
               img.style.transition = "none";
 
               if (isDesktop) {
-                // Desktop: keep full image visible
+                // Desktop: fill full viewport height with consistent cover behavior
                 img.style.width = "100%";
-                img.style.objectFit = "contain";
-                img.style.setProperty("height", "auto", "important");
-                img.style.setProperty("max-height", h + "px", "important");
-                img.style.objectPosition = needsHeadroom
-                  ? "top center"
-                  : "center center";
-                img.style.alignSelf = needsHeadroom ? "start" : "center";
+                img.style.setProperty("height", "100%", "important");
+                img.style.removeProperty("max-height");
+                img.style.objectFit = "cover";
+                img.style.objectPosition = "left center";
+                img.style.alignSelf = "stretch";
               } else {
                 // Mobile: fill edge-to-edge horizontally and vertically
                 img.style.width = "100%";
