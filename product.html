@@ -162,6 +162,13 @@
           object-position: left center !important; /* stay flush-left (1) */
         }
 
+        /* Ensure wrappers also fill viewport height so every image reaches top & bottom */
+        .gallery-main,
+        .hero-carousel {
+          height: 100vh !important;
+          height: 100svh !important;
+        }
+
         .p-gallery {
           margin: 0 !important;
         }
