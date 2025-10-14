@@ -136,7 +136,6 @@
           align-items: start !important;
           gap: 32px !important;
           padding-top: 0 !important;
-          padding-bottom: 0 !important;
           /* Ensure full-bleed main container on desktop */
           max-width: none !important;
           width: 100% !important;
@@ -161,13 +160,6 @@
           height: 100% !important;
           object-fit: cover !important; /* fill the uniform box; allows cropping where needed */
           object-position: left center !important; /* stay flush-left (1) */
-        }
-
-        /* Ensure wrappers also fill viewport height so every image reaches top & bottom */
-        .gallery-main,
-        .hero-carousel {
-          height: 100vh !important;
-          height: 100svh !important;
         }
 
         .p-gallery {
@@ -1086,7 +1078,6 @@
       class="container section product"
       style="
         padding-top: 0;
-        padding-bottom: 0;
         max-width: none;
         width: 100%;
         margin: 0;
@@ -1328,9 +1319,8 @@
               )
             );
             if (isDesktop) {
-              // Desktop: fit hero between sticky header/announcement and bottom of the viewport
-              track.style.setProperty("height", h + "px", "important");
-              track.style.removeProperty("min-height");
+              track.style.setProperty("height", "auto", "important");
+              track.style.setProperty("min-height", h + "px", "important");
             } else {
               // Mobile: rely on CSS (svh/vh) to avoid dynamic height jumps on scroll
               track.style.removeProperty("height");
@@ -1359,8 +1349,6 @@
                 el.style.width = "100%";
                 el.style.maxWidth = "none";
                 el.style.paddingLeft = "0";
-                // Ensure wrappers match the computed hero height
-                el.style.setProperty("height", h + "px", "important");
               });
             } else {
               // Mobile: flush gallery to both left and right edges (no crop/zoom)
@@ -1381,13 +1369,15 @@
               img.style.transition = "none";
 
               if (isDesktop) {
-                // Desktop: fill full viewport height with consistent cover behavior
+                // Desktop: keep full image visible
                 img.style.width = "100%";
-                img.style.setProperty("height", "100%", "important");
-                img.style.removeProperty("max-height");
-                img.style.objectFit = "cover";
-                img.style.objectPosition = "left center";
-                img.style.alignSelf = "stretch";
+                img.style.objectFit = "contain";
+                img.style.setProperty("height", "auto", "important");
+                img.style.setProperty("max-height", h + "px", "important");
+                img.style.objectPosition = needsHeadroom
+                  ? "top center"
+                  : "center center";
+                img.style.alignSelf = needsHeadroom ? "start" : "center";
               } else {
                 // Mobile: fill edge-to-edge horizontally and vertically
                 img.style.width = "100%";
