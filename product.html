@@ -152,9 +152,8 @@
         /* Desktop: render at final height immediately to prevent jump */
         #hero-track {
           width: 100% !important;
-          height: auto !important;
-          aspect-ratio: 4 / 5 !important; /* uniform portrait box (industry standard for fashion PDPs) */
-          max-height: 92vh !important; /* never exceed viewport height */
+          height: 100vh !important; /* full-viewport height on desktop */
+          height: 100svh !important; /* prefer stable viewport units */
         }
         #hero-track img {
           width: 100% !important;
