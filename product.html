@@ -132,7 +132,7 @@
         /* Side-by-side product layout: images left, details right */
         main.container.section.product {
           display: grid !important;
-          grid-template-columns: 1fr 1fr !important;
+          grid-template-columns: 50vw 1fr !important;
           align-items: start !important;
           gap: 32px !important;
           padding-top: 0 !important;
@@ -149,6 +149,10 @@
         #hero-track {
           min-height: 520px !important;
         }
+        /* Desktop: render at final height immediately to prevent jump */
+        #hero-track {
+          height: 86vh !important;
+        }
         #hero-track img {
           height: 100% !important;
           object-fit: contain !important;
@@ -160,8 +164,8 @@
         }
         /* Full-bleed gallery left on desktop */
         section.gallery.p-gallery {
-          margin-left: calc(50% - 50vw) !important;
-          width: 100vw !important;
+          margin-left: 0 !important;
+          width: 100% !important;
           max-width: none !important;
         }
         /* Remove any inner left padding that could create a gap */
@@ -1306,8 +1310,8 @@
               var trackEl = document.getElementById("hero-track");
               if (outer) {
                 outer.style.boxSizing = "border-box";
-                outer.style.marginLeft = "calc(50% - 50vw)";
-                outer.style.width = "100vw";
+                outer.style.marginLeft = "0";
+                outer.style.width = "100%";
                 outer.style.maxWidth = "none";
                 outer.style.paddingLeft = "0";
               }
