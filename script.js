@@ -1989,8 +1989,13 @@
       if (!bestTrack) {
         bestTrack = document.createElement("div");
         bestTrack.className = "carousel-track mobile-2x1";
-        bestTrack.style.cssText =
-          "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
+        if (window.innerWidth < 1024) {
+          bestTrack.style.cssText =
+            "display:grid;grid-auto-flow:column;grid-auto-columns:50%;gap:12px;align-items:stretch;overflow-x:auto;overflow-y:hidden;padding:0;-webkit-overflow-scrolling:touch;";
+        } else {
+          bestTrack.style.cssText =
+            "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
+        }
         bestSection.appendChild(bestTrack);
       }
       // Enforce 2x1 grid layout on desktop only; mobile will use horizontal scroll
@@ -4477,7 +4482,7 @@
           const data = await window.shopifyAPI.getCollection("all", tag);
           products = data.products || [];
         } else if (collectionHandle === "best-sellers") {
-          // Strict: only products tagged "bestsellers", deduped by handle
+          // Strict: only products tagged "best sellers", deduped by handle
           const data = await window.shopifyAPI.getCollection(
             "all",
             "best sellers"
@@ -4485,14 +4490,19 @@
           products = (
             data && Array.isArray(data.products) ? data.products : []
           ).filter((p) => {
-            const tags = (p.tags || []).map((t) =>
-              String(t || "").toLowerCase()
+            const raw = p.tags;
+            const arr = Array.isArray(raw)
+              ? raw
+              : typeof raw === "string"
+              ? raw.split(",")
+              : [];
+            const tags = arr.map((t) =>
+              String(t || "")
+                .trim()
+                .toLowerCase()
             );
             return (
-              (tags.includes("bestsellers") ||
-                tags.includes("best sellers") ||
-                tags.includes("best-sellers")) &&
-              p.availableForSale !== false
+              tags.includes("best sellers") && p.availableForSale !== false
             );
           });
           const seen = new Set();
@@ -4694,7 +4704,7 @@
       let products = [];
       if (window.shopifyAPI) {
         if (section === "best-sellers") {
-          // Strictly load only products tagged "bestsellers" and dedupe by handle
+          // Strictly load only products tagged "best sellers" and dedupe by handle
           const data = await window.shopifyAPI.getCollection(
             "all",
             "best sellers"
@@ -4702,14 +4712,19 @@
           products = (
             data && Array.isArray(data.products) ? data.products : []
           ).filter((p) => {
-            const tags = (p.tags || []).map((t) =>
-              String(t || "").toLowerCase()
+            const raw = p.tags;
+            const arr = Array.isArray(raw)
+              ? raw
+              : typeof raw === "string"
+              ? raw.split(",")
+              : [];
+            const tags = arr.map((t) =>
+              String(t || "")
+                .trim()
+                .toLowerCase()
             );
             return (
-              (tags.includes("bestsellers") ||
-                tags.includes("best sellers") ||
-                tags.includes("best-sellers")) &&
-              p.availableForSale !== false
+              tags.includes("best sellers") && p.availableForSale !== false
             );
           });
           const seen = new Set();
@@ -4765,17 +4780,23 @@
       if (section === "new-arrivals") {
         products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       } else if (section === "best-sellers") {
-        // Already filtered above; enforce tag and availability again for safety
+        // Already filtered above; enforce authoritative tag and availability again for safety
         products = products.filter((p) => {
-          const tags = (p.tags || []).map((t) => String(t || "").toLowerCase());
-          return (
-            (tags.includes("bestsellers") ||
-              tags.includes("best sellers") ||
-              tags.includes("best-sellers")) &&
-            p.availableForSale !== false
+          const raw = p.tags;
+          const arr = Array.isArray(raw)
+            ? raw
+            : typeof raw === "string"
+            ? raw.split(",")
+            : [];
+          const tags = arr.map((t) =>
+            String(t || "")
+              .trim()
+              .toLowerCase()
           );
+          return tags.includes("best sellers") && p.availableForSale !== false;
         });
       }
+      const productsFull = products.slice();
       products = products.slice(0, limit);
 
       // Update cache and UI if changed
@@ -4783,7 +4804,7 @@
       // Seed collection caches so navigating to collection pages paints instantly
       try {
         if (section === "best-sellers") {
-          __cacheSet("collection:best-sellers:-", products.slice());
+          __cacheSet("collection:best-sellers:-", productsFull);
         } else if (section === "new-arrivals") {
           __cacheSet("collection:all:-", products.slice());
         }
