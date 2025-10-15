@@ -6841,6 +6841,30 @@ document.addEventListener("DOMContentLoaded", () => {
   }, 1000);
 });
 
+// Auto-open cart drawer when arriving with ?openCart=true
+document.addEventListener("DOMContentLoaded", () => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("openCart") === "true") {
+      // Ensure cart is initialized, then open
+      try {
+        if (typeof window.setupCart === "function") window.setupCart();
+      } catch (_) {}
+      try {
+        if (typeof window.openCart === "function") {
+          window.openCart();
+        } else {
+          // Fallback: click any existing cart triggers
+          const btn = document.querySelector(
+            '[data-cart-toggle], .cart-toggle, #open-cart, a[aria-label="Cart"], .cart-link, [data-open-cart]'
+          );
+          if (btn) btn.click();
+        }
+      } catch (_) {}
+    }
+  } catch (_) {}
+});
+
 // Prefetch collections on click so collection pages paint instantly from cache
 function setupCollectionLinkPrefetch() {
   if (window.__collectionPrefetchBound) return;
