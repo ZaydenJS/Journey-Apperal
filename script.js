@@ -1864,11 +1864,26 @@
                 enableHoverSwapIn(section);
             });
             // Make RV track horizontally scrollable on mobile (match homepage behavior)
+            // Nuke any existing swipe/drag handlers by replacing track with a fresh clone (mobile)
+            if (window.innerWidth < 1024 && track && track.parentNode) {
+              var __fresh = track.cloneNode(true);
+              track.parentNode.replaceChild(__fresh, track);
+              track = __fresh;
+              try {
+                track.removeAttribute("data-drag-scroll");
+              } catch (_) {}
+            }
+
             try {
               section.classList.add("carousel");
               track.style.display = "grid";
               track.style.gridTemplateColumns = "unset";
               track.style.gridAutoFlow = "column";
+              // Extra smoothness on mobile
+              track.style.overscrollBehaviorX = "contain";
+              track.style.userSelect = "none";
+              track.style.webkitUserSelect = "none";
+
               track.style.gridAutoColumns = "50%";
               track.style.gap = track.style.gap || "12px";
               track.style.overflowX = "auto";
@@ -2005,12 +2020,26 @@
       }
 
       // Mobile baseline: use horizontal scroll track and drag-to-scroll identical to Recently Viewed
+      // Nuke any existing swipe/drag handlers by replacing bestTrack with a fresh clone (mobile)
+      if (bestTrack && window.innerWidth < 1024 && bestTrack.parentNode) {
+        var __freshBT0 = bestTrack.cloneNode(true);
+        bestTrack.parentNode.replaceChild(__freshBT0, bestTrack);
+        bestTrack = __freshBT0;
+        try {
+          bestTrack.removeAttribute("data-drag-scroll");
+        } catch (_) {}
+      }
+
       if (bestTrack && window.innerWidth < 1024) {
         try {
           bestSection.classList.add("carousel");
         } catch (_) {}
         bestTrack.style.display = "grid";
         bestTrack.style.gridTemplateColumns = "unset";
+        bestTrack.style.overscrollBehaviorX = "contain";
+        bestTrack.style.userSelect = "none";
+        bestTrack.style.webkitUserSelect = "none";
+
         bestTrack.style.gridAutoFlow = "column";
         bestTrack.style.gridAutoColumns = "50%";
         bestTrack.style.gap = bestTrack.style.gap || "12px";
@@ -2174,7 +2203,21 @@
               bestTrack.innerHTML = best.map(cardHTML).join("");
               normalizeCarouselMedia(bestSection);
               if (typeof enableHoverSwapIn === "function")
-                enableHoverSwapIn(bestSection);
+                if (
+                  window.innerWidth < 1024 &&
+                  bestTrack &&
+                  bestTrack.parentNode
+                ) {
+                  // Nuke any existing swipe/drag handlers by replacing bestTrack with a fresh clone (mobile)
+                  var __freshBT = bestTrack.cloneNode(true);
+                  bestTrack.parentNode.replaceChild(__freshBT, bestTrack);
+                  bestTrack = __freshBT;
+                  try {
+                    bestTrack.removeAttribute("data-drag-scroll");
+                  } catch (_) {}
+                }
+
+              enableHoverSwapIn(bestSection);
               requestAnimationFrame(function () {
                 normalizeCarouselMedia(bestSection);
                 if (typeof enableHoverSwapIn === "function")
@@ -2341,6 +2384,20 @@
                   bestTrack.style.webkitOverflowScrolling = "touch";
                   bestTrack.style.touchAction = "pan-x";
                   bestTrack.style.overscrollBehaviorX = "contain";
+                  // Nuke any existing swipe/drag handlers by replacing bestTrack with a fresh clone (mobile)
+                  if (
+                    window.innerWidth < 1024 &&
+                    bestTrack &&
+                    bestTrack.parentNode
+                  ) {
+                    var __freshBT2 = bestTrack.cloneNode(true);
+                    bestTrack.parentNode.replaceChild(__freshBT2, bestTrack);
+                    bestTrack = __freshBT2;
+                    try {
+                      bestTrack.removeAttribute("data-drag-scroll");
+                    } catch (_) {}
+                  }
+
                   bestTrack.style.userSelect = "none";
                   bestTrack.style.webkitUserSelect = "none";
                   if (!bestTrack.hasAttribute("data-drag-scroll")) {
