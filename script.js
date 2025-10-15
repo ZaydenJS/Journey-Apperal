@@ -1746,6 +1746,50 @@
             section.appendChild(track);
           }
           const pageSize = window.innerWidth >= 1024 ? 5 : 2;
+          // Mobile-only: swipe to page left/right for Recently Viewed
+          if (
+            window.innerWidth < 1024 &&
+            track &&
+            !track.getAttribute("data-swipe-bound")
+          ) {
+            track.setAttribute("data-swipe-bound", "1");
+            let sx = 0,
+              dx = 0,
+              touching = false;
+            track.addEventListener(
+              "touchstart",
+              function (e) {
+                touching = true;
+                sx = e.touches && e.touches[0] ? e.touches[0].clientX : 0;
+                dx = 0;
+              },
+              { passive: true }
+            );
+            track.addEventListener(
+              "touchmove",
+              function (e) {
+                if (!touching) return;
+                const x = e.touches && e.touches[0] ? e.touches[0].clientX : 0;
+                dx = x - sx;
+              },
+              { passive: true }
+            );
+            track.addEventListener("touchend", function () {
+              if (!touching) return;
+              touching = false;
+              const TH = 24; // minimal swipe distance
+              if (dx < -TH) {
+                idx = (idx + pageSize) % items.length;
+                renderPage();
+              } else if (dx > TH) {
+                idx = (idx - pageSize + items.length) % items.length;
+                renderPage();
+              }
+            });
+            track.addEventListener("touchcancel", function () {
+              touching = false;
+            });
+          }
           if ((items || []).length > pageSize) {
             const ctrls = ensureArrows(section);
             let idx = 0;
@@ -1929,6 +1973,50 @@
       if (prevBtn && nextBtn) {
         let idx = 0;
         const pageSize = window.innerWidth >= 1024 ? 4 : 2;
+        // Mobile-only: swipe to page left/right for Best Sellers
+        if (
+          window.innerWidth < 1024 &&
+          bestTrack &&
+          !bestTrack.getAttribute("data-swipe-bound")
+        ) {
+          bestTrack.setAttribute("data-swipe-bound", "1");
+          let sx = 0,
+            dx = 0,
+            touching = false;
+          bestTrack.addEventListener(
+            "touchstart",
+            function (e) {
+              touching = true;
+              sx = e.touches && e.touches[0] ? e.touches[0].clientX : 0;
+              dx = 0;
+            },
+            { passive: true }
+          );
+          bestTrack.addEventListener(
+            "touchmove",
+            function (e) {
+              if (!touching) return;
+              const x = e.touches && e.touches[0] ? e.touches[0].clientX : 0;
+              dx = x - sx;
+            },
+            { passive: true }
+          );
+          bestTrack.addEventListener("touchend", function () {
+            if (!touching) return;
+            touching = false;
+            const TH = 24;
+            if (dx < -TH) {
+              idx = (idx + pageSize) % best.length;
+              renderPage();
+            } else if (dx > TH) {
+              idx = (idx - pageSize + best.length) % best.length;
+              renderPage();
+            }
+          });
+          bestTrack.addEventListener("touchcancel", function () {
+            touching = false;
+          });
+        }
         const renderPage = () => {
           if (!best.length) return;
           const out = [];
