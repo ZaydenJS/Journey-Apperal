@@ -1774,7 +1774,7 @@
             });
           }
 
-          if ((items || []).length > pageSize) {
+          if (window.innerWidth >= 1024 && (items || []).length > pageSize) {
             const ctrls = ensureArrows(section);
             let idx = 0;
             function renderPage() {
@@ -1859,6 +1859,68 @@
               if (typeof enableHoverSwapIn === "function")
                 enableHoverSwapIn(section);
             });
+            // Make RV track horizontally scrollable on mobile (match homepage behavior)
+            try {
+              section.classList.add("carousel");
+              track.style.display = "grid";
+              track.style.gridTemplateColumns = "unset";
+              track.style.gridAutoFlow = "column";
+              track.style.gridAutoColumns = "50%";
+              track.style.gap = track.style.gap || "12px";
+              track.style.overflowX = "auto";
+              track.style.padding = track.style.padding || "0";
+              track.style.scrollBehavior =
+                track.style.scrollBehavior || "smooth";
+              track.style.webkitOverflowScrolling = "touch";
+              // Bind arrows to scrollBy like homepage (single-track)
+              const prevs = section.querySelectorAll(".prev");
+              const nexts = section.querySelectorAll(".next");
+              const step = () => {
+                const first = track.children[0];
+                if (first) {
+                  const rect = first.getBoundingClientRect();
+                  const styles = getComputedStyle(track);
+                  const gap =
+                    parseFloat(styles.columnGap || styles.gap || 0) || 0;
+                  return rect.width + gap;
+                }
+                return track.clientWidth * 0.8;
+              };
+              prevs.forEach((btn) =>
+                btn.addEventListener("click", () =>
+                  track.scrollBy({ left: -step(), behavior: "smooth" })
+                )
+              );
+              nexts.forEach((btn) =>
+                btn.addEventListener("click", () =>
+                  track.scrollBy({ left: step(), behavior: "smooth" })
+                )
+              );
+              // Drag to scroll (pointer events)
+              if (!track.hasAttribute("data-drag-scroll")) {
+                track.setAttribute("data-drag-scroll", "1");
+                let startX = 0,
+                  scrollLeft = 0,
+                  isDown = false;
+                track.addEventListener("pointerdown", (e) => {
+                  isDown = true;
+                  startX = e.pageX;
+                  scrollLeft = track.scrollLeft;
+                });
+                track.addEventListener("pointermove", (e) => {
+                  if (!isDown) return;
+                  const dx = e.pageX - startX;
+                  track.scrollLeft = scrollLeft - dx;
+                });
+                track.addEventListener("pointerup", () => {
+                  isDown = false;
+                });
+                track.addEventListener("pointerleave", () => {
+                  isDown = false;
+                });
+              }
+            } catch (_) {}
+
             // Prefetch PDP for visible cards to ensure instant PDP-to-PDP nav
             try {
               const cards = Array.from(
@@ -2077,6 +2139,55 @@
               list = list.slice(0, pageSize * 3);
               const mapped = list.map(toCard);
               // Only re-render if changed
+              // Mobile: render all Best Sellers horizontally and enable drag-to-scroll
+              if (window.innerWidth < 1024) {
+                try {
+                  bestTrack.innerHTML = best.map(cardHTML).join("");
+                  normalizeCarouselMedia(bestSection);
+                  if (typeof enableHoverSwapIn === "function")
+                    enableHoverSwapIn(bestSection);
+                  requestAnimationFrame(function () {
+                    normalizeCarouselMedia(bestSection);
+                    if (typeof enableHoverSwapIn === "function")
+                      enableHoverSwapIn(bestSection);
+                  });
+                  // Track layout and drag binding (like homepage)
+                  bestSection.classList.add("carousel");
+                  bestTrack.style.display = "grid";
+                  bestTrack.style.gridTemplateColumns = "unset";
+                  bestTrack.style.gridAutoFlow = "column";
+                  bestTrack.style.gridAutoColumns = "50%";
+                  bestTrack.style.gap = bestTrack.style.gap || "12px";
+                  bestTrack.style.overflowX = "auto";
+                  bestTrack.style.padding = bestTrack.style.padding || "0";
+                  bestTrack.style.scrollBehavior =
+                    bestTrack.style.scrollBehavior || "smooth";
+                  bestTrack.style.webkitOverflowScrolling = "touch";
+                  if (!bestTrack.hasAttribute("data-drag-scroll")) {
+                    bestTrack.setAttribute("data-drag-scroll", "1");
+                    let startX = 0,
+                      scrollLeft = 0,
+                      isDown = false;
+                    bestTrack.addEventListener("pointerdown", (e) => {
+                      isDown = true;
+                      startX = e.pageX;
+                      scrollLeft = bestTrack.scrollLeft;
+                    });
+                    bestTrack.addEventListener("pointermove", (e) => {
+                      if (!isDown) return;
+                      const dx = e.pageX - startX;
+                      bestTrack.scrollLeft = scrollLeft - dx;
+                    });
+                    bestTrack.addEventListener("pointerup", () => {
+                      isDown = false;
+                    });
+                    bestTrack.addEventListener("pointerleave", () => {
+                      isDown = false;
+                    });
+                  }
+                } catch (_) {}
+              }
+
               const currentHandles = Array.from(
                 bestSection.querySelectorAll("article.card[data-href]")
               ).map((el) =>
@@ -2101,17 +2212,39 @@
 
         renderPage();
         prevBtn.removeAttribute("onclick");
-        prevBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          idx = (idx - pageSize + best.length) % best.length;
-          renderPage();
-        });
         nextBtn.removeAttribute("onclick");
-        nextBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          idx = (idx + pageSize) % best.length;
-          renderPage();
-        });
+        if (window.innerWidth >= 1024) {
+          prevBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            idx = (idx - pageSize + best.length) % best.length;
+            renderPage();
+          });
+          nextBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            idx = (idx + pageSize) % best.length;
+            renderPage();
+          });
+        } else {
+          // Mobile: bind arrows to scroll the track horizontally
+          const step = () => {
+            const first = bestTrack.children[0];
+            if (first) {
+              const rect = first.getBoundingClientRect();
+              const styles = getComputedStyle(bestTrack);
+              const gap = parseFloat(styles.columnGap || styles.gap || 0) || 0;
+              return rect.width + gap;
+            }
+            return bestTrack.clientWidth * 0.8;
+          };
+          prevBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            bestTrack.scrollBy({ left: -step(), behavior: "smooth" });
+          });
+          nextBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            bestTrack.scrollBy({ left: step(), behavior: "smooth" });
+          });
+        }
         let bsResizeTO;
         window.addEventListener("resize", function () {
           clearTimeout(bsResizeTO);
