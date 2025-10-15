@@ -549,9 +549,8 @@
     <script id="pdp-instant-sizes">
       (function () {
         try {
-          // Desktop-only: leave mobile behavior untouched
-          var isDesktop = window.innerWidth >= 1024;
-          if (!isDesktop) return;
+          // Run on all devices (mobile + desktop) for instant sizes
+          // Formerly desktop-only; enabled for mobile per performance spec
 
           function getHandle() {
             try {
