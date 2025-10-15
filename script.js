@@ -2776,9 +2776,7 @@
   function normalizeCarouselMedia(root) {
     try {
       const scope = root || document;
-      const wraps = scope.querySelectorAll(
-        "#new-arrivals .img-wrap, #best-sellers .img-wrap, .p-details #you-also-viewed .img-wrap, .p-details #featured-collection .img-wrap"
-      );
+      const wraps = scope.querySelectorAll(".img-wrap");
       wraps.forEach((wrap) => {
         // wrapper sizing
         wrap.style.position = wrap.style.position || "relative";
@@ -2862,6 +2860,66 @@
           const h = this.querySelector("img.hover-img, img.alt");
           if (h) h.style.opacity = "0";
         };
+
+        // touch/pen: show instantly on press, hide on release (mobile)
+        try {
+          if (wrap.getAttribute("data-touch-swap-bound") !== "1") {
+            wrap.setAttribute("data-touch-swap-bound", "1");
+            const showAlt = function () {
+              try {
+                const h = wrap.querySelector("img.hover-img, img.alt");
+                if (h) h.style.opacity = "1";
+              } catch (_) {}
+            };
+            const hideAlt = function () {
+              try {
+                const h = wrap.querySelector("img.hover-img, img.alt");
+                if (h) h.style.opacity = "0";
+              } catch (_) {}
+            };
+            if ("onpointerdown" in window) {
+              wrap.addEventListener(
+                "pointerdown",
+                function (e) {
+                  try {
+                    if (e && e.pointerType === "mouse") return;
+                    showAlt();
+                  } catch (_) {}
+                },
+                { passive: true }
+              );
+              ["pointerup", "pointercancel", "pointerleave"].forEach(function (
+                ev
+              ) {
+                wrap.addEventListener(
+                  ev,
+                  function () {
+                    hideAlt();
+                  },
+                  { passive: true }
+                );
+              });
+            } else {
+              // Fallback for older iOS Safari without Pointer Events
+              wrap.addEventListener(
+                "touchstart",
+                function () {
+                  showAlt();
+                },
+                { passive: true }
+              );
+              ["touchend", "touchcancel", "mouseleave"].forEach(function (ev) {
+                wrap.addEventListener(
+                  ev,
+                  function () {
+                    hideAlt();
+                  },
+                  { passive: true }
+                );
+              });
+            }
+          }
+        } catch (_) {}
       });
     } catch (_) {}
   }
