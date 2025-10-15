@@ -1893,6 +1893,14 @@
                 track.style.scrollBehavior || "smooth";
               track.style.webkitOverflowScrolling = "touch";
               track.style.touchAction = "pan-x";
+              track.style.scrollSnapType = "x mandatory";
+              Array.from(track.children).forEach((c) => {
+                try {
+                  c.style.scrollSnapAlign = "start";
+                } catch (_) {}
+              });
+              track.style.willChange =
+                track.style.willChange || "scroll-position";
               // Bind arrows to scrollBy like homepage (single-track)
               const prevs = section.querySelectorAll(".prev");
               const nexts = section.querySelectorAll(".next");
@@ -1918,29 +1926,38 @@
                 )
               );
               // Drag to scroll (pointer events) — identical to homepage
-              if (!track.hasAttribute("data-drag-scroll")) {
-                track.setAttribute("data-drag-scroll", "1");
+              if (!track.hasAttribute("data-swipe-step")) {
+                track.setAttribute("data-swipe-step", "1");
                 let startX = 0,
-                  scrollLeft = 0,
-                  isDown = false,
-                  dragged = false;
+                  startT = 0,
+                  dragging = false;
+                const threshold = 30;
+                const velocityThresh = 0.6; // px per ms
+                const getStep = step;
                 track.addEventListener("pointerdown", (e) => {
-                  isDown = true;
-                  dragged = false;
+                  dragging = true;
                   startX = e.pageX;
-                  scrollLeft = track.scrollLeft;
+                  startT = performance.now();
                 });
-                track.addEventListener("pointermove", (e) => {
-                  if (!isDown) return;
-                  const dx = e.pageX - startX;
-                  if (Math.abs(dx) > 5) dragged = true;
-                  track.scrollLeft = scrollLeft - dx;
-                });
-                track.addEventListener("pointerup", () => {
-                  isDown = false;
-                });
+                const finish = (e) => {
+                  if (!dragging) return;
+                  dragging = false;
+                  const dx = (e.pageX || 0) - startX;
+                  const dt = Math.max(performance.now() - startT, 1);
+                  const v = Math.abs(dx) / dt;
+                  const s = getStep();
+                  if (Math.abs(dx) > threshold || v > velocityThresh) {
+                    const dir = dx < 0 ? 1 : -1;
+                    track.scrollBy({ left: dir * s, behavior: "smooth" });
+                  } else {
+                    const target = Math.round(track.scrollLeft / s) * s;
+                    track.scrollTo({ left: target, behavior: "smooth" });
+                  }
+                };
+                track.addEventListener("pointerup", finish);
+                track.addEventListener("pointercancel", finish);
                 track.addEventListener("pointerleave", () => {
-                  isDown = false;
+                  dragging = false;
                 });
               }
             } catch (_) {}
@@ -2050,29 +2067,55 @@
           bestTrack.style.scrollBehavior || "smooth";
         bestTrack.style.webkitOverflowScrolling = "touch";
         bestTrack.style.touchAction = "pan-x";
-        if (!bestTrack.hasAttribute("data-drag-scroll")) {
-          bestTrack.setAttribute("data-drag-scroll", "1");
+        bestTrack.style.scrollSnapType = "x mandatory";
+        Array.from(bestTrack.children).forEach((c) => {
+          try {
+            c.style.scrollSnapAlign = "start";
+          } catch (_) {}
+        });
+        bestTrack.style.willChange =
+          bestTrack.style.willChange || "scroll-position";
+        if (!bestTrack.hasAttribute("data-swipe-step")) {
+          bestTrack.setAttribute("data-swipe-step", "1");
           let startX = 0,
-            scrollLeft = 0,
-            isDown = false,
-            dragged = false;
+            startT = 0,
+            dragging = false;
+          const threshold = 30;
+          const velocityThresh = 0.6; // px per ms
+          const step = () => {
+            const first = bestTrack.children[0];
+            if (first) {
+              const rect = first.getBoundingClientRect();
+              const styles = getComputedStyle(bestTrack);
+              const gap = parseFloat(styles.columnGap || styles.gap || 0) || 0;
+              return rect.width + gap;
+            }
+            return bestTrack.clientWidth * 0.8;
+          };
           bestTrack.addEventListener("pointerdown", (e) => {
-            isDown = true;
-            dragged = false;
+            dragging = true;
             startX = e.pageX;
-            scrollLeft = bestTrack.scrollLeft;
+            startT = performance.now();
           });
-          bestTrack.addEventListener("pointermove", (e) => {
-            if (!isDown) return;
-            const dx = e.pageX - startX;
-            if (Math.abs(dx) > 5) dragged = true;
-            bestTrack.scrollLeft = scrollLeft - dx;
-          });
-          bestTrack.addEventListener("pointerup", () => {
-            isDown = false;
-          });
+          const finish = (e) => {
+            if (!dragging) return;
+            dragging = false;
+            const dx = (e.pageX || 0) - startX;
+            const dt = Math.max(performance.now() - startT, 1);
+            const v = Math.abs(dx) / dt;
+            const s = step();
+            if (Math.abs(dx) > threshold || v > velocityThresh) {
+              const dir = dx < 0 ? 1 : -1;
+              bestTrack.scrollBy({ left: dir * s, behavior: "smooth" });
+            } else {
+              const target = Math.round(bestTrack.scrollLeft / s) * s;
+              bestTrack.scrollTo({ left: target, behavior: "smooth" });
+            }
+          };
+          bestTrack.addEventListener("pointerup", finish);
+          bestTrack.addEventListener("pointercancel", finish);
           bestTrack.addEventListener("pointerleave", () => {
-            isDown = false;
+            dragging = false;
           });
         }
       }
@@ -2246,32 +2289,59 @@
                 bestTrack.style.scrollBehavior || "smooth";
               bestTrack.style.webkitOverflowScrolling = "touch";
               bestTrack.style.touchAction = "pan-x";
+              bestTrack.style.scrollSnapType = "x mandatory";
+              Array.from(bestTrack.children).forEach((c) => {
+                try {
+                  c.style.scrollSnapAlign = "start";
+                } catch (_) {}
+              });
+              bestTrack.style.willChange =
+                bestTrack.style.willChange || "scroll-position";
               bestTrack.style.overscrollBehaviorX = "contain";
               bestTrack.style.userSelect = "none";
               bestTrack.style.webkitUserSelect = "none";
-              if (!bestTrack.hasAttribute("data-drag-scroll")) {
-                bestTrack.setAttribute("data-drag-scroll", "1");
+              if (!bestTrack.hasAttribute("data-swipe-step")) {
+                bestTrack.setAttribute("data-swipe-step", "1");
                 let startX = 0,
-                  scrollLeft = 0,
-                  isDown = false,
-                  dragged = false;
+                  startT = 0,
+                  dragging = false;
+                const threshold = 30;
+                const velocityThresh = 0.6; // px per ms
+                const step = () => {
+                  const first = bestTrack.children[0];
+                  if (first) {
+                    const rect = first.getBoundingClientRect();
+                    const styles = getComputedStyle(bestTrack);
+                    const gap =
+                      parseFloat(styles.columnGap || styles.gap || 0) || 0;
+                    return rect.width + gap;
+                  }
+                  return bestTrack.clientWidth * 0.8;
+                };
                 bestTrack.addEventListener("pointerdown", (e) => {
-                  isDown = true;
-                  dragged = false;
+                  dragging = true;
                   startX = e.pageX;
-                  scrollLeft = bestTrack.scrollLeft;
+                  startT = performance.now();
                 });
-                bestTrack.addEventListener("pointermove", (e) => {
-                  if (!isDown) return;
-                  const dx = e.pageX - startX;
-                  if (Math.abs(dx) > 5) dragged = true;
-                  bestTrack.scrollLeft = scrollLeft - dx;
-                });
-                bestTrack.addEventListener("pointerup", () => {
-                  isDown = false;
-                });
+                const finish = (e) => {
+                  if (!dragging) return;
+                  dragging = false;
+                  const dx = (e.pageX || 0) - startX;
+                  const dt = Math.max(performance.now() - startT, 1);
+                  const v = Math.abs(dx) / dt;
+                  const s = step();
+                  if (Math.abs(dx) > threshold || v > velocityThresh) {
+                    const dir = dx < 0 ? 1 : -1;
+                    bestTrack.scrollBy({ left: dir * s, behavior: "smooth" });
+                  } else {
+                    const target = Math.round(bestTrack.scrollLeft / s) * s;
+                    bestTrack.scrollTo({ left: target, behavior: "smooth" });
+                  }
+                };
+                bestTrack.addEventListener("pointerup", finish);
+                bestTrack.addEventListener("pointercancel", finish);
                 bestTrack.addEventListener("pointerleave", () => {
-                  isDown = false;
+                  dragging = false;
                 });
               }
             } else {
@@ -2383,6 +2453,14 @@
                     bestTrack.style.scrollBehavior || "smooth";
                   bestTrack.style.webkitOverflowScrolling = "touch";
                   bestTrack.style.touchAction = "pan-x";
+                  bestTrack.style.scrollSnapType = "x mandatory";
+                  Array.from(bestTrack.children).forEach((c) => {
+                    try {
+                      c.style.scrollSnapAlign = "start";
+                    } catch (_) {}
+                  });
+                  bestTrack.style.willChange =
+                    bestTrack.style.willChange || "scroll-position";
                   bestTrack.style.overscrollBehaviorX = "contain";
                   // Nuke any existing swipe/drag handlers by replacing bestTrack with a fresh clone (mobile)
                   if (
@@ -2400,29 +2478,54 @@
 
                   bestTrack.style.userSelect = "none";
                   bestTrack.style.webkitUserSelect = "none";
-                  if (!bestTrack.hasAttribute("data-drag-scroll")) {
-                    bestTrack.setAttribute("data-drag-scroll", "1");
+                  if (!bestTrack.hasAttribute("data-swipe-step")) {
+                    bestTrack.setAttribute("data-swipe-step", "1");
                     let startX = 0,
-                      scrollLeft = 0,
-                      isDown = false,
-                      dragged = false;
+                      startT = 0,
+                      dragging = false;
+                    const threshold = 30;
+                    const velocityThresh = 0.6; // px per ms
+                    const step = () => {
+                      const first = bestTrack.children[0];
+                      if (first) {
+                        const rect = first.getBoundingClientRect();
+                        const styles = getComputedStyle(bestTrack);
+                        const gap =
+                          parseFloat(styles.columnGap || styles.gap || 0) || 0;
+                        return rect.width + gap;
+                      }
+                      return bestTrack.clientWidth * 0.8;
+                    };
                     bestTrack.addEventListener("pointerdown", (e) => {
-                      isDown = true;
-                      dragged = false;
+                      dragging = true;
                       startX = e.pageX;
-                      scrollLeft = bestTrack.scrollLeft;
+                      startT = performance.now();
                     });
-                    bestTrack.addEventListener("pointermove", (e) => {
-                      if (!isDown) return;
-                      const dx = e.pageX - startX;
-                      if (Math.abs(dx) > 5) dragged = true;
-                      bestTrack.scrollLeft = scrollLeft - dx;
-                    });
-                    bestTrack.addEventListener("pointerup", () => {
-                      isDown = false;
-                    });
+                    const finish = (e) => {
+                      if (!dragging) return;
+                      dragging = false;
+                      const dx = (e.pageX || 0) - startX;
+                      const dt = Math.max(performance.now() - startT, 1);
+                      const v = Math.abs(dx) / dt;
+                      const s = step();
+                      if (Math.abs(dx) > threshold || v > velocityThresh) {
+                        const dir = dx < 0 ? 1 : -1;
+                        bestTrack.scrollBy({
+                          left: dir * s,
+                          behavior: "smooth",
+                        });
+                      } else {
+                        const target = Math.round(bestTrack.scrollLeft / s) * s;
+                        bestTrack.scrollTo({
+                          left: target,
+                          behavior: "smooth",
+                        });
+                      }
+                    };
+                    bestTrack.addEventListener("pointerup", finish);
+                    bestTrack.addEventListener("pointercancel", finish);
                     bestTrack.addEventListener("pointerleave", () => {
-                      isDown = false;
+                      dragging = false;
                     });
                   }
                 } catch (_) {}
