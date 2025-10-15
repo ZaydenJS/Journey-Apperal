@@ -4057,6 +4057,13 @@
       window.__COLLECTION_PRODUCTS_NORM_SRC = null;
       // Render cards immediately
       container.innerHTML = list.map((p) => renderProductCard(p)).join("");
+      try {
+        normalizeCarouselMedia(container);
+        requestAnimationFrame(function () {
+          normalizeCarouselMedia(container);
+        });
+      } catch (_) {}
+
       if (countElement)
         countElement.textContent = `${list.length} product${
           list.length !== 1 ? "s" : ""
@@ -5196,8 +5203,15 @@
 
           // Render using live renderer
           const list = items.map((it) => it.product);
-          if (gridEl)
+          if (gridEl) {
             gridEl.innerHTML = list.map((p) => renderProductCard(p)).join("");
+            try {
+              normalizeCarouselMedia(gridEl);
+              requestAnimationFrame(function () {
+                normalizeCarouselMedia(gridEl);
+              });
+            } catch (_) {}
+          }
           if (countEl)
             countEl.textContent = `${list.length} product${
               list.length !== 1 ? "s" : ""
