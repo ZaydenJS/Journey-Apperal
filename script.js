@@ -1991,6 +1991,46 @@
           "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
       }
 
+      // Mobile baseline: use horizontal scroll track and drag-to-scroll identical to Recently Viewed
+      if (bestTrack && window.innerWidth < 1024) {
+        try {
+          bestSection.classList.add("carousel");
+        } catch (_) {}
+        bestTrack.style.display = "grid";
+        bestTrack.style.gridTemplateColumns = "unset";
+        bestTrack.style.gridAutoFlow = "column";
+        bestTrack.style.gridAutoColumns = "50%";
+        bestTrack.style.gap = bestTrack.style.gap || "12px";
+        bestTrack.style.overflowX = "auto";
+        bestTrack.style.overflowY = "hidden";
+        bestTrack.style.padding = bestTrack.style.padding || "0";
+        bestTrack.style.scrollBehavior =
+          bestTrack.style.scrollBehavior || "smooth";
+        bestTrack.style.webkitOverflowScrolling = "touch";
+        if (!bestTrack.hasAttribute("data-drag-scroll")) {
+          bestTrack.setAttribute("data-drag-scroll", "1");
+          let startX = 0,
+            scrollLeft = 0,
+            isDown = false;
+          bestTrack.addEventListener("pointerdown", (e) => {
+            isDown = true;
+            startX = e.pageX;
+            scrollLeft = bestTrack.scrollLeft;
+          });
+          bestTrack.addEventListener("pointermove", (e) => {
+            if (!isDown) return;
+            const dx = e.pageX - startX;
+            bestTrack.scrollLeft = scrollLeft - dx;
+          });
+          bestTrack.addEventListener("pointerup", () => {
+            isDown = false;
+          });
+          bestTrack.addEventListener("pointerleave", () => {
+            isDown = false;
+          });
+        }
+      }
+
       // Build real Best Sellers list (no placeholders)
       let best = [];
       const toCard = (p) => {
@@ -2071,11 +2111,18 @@
             __cacheGetFresh("collection:best-sellers:-", 10 * 60 * 1000) || [];
           const cachedB =
             __cacheGetFresh("home:best-sellers", 10 * 60 * 1000) || [];
-          const seed = (cachedA.length ? cachedA : cachedB).slice(
-            0,
-            pageSize * 2
-          );
-          best = seed.map(toCard);
+          const source = cachedA.length ? cachedA : cachedB;
+          const seed =
+            window.innerWidth < 1024 ? source : source.slice(0, pageSize * 2);
+          const filtered = seed.filter((p) => {
+            const tags = (p.tags || []).map((t) =>
+              String(t || "").toLowerCase()
+            );
+            return (
+              tags.includes("best sellers") && p.availableForSale !== false
+            );
+          });
+          best = filtered.map(toCard);
           if (best.length) {
             if (window.innerWidth < 1024) {
               // Mobile: render all horizontally (no pagination)
@@ -2167,15 +2214,13 @@
                 } catch (_) {}
               }
               if (list.length) {
-                // Enforce tag filter and availability
+                // Enforce authoritative tag filter ("best sellers") and availability
                 list = list.filter((p) => {
                   const tags = (p.tags || []).map((t) =>
                     String(t || "").toLowerCase()
                   );
                   return (
-                    (tags.includes("bestsellers") ||
-                      tags.includes("best sellers") ||
-                      tags.includes("best-sellers")) &&
+                    tags.includes("best sellers") &&
                     p.availableForSale !== false
                   );
                 });
@@ -2319,9 +2364,18 @@
             __cacheGetFresh("collection:best-sellers:-", 10 * 60 * 1000) ||
             __cacheGetFresh("home:best-sellers", 10 * 60 * 1000) ||
             [];
-          best = (window.innerWidth < 1024 ? cached : cached.slice(0, 8)).map(
-            toCard
-          );
+          const source = cached;
+          const filtered = source.filter((p) => {
+            const tags = (p.tags || []).map((t) =>
+              String(t || "").toLowerCase()
+            );
+            return (
+              tags.includes("best sellers") && p.availableForSale !== false
+            );
+          });
+          const list =
+            window.innerWidth < 1024 ? filtered : filtered.slice(0, 8);
+          best = list.map(toCard);
         } catch (_) {}
         bestTrack.innerHTML = best.map(cardHTML).join("");
         normalizeCarouselMedia(bestSection);
