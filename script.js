@@ -1544,12 +1544,12 @@
       const mainSrc = main || (pair && pair.main) || "";
       const altSrc = alt || (pair && pair.alt) || "";
       const altImg = altSrc
-        ? `<img class="hover-img" src="${altSrc}" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition: opacity 180ms ease; pointer-events:none; z-index:1;" />`
+        ? `<img class="hover-img" src="${altSrc}" alt="" loading="lazy" decoding="async" draggable="false" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition: opacity 180ms ease; pointer-events:none; z-index:1;" />`
         : "";
       return `
       <article class="card" data-href="${href}" style="cursor:pointer">
         <a href="${href}" class="img-wrap" onmouseenter="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='1'}" onmouseleave="var h=this.querySelector('.hover-img'); if(h){h.style.opacity='0'}" style="position:relative; display:block; aspect-ratio:1/1.7; overflow:hidden; border-radius:0">
-          <img src="${mainSrc}" alt="${name}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"/>
+          <img src="${mainSrc}" alt="${name}" loading="lazy" decoding="async" draggable="false" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"/>
           ${altImg}
         </a>
         <div class="details" style="padding: 12px 0; text-align: center;">
@@ -2050,11 +2050,20 @@
         const amount = parseFloat(priceObj.amount || 0);
         const code = priceObj.currencyCode || "USD";
         const price = amount ? `$${amount.toFixed(2)} ${code}` : "";
-        const main =
-          p?.featuredImage?.url ||
-          (p.images && (p.images[0]?.url || p.images[0]?.src)) ||
+        const img0 =
+          p?.images?.[0]?.url ||
+          p?.images?.[0]?.src ||
+          p?.images?.edges?.[0]?.node?.url ||
+          p?.images?.nodes?.[0]?.url ||
           "";
-        const alt = (p.images && (p.images[1]?.url || p.images[1]?.src)) || "";
+        const img1 =
+          p?.images?.[1]?.url ||
+          p?.images?.[1]?.src ||
+          p?.images?.edges?.[1]?.node?.url ||
+          p?.images?.nodes?.[1]?.url ||
+          "";
+        const main = p?.featuredImage?.url || img0;
+        const alt = img1;
         return {
           name: p.title || "",
           price,
@@ -2138,8 +2147,16 @@
           const seed =
             window.innerWidth < 1024 ? source : source.slice(0, pageSize * 2);
           const filtered = seed.filter((p) => {
-            const tags = (p.tags || []).map((t) =>
-              String(t || "").toLowerCase()
+            const raw = p.tags;
+            const arr = Array.isArray(raw)
+              ? raw
+              : typeof raw === "string"
+              ? raw.split(",")
+              : [];
+            const tags = arr.map((t) =>
+              String(t || "")
+                .trim()
+                .toLowerCase()
             );
             return (
               tags.includes("best sellers") && p.availableForSale !== false
@@ -2181,6 +2198,9 @@
                 bestTrack.style.scrollBehavior || "smooth";
               bestTrack.style.webkitOverflowScrolling = "touch";
               bestTrack.style.touchAction = "pan-x";
+              bestTrack.style.overscrollBehaviorX = "contain";
+              bestTrack.style.userSelect = "none";
+              bestTrack.style.webkitUserSelect = "none";
               if (!bestTrack.hasAttribute("data-drag-scroll")) {
                 bestTrack.setAttribute("data-drag-scroll", "1");
                 let startX = 0,
@@ -2252,8 +2272,16 @@
               if (list.length) {
                 // Enforce authoritative tag filter ("best sellers") and availability
                 list = list.filter((p) => {
-                  const tags = (p.tags || []).map((t) =>
-                    String(t || "").toLowerCase()
+                  const raw = p.tags;
+                  const arr = Array.isArray(raw)
+                    ? raw
+                    : typeof raw === "string"
+                    ? raw.split(",")
+                    : [];
+                  const tags = arr.map((t) =>
+                    String(t || "")
+                      .trim()
+                      .toLowerCase()
                   );
                   return (
                     tags.includes("best sellers") &&
@@ -2273,6 +2301,10 @@
               if (window.innerWidth >= 1024) {
                 list = list.slice(0, pageSize * 3);
               }
+              try {
+                __cacheSet("collection:best-sellers:-", list);
+              } catch (_) {}
+
               const mapped = list.map(toCard);
               // Only re-render if changed
               // Mobile: render all Best Sellers horizontally and enable drag-to-scroll
@@ -2303,6 +2335,9 @@
                     bestTrack.style.scrollBehavior || "smooth";
                   bestTrack.style.webkitOverflowScrolling = "touch";
                   bestTrack.style.touchAction = "pan-x";
+                  bestTrack.style.overscrollBehaviorX = "contain";
+                  bestTrack.style.userSelect = "none";
+                  bestTrack.style.webkitUserSelect = "none";
                   if (!bestTrack.hasAttribute("data-drag-scroll")) {
                     bestTrack.setAttribute("data-drag-scroll", "1");
                     let startX = 0,
@@ -2396,7 +2431,10 @@
           clearTimeout(bsResizeTO);
           bsResizeTO = setTimeout(function () {
             idx = 0;
-            renderPage();
+            if (window.innerWidth >= 1024) {
+              renderPage();
+            }
+            // On mobile, mobile layout/render is handled by the mobile branches above
           }, 150);
         });
       } else {
@@ -2408,8 +2446,16 @@
             [];
           const source = cached;
           const filtered = source.filter((p) => {
-            const tags = (p.tags || []).map((t) =>
-              String(t || "").toLowerCase()
+            const raw = p.tags;
+            const arr = Array.isArray(raw)
+              ? raw
+              : typeof raw === "string"
+              ? raw.split(",")
+              : [];
+            const tags = arr.map((t) =>
+              String(t || "")
+                .trim()
+                .toLowerCase()
             );
             return (
               tags.includes("best sellers") && p.availableForSale !== false
