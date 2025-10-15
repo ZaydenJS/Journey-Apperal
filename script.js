@@ -2158,6 +2158,15 @@
                 if (typeof enableHoverSwapIn === "function")
                   enableHoverSwapIn(bestSection);
               });
+              // Prewarm first images to ensure quick load on swipe
+              try {
+                const firstImgs = best
+                  .slice(0, 12)
+                  .map((c) => c && c.main)
+                  .filter(Boolean);
+                __prewarmImages(firstImgs);
+              } catch (_) {}
+
               // Track layout + drag like homepage
               bestSection.classList.add("carousel");
               bestTrack.style.display = "grid";
@@ -2260,8 +2269,10 @@
                   : false
               );
               // Limit: show more on mobile (up to 20), compact on desktop
-              const maxItems = window.innerWidth < 1024 ? 20 : pageSize * 3;
-              list = list.slice(0, maxItems);
+              // Do not limit on mobile; desktop keeps a compact slice
+              if (window.innerWidth >= 1024) {
+                list = list.slice(0, pageSize * 3);
+              }
               const mapped = list.map(toCard);
               // Only re-render if changed
               // Mobile: render all Best Sellers horizontally and enable drag-to-scroll
@@ -2291,6 +2302,7 @@
                   bestTrack.style.scrollBehavior =
                     bestTrack.style.scrollBehavior || "smooth";
                   bestTrack.style.webkitOverflowScrolling = "touch";
+                  bestTrack.style.touchAction = "pan-x";
                   if (!bestTrack.hasAttribute("data-drag-scroll")) {
                     bestTrack.setAttribute("data-drag-scroll", "1");
                     let startX = 0,
@@ -2344,7 +2356,7 @@
           }
         })();
 
-        renderPage();
+        if (window.innerWidth >= 1024) renderPage();
         prevBtn.removeAttribute("onclick");
         nextBtn.removeAttribute("onclick");
         if (window.innerWidth >= 1024) {
@@ -2424,7 +2436,10 @@
           if (typeof enableHoverSwapIn === "function")
             enableHoverSwapIn(bestSection);
           // Swipe to page (mobile) for Best Sellers (PDP)
-          if (!bestSection.hasAttribute("data-swipe-paging-bound")) {
+          if (
+            window.innerWidth >= 1024 &&
+            !bestSection.hasAttribute("data-swipe-paging-bound")
+          ) {
             bestSection.setAttribute("data-swipe-paging-bound", "1");
             let __bsSX = 0;
             bestSection.addEventListener(
