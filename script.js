@@ -2319,7 +2319,9 @@
             __cacheGetFresh("collection:best-sellers:-", 10 * 60 * 1000) ||
             __cacheGetFresh("home:best-sellers", 10 * 60 * 1000) ||
             [];
-          best = cached.slice(0, 8).map(toCard);
+          best = (window.innerWidth < 1024 ? cached : cached.slice(0, 8)).map(
+            toCard
+          );
         } catch (_) {}
         bestTrack.innerHTML = best.map(cardHTML).join("");
         normalizeCarouselMedia(bestSection);
