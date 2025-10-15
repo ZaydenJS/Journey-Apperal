@@ -1590,7 +1590,8 @@
           "height: 36px",
           "line-height: 1",
           "border-radius: 50%",
-          "z-index: 2",
+          "z-index: 10",
+          "pointer-events: auto",
         ].join(";");
         let span = btn.firstElementChild;
         if (!span || span.tagName !== "SPAN") {
@@ -1755,8 +1756,14 @@
               }
               track.innerHTML = out.map(cardHTML).join("");
               normalizeCarouselMedia(section);
+              try {
+                enableHoverSwapIn(section);
+              } catch (_) {}
               requestAnimationFrame(function () {
                 normalizeCarouselMedia(section);
+                try {
+                  enableHoverSwapIn(section);
+                } catch (_) {}
               });
               // Prefetch PDP for visible cards to ensure instant PDP-to-PDP nav
               try {
@@ -1819,8 +1826,14 @@
           } else {
             track.innerHTML = items.map(cardHTML).join("");
             normalizeCarouselMedia(section);
+            try {
+              enableHoverSwapIn(section);
+            } catch (_) {}
             requestAnimationFrame(function () {
               normalizeCarouselMedia(section);
+              try {
+                enableHoverSwapIn(section);
+              } catch (_) {}
             });
             // Prefetch PDP for visible cards to ensure instant PDP-to-PDP nav
             try {
@@ -1928,8 +1941,14 @@
           }
           bestTrack.innerHTML = out.map(cardHTML).join("");
           normalizeCarouselMedia(bestSection);
+          try {
+            enableHoverSwapIn(bestSection);
+          } catch (_) {}
           requestAnimationFrame(function () {
             normalizeCarouselMedia(bestSection);
+            try {
+              enableHoverSwapIn(bestSection);
+            } catch (_) {}
           });
           try {
             const cards = Array.from(
@@ -2090,8 +2109,14 @@
         } catch (_) {}
         bestTrack.innerHTML = best.map(cardHTML).join("");
         normalizeCarouselMedia(bestSection);
+        try {
+          enableHoverSwapIn(bestSection);
+        } catch (_) {}
         requestAnimationFrame(function () {
           normalizeCarouselMedia(bestSection);
+          try {
+            enableHoverSwapIn(bestSection);
+          } catch (_) {}
         });
       }
     }
