@@ -1746,50 +1746,6 @@
             section.appendChild(track);
           }
           const pageSize = window.innerWidth >= 1024 ? 5 : 2;
-          // Mobile-only: swipe to page left/right for Recently Viewed
-          if (
-            window.innerWidth < 1024 &&
-            track &&
-            !track.getAttribute("data-swipe-bound")
-          ) {
-            track.setAttribute("data-swipe-bound", "1");
-            let sx = 0,
-              dx = 0,
-              touching = false;
-            track.addEventListener(
-              "touchstart",
-              function (e) {
-                touching = true;
-                sx = e.touches && e.touches[0] ? e.touches[0].clientX : 0;
-                dx = 0;
-              },
-              { passive: true }
-            );
-            track.addEventListener(
-              "touchmove",
-              function (e) {
-                if (!touching) return;
-                const x = e.touches && e.touches[0] ? e.touches[0].clientX : 0;
-                dx = x - sx;
-              },
-              { passive: true }
-            );
-            track.addEventListener("touchend", function () {
-              if (!touching) return;
-              touching = false;
-              const TH = 24; // minimal swipe distance
-              if (dx < -TH) {
-                idx = (idx + pageSize) % items.length;
-                renderPage();
-              } else if (dx > TH) {
-                idx = (idx - pageSize + items.length) % items.length;
-                renderPage();
-              }
-            });
-            track.addEventListener("touchcancel", function () {
-              touching = false;
-            });
-          }
           if ((items || []).length > pageSize) {
             const ctrls = ensureArrows(section);
             let idx = 0;
@@ -1840,9 +1796,56 @@
               } catch (_) {}
             }
             renderPage();
+            // Mobile-only: swipe to page left/right for Recently Viewed (bind after idx/renderPage exist)
+            if (
+              window.innerWidth < 1024 &&
+              track &&
+              !track.getAttribute("data-swipe-bound")
+            ) {
+              track.setAttribute("data-swipe-bound", "1");
+              let sx = 0,
+                dx = 0,
+                touching = false;
+              track.addEventListener(
+                "touchstart",
+                function (e) {
+                  touching = true;
+                  sx = e.touches && e.touches[0] ? e.touches[0].clientX : 0;
+                  dx = 0;
+                },
+                { passive: true }
+              );
+              track.addEventListener(
+                "touchmove",
+                function (e) {
+                  if (!touching) return;
+                  const x =
+                    e.touches && e.touches[0] ? e.touches[0].clientX : 0;
+                  dx = x - sx;
+                },
+                { passive: true }
+              );
+              track.addEventListener("touchend", function () {
+                if (!touching) return;
+                touching = false;
+                const TH = 24; // minimal swipe distance
+                if (dx < -TH) {
+                  idx = (idx + pageSize) % items.length;
+                  renderPage();
+                } else if (dx > TH) {
+                  idx = (idx - pageSize + items.length) % items.length;
+                  renderPage();
+                }
+              });
+              track.addEventListener("touchcancel", function () {
+                touching = false;
+              });
+            }
+
             if (ctrls.prev) {
               ctrls.prev.onclick = function (e) {
                 e.preventDefault();
+                e.stopPropagation();
                 idx = (idx - pageSize + items.length) % items.length;
                 renderPage();
               };
@@ -1850,6 +1853,7 @@
             if (ctrls.next) {
               ctrls.next.onclick = function (e) {
                 e.preventDefault();
+                e.stopPropagation();
                 idx = (idx + pageSize) % items.length;
                 renderPage();
               };
@@ -2169,12 +2173,14 @@
         prevBtn.removeAttribute("onclick");
         prevBtn.addEventListener("click", (e) => {
           e.preventDefault();
+          e.stopPropagation();
           idx = (idx - pageSize + best.length) % best.length;
           renderPage();
         });
         nextBtn.removeAttribute("onclick");
         nextBtn.addEventListener("click", (e) => {
           e.preventDefault();
+          e.stopPropagation();
           idx = (idx + pageSize) % best.length;
           renderPage();
         });
