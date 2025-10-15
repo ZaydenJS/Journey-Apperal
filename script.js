@@ -2776,7 +2776,9 @@
   function normalizeCarouselMedia(root) {
     try {
       const scope = root || document;
-      const wraps = scope.querySelectorAll(".img-wrap");
+      const wraps = scope.querySelectorAll(
+        "#new-arrivals .img-wrap, #best-sellers .img-wrap, .p-details #you-also-viewed .img-wrap, .p-details #featured-collection .img-wrap"
+      );
       wraps.forEach((wrap) => {
         // wrapper sizing
         wrap.style.position = wrap.style.position || "relative";
@@ -2860,79 +2862,6 @@
           const h = this.querySelector("img.hover-img, img.alt");
           if (h) h.style.opacity = "0";
         };
-
-        // Touch/pen long-press on mobile to show second image; release to revert
-        try {
-          if (wrap.getAttribute("data-hover-swap-bound") !== "1") {
-            wrap.setAttribute("data-hover-swap-bound", "1");
-            let __pressTO;
-            const __showAlt = function () {
-              try {
-                const h = wrap.querySelector("img.hover-img, img.alt");
-                if (h) h.style.opacity = "1";
-              } catch (_) {}
-            };
-            const __hideAlt = function () {
-              try {
-                const h = wrap.querySelector("img.hover-img, img.alt");
-                if (h) h.style.opacity = "0";
-              } catch (_) {}
-            };
-            const __onPointerDown = function (e) {
-              try {
-                if (
-                  e &&
-                  e.pointerType &&
-                  e.pointerType !== "touch" &&
-                  e.pointerType !== "pen"
-                )
-                  return;
-                clearTimeout(__pressTO);
-                __pressTO = setTimeout(__showAlt, 120); // small delay = intentional "hold"
-              } catch (_) {}
-            };
-            const __onPointerUpCancel = function () {
-              try {
-                clearTimeout(__pressTO);
-                __hideAlt();
-              } catch (_) {}
-            };
-            if ("onpointerdown" in window) {
-              wrap.addEventListener("pointerdown", __onPointerDown, {
-                passive: true,
-              });
-              wrap.addEventListener("pointerup", __onPointerUpCancel, {
-                passive: true,
-              });
-              wrap.addEventListener("pointercancel", __onPointerUpCancel, {
-                passive: true,
-              });
-              wrap.addEventListener("pointerleave", __onPointerUpCancel, {
-                passive: true,
-              });
-            } else {
-              // Fallback for very old browsers
-              wrap.addEventListener(
-                "touchstart",
-                function () {
-                  clearTimeout(__pressTO);
-                  __pressTO = setTimeout(__showAlt, 120);
-                },
-                { passive: true }
-              );
-              ["touchend", "touchcancel", "mouseleave"].forEach(function (ev) {
-                wrap.addEventListener(
-                  ev,
-                  function () {
-                    clearTimeout(__pressTO);
-                    __hideAlt();
-                  },
-                  { passive: true }
-                );
-              });
-            }
-          }
-        } catch (_) {}
       });
     } catch (_) {}
   }
@@ -4057,13 +3986,6 @@
       window.__COLLECTION_PRODUCTS_NORM_SRC = null;
       // Render cards immediately
       container.innerHTML = list.map((p) => renderProductCard(p)).join("");
-      try {
-        normalizeCarouselMedia(container);
-        requestAnimationFrame(function () {
-          normalizeCarouselMedia(container);
-        });
-      } catch (_) {}
-
       if (countElement)
         countElement.textContent = `${list.length} product${
           list.length !== 1 ? "s" : ""
@@ -5203,15 +5125,8 @@
 
           // Render using live renderer
           const list = items.map((it) => it.product);
-          if (gridEl) {
+          if (gridEl)
             gridEl.innerHTML = list.map((p) => renderProductCard(p)).join("");
-            try {
-              normalizeCarouselMedia(gridEl);
-              requestAnimationFrame(function () {
-                normalizeCarouselMedia(gridEl);
-              });
-            } catch (_) {}
-          }
           if (countEl)
             countEl.textContent = `${list.length} product${
               list.length !== 1 ? "s" : ""
