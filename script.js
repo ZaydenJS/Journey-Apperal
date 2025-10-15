@@ -2011,15 +2011,18 @@
           bestTrack.setAttribute("data-drag-scroll", "1");
           let startX = 0,
             scrollLeft = 0,
-            isDown = false;
+            isDown = false,
+            dragged = false;
           bestTrack.addEventListener("pointerdown", (e) => {
             isDown = true;
+            dragged = false;
             startX = e.pageX;
             scrollLeft = bestTrack.scrollLeft;
           });
           bestTrack.addEventListener("pointermove", (e) => {
             if (!isDown) return;
             const dx = e.pageX - startX;
+            if (Math.abs(dx) > 5) dragged = true;
             bestTrack.scrollLeft = scrollLeft - dx;
           });
           bestTrack.addEventListener("pointerup", () => {
@@ -2152,15 +2155,18 @@
                 bestTrack.setAttribute("data-drag-scroll", "1");
                 let startX = 0,
                   scrollLeft = 0,
-                  isDown = false;
+                  isDown = false,
+                  dragged = false;
                 bestTrack.addEventListener("pointerdown", (e) => {
                   isDown = true;
+                  dragged = false;
                   startX = e.pageX;
                   scrollLeft = bestTrack.scrollLeft;
                 });
                 bestTrack.addEventListener("pointermove", (e) => {
                   if (!isDown) return;
                   const dx = e.pageX - startX;
+                  if (Math.abs(dx) > 5) dragged = true;
                   bestTrack.scrollLeft = scrollLeft - dx;
                 });
                 bestTrack.addEventListener("pointerup", () => {
@@ -2268,15 +2274,18 @@
                     bestTrack.setAttribute("data-drag-scroll", "1");
                     let startX = 0,
                       scrollLeft = 0,
-                      isDown = false;
+                      isDown = false,
+                      dragged = false;
                     bestTrack.addEventListener("pointerdown", (e) => {
                       isDown = true;
+                      dragged = false;
                       startX = e.pageX;
                       scrollLeft = bestTrack.scrollLeft;
                     });
                     bestTrack.addEventListener("pointermove", (e) => {
                       if (!isDown) return;
                       const dx = e.pageX - startX;
+                      if (Math.abs(dx) > 5) dragged = true;
                       bestTrack.scrollLeft = scrollLeft - dx;
                     });
                     bestTrack.addEventListener("pointerup", () => {
