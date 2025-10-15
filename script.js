@@ -1745,6 +1745,35 @@
             section.appendChild(track);
           }
           const pageSize = window.innerWidth >= 1024 ? 5 : 2;
+          // Always ensure arrows visible and bind swipe for RV (PDP)
+          const rvCtrlsAlways = ensureArrows(section);
+          if (!section.hasAttribute("data-swipe-paging-bound")) {
+            section.setAttribute("data-swipe-paging-bound", "1");
+            let __sx = 0;
+            section.addEventListener(
+              "touchstart",
+              function (e) {
+                if (!e.touches || !e.touches.length) return;
+                __sx = e.touches[0].clientX;
+              },
+              { passive: true }
+            );
+            section.addEventListener("touchend", function (e) {
+              const cx =
+                (e.changedTouches &&
+                  e.changedTouches[0] &&
+                  e.changedTouches[0].clientX) ||
+                0;
+              const dx = cx - __sx;
+              if (Math.abs(dx) > 30) {
+                if (dx < 0 && rvCtrlsAlways && rvCtrlsAlways.next)
+                  rvCtrlsAlways.next.click();
+                else if (dx > 0 && rvCtrlsAlways && rvCtrlsAlways.prev)
+                  rvCtrlsAlways.prev.click();
+              }
+            });
+          }
+
           if ((items || []).length > pageSize) {
             const ctrls = ensureArrows(section);
             let idx = 0;
@@ -2108,6 +2137,31 @@
           normalizeCarouselMedia(bestSection);
           if (typeof enableHoverSwapIn === "function")
             enableHoverSwapIn(bestSection);
+          // Swipe to page (mobile) for Best Sellers (PDP)
+          if (!bestSection.hasAttribute("data-swipe-paging-bound")) {
+            bestSection.setAttribute("data-swipe-paging-bound", "1");
+            let __bsSX = 0;
+            bestSection.addEventListener(
+              "touchstart",
+              function (e) {
+                if (!e.touches || !e.touches.length) return;
+                __bsSX = e.touches[0].clientX;
+              },
+              { passive: true }
+            );
+            bestSection.addEventListener("touchend", function (e) {
+              const cx =
+                (e.changedTouches &&
+                  e.changedTouches[0] &&
+                  e.changedTouches[0].clientX) ||
+                0;
+              const dx = cx - __bsSX;
+              if (Math.abs(dx) > 30) {
+                if (dx < 0 && nextBtn) nextBtn.click();
+                else if (dx > 0 && prevBtn) prevBtn.click();
+              }
+            });
+          }
         });
       }
     }

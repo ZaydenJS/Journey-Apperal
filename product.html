@@ -388,6 +388,45 @@
         }
       }
     </style>
+    <style id="hover-swap-pdp">
+      /* Mirror index hover swap for PDP Recently Viewed + Best Sellers */
+      .p-details #you-also-viewed .card .img-wrap,
+      .p-details #featured-collection .card .img-wrap {
+        position: relative !important;
+        overflow: hidden !important;
+      }
+      .p-details #you-also-viewed .card .img-wrap img.alt,
+      .p-details #you-also-viewed .card .img-wrap img.hover-img,
+      .p-details #featured-collection .card .img-wrap img.alt,
+      .p-details #featured-collection .card .img-wrap img.hover-img {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        pointer-events: none !important;
+        opacity: 0 !important;
+        transition: opacity 180ms ease !important;
+        z-index: 1 !important;
+      }
+      @media (hover: hover) {
+        .p-details #you-also-viewed .card:hover .img-wrap img.alt,
+        .p-details #you-also-viewed .card:hover .img-wrap img.hover-img,
+        .p-details #featured-collection .card:hover .img-wrap img.alt,
+        .p-details #featured-collection .card:hover .img-wrap img.hover-img {
+          opacity: 1 !important;
+        }
+      }
+      @media (hover: none) {
+        .p-details #you-also-viewed .card:active .img-wrap img.alt,
+        .p-details #you-also-viewed .card:active .img-wrap img.hover-img,
+        .p-details #featured-collection .card:active .img-wrap img.alt,
+        .p-details #featured-collection .card:active .img-wrap img.hover-img {
+          opacity: 1 !important;
+        }
+      }
+    </style>
+
     <style id="pdp-collapsible-click">
       .p-details .collapsible button {
         pointer-events: auto !important;
