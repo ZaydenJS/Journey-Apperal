@@ -1985,8 +1985,8 @@
           "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
         bestSection.appendChild(bestTrack);
       }
-      // Enforce 2x1 grid layout consistently even if track already existed
-      if (bestTrack) {
+      // Enforce 2x1 grid layout on desktop only; mobile will use horizontal scroll
+      if (bestTrack && window.innerWidth >= 1024) {
         bestTrack.style.cssText =
           "display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row;gap:12px;align-items:stretch;overflow:visible;padding:0;";
       }
@@ -2187,7 +2187,9 @@
                   ? (seen.add(p.handle), true)
                   : false
               );
-              list = list.slice(0, pageSize * 3);
+              // Limit: show more on mobile (up to 20), compact on desktop
+              const maxItems = window.innerWidth < 1024 ? 20 : pageSize * 3;
+              list = list.slice(0, maxItems);
               const mapped = list.map(toCard);
               // Only re-render if changed
               // Mobile: render all Best Sellers horizontally and enable drag-to-scroll
