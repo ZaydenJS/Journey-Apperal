@@ -1868,6 +1868,7 @@
               track.style.gridAutoColumns = "50%";
               track.style.gap = track.style.gap || "12px";
               track.style.overflowX = "auto";
+              track.style.overflowY = "hidden";
               track.style.padding = track.style.padding || "0";
               track.style.scrollBehavior =
                 track.style.scrollBehavior || "smooth";
@@ -2075,7 +2076,57 @@
             pageSize * 2
           );
           best = seed.map(toCard);
-          if (best.length) renderPage();
+          if (best.length) {
+            if (window.innerWidth < 1024) {
+              // Mobile: render all horizontally (no pagination)
+              bestTrack.innerHTML = best.map(cardHTML).join("");
+              normalizeCarouselMedia(bestSection);
+              if (typeof enableHoverSwapIn === "function")
+                enableHoverSwapIn(bestSection);
+              requestAnimationFrame(function () {
+                normalizeCarouselMedia(bestSection);
+                if (typeof enableHoverSwapIn === "function")
+                  enableHoverSwapIn(bestSection);
+              });
+              // Track layout + drag like homepage
+              bestSection.classList.add("carousel");
+              bestTrack.style.display = "grid";
+              bestTrack.style.gridTemplateColumns = "unset";
+              bestTrack.style.gridAutoFlow = "column";
+              bestTrack.style.gridAutoColumns = "50%";
+              bestTrack.style.gap = bestTrack.style.gap || "12px";
+              bestTrack.style.overflowX = "auto";
+              bestTrack.style.overflowY = "hidden";
+              bestTrack.style.padding = bestTrack.style.padding || "0";
+              bestTrack.style.scrollBehavior =
+                bestTrack.style.scrollBehavior || "smooth";
+              bestTrack.style.webkitOverflowScrolling = "touch";
+              if (!bestTrack.hasAttribute("data-drag-scroll")) {
+                bestTrack.setAttribute("data-drag-scroll", "1");
+                let startX = 0,
+                  scrollLeft = 0,
+                  isDown = false;
+                bestTrack.addEventListener("pointerdown", (e) => {
+                  isDown = true;
+                  startX = e.pageX;
+                  scrollLeft = bestTrack.scrollLeft;
+                });
+                bestTrack.addEventListener("pointermove", (e) => {
+                  if (!isDown) return;
+                  const dx = e.pageX - startX;
+                  bestTrack.scrollLeft = scrollLeft - dx;
+                });
+                bestTrack.addEventListener("pointerup", () => {
+                  isDown = false;
+                });
+                bestTrack.addEventListener("pointerleave", () => {
+                  isDown = false;
+                });
+              }
+            } else {
+              renderPage();
+            }
+          }
         } catch (_) {}
 
         // 2) Fetch fresh in background
@@ -2142,7 +2193,9 @@
               // Mobile: render all Best Sellers horizontally and enable drag-to-scroll
               if (window.innerWidth < 1024) {
                 try {
-                  bestTrack.innerHTML = best.map(cardHTML).join("");
+                  // Use fresh mapped data
+                  best = mapped;
+                  bestTrack.innerHTML = mapped.map(cardHTML).join("");
                   normalizeCarouselMedia(bestSection);
                   if (typeof enableHoverSwapIn === "function")
                     enableHoverSwapIn(bestSection);
@@ -2159,6 +2212,7 @@
                   bestTrack.style.gridAutoColumns = "50%";
                   bestTrack.style.gap = bestTrack.style.gap || "12px";
                   bestTrack.style.overflowX = "auto";
+                  bestTrack.style.overflowY = "hidden";
                   bestTrack.style.padding = bestTrack.style.padding || "0";
                   bestTrack.style.scrollBehavior =
                     bestTrack.style.scrollBehavior || "smooth";
@@ -2201,8 +2255,11 @@
                 currentHandles.some((h, i) => h !== nextHandles[i]);
               if (changed) {
                 best = mapped;
-                idx = 0;
-                renderPage();
+                if (window.innerWidth >= 1024) {
+                  idx = 0;
+                  renderPage();
+                }
+                // On mobile, we have already re-rendered horizontally above
               }
             }
           } catch (e) {
