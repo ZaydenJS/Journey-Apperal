@@ -1755,8 +1755,12 @@
               }
               track.innerHTML = out.map(cardHTML).join("");
               normalizeCarouselMedia(section);
+              if (typeof enableHoverSwapIn === "function")
+                enableHoverSwapIn(section);
               requestAnimationFrame(function () {
                 normalizeCarouselMedia(section);
+                if (typeof enableHoverSwapIn === "function")
+                  enableHoverSwapIn(section);
               });
               // Prefetch PDP for visible cards to ensure instant PDP-to-PDP nav
               try {
@@ -1819,8 +1823,12 @@
           } else {
             track.innerHTML = items.map(cardHTML).join("");
             normalizeCarouselMedia(section);
+            if (typeof enableHoverSwapIn === "function")
+              enableHoverSwapIn(section);
             requestAnimationFrame(function () {
               normalizeCarouselMedia(section);
+              if (typeof enableHoverSwapIn === "function")
+                enableHoverSwapIn(section);
             });
             // Prefetch PDP for visible cards to ensure instant PDP-to-PDP nav
             try {
@@ -1928,8 +1936,12 @@
           }
           bestTrack.innerHTML = out.map(cardHTML).join("");
           normalizeCarouselMedia(bestSection);
+          if (typeof enableHoverSwapIn === "function")
+            enableHoverSwapIn(bestSection);
           requestAnimationFrame(function () {
             normalizeCarouselMedia(bestSection);
+            if (typeof enableHoverSwapIn === "function")
+              enableHoverSwapIn(bestSection);
           });
           try {
             const cards = Array.from(
@@ -2090,8 +2102,12 @@
         } catch (_) {}
         bestTrack.innerHTML = best.map(cardHTML).join("");
         normalizeCarouselMedia(bestSection);
+        if (typeof enableHoverSwapIn === "function")
+          enableHoverSwapIn(bestSection);
         requestAnimationFrame(function () {
           normalizeCarouselMedia(bestSection);
+          if (typeof enableHoverSwapIn === "function")
+            enableHoverSwapIn(bestSection);
         });
       }
     }
