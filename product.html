@@ -371,10 +371,9 @@
         }
         .p-details #you-also-viewed .img-wrap img,
         .p-details #featured-collection .img-wrap img {
-          display: block !important;
           width: 100% !important;
           height: 100% !important;
-          object-fit: cover !important;
+          object-fit: contain !important;
           object-position: center center !important;
         }
         /* Mobile: force accordion text to black */
@@ -550,8 +549,9 @@
     <script id="pdp-instant-sizes">
       (function () {
         try {
-          // Run on all devices (mobile + desktop) for instant sizes
-          // Formerly desktop-only; enabled for mobile per performance spec
+          // Desktop-only: leave mobile behavior untouched
+          var isDesktop = window.innerWidth >= 1024;
+          if (!isDesktop) return;
 
           function getHandle() {
             try {

@@ -1590,8 +1590,7 @@
           "height: 36px",
           "line-height: 1",
           "border-radius: 50%",
-          "z-index: 10",
-          "pointer-events: auto",
+          "z-index: 2",
         ].join(";");
         let span = btn.firstElementChild;
         if (!span || span.tagName !== "SPAN") {
@@ -1756,14 +1755,8 @@
               }
               track.innerHTML = out.map(cardHTML).join("");
               normalizeCarouselMedia(section);
-              try {
-                enableHoverSwapIn(section);
-              } catch (_) {}
               requestAnimationFrame(function () {
                 normalizeCarouselMedia(section);
-                try {
-                  enableHoverSwapIn(section);
-                } catch (_) {}
               });
               // Prefetch PDP for visible cards to ensure instant PDP-to-PDP nav
               try {
@@ -1796,56 +1789,9 @@
               } catch (_) {}
             }
             renderPage();
-            // Mobile-only: swipe to page left/right for Recently Viewed (bind after idx/renderPage exist)
-            if (
-              window.innerWidth < 1024 &&
-              track &&
-              !track.getAttribute("data-swipe-bound")
-            ) {
-              track.setAttribute("data-swipe-bound", "1");
-              let sx = 0,
-                dx = 0,
-                touching = false;
-              track.addEventListener(
-                "touchstart",
-                function (e) {
-                  touching = true;
-                  sx = e.touches && e.touches[0] ? e.touches[0].clientX : 0;
-                  dx = 0;
-                },
-                { passive: true }
-              );
-              track.addEventListener(
-                "touchmove",
-                function (e) {
-                  if (!touching) return;
-                  const x =
-                    e.touches && e.touches[0] ? e.touches[0].clientX : 0;
-                  dx = x - sx;
-                },
-                { passive: true }
-              );
-              track.addEventListener("touchend", function () {
-                if (!touching) return;
-                touching = false;
-                const TH = 24; // minimal swipe distance
-                if (dx < -TH) {
-                  idx = (idx + pageSize) % items.length;
-                  renderPage();
-                } else if (dx > TH) {
-                  idx = (idx - pageSize + items.length) % items.length;
-                  renderPage();
-                }
-              });
-              track.addEventListener("touchcancel", function () {
-                touching = false;
-              });
-            }
-
             if (ctrls.prev) {
               ctrls.prev.onclick = function (e) {
                 e.preventDefault();
-                e.stopPropagation();
                 idx = (idx - pageSize + items.length) % items.length;
                 renderPage();
               };
@@ -1853,7 +1799,6 @@
             if (ctrls.next) {
               ctrls.next.onclick = function (e) {
                 e.preventDefault();
-                e.stopPropagation();
                 idx = (idx + pageSize) % items.length;
                 renderPage();
               };
@@ -1874,14 +1819,8 @@
           } else {
             track.innerHTML = items.map(cardHTML).join("");
             normalizeCarouselMedia(section);
-            try {
-              enableHoverSwapIn(section);
-            } catch (_) {}
             requestAnimationFrame(function () {
               normalizeCarouselMedia(section);
-              try {
-                enableHoverSwapIn(section);
-              } catch (_) {}
             });
             // Prefetch PDP for visible cards to ensure instant PDP-to-PDP nav
             try {
@@ -1977,50 +1916,6 @@
       if (prevBtn && nextBtn) {
         let idx = 0;
         const pageSize = window.innerWidth >= 1024 ? 4 : 2;
-        // Mobile-only: swipe to page left/right for Best Sellers
-        if (
-          window.innerWidth < 1024 &&
-          bestTrack &&
-          !bestTrack.getAttribute("data-swipe-bound")
-        ) {
-          bestTrack.setAttribute("data-swipe-bound", "1");
-          let sx = 0,
-            dx = 0,
-            touching = false;
-          bestTrack.addEventListener(
-            "touchstart",
-            function (e) {
-              touching = true;
-              sx = e.touches && e.touches[0] ? e.touches[0].clientX : 0;
-              dx = 0;
-            },
-            { passive: true }
-          );
-          bestTrack.addEventListener(
-            "touchmove",
-            function (e) {
-              if (!touching) return;
-              const x = e.touches && e.touches[0] ? e.touches[0].clientX : 0;
-              dx = x - sx;
-            },
-            { passive: true }
-          );
-          bestTrack.addEventListener("touchend", function () {
-            if (!touching) return;
-            touching = false;
-            const TH = 24;
-            if (dx < -TH) {
-              idx = (idx + pageSize) % best.length;
-              renderPage();
-            } else if (dx > TH) {
-              idx = (idx - pageSize + best.length) % best.length;
-              renderPage();
-            }
-          });
-          bestTrack.addEventListener("touchcancel", function () {
-            touching = false;
-          });
-        }
         const renderPage = () => {
           if (!best.length) return;
           const out = [];
@@ -2033,14 +1928,8 @@
           }
           bestTrack.innerHTML = out.map(cardHTML).join("");
           normalizeCarouselMedia(bestSection);
-          try {
-            enableHoverSwapIn(bestSection);
-          } catch (_) {}
           requestAnimationFrame(function () {
             normalizeCarouselMedia(bestSection);
-            try {
-              enableHoverSwapIn(bestSection);
-            } catch (_) {}
           });
           try {
             const cards = Array.from(
@@ -2173,14 +2062,12 @@
         prevBtn.removeAttribute("onclick");
         prevBtn.addEventListener("click", (e) => {
           e.preventDefault();
-          e.stopPropagation();
           idx = (idx - pageSize + best.length) % best.length;
           renderPage();
         });
         nextBtn.removeAttribute("onclick");
         nextBtn.addEventListener("click", (e) => {
           e.preventDefault();
-          e.stopPropagation();
           idx = (idx + pageSize) % best.length;
           renderPage();
         });
@@ -2203,14 +2090,8 @@
         } catch (_) {}
         bestTrack.innerHTML = best.map(cardHTML).join("");
         normalizeCarouselMedia(bestSection);
-        try {
-          enableHoverSwapIn(bestSection);
-        } catch (_) {}
         requestAnimationFrame(function () {
           normalizeCarouselMedia(bestSection);
-          try {
-            enableHoverSwapIn(bestSection);
-          } catch (_) {}
         });
       }
     }
@@ -2895,7 +2776,9 @@
   function normalizeCarouselMedia(root) {
     try {
       const scope = root || document;
-      const wraps = scope.querySelectorAll(".img-wrap");
+      const wraps = scope.querySelectorAll(
+        "#new-arrivals .img-wrap, #best-sellers .img-wrap, .p-details #you-also-viewed .img-wrap, .p-details #featured-collection .img-wrap"
+      );
       wraps.forEach((wrap) => {
         // wrapper sizing
         wrap.style.position = wrap.style.position || "relative";
@@ -2979,66 +2862,6 @@
           const h = this.querySelector("img.hover-img, img.alt");
           if (h) h.style.opacity = "0";
         };
-
-        // touch/pen: show instantly on press, hide on release (mobile)
-        try {
-          if (wrap.getAttribute("data-touch-swap-bound") !== "1") {
-            wrap.setAttribute("data-touch-swap-bound", "1");
-            const showAlt = function () {
-              try {
-                const h = wrap.querySelector("img.hover-img, img.alt");
-                if (h) h.style.opacity = "1";
-              } catch (_) {}
-            };
-            const hideAlt = function () {
-              try {
-                const h = wrap.querySelector("img.hover-img, img.alt");
-                if (h) h.style.opacity = "0";
-              } catch (_) {}
-            };
-            if ("onpointerdown" in window) {
-              wrap.addEventListener(
-                "pointerdown",
-                function (e) {
-                  try {
-                    if (e && e.pointerType === "mouse") return;
-                    showAlt();
-                  } catch (_) {}
-                },
-                { passive: true }
-              );
-              ["pointerup", "pointercancel", "pointerleave"].forEach(function (
-                ev
-              ) {
-                wrap.addEventListener(
-                  ev,
-                  function () {
-                    hideAlt();
-                  },
-                  { passive: true }
-                );
-              });
-            } else {
-              // Fallback for older iOS Safari without Pointer Events
-              wrap.addEventListener(
-                "touchstart",
-                function () {
-                  showAlt();
-                },
-                { passive: true }
-              );
-              ["touchend", "touchcancel", "mouseleave"].forEach(function (ev) {
-                wrap.addEventListener(
-                  ev,
-                  function () {
-                    hideAlt();
-                  },
-                  { passive: true }
-                );
-              });
-            }
-          }
-        } catch (_) {}
       });
     } catch (_) {}
   }
