@@ -149,7 +149,7 @@
     };
 
     __safe("setupMobileNav", setupMobileNav);
-    __safe("injectShippingNote", injectShippingNote);
+
     __safe("setupMegaMenuHoverIntent", setupMegaMenuHoverIntent);
 
     __safe("setupCarousel", setupCarousel);
@@ -2818,28 +2818,6 @@
     });
 
     setupDrawerAccordions();
-  }
-
-  // Inject shipping details text into Support/Contact accordion across pages
-  function injectShippingNote() {
-    try {
-      const text =
-        "Standard shipping: $11 | Express shipping: $15 | Orders $100+ ship free.";
-      const accordions = Array.from(
-        document.querySelectorAll(".drawer .accordion")
-      );
-      accordions
-        .filter((btn) => /support|customer care/i.test(btn.textContent || ""))
-        .forEach((btn) => {
-          const sub = btn.nextElementSibling;
-          if (!sub || !sub.classList?.contains("sub")) return;
-          if (sub.querySelector(".shipping-note")) return; // avoid duplicates
-          const note = document.createElement("div");
-          note.className = "shipping-note";
-          note.textContent = text;
-          sub.appendChild(note);
-        });
-    } catch (_) {}
   }
 
   function setupMegaMenuHoverIntent() {
