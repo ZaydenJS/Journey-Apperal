@@ -1745,7 +1745,7 @@
             section.appendChild(track);
           }
           const pageSize = window.innerWidth >= 1024 ? 5 : 2;
-          if ((items || []).length > pageSize) {
+          {
             const ctrls = ensureArrows(section);
             let idx = 0;
             function renderPage() {
@@ -1803,9 +1803,34 @@
             if (ctrls.next) {
               ctrls.next.onclick = function (e) {
                 e.preventDefault();
+                if (items.length === 0) return;
                 idx = (idx + pageSize) % items.length;
                 renderPage();
               };
+            }
+            // Swipe to page (mobile)
+            if (!section.hasAttribute("data-swipe-paging-bound")) {
+              section.setAttribute("data-swipe-paging-bound", "1");
+              let __sx = 0;
+              section.addEventListener(
+                "touchstart",
+                function (e) {
+                  if (!e.touches || !e.touches.length) return;
+                  __sx = e.touches[0].clientX;
+                },
+                { passive: true }
+              );
+              section.addEventListener("touchend", function (e) {
+                const cx =
+                  (e.changedTouches &&
+                    e.changedTouches[0] &&
+                    e.changedTouches[0].clientX) || 0;
+                const dx = cx - __sx;
+                if (Math.abs(dx) > 30) {
+                  if (dx < 0 && ctrls.next) ctrls.next.click();
+                  else if (dx > 0 && ctrls.prev) ctrls.prev.click();
+                }
+              });
             }
             // Re-render on resize to switch 2-up/4-up
             let rvResizeTO;
@@ -1820,46 +1845,7 @@
                 renderPage();
               }, 150);
             });
-          } else {
-            track.innerHTML = items.map(cardHTML).join("");
-            normalizeCarouselMedia(section);
-            if (typeof enableHoverSwapIn === "function")
-              enableHoverSwapIn(section);
-            requestAnimationFrame(function () {
-              normalizeCarouselMedia(section);
-              if (typeof enableHoverSwapIn === "function")
-                enableHoverSwapIn(section);
-            });
-            // Prefetch PDP for visible cards to ensure instant PDP-to-PDP nav
-            try {
-              const cards = Array.from(
-                section.querySelectorAll("article.card[data-href]")
-              );
-              cards.slice(0, 8).forEach(function (card) {
-                const href = card.getAttribute("data-href") || "";
-                const handle = __extractHandleFromHref(href);
-                if (handle) __prefetchPDP(handle);
-              });
-              if ("IntersectionObserver" in window) {
-                const io = new IntersectionObserver(
-                  function (entries) {
-                    entries.forEach(function (entry) {
-                      if (!entry.isIntersecting) return;
-                      const el = entry.target;
-                      const href = el.getAttribute("data-href") || "";
-                      const handle = __extractHandleFromHref(href);
-                      if (handle) __prefetchPDP(handle);
-                      io.unobserve(el);
-                    });
-                  },
-                  { rootMargin: "300px" }
-                );
-                cards.forEach(function (el) {
-                  io.observe(el);
-                });
-              }
-            } catch (_) {}
-          }
+
         }
       }
     } catch (_) {}
@@ -2083,6 +2069,30 @@
           idx = (idx + pageSize) % best.length;
           renderPage();
         });
+        // Swipe to page (mobile)
+        if (!bestSection.hasAttribute("data-swipe-paging-bound")) {
+          bestSection.setAttribute("data-swipe-paging-bound", "1");
+          let __bsSX = 0;
+          bestSection.addEventListener(
+            "touchstart",
+            function (e) {
+              if (!e.touches || !e.touches.length) return;
+              __bsSX = e.touches[0].clientX;
+            },
+            { passive: true }
+          );
+          bestSection.addEventListener("touchend", function (e) {
+            const cx =
+              (e.changedTouches &&
+                e.changedTouches[0] &&
+                e.changedTouches[0].clientX) || 0;
+            const dx = cx - __bsSX;
+            if (Math.abs(dx) > 30) {
+              if (dx < 0 && nextBtn) nextBtn.click();
+              else if (dx > 0 && prevBtn) prevBtn.click();
+            }
+          });
+        }
         let bsResizeTO;
         window.addEventListener("resize", function () {
           clearTimeout(bsResizeTO);
