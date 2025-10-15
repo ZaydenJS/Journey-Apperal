@@ -1747,7 +1747,11 @@
           const pageSize = window.innerWidth >= 1024 ? 5 : 2;
           // Always ensure arrows visible and bind swipe for RV (PDP)
           const rvCtrlsAlways = ensureArrows(section);
-          if (!section.hasAttribute("data-swipe-paging-bound")) {
+          // Only bind swipe-to-page on desktop pagination
+          if (
+            window.innerWidth >= 1024 &&
+            !section.hasAttribute("data-swipe-paging-bound")
+          ) {
             section.setAttribute("data-swipe-paging-bound", "1");
             let __sx = 0;
             section.addEventListener(
@@ -1873,6 +1877,7 @@
               track.style.scrollBehavior =
                 track.style.scrollBehavior || "smooth";
               track.style.webkitOverflowScrolling = "touch";
+              track.style.touchAction = "pan-x";
               // Bind arrows to scrollBy like homepage (single-track)
               const prevs = section.querySelectorAll(".prev");
               const nexts = section.querySelectorAll(".next");
@@ -1897,20 +1902,23 @@
                   track.scrollBy({ left: step(), behavior: "smooth" })
                 )
               );
-              // Drag to scroll (pointer events)
+              // Drag to scroll (pointer events) — identical to homepage
               if (!track.hasAttribute("data-drag-scroll")) {
                 track.setAttribute("data-drag-scroll", "1");
                 let startX = 0,
                   scrollLeft = 0,
-                  isDown = false;
+                  isDown = false,
+                  dragged = false;
                 track.addEventListener("pointerdown", (e) => {
                   isDown = true;
+                  dragged = false;
                   startX = e.pageX;
                   scrollLeft = track.scrollLeft;
                 });
                 track.addEventListener("pointermove", (e) => {
                   if (!isDown) return;
                   const dx = e.pageX - startX;
+                  if (Math.abs(dx) > 5) dragged = true;
                   track.scrollLeft = scrollLeft - dx;
                 });
                 track.addEventListener("pointerup", () => {
@@ -2007,6 +2015,7 @@
         bestTrack.style.scrollBehavior =
           bestTrack.style.scrollBehavior || "smooth";
         bestTrack.style.webkitOverflowScrolling = "touch";
+        bestTrack.style.touchAction = "pan-x";
         if (!bestTrack.hasAttribute("data-drag-scroll")) {
           bestTrack.setAttribute("data-drag-scroll", "1");
           let startX = 0,
@@ -2041,7 +2050,10 @@
         const amount = parseFloat(priceObj.amount || 0);
         const code = priceObj.currencyCode || "USD";
         const price = amount ? `$${amount.toFixed(2)} ${code}` : "";
-        const main = (p.images && (p.images[0]?.url || p.images[0]?.src)) || "";
+        const main =
+          p?.featuredImage?.url ||
+          (p.images && (p.images[0]?.url || p.images[0]?.src)) ||
+          "";
         const alt = (p.images && (p.images[1]?.url || p.images[1]?.src)) || "";
         return {
           name: p.title || "",
@@ -2106,6 +2118,14 @@
               });
             }
           } catch (_) {}
+          // Prewarm first images to ensure quick load on swipe
+          try {
+            const firstImgs = out
+              .slice(0, 12)
+              .map((c) => c && c.main)
+              .filter(Boolean);
+            __prewarmImages(firstImgs);
+          } catch (_) {}
         };
 
         // 1) Seed from caches for instant paint
@@ -2151,6 +2171,7 @@
               bestTrack.style.scrollBehavior =
                 bestTrack.style.scrollBehavior || "smooth";
               bestTrack.style.webkitOverflowScrolling = "touch";
+              bestTrack.style.touchAction = "pan-x";
               if (!bestTrack.hasAttribute("data-drag-scroll")) {
                 bestTrack.setAttribute("data-drag-scroll", "1");
                 let startX = 0,
@@ -2390,6 +2411,14 @@
         normalizeCarouselMedia(bestSection);
         if (typeof enableHoverSwapIn === "function")
           enableHoverSwapIn(bestSection);
+        // Prewarm first images to improve initial swipe load
+        try {
+          const firstImgs = best
+            .slice(0, 12)
+            .map((c) => c && c.main)
+            .filter(Boolean);
+          __prewarmImages(firstImgs);
+        } catch (_) {}
         requestAnimationFrame(function () {
           normalizeCarouselMedia(bestSection);
           if (typeof enableHoverSwapIn === "function")
