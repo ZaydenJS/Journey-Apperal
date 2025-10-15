@@ -438,6 +438,18 @@
           var handle = getHandle();
           if (!handle) return;
 
+          // Preload product JSON early so data is ready before paint
+          try {
+            var lnJson = document.createElement("link");
+            lnJson.rel = "preload";
+            lnJson.as = "fetch";
+            lnJson.href =
+              "/.netlify/functions/getProduct?handle=" +
+              encodeURIComponent(handle);
+            lnJson.crossOrigin = "anonymous";
+            document.head.appendChild(lnJson);
+          } catch (_) {}
+
           // Minimal card data handoff
           var minRaw = sessionStorage.getItem("handoff:min:" + handle);
           if (minRaw) {
@@ -537,17 +549,22 @@
     <script id="pdp-instant-sizes">
       (function () {
         try {
+          // Desktop-only: leave mobile behavior untouched
+          var isDesktop = window.innerWidth >= 1024;
+          if (!isDesktop) return;
+
           function getHandle() {
-            var u = new URL(window.location.href);
-            var slug = u.searchParams.get("slug");
-            if (slug) return slug;
-            var seg = u.pathname.split("/").filter(Boolean);
+            try {
+              var u = new URL(window.location.href);
+              var slug = u.searchParams.get("slug");
+              if (slug) return slug;
+            } catch (_) {}
+            var seg = (window.location.pathname || "")
+              .split("/")
+              .filter(Boolean);
             return seg[seg.length - 1] || "";
           }
-          function onReady(fn) {
-            if (document.readyState !== "loading") fn();
-            else document.addEventListener("DOMContentLoaded", fn);
-          }
+
           var handle = getHandle();
           if (!handle) return;
 
@@ -565,6 +582,17 @@
                 if (Array.isArray(p.variants) && p.variants.length) {
                   payload = { variants: p.variants, options: p.options || [] };
                 }
+              }
+            } catch (_) {}
+          }
+          // Soft-fallback: allow cached variants for instant paint (no network)
+          if (!payload || !payload.variants) {
+            try {
+              var raw = localStorage.getItem("pdp:variants:" + handle);
+              if (raw) {
+                var parsed = JSON.parse(raw);
+                // __cacheSet stores { t, v }; accept either {variants,...} or wrapped
+                payload = parsed && (parsed.v || parsed);
               }
             } catch (_) {}
           }
@@ -688,13 +716,25 @@
             return true;
           }
 
-          onReady(function () {
-            var tries = 0;
-            (function tick() {
-              if (render()) return;
-              if (++tries < 40) setTimeout(tick, 25);
-            })();
-          });
+          // Try now; if grid not yet in DOM, observe and render at first availability
+          if (!render()) {
+            var mo = new MutationObserver(function () {
+              if (render()) {
+                try {
+                  mo.disconnect();
+                } catch (_) {}
+              }
+            });
+            mo.observe(document.documentElement || document, {
+              subtree: true,
+              childList: true,
+            });
+            setTimeout(function () {
+              try {
+                mo.disconnect();
+              } catch (_) {}
+            }, 1500);
+          }
         } catch (_) {}
       })();
     </script>

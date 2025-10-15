@@ -1004,6 +1004,14 @@
     const grid = document.getElementById("size-grid");
     if (!grid) return;
 
+    // If instant sizes already painted (from handoff), skip re-render to avoid flash
+    if (
+      grid.getAttribute("data-instant-sizes") === "1" &&
+      grid.querySelector(".size")
+    ) {
+      return;
+    }
+
     const renderFrom = (data) => {
       if (!data || !data.variants) return;
       // Build a map from Size value -> best available variant across colors
