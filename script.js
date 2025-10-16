@@ -6465,10 +6465,6 @@
             footer.innerHTML =
               '<div style="border:1px solid #dcdcdc; border-radius:8px; padding:16px; background:#fff;">' +
               '<div style="display:flex; justify-content:space-between; margin:6px 0;"><span>Subtotal</span><span id="cart-subtotal">$0.00</span></div>' +
-              '<div style="display:flex; justify-content:space-between; margin:6px 0;"><span>GST</span><span id="cart-gst">$0.00</span></div>' +
-              '<div style="height:1px; background:#e5e5e5; margin:12px 0;"></div>' +
-              '<div style="display:flex; justify-content:space-between; margin:8px 0; font-weight:700;"><span>Order Total Incl. Tax</span><span id="cart-total-incl">$0.00</span></div>' +
-              '<div style="display:flex; justify-content:space-between; margin:6px 0;"><span>Order Total Excl. Tax</span><span id="cart-total-excl">$0.00</span></div>' +
               "</div>" +
               '<button id="checkout-btn" style="width:100%; margin-top:12px; padding:14px 16px; border-radius:9999px; background:#000; color:#fff; font-weight:700; cursor:pointer;">Proceed to Checkout</button>';
             footer.dataset.enhanced = "1";
@@ -6744,12 +6740,7 @@
         wrap.innerHTML =
           '<div style="text-align:center; color:#666; padding:24px 0;">Your cart is empty.</div>';
         sub.textContent = "$0.00";
-        const gstEl = document.getElementById("cart-gst");
-        const inclEl = document.getElementById("cart-total-incl");
-        const exclEl = document.getElementById("cart-total-excl");
-        if (gstEl) gstEl.textContent = "$0.00";
-        if (inclEl) inclEl.textContent = "$0.00";
-        if (exclEl) exclEl.textContent = "$0.00";
+
         return;
       }
       let html = "";
@@ -6792,14 +6783,7 @@
         '<div style="height:1px; background:#e5e5e5; margin:12px 0;"></div><div style="text-align:center; margin-bottom:12px;"><a href="#" id="continue-shopping" style="color:#2f6fec; text-decoration:underline;">Continue shopping</a></div>';
       wrap.innerHTML = html;
       sub.textContent = money(total);
-      // GST added on top (10% of subtotal)
-      const gst = total * 0.1;
-      const gstEl = document.getElementById("cart-gst");
-      const inclEl = document.getElementById("cart-total-incl");
-      const exclEl = document.getElementById("cart-total-excl");
-      if (gstEl) gstEl.textContent = money(gst);
-      if (inclEl) inclEl.textContent = money(total + gst);
-      if (exclEl) exclEl.textContent = money(total);
+
       // remove handlers
       wrap.querySelectorAll("[data-remove]").forEach((btn) =>
         btn.addEventListener("click", () => {
