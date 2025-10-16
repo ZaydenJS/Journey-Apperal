@@ -768,6 +768,45 @@
         console.warn("hero-track population failed", e);
       }
 
+      // Wire prev/next controls to navigate images reliably
+      try {
+        const heroTrack = document.getElementById("hero-track");
+        if (!heroTrack) throw new Error("heroTrack missing");
+
+        const prev = document.querySelector(".hero-carousel .ctrl.prev");
+        const next = document.querySelector(".hero-carousel .ctrl.next");
+
+        const slides = () => Array.from(heroTrack.querySelectorAll("img"));
+        const slideW = () => heroTrack.clientWidth;
+        const count = () => slides().length;
+        const idx = () =>
+          Math.round(heroTrack.scrollLeft / Math.max(1, slideW()));
+        const clamp = (i) => Math.max(0, Math.min(count() - 1, i));
+        const goTo = (i) => {
+          const target = clamp(i);
+          heroTrack.scrollTo({ left: target * slideW(), behavior: "smooth" });
+        };
+
+        if (prev) {
+          prev.addEventListener(
+            "click",
+            (e) => {
+              e.preventDefault();
+              goTo(idx() - 1);
+            },
+            { passive: false }
+          );
+        }
+        if (next) {
+          next.addEventListener(
+            "click",
+            (e) => {
+              e.preventDefault();
+              goTo(idx() + 1);
+            },
+            { passive: false }
+          );
+        }
 
         // Instant render from sessionStorage handoff (from collection click)
         try {
