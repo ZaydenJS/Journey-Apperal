@@ -643,13 +643,112 @@
           }
           if (!payload || !payload.variants) return;
 
+          // Colour (COLOUR) option handling and swatches
+          var colourOption = (payload.options || []).find(function (o) {
+            var n = String(o.name || "").toLowerCase();
+            return n === "colour" || n === "color";
+          });
+
+          function getSelectedColour() {
+            try {
+              var el = document.querySelector(
+                '#colour-swatches .swatch[aria-pressed="true"]'
+              );
+              if (el) return el.getAttribute("data-value") || "";
+            } catch (_) {}
+            var saved = "";
+            try {
+              saved = localStorage.getItem("pdp:lastColour:" + handle) || "";
+            } catch (_) {}
+            if (saved) return saved;
+            var vals = (colourOption && colourOption.values) || [];
+            return vals.length ? vals[0] : "";
+          }
+
+          function renderColours() {
+            var container = document.getElementById("colour-swatches");
+            if (!container || !colourOption) return;
+            var selected = getSelectedColour();
+            container.innerHTML = "";
+            (colourOption.values || []).forEach(function (val) {
+              var btn = document.createElement("button");
+              btn.className = "swatch";
+              btn.setAttribute("data-value", val);
+              btn.setAttribute(
+                "aria-pressed",
+                String(val) === String(selected) ? "true" : "false"
+              );
+              // Visual style for circular swatch; shows text as fallback
+              btn.textContent = val;
+              btn.style.width = "28px";
+              btn.style.height = "28px";
+              btn.style.borderRadius = "50%";
+              btn.style.border = "1px solid #ccc";
+              btn.style.background = "#fff";
+              btn.style.fontSize = "10px";
+              btn.style.lineHeight = "1";
+              btn.style.display = "inline-flex";
+              btn.style.alignItems = "center";
+              btn.style.justifyContent = "center";
+              btn.style.cursor = "pointer";
+              btn.style.userSelect = "none";
+              btn.style.padding = "0";
+              btn.style.margin = "0";
+
+              btn.addEventListener("click", function (e) {
+                e.preventDefault();
+                var parent = btn.parentElement;
+                Array.from(
+                  parent.querySelectorAll('.swatch[aria-pressed="true"]')
+                ).forEach(function (b) {
+                  b.setAttribute("aria-pressed", "false");
+                });
+                btn.setAttribute("aria-pressed", "true");
+                try {
+                  localStorage.setItem("pdp:lastColour:" + handle, val);
+                } catch (_) {}
+                // Re-render sizes for the chosen colour
+                render();
+              });
+
+              container.appendChild(btn);
+            });
+          }
+
+          // Initial paint of colour swatches (if any)
+          try {
+            renderColours();
+          } catch (_) {}
+
           function render() {
             var grid = document.getElementById("size-grid");
             if (!grid) return false;
 
-            // Build size -> best candidate map
+            // Build size -> best candidate map, filtered by selected COLOUR if present
             var bySize = Object.create(null);
+            var selectedColour = (function () {
+              try {
+                var el = document.querySelector(
+                  '#colour-swatches .swatch[aria-pressed="true"]'
+                );
+                if (el) return el.getAttribute("data-value") || "";
+              } catch (_) {}
+              try {
+                return localStorage.getItem("pdp:lastColour:" + handle) || "";
+              } catch (_) {
+                return "";
+              }
+            })();
             (payload.variants || []).forEach(function (v) {
+              // If a colour is selected, only consider variants matching that colour
+              if (selectedColour) {
+                var col = (v.selectedOptions || []).find(function (o) {
+                  var n = String(o.name || "").toLowerCase();
+                  return n === "colour" || n === "color";
+                });
+                if (!col || String(col.value) !== String(selectedColour))
+                  return;
+              }
               var so = (v.selectedOptions || []).find(function (o) {
                 return String(o.name || "").toLowerCase() === "size";
               });
@@ -1621,6 +1720,7 @@
                 } else {
                   // Vertical gesture: keep the carousel fixed
                   track.scrollLeft = startScrollX; // freeze horizontal position
+
                   // Let the page scroll naturally; do not preventDefault
                 }
               },
@@ -1719,6 +1819,36 @@
             } catch (e) {}
           })();
         </script>
+
+        <!-- Colour (COLOUR) selector between installments line and size section -->
+        <div
+          class="row"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin: 8px 0 0 0;
+          "
+        >
+          <div
+            class="upper"
+            style="font-weight: 800; font-size: 12px; letter-spacing: 0.4px"
+          >
+            SELECT COLOUR
+          </div>
+        </div>
+        <div
+          id="colour-swatches"
+          class="colour-swatches"
+          style="
+            margin-top: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+          "
+        ></div>
 
         <div
           class="row mt-16"

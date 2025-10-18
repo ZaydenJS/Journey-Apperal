@@ -1014,10 +1014,83 @@
 
     const renderFrom = (data) => {
       if (!data || !data.variants) return;
+      // Determine COLOUR option and selected value; render swatches if present
+      const swatches = document.getElementById("colour-swatches");
+      const colourOption = (data.options || []).find((o) => {
+        const n = String(o.name || "").toLowerCase();
+        return n === "colour" || n === "color";
+      });
+      let selectedColour = "";
+      if (swatches && colourOption) {
+        // Determine current selection from DOM, localStorage, or default
+        const pressed = swatches.querySelector('.swatch[aria-pressed="true"]');
+        if (pressed) {
+          selectedColour = pressed.getAttribute("data-value") || "";
+        } else {
+          try {
+            selectedColour =
+              localStorage.getItem("pdp:lastColour:" + handle) || "";
+          } catch (_) {}
+          if (!selectedColour) {
+            selectedColour =
+              (colourOption.values && colourOption.values[0]) || "";
+          }
+        }
+        // Render swatches if empty
+        if (!swatches.querySelector(".swatch")) {
+          swatches.innerHTML = "";
+          (colourOption.values || []).forEach((val) => {
+            const btn = document.createElement("button");
+            btn.className = "swatch";
+            btn.setAttribute("data-value", val);
+            btn.setAttribute(
+              "aria-pressed",
+              String(val) === String(selectedColour) ? "true" : "false"
+            );
+            btn.textContent = val;
+            btn.style.width = "28px";
+            btn.style.height = "28px";
+            btn.style.borderRadius = "50%";
+            btn.style.border = "1px solid #ccc";
+            btn.style.background = "#fff";
+            btn.style.fontSize = "10px";
+            btn.style.lineHeight = "1";
+            btn.style.display = "inline-flex";
+            btn.style.alignItems = "center";
+            btn.style.justifyContent = "center";
+            btn.style.cursor = "pointer";
+            btn.style.userSelect = "none";
+            btn.style.padding = "0";
+            btn.style.margin = "0";
+            btn.addEventListener("click", (e) => {
+              e.preventDefault();
+              Array.from(
+                swatches.querySelectorAll('.swatch[aria-pressed="true"]')
+              ).forEach((b) => b.setAttribute("aria-pressed", "false"));
+              btn.setAttribute("aria-pressed", "true");
+              try {
+                localStorage.setItem("pdp:lastColour:" + handle, val);
+              } catch (_) {}
+              // Re-render sizes using the newly selected colour
+              renderFrom(data);
+            });
+            swatches.appendChild(btn);
+          });
+        }
+      }
+
       // Build a map from Size value -> best available variant across colors
       const bySize = new Map();
       const candidates = new Map(); // size -> [{id, available, qty}]
       (data.variants || []).forEach((v) => {
+        // If a COLOUR is selected, only consider variants matching that colour
+        if (selectedColour) {
+          const col = (v.selectedOptions || []).find((o) => {
+            const n = String(o.name || "").toLowerCase();
+            return n === "colour" || n === "color";
+          });
+          if (!col || String(col.value) !== String(selectedColour)) return;
+        }
         const so = (v.selectedOptions || []).find(
           (o) => (o.name || "").toLowerCase() === "size"
         );
