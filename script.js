@@ -1278,6 +1278,86 @@
       }
 
       // Fetch fresh in background and update if needed (use full product to avoid second round-trip)
+
+      // Update gallery images to reflect the selected color (uses variant.image when available)
+      function updateGalleryForColor(productMaybe) {
+        try {
+          const selectedLower = getSelectedColorLower(handle);
+          if (!selectedLower) return;
+          // Ensure we have a full product object with images
+          let full = productMaybe || null;
+          try {
+            if (!full || !full.images || !full.images.length) {
+              full = __cacheGetFresh(
+                "pdp:product:" + handle,
+                24 * 60 * 60 * 1000
+              );
+            }
+          } catch (_) {}
+          if (!full || !full.images || !full.images.length) return;
+
+          function colorLowerFromOpts(opts) {
+            const c = (opts || []).find((o) => {
+              const n = String(o.name || "")
+                .toLowerCase()
+                .replace(/\s+/g, "");
+              return (
+                n === "color" ||
+                n === "colour" ||
+                n === "colorway" ||
+                n === "colourway"
+              );
+            });
+            return c && c.value ? String(c.value).toLowerCase() : "";
+          }
+
+          // Build prioritized image list for this color
+          const vImgs = [];
+          (full.variants || []).forEach((v) => {
+            const vColor = colorLowerFromOpts(v.selectedOptions || []);
+            const u = v && v.image && (v.image.url || v.image.src);
+            if (u && vColor === selectedLower) vImgs.push(u);
+          });
+          const altMatches = [];
+          (full.images || []).forEach((node) => {
+            const u = node && (node.url || node.src);
+            if (!u) return;
+            const alt = (node.altText || node.alt || "").toLowerCase();
+            const inUrl = String(u).toLowerCase().includes(selectedLower);
+            if (alt.includes(selectedLower) || inUrl) altMatches.push(u);
+          });
+          const all = (full.images || [])
+            .map((n) => (n && (n.url || n.src)) || null)
+            .filter(Boolean);
+
+          const urls = [];
+          const seen = new Set();
+          const pushUnique = (arr) =>
+            (arr || []).forEach((u) => {
+              if (!u || seen.has(u)) return;
+              seen.add(u);
+              urls.push(u);
+            });
+          pushUnique(vImgs);
+          pushUnique(altMatches);
+          pushUnique(all);
+          if (!urls.length) return;
+
+          const track = document.getElementById("hero-track");
+          if (!track) return;
+          const imgs = Array.from(track.querySelectorAll("img"));
+          if (!imgs.length) return;
+          for (let i = 0; i < imgs.length; i++) {
+            const src = urls[i] || urls[0];
+            if (!src) break;
+            try {
+              imgs[i].src = src;
+              if (!imgs[i].alt) imgs[i].alt = "Product image";
+            } catch (_) {}
+          }
+        } catch (_) {}
+      }
+
       const resp = await fetch(
         `/.netlify/functions/getProduct?handle=${encodeURIComponent(handle)}`
       );
@@ -1451,6 +1531,9 @@
             btn.setAttribute("aria-pressed", "true");
             try {
               localStorage.setItem("pdp:lastColor:" + handle, String(color));
+              try {
+                updateGalleryForColor(product);
+              } catch (_) {}
             } catch (_) {}
             // Re-render size grid to reflect this color selection
             try {
