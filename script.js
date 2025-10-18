@@ -1014,21 +1014,38 @@
 
     const renderFrom = (data) => {
       if (!data || !data.variants) return;
-      // Build a map from Size value -> best available variant across colors
+      // Respect selected color (if any): filter variants to the chosen color
+      const selectedColorLower = getSelectedColorLower(handle);
+      // Build a map from Size value -> best available variant within the selected color (or across colors if none selected)
       const bySize = new Map();
       const candidates = new Map(); // size -> [{id, available, qty}]
       (data.variants || []).forEach((v) => {
-        const so = (v.selectedOptions || []).find(
+        const opts = Array.isArray(v.selectedOptions) ? v.selectedOptions : [];
+        const sizeOpt = opts.find(
           (o) => (o.name || "").toLowerCase() === "size"
         );
-        if (!so) return;
-        const arr = candidates.get(so.value) || [];
+        if (!sizeOpt) return;
+        if (selectedColorLower) {
+          const colorOpt = opts.find((o) => {
+            const n = (o.name || "").toLowerCase().replace(/\s+/g, "");
+            return (
+              n === "color" ||
+              n === "colour" ||
+              n === "colorway" ||
+              n === "colourway"
+            );
+          });
+          const colLower =
+            colorOpt && String(colorOpt.value || "").toLowerCase();
+          if (!colLower || colLower !== selectedColorLower) return; // skip variants not matching selected color
+        }
+        const arr = candidates.get(sizeOpt.value) || [];
         arr.push({
           id: v.id,
           available: !!v.availableForSale,
           qty: v.quantityAvailable ?? null,
         });
-        candidates.set(so.value, arr);
+        candidates.set(sizeOpt.value, arr);
       });
       // choose best candidate per size: any available variant (qty null or >0); otherwise first
       for (const [sizeVal, arr] of candidates.entries()) {
@@ -1176,6 +1193,9 @@
           })),
           options: product.options || [],
         };
+        try {
+          setupColorSwatches(product);
+        } catch (_) {}
         renderFrom(quick);
       }
     } catch (_) {}
@@ -1198,6 +1218,9 @@
               options: p.options || [],
             };
             renderFrom(quick);
+            try {
+              setupColorSwatches(p);
+            } catch (_) {}
           }
         } catch (_) {}
       }
@@ -1221,6 +1244,9 @@
             })),
             options: cachedP.options || [],
           };
+          try {
+            setupColorSwatches(cachedP);
+          } catch (_) {}
           renderFrom(quick);
         }
       } catch (_) {}
@@ -1232,19 +1258,218 @@
         const h = sessionStorage.getItem("handoff:variants:" + handle);
         if (h) {
           const d = JSON.parse(h);
-          if (d && d.variants) renderFrom(d);
+          if (d && d.variants) {
+            renderFrom(d);
+            try {
+              setupColorSwatches(d);
+            } catch (_) {}
+          }
           sessionStorage.removeItem("handoff:variants:" + handle);
         }
       } catch (_) {}
 
       // Priority B: Cache-first render for instant size grid
       const cached = __cacheGetFresh("pdp:variants:" + handle, 10 * 60 * 1000);
-      if (cached && cached.variants) renderFrom(cached);
+      if (cached && cached.variants) {
+        renderFrom(cached);
+        try {
+          setupColorSwatches(cached);
+        } catch (_) {}
+      }
 
       // Fetch fresh in background and update if needed (use full product to avoid second round-trip)
       const resp = await fetch(
         `/.netlify/functions/getProduct?handle=${encodeURIComponent(handle)}`
       );
+
+      // Return the currently selected color (lowercased), or saved preference, or empty string
+      function getSelectedColorLower(handle) {
+        try {
+          var pressed = document.querySelector(
+            '#color-swatches .swatch[aria-pressed="true"]'
+          );
+          if (pressed && pressed.dataset && pressed.dataset.colorLower) {
+            return String(pressed.dataset.colorLower || "").toLowerCase();
+          }
+          var saved = localStorage.getItem("pdp:lastColor:" + handle) || "";
+          return String(saved || "").toLowerCase();
+        } catch (_) {
+          return "";
+        }
+      }
+
+      // Render color swatches (small circles) from product options/variants
+      function setupColorSwatches(product) {
+        var cont = document.getElementById("color-swatches");
+        var row = document.getElementById("color-option");
+        if (!cont) return;
+
+        function findColorValue(opts) {
+          var c = (opts || []).find(function (o) {
+            var n = String(o.name || "")
+              .toLowerCase()
+              .replace(/\s+/g, "");
+            return (
+              n === "color" ||
+              n === "colour" ||
+              n === "colorway" ||
+              n === "colourway"
+            );
+          });
+          return c && c.value ? String(c.value) : "";
+        }
+
+        // Build unique color list
+        var colors = [];
+        try {
+          var colorOpt = (product.options || []).find(function (o) {
+            var n = String(o.name || "")
+              .toLowerCase()
+              .replace(/\s+/g, "");
+            return (
+              n === "color" ||
+              n === "colour" ||
+              n === "colorway" ||
+              n === "colourway"
+            );
+          });
+          if (colorOpt && Array.isArray(colorOpt.values)) {
+            var s = new Set();
+            colorOpt.values.forEach(function (v) {
+              if (v) s.add(String(v));
+            });
+            colors = Array.from(s);
+          } else {
+            var set = new Set();
+            (product.variants || []).forEach(function (v) {
+              var col = findColorValue(v.selectedOptions || []);
+              if (col) set.add(col);
+            });
+            colors = Array.from(set);
+          }
+        } catch (_) {}
+
+        if (!colors.length) {
+          if (row) row.style.display = "none";
+          cont.style.display = "none";
+          return;
+        } else {
+          if (row) row.style.display = "";
+          cont.style.display = "";
+        }
+
+        // Resolve a color string to a CSS color
+        function resolveSwatchColor(name) {
+          var dict = {
+            black: "#000000",
+            white: "#ffffff",
+            blue: "#1e90ff",
+            navy: "#001f3f",
+            red: "#e61919",
+            pink: "#ff69b4",
+            cream: "#f5f0e6",
+            beige: "#f5f5dc",
+            grey: "#808080",
+            gray: "#808080",
+            green: "#2ecc71",
+            yellow: "#ffeb3b",
+            orange: "#ff9800",
+            brown: "#8b4513",
+            purple: "#8e44ad",
+          };
+          var key = String(name || "")
+            .toLowerCase()
+            .trim();
+          if (dict[key]) return dict[key];
+          try {
+            var el = document.createElement("div");
+            el.style.backgroundColor = name;
+            if (el.style.backgroundColor) return name; // native CSS color accepted
+          } catch (_) {}
+          return "#dcdcdc";
+        }
+
+        // Determine handle for storage
+        var handle = (function () {
+          try {
+            var p = new URLSearchParams(location.search).get("slug");
+            if (p) return p;
+          } catch (_) {}
+          var last = (location.pathname || "").split("/").filter(Boolean).pop();
+          return last && last !== "product.html" ? last : "";
+        })();
+
+        var savedLower = "";
+        try {
+          savedLower = (
+            localStorage.getItem("pdp:lastColor:" + handle) || ""
+          ).toLowerCase();
+        } catch (_) {}
+
+        cont.innerHTML = "";
+        var first = null;
+        colors.forEach(function (color) {
+          var btn = document.createElement("button");
+          btn.className = "swatch";
+          btn.type = "button";
+          btn.dataset.color = String(color);
+          btn.dataset.colorLower = String(color).toLowerCase();
+          btn.setAttribute("aria-label", String(color));
+          btn.setAttribute("aria-pressed", "false");
+          btn.title = String(color);
+          // Basic circle styling
+          btn.style.width = "24px";
+          btn.style.height = "24px";
+          btn.style.borderRadius = "50%";
+          btn.style.border = "1px solid #dcdcdc";
+          btn.style.display = "inline-flex";
+          btn.style.alignItems = "center";
+          btn.style.justifyContent = "center";
+          btn.style.padding = "0";
+          btn.style.cursor = "pointer";
+
+          var resolved = resolveSwatchColor(color);
+          btn.style.background = resolved;
+          // If very light, add inner ring for visibility
+          try {
+            var test = document.createElement("div");
+            test.style.backgroundColor = resolved;
+            var isWhite =
+              /rgb\(255,\s*255,\s*255\)/i.test(test.style.backgroundColor) ||
+              /#fff/i.test(resolved) ||
+              /white/i.test(resolved);
+            if (isWhite) btn.style.boxShadow = "inset 0 0 0 1px #cfcfcf";
+          } catch (_) {}
+
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            Array.from(
+              cont.querySelectorAll('.swatch[aria-pressed="true"]')
+            ).forEach(function (b) {
+              b.setAttribute("aria-pressed", "false");
+            });
+            btn.setAttribute("aria-pressed", "true");
+            try {
+              localStorage.setItem("pdp:lastColor:" + handle, String(color));
+            } catch (_) {}
+            // Re-render size grid to reflect this color selection
+            try {
+              setupLiveSizePicker(product);
+            } catch (_) {}
+          });
+
+          if (!first) first = btn;
+          cont.appendChild(btn);
+        });
+
+        // Preselect saved color or first
+        var toSelect =
+          Array.from(cont.querySelectorAll(".swatch")).find(function (b) {
+            return b.dataset && b.dataset.colorLower === savedLower;
+          }) || first;
+        if (toSelect) toSelect.click();
+      }
+
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
       const product =
@@ -1257,6 +1482,9 @@
       };
       __cacheSet("pdp:product:" + handle, product);
       __cacheSet("pdp:variants:" + handle, payload);
+      try {
+        setupColorSwatches(product);
+      } catch (_) {}
       renderFrom(payload);
     } catch (e) {
       console.warn("Failed to load product-variants", e);
