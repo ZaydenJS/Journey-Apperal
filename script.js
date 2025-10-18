@@ -1606,12 +1606,24 @@
                       return;
                     }
                     // Fallback to Shopify product.js if Netlify function is unavailable
-                    return fetch(
-                      "/products/" +
+                    var __sd = (
+                      window.SHOPIFY_DOMAIN ||
+                      window.SHOPIFY_STORE_DOMAIN ||
+                      window.SHOPIFY_STOREFRONT_DOMAIN ||
+                      ""
+                    ).replace(/^https?:\/\//, "");
+                    var __prodJsUrl = __sd
+                      ? "https://" +
+                        __sd +
+                        "/products/" +
                         encodeURIComponent(__handle) +
                         ".js?ts=" +
                         Date.now()
-                    )
+                      : "/products/" +
+                        encodeURIComponent(__handle) +
+                        ".js?ts=" +
+                        Date.now();
+                    return fetch(__prodJsUrl)
                       .then(function (r2) {
                         return r2 && r2.ok ? r2.json() : null;
                       })
@@ -1828,9 +1840,18 @@
       // Fallback: use Shopify's built-in product JSON endpoint when needed
       if (!product || !Array.isArray(product.variants)) {
         try {
-          const r2 = await fetch(
-            `/products/${encodeURIComponent(handle)}.js?ts=${Date.now()}`
-          );
+          const __sd = (
+            window.SHOPIFY_DOMAIN ||
+            window.SHOPIFY_STORE_DOMAIN ||
+            window.SHOPIFY_STOREFRONT_DOMAIN ||
+            ""
+          ).replace(/^https?:\/\//, "");
+          const __prodJsUrl = __sd
+            ? `https://${__sd}/products/${encodeURIComponent(
+                handle
+              )}.js?ts=${Date.now()}`
+            : `/products/${encodeURIComponent(handle)}.js?ts=${Date.now()}`;
+          const r2 = await fetch(__prodJsUrl);
           if (r2 && r2.ok) {
             const pj = await r2.json();
             const optNames = Array.isArray(pj.options) ? pj.options : [];
