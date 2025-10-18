@@ -645,7 +645,7 @@
 
           // Colour (COLOUR) option handling and swatches
           var colourOption = (payload.options || []).find(function (o) {
-            var n = String(o.name || "").toLowerCase();
+            var n = String((o.name || "").trim()).toLowerCase();
             return n === "colour" || n === "color";
           });
 
@@ -743,14 +743,14 @@
               // If a colour is selected, only consider variants matching that colour
               if (selectedColour) {
                 var col = (v.selectedOptions || []).find(function (o) {
-                  var n = String(o.name || "").toLowerCase();
+                  var n = String((o.name || "").trim()).toLowerCase();
                   return n === "colour" || n === "color";
                 });
                 if (!col || String(col.value) !== String(selectedColour))
                   return;
               }
               var so = (v.selectedOptions || []).find(function (o) {
-                return String(o.name || "").toLowerCase() === "size";
+                return String((o.name || "").trim()).toLowerCase() === "size";
               });
               if (!so) return;
               var rec = bySize[so.value] || { cands: [] };

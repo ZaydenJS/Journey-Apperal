@@ -1005,19 +1005,16 @@
     if (!grid) return;
 
     // If instant sizes already painted (from handoff), skip re-render to avoid flash
-    if (
+    const skipSizeRepaint =
       grid.getAttribute("data-instant-sizes") === "1" &&
-      grid.querySelector(".size")
-    ) {
-      return;
-    }
+      grid.querySelector(".size");
 
-    const renderFrom = (data) => {
+    const renderFrom = (data, force = false) => {
       if (!data || !data.variants) return;
       // Determine COLOUR option and selected value; render swatches if present
       const swatches = document.getElementById("colour-swatches");
       const colourOption = (data.options || []).find((o) => {
-        const n = String(o.name || "").toLowerCase();
+        const n = String((o.name || "").trim()).toLowerCase();
         return n === "colour" || n === "color";
       });
       let selectedColour = "";
@@ -1071,8 +1068,8 @@
               try {
                 localStorage.setItem("pdp:lastColour:" + handle, val);
               } catch (_) {}
-              // Re-render sizes using the newly selected colour
-              renderFrom(data);
+              // Re-render sizes using the newly selected colour (force repaint even if instant sizes exist)
+              renderFrom(data, true);
             });
             swatches.appendChild(btn);
           });
@@ -1086,13 +1083,13 @@
         // If a COLOUR is selected, only consider variants matching that colour
         if (selectedColour) {
           const col = (v.selectedOptions || []).find((o) => {
-            const n = String(o.name || "").toLowerCase();
+            const n = String((o.name || "").trim()).toLowerCase();
             return n === "colour" || n === "color";
           });
           if (!col || String(col.value) !== String(selectedColour)) return;
         }
         const so = (v.selectedOptions || []).find(
-          (o) => (o.name || "").toLowerCase() === "size"
+          (o) => String((o.name || "").trim()).toLowerCase() === "size"
         );
         if (!so) return;
         const arr = candidates.get(so.value) || [];
@@ -1125,7 +1122,7 @@
 
       const values =
         (data.options || []).find(
-          (o) => (o.name || "").toLowerCase() === "size"
+          (o) => String((o.name || "").trim()).toLowerCase() === "size"
         )?.values || Array.from(bySize.keys());
       if (!values || !values.length) return;
 
@@ -1159,77 +1156,79 @@
         }
       })();
 
-      // Render buttons
-      grid.innerHTML = "";
-      values.forEach((val) => {
-        const meta = bySize.get(val) || {};
-        const btn = document.createElement("button");
-        btn.className = "size";
-        btn.textContent = val;
-        // attach variant id on the button for robust fallback
-        if (meta && meta.id) btn.dataset.variantId = String(meta.id);
-        const disabled =
-          meta.available === false ||
-          (typeof meta.qty === "number" && meta.qty <= 0);
-        if (disabled) {
-          btn.setAttribute("disabled", "true");
-          btn.style.opacity = "0.5";
-          btn.style.cursor = "not-allowed";
-        }
-        if (!disabled && typeof meta.qty === "number" && meta.qty <= 3) {
-          const low = document.createElement("span");
-          low.textContent = "  Low stock";
-          low.style.fontSize = "11px";
-          low.style.color = "#c20";
-          btn.appendChild(low);
-        }
-        btn.addEventListener("click", function (e) {
-          e.preventDefault();
-          if (btn.disabled) return;
-          // toggle selected state
-          Array.from(
-            grid.querySelectorAll('.size[aria-pressed="true"]')
-          ).forEach(function (b) {
-            b.setAttribute("aria-pressed", "false");
-          });
-          btn.setAttribute("aria-pressed", "true");
-          // persist + store variant id
-          const meta2 = bySize.get(val) || {};
-          if (meta2.id && hidden) {
-            hidden.value = meta2.id;
-            if (typeof hiddenLegacy !== "undefined" && hiddenLegacy) {
-              hiddenLegacy.value = meta2.id;
-            }
-            btn.dataset.variantId = String(meta2.id);
-            try {
-              localStorage.setItem("pdp:lastSize:" + handle, val);
-            } catch (e) {}
-            // enable Add to Cart
-            var addBtn = Array.from(
-              document.querySelectorAll(".p-details .btn, .add-to-cart")
-            ).find(function (b) {
-              return /add\s*to\s*cart/i.test(b.textContent || "");
-            });
-            if (addBtn) addBtn.disabled = false;
+      // Render buttons unless instant sizes were already painted and we're not forcing repaint
+      if (!(skipSizeRepaint && !force)) {
+        grid.innerHTML = "";
+        values.forEach((val) => {
+          const meta = bySize.get(val) || {};
+          const btn = document.createElement("button");
+          btn.className = "size";
+          btn.textContent = val;
+          // attach variant id on the button for robust fallback
+          if (meta && meta.id) btn.dataset.variantId = String(meta.id);
+          const disabled =
+            meta.available === false ||
+            (typeof meta.qty === "number" && meta.qty <= 0);
+          if (disabled) {
+            btn.setAttribute("disabled", "true");
+            btn.style.opacity = "0.5";
+            btn.style.cursor = "not-allowed";
           }
-        });
-        grid.appendChild(btn);
-      });
-
-      // Default preselect saved or first available (do not override if already selected)
-      if (!grid.querySelector('.size[aria-pressed="true"]')) {
-        let toSelect = null;
-        if (saved) {
-          toSelect = Array.from(grid.querySelectorAll(".size")).find(function (
-            b
-          ) {
-            return (
-              (b.textContent || "").trim().startsWith(saved) && !b.disabled
-            );
+          if (!disabled && typeof meta.qty === "number" && meta.qty <= 3) {
+            const low = document.createElement("span");
+            low.textContent = "  Low stock";
+            low.style.fontSize = "11px";
+            low.style.color = "#c20";
+            btn.appendChild(low);
+          }
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            if (btn.disabled) return;
+            // toggle selected state
+            Array.from(
+              grid.querySelectorAll('.size[aria-pressed="true"]')
+            ).forEach(function (b) {
+              b.setAttribute("aria-pressed", "false");
+            });
+            btn.setAttribute("aria-pressed", "true");
+            // persist + store variant id
+            const meta2 = bySize.get(val) || {};
+            if (meta2.id && hidden) {
+              hidden.value = meta2.id;
+              if (typeof hiddenLegacy !== "undefined" && hiddenLegacy) {
+                hiddenLegacy.value = meta2.id;
+              }
+              btn.dataset.variantId = String(meta2.id);
+              try {
+                localStorage.setItem("pdp:lastSize:" + handle, val);
+              } catch (e) {}
+              // enable Add to Cart
+              var addBtn = Array.from(
+                document.querySelectorAll(".p-details .btn, .add-to-cart")
+              ).find(function (b) {
+                return /add\s*to\s*cart/i.test(b.textContent || "");
+              });
+              if (addBtn) addBtn.disabled = false;
+            }
           });
+          grid.appendChild(btn);
+        });
+
+        // Default preselect saved or first available (do not override if already selected)
+        if (!grid.querySelector('.size[aria-pressed="true"]')) {
+          let toSelect = null;
+          if (saved) {
+            toSelect = Array.from(grid.querySelectorAll(".size")).find(
+              function (b) {
+                return (
+                  (b.textContent || "").trim().startsWith(saved) && !b.disabled
+                );
+              }
+            );
+          }
+          if (!toSelect) toSelect = grid.querySelector(".size:not([disabled])");
+          if (toSelect) toSelect.click();
         }
-        if (!toSelect) toSelect = grid.querySelector(".size:not([disabled])");
-        if (toSelect) toSelect.click();
       }
     };
 
