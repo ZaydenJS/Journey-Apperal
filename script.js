@@ -1595,7 +1595,7 @@
                     Date.now()
                 )
                   .then(function (r) {
-                    return r.ok ? r.json() : null;
+                    return r && r.ok ? r.json() : null;
                   })
                   .then(function (res) {
                     var p = res && res.product;
@@ -1603,10 +1603,85 @@
                       try {
                         setupColorSwatches(p);
                       } catch (_) {}
-                    } else {
-                      if (row) row.style.display = "none";
-                      cont.style.display = "none";
+                      return;
                     }
+                    // Fallback to Shopify product.js if Netlify function is unavailable
+                    return fetch(
+                      "/products/" +
+                        encodeURIComponent(__handle) +
+                        ".js?ts=" +
+                        Date.now()
+                    )
+                      .then(function (r2) {
+                        return r2 && r2.ok ? r2.json() : null;
+                      })
+                      .then(function (pj) {
+                        if (!pj) throw new Error("no product.js");
+                        var optNames = Array.isArray(pj.options)
+                          ? pj.options
+                          : [];
+                        var options = optNames.map(function (name, idx) {
+                          var set = new Set();
+                          (pj.variants || []).forEach(function (v) {
+                            var val =
+                              v["option" + (idx + 1)] ||
+                              (Array.isArray(v.options)
+                                ? v.options[idx]
+                                : undefined);
+                            if (val != null) {
+                              var t = String(val).trim();
+                              if (t) set.add(t);
+                            }
+                          });
+                          return {
+                            id: name,
+                            name: name,
+                            values: Array.from(set),
+                          };
+                        });
+                        var variants = (pj.variants || []).map(function (v) {
+                          var selectedOptions = optNames
+                            .map(function (name, idx) {
+                              var value =
+                                v["option" + (idx + 1)] ||
+                                (Array.isArray(v.options)
+                                  ? v.options[idx]
+                                  : "");
+                              return { name: name, value: value };
+                            })
+                            .filter(function (o) {
+                              return (
+                                o.value != null && String(o.value).trim() !== ""
+                              );
+                            });
+                          var img = v.featured_image || v.image || null;
+                          var image = img
+                            ? {
+                                id: img.id || img.src || "",
+                                url: img.src || img.url || "",
+                                altText: img.alt || "",
+                              }
+                            : null;
+                          return {
+                            id: String(v.id || ""),
+                            title: v.title || "",
+                            availableForSale: v.available !== false,
+                            selectedOptions: selectedOptions,
+                            image: image,
+                          };
+                        });
+                        var pn = {
+                          id: String(pj.id || ""),
+                          handle: pj.handle || __handle,
+                          title: pj.title,
+                          images: [],
+                          variants: variants,
+                          options: options,
+                        };
+                        try {
+                          setupColorSwatches(pn);
+                        } catch (_) {}
+                      });
                   })
                   .catch(function () {
                     if (row) row.style.display = "none";
@@ -1739,10 +1814,93 @@
         if (toSelect) toSelect.click();
       }
 
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      const product =
-        data && (data.product || data.product === null ? data.product : null);
+      // Robust product fetch with Shopify fallback when Netlify functions are unavailable
+      let product = null;
+      try {
+        if (resp && resp.ok) {
+          const data = await resp.json();
+          product =
+            data &&
+            (data.product || data.product === null ? data.product : null);
+        }
+      } catch (_) {}
+
+      // Fallback: use Shopify's built-in product JSON endpoint when needed
+      if (!product || !Array.isArray(product.variants)) {
+        try {
+          const r2 = await fetch(
+            `/products/${encodeURIComponent(handle)}.js?ts=${Date.now()}`
+          );
+          if (r2 && r2.ok) {
+            const pj = await r2.json();
+            const optNames = Array.isArray(pj.options) ? pj.options : [];
+            const options = optNames.map((name, idx) => {
+              const set = new Set();
+              (pj.variants || []).forEach((v) => {
+                const val =
+                  v[`option${idx + 1}`] ||
+                  (Array.isArray(v.options) ? v.options[idx] : undefined);
+                if (val != null) {
+                  const t = String(val).trim();
+                  if (t) set.add(t);
+                }
+              });
+              return { id: name, name, values: Array.from(set) };
+            });
+            const variants = (pj.variants || []).map((v) => {
+              const selectedOptions = optNames
+                .map((name, idx) => {
+                  const value =
+                    v[`option${idx + 1}`] ||
+                    (Array.isArray(v.options) ? v.options[idx] : "");
+                  return { name, value };
+                })
+                .filter(
+                  (o) => o.value != null && String(o.value).trim() !== ""
+                );
+              const img = v.featured_image || v.image || null;
+              const image = img
+                ? {
+                    id: img.id || img.src || "",
+                    url: img.src || img.url || "",
+                    altText: img.alt || "",
+                    width: img.width,
+                    height: img.height,
+                  }
+                : null;
+              return {
+                id: String(v.id || ""),
+                title: v.title || "",
+                availableForSale: v.available !== false,
+                selectedOptions,
+                image,
+              };
+            });
+            const images = (pj.images || []).map((img) => {
+              const url =
+                typeof img === "string" ? img : img?.src || img?.url || "";
+              const altText =
+                typeof img === "object" ? img.alt || img.altText || "" : "";
+              return {
+                id: url,
+                url,
+                altText,
+                width: img?.width,
+                height: img?.height,
+              };
+            });
+            product = {
+              id: String(pj.id || ""),
+              handle: pj.handle || handle,
+              title: pj.title,
+              images,
+              variants,
+              options,
+            };
+          }
+        } catch (_) {}
+      }
+
       if (!product || !Array.isArray(product.variants))
         throw new Error("No product/variant data");
       const payload = {
