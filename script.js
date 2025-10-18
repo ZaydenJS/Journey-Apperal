@@ -1517,20 +1517,105 @@
           if (colorOpt && Array.isArray(colorOpt.values)) {
             var s = new Set();
             colorOpt.values.forEach(function (v) {
-              if (v) s.add(String(v));
+              if (v != null) {
+                var t = String(v).trim();
+                if (t) s.add(t);
+              }
             });
             colors = Array.from(s);
           } else {
             var set = new Set();
             (product.variants || []).forEach(function (v) {
               var col = findColorValue(v.selectedOptions || []);
-              if (col) set.add(col);
+              if (col) {
+                var t = String(col).trim();
+                if (t) set.add(t);
+              }
             });
             colors = Array.from(set);
           }
         } catch (_) {}
 
+        // Tertiary fallback: derive best option by uniqueness across variants
+        if (!colors.length && Array.isArray(product.variants)) {
+          try {
+            var nameToSet = {};
+            (product.variants || []).forEach(function (v) {
+              (v.selectedOptions || []).forEach(function (o) {
+                var name = String(o.name || "").trim();
+                var val = String(o.value || "").trim();
+                if (!name || !val) return;
+                if (!nameToSet[name]) nameToSet[name] = new Set();
+                nameToSet[name].add(val);
+              });
+            });
+            var best = null;
+            var bestScore = -1;
+            Object.keys(nameToSet).forEach(function (name) {
+              var vals = Array.from(nameToSet[name]);
+              var nonSize = vals.filter(function (v) {
+                return !__isLikelySizeValue(v);
+              }).length;
+              var score = nonSize; // prefer more non-size uniques
+              if (__isColorOptionName(name)) score += 100; // strong boost for color-like names
+              if (!__isSizeOptionName(name) && score > bestScore) {
+                bestScore = score;
+                best = { name: name, vals: vals };
+              }
+            });
+            if (best && best.vals && best.vals.length) {
+              colors = best.vals;
+            }
+          } catch (_) {}
+        }
+
         if (!colors.length) {
+          // Attempt a one-time live refetch in case caches lacked options
+          try {
+            if (!cont.dataset.refetched) {
+              cont.dataset.refetched = "1";
+              var __handle = (function () {
+                try {
+                  var p = new URLSearchParams(location.search).get("slug");
+                  if (p) return p;
+                } catch (_) {}
+                var last = (location.pathname || "")
+                  .split("/")
+                  .filter(Boolean)
+                  .pop();
+                return last && last !== "product.html"
+                  ? last
+                  : (product && product.handle) || "";
+              })();
+              if (__handle) {
+                fetch(
+                  "/.netlify/functions/getProduct?handle=" +
+                    encodeURIComponent(__handle) +
+                    "&ts=" +
+                    Date.now()
+                )
+                  .then(function (r) {
+                    return r.ok ? r.json() : null;
+                  })
+                  .then(function (res) {
+                    var p = res && res.product;
+                    if (p) {
+                      try {
+                        setupColorSwatches(p);
+                      } catch (_) {}
+                    } else {
+                      if (row) row.style.display = "none";
+                      cont.style.display = "none";
+                    }
+                  })
+                  .catch(function () {
+                    if (row) row.style.display = "none";
+                    cont.style.display = "none";
+                  });
+                return;
+              }
+            }
+          } catch (_) {}
           if (row) row.style.display = "none";
           cont.style.display = "none";
           return;
