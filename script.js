@@ -1297,18 +1297,64 @@
           if (!full || !full.images || !full.images.length) return;
 
           function colorLowerFromOpts(opts) {
-            const c = (opts || []).find((o) => {
-              const n = String(o.name || "")
+            // Prefer explicit color-like names, else pick first non-size-looking option
+            const __normName = (n) =>
+              String(n || "")
                 .toLowerCase()
-                .replace(/\s+/g, "");
+                .replace(/\s+/g, "")
+                .replace(/[^a-z0-9]/g, "");
+            const __isColorOptionName = (name) => {
+              const n = __normName(name);
               return (
-                n === "color" ||
-                n === "colour" ||
-                n === "colorway" ||
-                n === "colourway"
+                n.includes("color") ||
+                n.includes("colour") ||
+                n.includes("colorway") ||
+                n.includes("colourway") ||
+                n === "shade" ||
+                n === "wash" ||
+                n.includes("hue") ||
+                n.includes("tone")
               );
-            });
-            return c && c.value ? String(c.value).toLowerCase() : "";
+            };
+            const __isSizeOptionName = (name) => {
+              const n = __normName(name);
+              return (
+                n.includes("size") ||
+                n.includes("length") ||
+                n.includes("inseam")
+              );
+            };
+            const __isLikelySizeValue = (val) => {
+              const v = String(val || "").toLowerCase();
+              const sizeTokens = [
+                "xxs",
+                "xs",
+                "s",
+                "m",
+                "l",
+                "xl",
+                "xxl",
+                "xxxl",
+                "2xl",
+                "3xl",
+                "4xl",
+                "one size",
+                "onesize",
+                "os",
+              ];
+              if (sizeTokens.includes(v)) return true;
+              if (/^\d{2}([\./-]\d+)?$/.test(v)) return true;
+              return false;
+            };
+            const c = (opts || []).find((o) => __isColorOptionName(o.name));
+            if (c && c.value) return String(c.value).toLowerCase();
+            const any = (opts || []).find(
+              (o) =>
+                !__isSizeOptionName(o.name) &&
+                o.value &&
+                !__isLikelySizeValue(o.value)
+            );
+            return any && any.value ? String(any.value).toLowerCase() : "";
           }
 
           // Build prioritized image list for this color
@@ -1384,35 +1430,90 @@
         var row = document.getElementById("color-option");
         if (!cont) return;
 
+        // Helpers to robustly identify color option and values across stores
+        function __normName(n) {
+          return String(n || "")
+            .toLowerCase()
+            .replace(/\s+/g, "")
+            .replace(/[^a-z0-9]/g, "");
+        }
+        function __isColorOptionName(name) {
+          var n = __normName(name);
+          return (
+            n.includes("color") ||
+            n.includes("colour") ||
+            n.includes("colorway") ||
+            n.includes("colourway") ||
+            n === "shade" ||
+            n === "wash" ||
+            n.includes("hue") ||
+            n.includes("tone")
+          );
+        }
+        function __isSizeOptionName(name) {
+          var n = __normName(name);
+          return (
+            n.includes("size") || n.includes("length") || n.includes("inseam")
+          );
+        }
+        function __isLikelySizeValue(val) {
+          var v = String(val || "").toLowerCase();
+          var sizeTokens = [
+            "xxs",
+            "xs",
+            "s",
+            "m",
+            "l",
+            "xl",
+            "xxl",
+            "xxxl",
+            "2xl",
+            "3xl",
+            "4xl",
+            "one size",
+            "onesize",
+            "os",
+          ];
+          if (sizeTokens.includes(v)) return true;
+          if (/^\d{2}([\./-]\d+)?$/.test(v)) return true; // 28, 30, 32 or 30/32
+          return false;
+        }
+
         function findColorValue(opts) {
+          // Prefer explicit color-like option names
           var c = (opts || []).find(function (o) {
-            var n = String(o.name || "")
-              .toLowerCase()
-              .replace(/\s+/g, "");
+            return __isColorOptionName(o.name);
+          });
+          if (c && c.value) return String(c.value);
+          // Fallback: choose the first option that does not look like size
+          var any = (opts || []).find(function (o) {
             return (
-              n === "color" ||
-              n === "colour" ||
-              n === "colorway" ||
-              n === "colourway"
+              !__isSizeOptionName(o.name) &&
+              o.value &&
+              !__isLikelySizeValue(o.value)
             );
           });
-          return c && c.value ? String(c.value) : "";
+          return any && any.value ? String(any.value) : "";
         }
 
         // Build unique color list
         var colors = [];
         try {
           var colorOpt = (product.options || []).find(function (o) {
-            var n = String(o.name || "")
-              .toLowerCase()
-              .replace(/\s+/g, "");
-            return (
-              n === "color" ||
-              n === "colour" ||
-              n === "colorway" ||
-              n === "colourway"
-            );
+            return __isColorOptionName(o.name);
           });
+          if (!colorOpt) {
+            // Heuristic: pick first non-size option whose values don't look like sizes
+            colorOpt = (product.options || []).find(function (o) {
+              if (__isSizeOptionName(o.name)) return false;
+              var vals = Array.isArray(o.values) ? o.values : [];
+              if (!vals.length) return false;
+              var nonSizeCount = vals.filter(function (v) {
+                return !__isLikelySizeValue(v);
+              }).length;
+              return nonSizeCount >= Math.ceil(vals.length / 2);
+            });
+          }
           if (colorOpt && Array.isArray(colorOpt.values)) {
             var s = new Set();
             colorOpt.values.forEach(function (v) {
