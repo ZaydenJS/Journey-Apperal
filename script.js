@@ -1044,17 +1044,61 @@
               "aria-pressed",
               String(val) === String(selectedColour) ? "true" : "false"
             );
-            btn.textContent = val;
+            const cssColor = (function (raw) {
+              const t = String(raw || "")
+                .trim()
+                .toLowerCase();
+              const map = {
+                black: "#000000",
+                white: "#ffffff",
+                blue: "#0000ff",
+                navy: "#001f3f",
+                sky: "#87ceeb",
+                skyblue: "#87ceeb",
+                red: "#ff0000",
+                burgundy: "#800020",
+                maroon: "#800000",
+                green: "#008000",
+                forest: "#0b3d0b",
+                olive: "#808000",
+                sage: "#b2ac88",
+                yellow: "#ffff00",
+                orange: "#ffa500",
+                tan: "#d2b48c",
+                khaki: "#c3b091",
+                sand: "#c2b280",
+                ecru: "#c2b280",
+                cream: "#f5f5dc",
+                beige: "#f5f5dc",
+                brown: "#8b4513",
+                grey: "#808080",
+                gray: "#808080",
+                charcoal: "#333333",
+                silver: "#c0c0c0",
+                gold: "#d4af37",
+                purple: "#800080",
+                lilac: "#c8a2c8",
+                pink: "#ffc0cb",
+              };
+              if (map[t]) return map[t];
+              if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(t)) return t;
+              const probe = document.createElement("span").style;
+              probe.color = "";
+              probe.color = t;
+              return probe.color ? t : "";
+            })(val);
+            btn.textContent = "";
+            btn.setAttribute("aria-label", val);
+            btn.title = val;
             btn.style.width = "28px";
             btn.style.height = "28px";
             btn.style.borderRadius = "50%";
-            btn.style.border = "1px solid #ccc";
-            btn.style.background = "#fff";
-            btn.style.fontSize = "10px";
-            btn.style.lineHeight = "1";
-            btn.style.display = "inline-flex";
-            btn.style.alignItems = "center";
-            btn.style.justifyContent = "center";
+            btn.style.border =
+              String(val) === String(selectedColour)
+                ? "2px solid #111"
+                : "1px solid #ccc";
+            btn.style.background = cssColor || "#f0f0f0";
+            btn.style.display = "inline-block";
             btn.style.cursor = "pointer";
             btn.style.userSelect = "none";
             btn.style.padding = "0";
@@ -1062,9 +1106,13 @@
             btn.addEventListener("click", (e) => {
               e.preventDefault();
               Array.from(
-                swatches.querySelectorAll('.swatch[aria-pressed="true"]')
-              ).forEach((b) => b.setAttribute("aria-pressed", "false"));
+                swatches.querySelectorAll(".swatch[aria-pressed]")
+              ).forEach((b) => {
+                b.setAttribute("aria-pressed", "false");
+                b.style.border = "1px solid #ccc";
+              });
               btn.setAttribute("aria-pressed", "true");
+              btn.style.border = "2px solid #111";
               try {
                 localStorage.setItem("pdp:lastColour:" + handle, val);
               } catch (_) {}
