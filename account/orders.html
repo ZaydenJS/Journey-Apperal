@@ -746,102 +746,13 @@
         JAAccount.guardAuthenticated();
         var list = document.getElementById("orders");
         if (!list) return;
+        list.innerHTML =
+          '<div style="color:#666;text-align:center">Loading your orders…</div>';
 
-        var params = new URLSearchParams(location.search || "");
-        var expectedOrder = params.get("order_number"); // e.g. "#1001" or "1001"
-        var justPlaced = params.get("just_placed") === "1";
-        var start = Date.now();
-        var maxMs = 45000; // keep polling up to 45s right after checkout
-
-        function renderOrders(orders) {
-          list.innerHTML = "";
-          if (!orders || !orders.length) {
-            var empty = document.createElement("div");
-            empty.textContent = "You haven’t placed any orders yet.";
-            empty.style.cssText =
-              "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#666";
-            list.appendChild(empty);
-            return;
-          }
-
-          orders.forEach(function (o) {
-            var total =
-              o.total && typeof o.total.amount !== "undefined" ? o.total : null;
-            var amount = total ? parseFloat(total.amount).toFixed(2) : "-";
-            var currency = total ? total.currencyCode || "" : "";
-            var when = o.date ? new Date(o.date) : null;
-            var dateStr = when ? when.toLocaleDateString() : "";
-            var items = Array.isArray(o.items) ? o.items : [];
-            var itemsCount = items.reduce(function (n, li) {
-              return n + (li.quantity || 0);
-            }, 0);
-
-            var card = document.createElement("article");
-            card.setAttribute("role", "listitem");
-            card.style.cssText =
-              "border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px";
-            var itemsHtml = items
-              .map(function (li) {
-                var t = li && li.title ? li.title : "";
-                var q = li && li.quantity ? li.quantity : 0;
-                var v =
-                  li && li.variant && li.variant.title
-                    ? " — " + li.variant.title
-                    : "";
-                return (
-                  '<div style="color:#444;font-size:13px">' +
-                  t +
-                  v +
-                  " × " +
-                  q +
-                  "</div>"
-                );
-              })
-              .join("");
-            card.innerHTML =
-              '<div style="display:flex;flex-direction:column;gap:4px"><strong style="font-weight:700">Order #' +
-              (o.orderNumber || "") +
-              '</strong><span style="color:#666;font-size:13px">' +
-              dateStr +
-              "</span></div>" +
-              '<div style="color:#111">' +
-              (itemsCount || 0) +
-              " " +
-              (itemsCount === 1 ? "item" : "items") +
-              "</div>" +
-              '<div style="color:#111">' +
-              (total ? "$" + amount + " " + currency : "-") +
-              "</div>" +
-              '<div style="color:#111">' +
-              (o.financialStatus || "-") +
-              " / " +
-              (o.fulfillmentStatus || "-") +
-              "</div>" +
-              '<div style="flex:1 1 100%"></div>' +
-              (itemsHtml
-                ? '<div style="flex:1 1 100%;border-top:1px solid #eee;padding-top:8px;display:flex;flex-direction:column;gap:4px">' +
-                  itemsHtml +
-                  "</div>"
-                : "") +
-              (o.statusUrl
-                ? '<div style="flex:1 1 100%;margin-top:8px"><a href="' +
-                  o.statusUrl +
-                  '" target="_blank" rel="noopener" class="btn secondary" style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;text-decoration:none">View Order</a></div>'
-                : "");
-            list.appendChild(card);
-          });
-        }
-
-        async function fetchOrders() {
-          try {
-            var resp = await fetch(
-              "/.netlify/functions/customerOrders?first=20",
-              {
-                credentials: "same-origin",
-                cache: "no-store",
-                headers: { "Cache-Control": "no-store" },
-              }
-            );
+        fetch("/.netlify/functions/customerOrders?first=20", {
+          credentials: "same-origin",
+        })
+          .then(async function (resp) {
             if (resp.status === 401) {
               location.replace("/account/login.html");
               return null;
@@ -853,45 +764,73 @@
               throw new Error(
                 data.error || data.message || "Failed to load orders"
               );
-            return Array.isArray(data.orders) ? data.orders : [];
-          } catch (err) {
+            return data;
+          })
+          .then(function (data) {
+            if (!data) return;
+            var orders = Array.isArray(data.orders) ? data.orders : [];
+            list.innerHTML = "";
+            if (!orders.length) {
+              var empty = document.createElement("div");
+              empty.innerHTML =
+                "No orders found for your account.<br/>If you checked out as a guest previously, those orders won’t appear here. Please sign in and place your next order to see it here.";
+              empty.style.cssText =
+                "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#666";
+              list.appendChild(empty);
+              return;
+            }
+
+            orders.forEach(function (o) {
+              var total =
+                o.total && typeof o.total.amount !== "undefined"
+                  ? o.total
+                  : null;
+              var amount = total ? parseFloat(total.amount).toFixed(2) : "-";
+              var currency = total ? total.currencyCode || "" : "";
+              var when = o.date ? new Date(o.date) : null;
+              var dateStr = when ? when.toLocaleDateString() : "";
+              var itemsCount = (o.items || []).reduce(function (n, li) {
+                return n + (li.quantity || 0);
+              }, 0);
+
+              var card = document.createElement("article");
+              card.setAttribute("role", "listitem");
+              card.style.cssText =
+                "border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px";
+              card.innerHTML =
+                '<div style="display:flex;flex-direction:column;gap:4px"><strong style="font-weight:700">Order #' +
+                (o.orderNumber || "") +
+                '</strong><span style="color:#666;font-size:13px">' +
+                dateStr +
+                "</span></div>" +
+                '<div style="color:#111">' +
+                (itemsCount || 0) +
+                " " +
+                (itemsCount === 1 ? "item" : "items") +
+                "</div>" +
+                '<div style="color:#111">' +
+                (total ? "$" + amount + " " + currency : "-") +
+                "</div>" +
+                '<div style="color:#111">' +
+                (o.financialStatus || "-") +
+                " / " +
+                (o.fulfillmentStatus || "-") +
+                "</div>" +
+                '<div style="flex:1 1 100%"></div>' +
+                (o.statusUrl
+                  ? '<a href="' +
+                    o.statusUrl +
+                    '" target="_blank" rel="noopener" class="btn secondary" style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;text-decoration:none">View Order</a>'
+                  : '<button disabled style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#f6f6f6;color:#999;cursor:not-allowed">View Order</button>');
+              list.appendChild(card);
+            });
+          })
+          .catch(function (err) {
             list.innerHTML =
               '<div style="color:#c00;text-align:center">Could not load orders: ' +
               (err && err.message ? err.message : "Unknown error") +
               "</div>";
-            return null;
-          }
-        }
-
-        async function loadAndMaybePoll() {
-          if (expectedOrder || justPlaced) {
-            list.innerHTML =
-              '<div style="color:#666;text-align:center">Finalizing your order…</div>';
-          } else {
-            list.innerHTML =
-              '<div style="color:#666;text-align:center">Loading your orders…</div>';
-          }
-          var orders = await fetchOrders();
-          if (!orders) return;
-          var found = expectedOrder
-            ? orders.some(function (o) {
-                var num = String(o.orderNumber || "");
-                var name = String(o.name || "");
-                var want = String(expectedOrder || "").replace(/^#/, "");
-                return num === want || name === expectedOrder;
-              })
-            : orders.length > 0;
-          renderOrders(orders);
-          if (
-            (expectedOrder || justPlaced) &&
-            !found &&
-            Date.now() - start < maxMs
-          ) {
-            setTimeout(loadAndMaybePoll, 2000);
-          }
-        }
-
-        loadAndMaybePoll();
+          });
       })();
     </script>
     <script src="/script.js" defer></script>

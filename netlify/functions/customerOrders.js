@@ -86,24 +86,8 @@ export const handler = async (event) => {
       items: (node.lineItems?.edges || []).map((e) => e.node) || [],
     }));
 
-    const res = createApiResponse(
-      { orders, pageInfo: ordersConn.pageInfo },
-      200
-    );
-    res.headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
-    res.headers["Pragma"] = "no-cache";
-    res.headers["Expires"] = "0";
-    res.headers["Netlify-CDN-Cache-Control"] = "no-store";
-    return res;
+    return createApiResponse({ orders, pageInfo: ordersConn.pageInfo }, 200);
   } catch (err) {
-    const res = createErrorResponse(
-      err.message || "Failed to load orders",
-      500
-    );
-    res.headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
-    res.headers["Pragma"] = "no-cache";
-    res.headers["Expires"] = "0";
-    res.headers["Netlify-CDN-Cache-Control"] = "no-store";
-    return res;
+    return createErrorResponse(err.message || "Failed to load orders", 500);
   }
 };

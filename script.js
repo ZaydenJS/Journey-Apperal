@@ -6603,18 +6603,11 @@
           checkout.style.cursor = "pointer";
           checkout.setAttribute("type", "button");
 
-          // Proceed to Checkout via Shopify Cart Permalink (client-only)
+          // Proceed to Checkout. Prefer Cart API (attaches buyer identity) with permalink fallback
           if (!checkout.dataset.clickBound) {
-            checkout.addEventListener("click", function (e) {
+            checkout.addEventListener("click", async function (e) {
               e.preventDefault();
               try {
-                if (typeof window.buildCheckoutUrl === "function") {
-                  const direct = window.buildCheckoutUrl();
-                  if (direct) {
-                    window.location.href = direct;
-                    return;
-                  }
-                }
                 const CP = window.CartPermalink || {};
                 const getLines =
                   typeof CP.getLines === "function"
@@ -6628,6 +6621,45 @@
                           return [];
                         }
                       };
+
+                const lines = (getLines() || []).filter(
+                  (l) => Number(l?.quantity) > 0
+                );
+                if (!lines.length) {
+                  alert("Your cart is empty.");
+                  return;
+                }
+
+                // Try serverless Cart API to ensure orders link to the logged-in customer
+                try {
+                  const resp = await fetch("/.netlify/functions/cartCreate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "same-origin",
+                    body: JSON.stringify({ lines }),
+                  });
+                  if (resp.ok) {
+                    const data = await resp.json();
+                    if (data && data.cart && data.cart.checkoutUrl) {
+                      try {
+                        localStorage.setItem("ja_cart_id", data.cart.id || "");
+                      } catch (_) {}
+                      window.location.href = data.cart.checkoutUrl;
+                      return;
+                    }
+                  }
+                } catch (_) {}
+
+                // Fallback 1: direct builder
+                if (typeof window.buildCheckoutUrl === "function") {
+                  const direct = window.buildCheckoutUrl();
+                  if (direct) {
+                    window.location.href = direct;
+                    return;
+                  }
+                }
+
+                // Fallback 2: cart permalink
                 const build =
                   typeof CP.buildCartPermalink === "function"
                     ? CP.buildCartPermalink
@@ -6672,13 +6704,8 @@
                         } catch (_) {}
                         return url;
                       };
-                const lines = getLines() || [];
-                const nonEmpty = lines.filter((l) => Number(l?.quantity) > 0);
-                if (!nonEmpty.length) {
-                  alert("Your cart is empty.");
-                  return;
-                }
-                const url = build(nonEmpty);
+
+                const url = build(lines);
                 if (!url) {
                   alert("Checkout is unavailable. Please try again.");
                   return;
