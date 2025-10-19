@@ -1,9 +1,16 @@
-import { createShopifyClient, handleGraphQLResponse, createApiResponse, createErrorResponse } from "./utils/shopify.js";
+import {
+  createShopifyClient,
+  handleGraphQLResponse,
+  createApiResponse,
+  createErrorResponse,
+} from "./utils/shopify.js";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
   const parts = String(cookieHeader).split(/;\s*/);
-  for (const p of parts) if (p.startsWith("ja_customer_token=")) return decodeURIComponent(p.split("=")[1] || "");
+  for (const p of parts)
+    if (p.startsWith("ja_customer_token="))
+      return decodeURIComponent(p.split("=")[1] || "");
   return null;
 }
 
@@ -11,7 +18,8 @@ function normalizeOrders(edges) {
   const arr = Array.isArray(edges) ? edges : [];
   return arr.map(({ node }) => {
     const n = node || {};
-    const total = n.totalPriceSet?.presentmentMoney || n.totalPriceSet?.shopMoney || null;
+    const total =
+      n.totalPriceSet?.presentmentMoney || n.totalPriceSet?.shopMoney || null;
     return {
       id: n.id,
       name: n.name,
@@ -28,21 +36,32 @@ function normalizeOrders(edges) {
 
 export const handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return createApiResponse({}, 200);
-  if (event.httpMethod !== "GET") return createErrorResponse("Method not allowed", 405);
+  if (event.httpMethod !== "GET")
+    return createErrorResponse("Method not allowed", 405);
 
-  const token = getTokenFromCookie(event.headers.cookie || event.headers.Cookie);
+  const token = getTokenFromCookie(
+    event.headers.cookie || event.headers.Cookie
+  );
   if (!token) return createErrorResponse("Unauthorized", 401);
 
   const params = event.queryStringParameters || {};
-  const limit = Math.max(1, Math.min(50, parseInt(params.limit || params.first || "10", 10)));
+  const limit = Math.max(
+    1,
+    Math.min(50, parseInt(params.limit || params.first || "10", 10))
+  );
   const debug = String(params.debug || "").trim() === "1";
 
-  const mode = (process.env.SHOPIFY_CUSTOMER_ACCOUNTS_MODE || "classic").toLowerCase();
+  const mode = (
+    process.env.SHOPIFY_CUSTOMER_ACCOUNTS_MODE || "classic"
+  ).toLowerCase();
 
   try {
     if (mode !== "classic") {
       // Placeholder: for New Customer Accounts, use Customer Account API with OAuth and tokens scoped per customer
-      return createErrorResponse("Orders endpoint not implemented for new customer accounts. Set SHOPIFY_CUSTOMER_ACCOUNTS_MODE=classic or enable Customer Account API OAuth.", 501);
+      return createErrorResponse(
+        "Orders endpoint not implemented for new customer accounts. Set SHOPIFY_CUSTOMER_ACCOUNTS_MODE=classic or enable Customer Account API OAuth.",
+        501
+      );
     }
 
     const client = createShopifyClient();
@@ -51,7 +70,7 @@ export const handler = async (event) => {
         customer(customerAccessToken: $token) {
           id
           email
-          orders(first: $first, reverse: true) {
+          orders(first: $first, sortKey: PROCESSED_AT, reverse: true) {
             edges {
               node {
                 id
@@ -76,7 +95,9 @@ export const handler = async (event) => {
       }
     `;
 
-    const resp = await client.request(query, { variables: { token, first: limit } });
+    const resp = await client.request(query, {
+      variables: { token, first: limit },
+    });
     const data = handleGraphQLResponse(resp);
     const customer = data.customer || null;
     const ordersConn = customer?.orders || null;
@@ -99,14 +120,24 @@ export const handler = async (event) => {
       });
     } catch (_) {}
 
-    const payload = { orders, pageInfo: ordersConn ? ordersConn.pageInfo : null };
-    if (debug) payload.__debug = { customer: { id: customer?.id || null, email: customer?.email || null }, mode };
+    const payload = {
+      orders,
+      pageInfo: ordersConn ? ordersConn.pageInfo : null,
+    };
+    if (debug)
+      payload.__debug = {
+        customer: { id: customer?.id || null, email: customer?.email || null },
+        mode,
+      };
 
     return createApiResponse(payload, 200);
   } catch (err) {
-    try { console.error("ordersIndex error:", err?.message || err); } catch (_) {}
-    const status = /Unauthorized|token/i.test(String(err?.message || "")) ? 401 : 500;
+    try {
+      console.error("ordersIndex error:", err?.message || err);
+    } catch (_) {}
+    const status = /Unauthorized|token/i.test(String(err?.message || ""))
+      ? 401
+      : 500;
     return createErrorResponse(err.message || "Failed to load orders", status);
   }
 };
-

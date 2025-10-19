@@ -837,10 +837,10 @@
             renderOrders(Array.isArray(data.orders) ? data.orders : []);
             if (
               (Array.isArray(data.orders) ? data.orders.length : 0) === 0 &&
-              attempt < 3
+              attempt < 6
             ) {
-              // Light retry: Shopify can take a moment to surface new orders via API
-              setTimeout(() => loadOrders(attempt + 1), 4000);
+              // Short polling: retry quickly so fresh post-checkout orders appear
+              setTimeout(() => loadOrders(attempt + 1), 2000);
             }
           } catch (err) {
             console.error("[orders] load error:", err);
