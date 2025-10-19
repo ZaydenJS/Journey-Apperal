@@ -16,31 +16,9 @@ function getTokenFromCookie(cookieHeader) {
   return null;
 }
 
-function makeDomainAttr(host) {
-  try {
-    const h = String(host || "")
-      .split(":")[0]
-      .toLowerCase();
-    if (!h) return "";
-    if (h === "journeys.para.com" || h.endsWith(".journeys.para.com"))
-      return "Domain=.journeys.para.com; ";
-    if (h === "journeysapparel.com" || h.endsWith(".journeysapparel.com"))
-      return "Domain=.journeysapparel.com; ";
-    const parts = h.split(".");
-    if (parts.length >= 2) {
-      const base = parts.slice(-2).join(".");
-      return `Domain=.${base}; `;
-    }
-    return "";
-  } catch (_) {
-    return "";
-  }
-}
-
-const clearCookieHeader = (host) => {
+const clearCookieHeader = () => {
   const expires = new Date(0).toUTCString();
-  const domainAttr = makeDomainAttr(host);
-  return `ja_customer_token=; ${domainAttr}Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+  return `ja_customer_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
 };
 
 export const handler = async (event) => {
@@ -79,18 +57,14 @@ export const handler = async (event) => {
 
     if (!customer) {
       const res = createErrorResponse("Unauthorized", 401);
-      res.headers["Set-Cookie"] = clearCookieHeader(
-        event.headers.host || event.headers.Host
-      );
+      res.headers["Set-Cookie"] = clearCookieHeader();
       return res;
     }
 
     return createApiResponse({ customer }, 200);
   } catch (err) {
     const res = createErrorResponse("Unauthorized", 401);
-    res.headers["Set-Cookie"] = clearCookieHeader(
-      event.headers.host || event.headers.Host
-    );
+    res.headers["Set-Cookie"] = clearCookieHeader();
     return res;
   }
 };

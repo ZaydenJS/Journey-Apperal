@@ -760,12 +760,6 @@
             var data = await resp.json().catch(function () {
               return {};
             });
-            if (resp.status === 403) {
-              throw new Error(
-                data.error ||
-                  "Storefront API missing permission to read customer orders. Please enable it in the app's Storefront API access."
-              );
-            }
             if (!resp.ok)
               throw new Error(
                 data.error || data.message || "Failed to load orders"
@@ -778,8 +772,7 @@
             list.innerHTML = "";
             if (!orders.length) {
               var empty = document.createElement("div");
-              empty.innerHTML =
-                "No orders found for your account.<br/>If you checked out as a guest previously, those orders won’t appear here. Please sign in and place your next order to see it here.";
+              empty.textContent = "You haven’t placed any orders yet.";
               empty.style.cssText =
                 "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#666";
               list.appendChild(empty);

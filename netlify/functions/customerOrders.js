@@ -68,25 +68,8 @@ export const handler = async (event) => {
       variables: { token, first, after },
     });
     const data = handleGraphQLResponse(resp);
-    if (!data || !data.customer) {
-      // Token valid earlier might have expired or belongs to a different shop
-      return createErrorResponse("Unauthorized", 401);
-    }
-    const ordersConn = data.customer.orders;
-    if (!ordersConn) {
-      return createApiResponse(
-        {
-          orders: [],
-          pageInfo: {
-            hasNextPage: false,
-            hasPreviousPage: false,
-            startCursor: null,
-            endCursor: null,
-          },
-        },
-        200
-      );
-    }
+    const ordersConn = data.customer?.orders;
+    if (!ordersConn) return createErrorResponse("No orders", 200);
 
     const orders = ordersConn.edges.map(({ node }) => ({
       id: node.id,
@@ -105,16 +88,6 @@ export const handler = async (event) => {
 
     return createApiResponse({ orders, pageInfo: ordersConn.pageInfo }, 200);
   } catch (err) {
-    const msg = String(
-      err && err.message ? err.message : "Failed to load orders"
-    );
-    // Help diagnose missing Storefront API permissions
-    if (/access\s+denied|does\s+not\s+have\s+access|forbidden/i.test(msg)) {
-      return createErrorResponse(
-        "Storefront API lacks permission to read customer orders. Enable 'Read customer orders' on your app's Storefront API access.",
-        403
-      );
-    }
-    return createErrorResponse(msg, 500);
+    return createErrorResponse(err.message || "Failed to load orders", 500);
   }
 };

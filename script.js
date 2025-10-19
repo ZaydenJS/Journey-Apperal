@@ -6603,11 +6603,18 @@
           checkout.style.cursor = "pointer";
           checkout.setAttribute("type", "button");
 
-          // Proceed to Checkout. Prefer Cart API (attaches buyer identity) with permalink fallback
+          // Proceed to Checkout via Shopify Cart Permalink (client-only)
           if (!checkout.dataset.clickBound) {
-            checkout.addEventListener("click", async function (e) {
+            checkout.addEventListener("click", function (e) {
               e.preventDefault();
               try {
+                if (typeof window.buildCheckoutUrl === "function") {
+                  const direct = window.buildCheckoutUrl();
+                  if (direct) {
+                    window.location.href = direct;
+                    return;
+                  }
+                }
                 const CP = window.CartPermalink || {};
                 const getLines =
                   typeof CP.getLines === "function"
@@ -6621,102 +6628,6 @@
                           return [];
                         }
                       };
-
-                const lines = (getLines() || []).filter(
-                  (l) => Number(l?.quantity) > 0
-                );
-                if (!lines.length) {
-                  alert("Your cart is empty.");
-                  return;
-                }
-
-                // Try serverless Cart API to ensure orders link to the logged-in customer
-                try {
-                  const resp = await fetch("/.netlify/functions/cartCreate", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "same-origin",
-                    body: JSON.stringify({ lines }),
-                  });
-                  if (resp.ok) {
-                    const data = await resp.json();
-                    if (data && data.cart && data.cart.checkoutUrl) {
-                      try {
-                        localStorage.setItem("ja_cart_id", data.cart.id || "");
-                      } catch (_) {}
-                      window.location.href = data.cart.checkoutUrl;
-                      return;
-                    }
-                  }
-                } catch (_) {}
-
-                // Fallback 1a: use server-configured Storefront domain for permalink
-                try {
-                  const d = await fetch("/.netlify/functions/storefrontDomain");
-                  if (d && d.ok) {
-                    const dj = await d.json().catch(function () {
-                      return {};
-                    });
-                    var dom = dj && dj.domain ? String(dj.domain) : "";
-                    if (dom) {
-                      try {
-                        dom = dom.replace(/^https?:\/\//i, "");
-                      } catch (_) {}
-                      // Build items string
-                      const gidToNumeric = (gid) => {
-                        if (!gid) return "";
-                        const m = String(gid).match(/ProductVariant\/(\d+)/);
-                        return m ? m[1] : "";
-                      };
-                      const items = (Array.isArray(lines) ? lines : [])
-                        .filter((l) => Number(l?.quantity) > 0)
-                        .map(
-                          (l) =>
-                            `${gidToNumeric(l.variantGid)}:${Math.max(
-                              1,
-                              Number(l.quantity)
-                            )}`
-                        )
-                        .filter((s) => s && !s.startsWith(":"));
-                      if (items.length) {
-                        let url = `https://${dom}/cart/${items.join(",")}`;
-                        try {
-                          const params = new URLSearchParams(
-                            window.location.search || ""
-                          );
-                          const pass = [];
-                          params.forEach((v, k) => {
-                            const kk = String(k);
-                            if (
-                              kk === "discount" ||
-                              kk.toLowerCase().startsWith("utm_")
-                            ) {
-                              pass.push(
-                                `${encodeURIComponent(kk)}=${encodeURIComponent(
-                                  v
-                                )}`
-                              );
-                            }
-                          });
-                          if (pass.length) url += `?${pass.join("&")}`;
-                        } catch (_) {}
-                        window.location.href = url;
-                        return;
-                      }
-                    }
-                  }
-                } catch (_) {}
-
-                // Fallback 1: direct builder
-                if (typeof window.buildCheckoutUrl === "function") {
-                  const direct = window.buildCheckoutUrl();
-                  if (direct) {
-                    window.location.href = direct;
-                    return;
-                  }
-                }
-
-                // Fallback 2: cart permalink
                 const build =
                   typeof CP.buildCartPermalink === "function"
                     ? CP.buildCartPermalink
@@ -6736,25 +6647,9 @@
                               )}`
                           )
                           .filter((s) => s && !s.startsWith(":"));
-                        // Pick checkout subdomain dynamically based on current host
-                        let shopHost = "shop.journeysapparel.com";
-                        try {
-                          const h = String(
-                            window.location.hostname || ""
-                          ).toLowerCase();
-                          if (
-                            h === "journeys.para.com" ||
-                            h.endsWith(".journeys.para.com")
-                          ) {
-                            shopHost = "shop.journeys.para.com";
-                          } else if (
-                            h === "journeysapparel.com" ||
-                            h.endsWith(".journeysapparel.com")
-                          ) {
-                            shopHost = "shop.journeysapparel.com";
-                          }
-                        } catch (_) {}
-                        let url = `https://${shopHost}/cart/${items.join(",")}`;
+                        let url = `https://shop.journeysapparel.com/cart/${items.join(
+                          ","
+                        )}`;
                         try {
                           const params = new URLSearchParams(
                             window.location.search || ""
@@ -6777,8 +6672,13 @@
                         } catch (_) {}
                         return url;
                       };
-
-                const url = build(lines);
+                const lines = getLines() || [];
+                const nonEmpty = lines.filter((l) => Number(l?.quantity) > 0);
+                if (!nonEmpty.length) {
+                  alert("Your cart is empty.");
+                  return;
+                }
+                const url = build(nonEmpty);
                 if (!url) {
                   alert("Checkout is unavailable. Please try again.");
                   return;

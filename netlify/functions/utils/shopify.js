@@ -1,38 +1,23 @@
 import { createStorefrontApiClient } from "@shopify/storefront-api-client";
 
 // Initialize Shopify Storefront API client
-// Prefer PRIVATE Storefront access token on the server (industry standard),
-// fall back to public token if a private one isn't configured.
 export const createShopifyClient = () => {
   const storeDomain =
     process.env.SHOPIFY_STOREFRONT_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
-
-  const privateToken =
-    process.env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN ||
-    process.env.SHOPIFY_STOREFRONT_PRIVATE_ACCESS_TOKEN ||
-    process.env.SHOPIFY_STOREFRONT_PRIVATE_API_TOKEN;
-
-  const publicToken =
+  const storefrontToken =
     process.env.SHOPIFY_STOREFRONT_API_TOKEN ||
     process.env.SHOPIFY_STOREFRONT_TOKEN;
-
   const apiVersion = process.env.SHOPIFY_API_VERSION || "2024-07";
 
-  if (!storeDomain || (!privateToken && !publicToken)) {
-    throw new Error(
-      "Missing required Shopify environment variables (store domain or token)"
-    );
+  if (!storeDomain || !storefrontToken) {
+    throw new Error("Missing required Shopify environment variables");
   }
 
-  const config = {
+  return createStorefrontApiClient({
     storeDomain,
     apiVersion,
-    ...(privateToken
-      ? { privateAccessToken: privateToken }
-      : { publicAccessToken: publicToken }),
-  };
-
-  return createStorefrontApiClient(config);
+    publicAccessToken: storefrontToken,
+  });
 };
 
 // Common GraphQL fragments
@@ -143,7 +128,7 @@ export const COLLECTION_FRAGMENT = `
   }
 `;
 
-// Cart flow note: We are using the Storefront Cart API via serverless functions for checkout creation.
+// CART_FRAGMENT removed: no longer using Cart API. Checkout now uses Shopify cart permalinks.
 
 // Helper function to handle GraphQL errors
 export const handleGraphQLResponse = (response) => {

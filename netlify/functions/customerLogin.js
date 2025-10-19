@@ -5,40 +5,18 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-function makeDomainAttr(host) {
-  try {
-    const h = String(host || "")
-      .split(":")[0]
-      .toLowerCase();
-    if (!h) return "";
-    if (h === "journeys.para.com" || h.endsWith(".journeys.para.com"))
-      return "Domain=.journeys.para.com; ";
-    if (h === "journeysapparel.com" || h.endsWith(".journeysapparel.com"))
-      return "Domain=.journeysapparel.com; ";
-    const parts = h.split(".");
-    if (parts.length >= 2) {
-      const base = parts.slice(-2).join(".");
-      return `Domain=.${base}; `;
-    }
-    return "";
-  } catch (_) {
-    return "";
-  }
-}
-
-function setCookieHeader(token, expiresAt, host) {
-  const domainAttr = makeDomainAttr(host);
+function setCookieHeader(token, expiresAt) {
   try {
     const expires = new Date(expiresAt).toUTCString();
     return `ja_customer_token=${encodeURIComponent(
       token
-    )}; ${domainAttr}Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+    )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
   } catch (_) {
     // Fallback: 24h
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString();
     return `ja_customer_token=${encodeURIComponent(
       token
-    )}; ${domainAttr}Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+    )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
   }
 }
 
@@ -94,11 +72,7 @@ export const handler = async (event) => {
     const customer = meData.customer || null;
 
     const res = createApiResponse({ ok: true, customer }, 200);
-    res.headers["Set-Cookie"] = setCookieHeader(
-      token,
-      expiresAt,
-      event.headers.host || event.headers.Host
-    );
+    res.headers["Set-Cookie"] = setCookieHeader(token, expiresAt);
     return res;
   } catch (err) {
     return createErrorResponse(err.message || "Login failed", 500);
