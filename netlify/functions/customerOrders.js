@@ -105,6 +105,16 @@ export const handler = async (event) => {
 
     return createApiResponse({ orders, pageInfo: ordersConn.pageInfo }, 200);
   } catch (err) {
-    return createErrorResponse(err.message || "Failed to load orders", 500);
+    const msg = String(
+      err && err.message ? err.message : "Failed to load orders"
+    );
+    // Help diagnose missing Storefront API permissions
+    if (/access\s+denied|does\s+not\s+have\s+access|forbidden/i.test(msg)) {
+      return createErrorResponse(
+        "Storefront API lacks permission to read customer orders. Enable 'Read customer orders' on your app's Storefront API access.",
+        403
+      );
+    }
+    return createErrorResponse(msg, 500);
   }
 };

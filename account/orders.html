@@ -760,6 +760,12 @@
             var data = await resp.json().catch(function () {
               return {};
             });
+            if (resp.status === 403) {
+              throw new Error(
+                data.error ||
+                  "Storefront API missing permission to read customer orders. Please enable it in the app's Storefront API access."
+              );
+            }
             if (!resp.ok)
               throw new Error(
                 data.error || data.message || "Failed to load orders"
