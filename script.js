@@ -6646,17 +6646,27 @@
                     discountCode = params.get("discount");
                 } catch (_) {}
 
+                let __checkoutStatus = 0;
                 const resp = await fetch("/.netlify/functions/beginCheckout", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   credentials: "same-origin",
                   body: JSON.stringify({ lines, discountCode }),
                 });
+                __checkoutStatus = resp.status;
                 const data = await resp.json().catch(() => ({}));
                 if (!resp.ok || !data.checkoutUrl) {
-                  throw new Error(
-                    data.error || data.message || "Checkout unavailable"
-                  );
+                  const msg =
+                    data.error || data.message || "Checkout unavailable";
+                  if (__checkoutStatus === 401) {
+                    // Force login when server requires authentication for checkout
+                    location.replace(
+                      "/account/login.html?next=" +
+                        encodeURIComponent(location.pathname + location.search)
+                    );
+                    return;
+                  }
+                  throw new Error(msg);
                 }
 
                 try {
@@ -6695,17 +6705,7 @@
                 window.location.href = finalUrl;
               } catch (err) {
                 console.error("Checkout failed:", err);
-                // Fallback to legacy permalink if available
-                try {
-                  if (typeof window.buildCheckoutUrl === "function") {
-                    const direct = window.buildCheckoutUrl();
-                    if (direct) {
-                      window.location.href = direct;
-                      return;
-                    }
-                  }
-                } catch (_) {}
-                alert("Checkout is unavailable. Please try again.");
+                alert("Checkout is unavailable. Please sign in and try again.");
               } finally {
                 try {
                   checkout.disabled = false;

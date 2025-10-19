@@ -751,7 +751,13 @@
           list.innerHTML = "";
           if (!orders.length) {
             var empty = document.createElement("div");
-            empty.textContent = "You haven’t placed any orders yet.";
+            empty.innerHTML =
+              "<div>You haven’t placed any orders yet.</div>" +
+              '<div style="margin-top:8px;font-size:13px;color:#555">Checked out as a guest? Create an account or sign in with the same email to claim your orders.</div>' +
+              '<div style="margin-top:10px;display:flex;gap:8px;justify-content:center">' +
+              '<a class="btn secondary" href="/account/register.html" style="padding:8px 12px;border:1px solid #e5e5e5;border-radius:8px;text-decoration:none;background:#fff">Create account</a>' +
+              '<a class="btn" href="/account/login.html" style="padding:8px 12px;border:1px solid #111;border-radius:8px;text-decoration:none;background:#111;color:#fff">Sign in</a>' +
+              "</div>";
             empty.style.cssText =
               "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#666";
             list.appendChild(empty);
@@ -808,7 +814,7 @@
             '<div style="color:#666;text-align:center">Loading your orders…</div>';
           try {
             const resp = await fetch(
-              "/.netlify/functions/customerOrders?first=20" +
+              "/.netlify/functions/ordersIndex?limit=10" +
                 (location.search.includes("debug=1") ? "&debug=1" : ""),
               { credentials: "same-origin" }
             );

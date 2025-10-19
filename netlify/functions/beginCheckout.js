@@ -45,6 +45,13 @@ export const handler = async (event) => {
     const token = getTokenFromCookie(
       event.headers.cookie || event.headers.Cookie
     );
+    if (!token) {
+      // Block checkout when not logged in; ensures orders attach to the customer
+      return createErrorResponse(
+        "Unauthorized: Login required to checkout",
+        401
+      );
+    }
 
     const mutation = `
       mutation BeginCheckout($input: CartInput!) {
@@ -106,6 +113,13 @@ export const handler = async (event) => {
         buyerAttached
       );
     } catch (_) {}
+
+    if (!buyerAttached) {
+      return createErrorResponse(
+        "Failed to attach customer to checkout. Please sign in again.",
+        401
+      );
+    }
 
     return createApiResponse(
       { ok: true, cart: data.cart, checkoutUrl, buyerAttached },
