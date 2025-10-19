@@ -32,12 +32,15 @@ export const handler = async (event) => {
   const params = event.queryStringParameters || {};
   const first = Math.max(1, Math.min(50, parseInt(params.first || "20", 10)));
   const after = params.after || null;
+  const debug = String(params.debug || "").trim() === "1";
 
   try {
     const client = createShopifyClient();
     const query = `
       query Orders($token: String!, $first: Int!, $after: String) {
         customer(customerAccessToken: $token) {
+          id
+          email
           orders(first: $first, after: $after, reverse: true) {
             edges {
               cursor
@@ -69,7 +72,18 @@ export const handler = async (event) => {
     });
     const data = handleGraphQLResponse(resp);
     const ordersConn = data.customer?.orders;
-    if (!ordersConn) return createErrorResponse("No orders", 200);
+    if (!ordersConn) {
+      try {
+        console.log(
+          "customerOrders: tokenPresent=",
+          !!token,
+          "customer=",
+          data.customer ? data.customer.email : null,
+          "orders=0 (no conn)"
+        );
+      } catch (_) {}
+      return createErrorResponse("No orders", 200);
+    }
 
     const orders = ordersConn.edges.map(({ node }) => ({
       id: node.id,
@@ -86,8 +100,28 @@ export const handler = async (event) => {
       items: (node.lineItems?.edges || []).map((e) => e.node) || [],
     }));
 
-    return createApiResponse({ orders, pageInfo: ordersConn.pageInfo }, 200);
+    try {
+      console.log(
+        "customerOrders: tokenPresent=",
+        !!token,
+        "orders=",
+        orders.length
+      );
+    } catch (_) {}
+
+    const payload = { orders, pageInfo: ordersConn.pageInfo };
+    if (debug)
+      payload.__debug = {
+        customer: {
+          id: data.customer?.id || null,
+          email: data.customer?.email || null,
+        },
+      };
+    return createApiResponse(payload, 200);
   } catch (err) {
+    try {
+      console.error("customerOrders error:", err?.message || err);
+    } catch (_) {}
     return createErrorResponse(err.message || "Failed to load orders", 500);
   }
 };

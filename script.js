@@ -6659,6 +6659,13 @@
                   );
                 }
 
+                try {
+                  console.log("[checkout] beginCheckout ok", {
+                    buyerAttached: !!data.buyerAttached,
+                    cartId: data.cart && data.cart.id ? data.cart.id : null,
+                  });
+                } catch (_) {}
+
                 // Save cart id for possible follow-up actions
                 try {
                   if (data.cart && data.cart.id)

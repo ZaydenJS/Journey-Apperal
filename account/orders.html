@@ -746,90 +746,106 @@
         JAAccount.guardAuthenticated();
         var list = document.getElementById("orders");
         if (!list) return;
-        list.innerHTML =
-          '<div style="color:#666;text-align:center">Loading your orders…</div>';
 
-        fetch("/.netlify/functions/customerOrders?first=20", {
-          credentials: "same-origin",
-        })
-          .then(async function (resp) {
+        function renderOrders(orders) {
+          list.innerHTML = "";
+          if (!orders.length) {
+            var empty = document.createElement("div");
+            empty.textContent = "You haven’t placed any orders yet.";
+            empty.style.cssText =
+              "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#666";
+            list.appendChild(empty);
+            return;
+          }
+
+          orders.forEach(function (o) {
+            var total =
+              o.total && typeof o.total.amount !== "undefined" ? o.total : null;
+            var amount = total ? parseFloat(total.amount).toFixed(2) : "-";
+            var currency = total ? total.currencyCode || "" : "";
+            var when = o.date ? new Date(o.date) : null;
+            var dateStr = when ? when.toLocaleDateString() : "";
+            var itemsCount = (o.items || []).reduce(function (n, li) {
+              return n + (li.quantity || 0);
+            }, 0);
+
+            var card = document.createElement("article");
+            card.setAttribute("role", "listitem");
+            card.style.cssText =
+              "border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px";
+            card.innerHTML =
+              '<div style="display:flex;flex-direction:column;gap:4px"><strong style="font-weight:700">Order #' +
+              (o.orderNumber || "") +
+              '</strong><span style="color:#666;font-size:13px">' +
+              dateStr +
+              "</span></div>" +
+              '<div style="color:#111">' +
+              (itemsCount || 0) +
+              " " +
+              (itemsCount === 1 ? "item" : "items") +
+              "</div>" +
+              '<div style="color:#111">' +
+              (total ? "$" + amount + " " + currency : "-") +
+              "</div>" +
+              '<div style="color:#111">' +
+              (o.financialStatus || "-") +
+              " / " +
+              (o.fulfillmentStatus || "-") +
+              "</div>" +
+              '<div style="flex:1 1 100%"></div>' +
+              (o.statusUrl
+                ? '<a href="' +
+                  o.statusUrl +
+                  '" target="_blank" rel="noopener" class="btn secondary" style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;text-decoration:none">View Order</a>'
+                : '<button disabled style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#f6f6f6;color:#999;cursor:not-allowed">View Order</button>');
+            list.appendChild(card);
+          });
+        }
+
+        async function loadOrders(attempt) {
+          attempt = attempt || 1;
+          list.innerHTML =
+            '<div style="color:#666;text-align:center">Loading your orders…</div>';
+          try {
+            const resp = await fetch(
+              "/.netlify/functions/customerOrders?first=20" +
+                (location.search.includes("debug=1") ? "&debug=1" : ""),
+              { credentials: "same-origin" }
+            );
             if (resp.status === 401) {
               location.replace("/account/login.html");
-              return null;
+              return;
             }
-            var data = await resp.json().catch(function () {
-              return {};
-            });
+            const data = await resp.json().catch(() => ({}));
             if (!resp.ok)
               throw new Error(
                 data.error || data.message || "Failed to load orders"
               );
-            return data;
-          })
-          .then(function (data) {
-            if (!data) return;
-            var orders = Array.isArray(data.orders) ? data.orders : [];
-            list.innerHTML = "";
-            if (!orders.length) {
-              var empty = document.createElement("div");
-              empty.textContent = "You haven’t placed any orders yet.";
-              empty.style.cssText =
-                "border:1px solid #e5e5e5;border-radius:10px;padding:12px;text-align:center;color:#666";
-              list.appendChild(empty);
-              return;
+            console.log(
+              "[orders] attempt",
+              attempt,
+              "orders:",
+              (data.orders || []).length,
+              data.__debug ? data.__debug : ""
+            );
+            renderOrders(Array.isArray(data.orders) ? data.orders : []);
+            if (
+              (Array.isArray(data.orders) ? data.orders.length : 0) === 0 &&
+              attempt < 3
+            ) {
+              // Light retry: Shopify can take a moment to surface new orders via API
+              setTimeout(() => loadOrders(attempt + 1), 4000);
             }
-
-            orders.forEach(function (o) {
-              var total =
-                o.total && typeof o.total.amount !== "undefined"
-                  ? o.total
-                  : null;
-              var amount = total ? parseFloat(total.amount).toFixed(2) : "-";
-              var currency = total ? total.currencyCode || "" : "";
-              var when = o.date ? new Date(o.date) : null;
-              var dateStr = when ? when.toLocaleDateString() : "";
-              var itemsCount = (o.items || []).reduce(function (n, li) {
-                return n + (li.quantity || 0);
-              }, 0);
-
-              var card = document.createElement("article");
-              card.setAttribute("role", "listitem");
-              card.style.cssText =
-                "border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px";
-              card.innerHTML =
-                '<div style="display:flex;flex-direction:column;gap:4px"><strong style="font-weight:700">Order #' +
-                (o.orderNumber || "") +
-                '</strong><span style="color:#666;font-size:13px">' +
-                dateStr +
-                "</span></div>" +
-                '<div style="color:#111">' +
-                (itemsCount || 0) +
-                " " +
-                (itemsCount === 1 ? "item" : "items") +
-                "</div>" +
-                '<div style="color:#111">' +
-                (total ? "$" + amount + " " + currency : "-") +
-                "</div>" +
-                '<div style="color:#111">' +
-                (o.financialStatus || "-") +
-                " / " +
-                (o.fulfillmentStatus || "-") +
-                "</div>" +
-                '<div style="flex:1 1 100%"></div>' +
-                (o.statusUrl
-                  ? '<a href="' +
-                    o.statusUrl +
-                    '" target="_blank" rel="noopener" class="btn secondary" style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;text-decoration:none">View Order</a>'
-                  : '<button disabled style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#f6f6f6;color:#999;cursor:not-allowed">View Order</button>');
-              list.appendChild(card);
-            });
-          })
-          .catch(function (err) {
+          } catch (err) {
+            console.error("[orders] load error:", err);
             list.innerHTML =
               '<div style="color:#c00;text-align:center">Could not load orders: ' +
               (err && err.message ? err.message : "Unknown error") +
               "</div>";
-          });
+          }
+        }
+
+        loadOrders(1);
       })();
     </script>
     <script src="/script.js" defer></script>
