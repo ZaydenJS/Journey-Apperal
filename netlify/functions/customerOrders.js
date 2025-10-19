@@ -68,8 +68,25 @@ export const handler = async (event) => {
       variables: { token, first, after },
     });
     const data = handleGraphQLResponse(resp);
-    const ordersConn = data.customer?.orders;
-    if (!ordersConn) return createErrorResponse("No orders", 200);
+    if (!data || !data.customer) {
+      // Token valid earlier might have expired or belongs to a different shop
+      return createErrorResponse("Unauthorized", 401);
+    }
+    const ordersConn = data.customer.orders;
+    if (!ordersConn) {
+      return createApiResponse(
+        {
+          orders: [],
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: false,
+            startCursor: null,
+            endCursor: null,
+          },
+        },
+        200
+      );
+    }
 
     const orders = ordersConn.edges.map(({ node }) => ({
       id: node.id,

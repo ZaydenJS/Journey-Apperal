@@ -6650,6 +6650,63 @@
                   }
                 } catch (_) {}
 
+                // Fallback 1a: use server-configured Storefront domain for permalink
+                try {
+                  const d = await fetch("/.netlify/functions/storefrontDomain");
+                  if (d && d.ok) {
+                    const dj = await d.json().catch(function () {
+                      return {};
+                    });
+                    var dom = dj && dj.domain ? String(dj.domain) : "";
+                    if (dom) {
+                      try {
+                        dom = dom.replace(/^https?:\/\//i, "");
+                      } catch (_) {}
+                      // Build items string
+                      const gidToNumeric = (gid) => {
+                        if (!gid) return "";
+                        const m = String(gid).match(/ProductVariant\/(\d+)/);
+                        return m ? m[1] : "";
+                      };
+                      const items = (Array.isArray(lines) ? lines : [])
+                        .filter((l) => Number(l?.quantity) > 0)
+                        .map(
+                          (l) =>
+                            `${gidToNumeric(l.variantGid)}:${Math.max(
+                              1,
+                              Number(l.quantity)
+                            )}`
+                        )
+                        .filter((s) => s && !s.startsWith(":"));
+                      if (items.length) {
+                        let url = `https://${dom}/cart/${items.join(",")}`;
+                        try {
+                          const params = new URLSearchParams(
+                            window.location.search || ""
+                          );
+                          const pass = [];
+                          params.forEach((v, k) => {
+                            const kk = String(k);
+                            if (
+                              kk === "discount" ||
+                              kk.toLowerCase().startsWith("utm_")
+                            ) {
+                              pass.push(
+                                `${encodeURIComponent(kk)}=${encodeURIComponent(
+                                  v
+                                )}`
+                              );
+                            }
+                          });
+                          if (pass.length) url += `?${pass.join("&")}`;
+                        } catch (_) {}
+                        window.location.href = url;
+                        return;
+                      }
+                    }
+                  }
+                } catch (_) {}
+
                 // Fallback 1: direct builder
                 if (typeof window.buildCheckoutUrl === "function") {
                   const direct = window.buildCheckoutUrl();
