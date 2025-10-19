@@ -6603,90 +6603,107 @@
           checkout.style.cursor = "pointer";
           checkout.setAttribute("type", "button");
 
-          // Proceed to Checkout via Shopify Cart Permalink (client-only)
+          // Proceed to Checkout via Netlify (Storefront Cart API + buyer association)
           if (!checkout.dataset.clickBound) {
-            checkout.addEventListener("click", function (e) {
+            checkout.addEventListener("click", async function (e) {
               e.preventDefault();
               try {
-                if (typeof window.buildCheckoutUrl === "function") {
-                  const direct = window.buildCheckoutUrl();
-                  if (direct) {
-                    window.location.href = direct;
-                    return;
-                  }
-                }
-                const CP = window.CartPermalink || {};
-                const getLines =
-                  typeof CP.getLines === "function"
-                    ? CP.getLines
-                    : function () {
-                        try {
-                          return JSON.parse(
-                            localStorage.getItem("ja_cart_lines") || "[]"
-                          );
-                        } catch (_) {
-                          return [];
-                        }
-                      };
-                const build =
-                  typeof CP.buildCartPermalink === "function"
-                    ? CP.buildCartPermalink
-                    : function (lines) {
-                        const gidToNumeric = (gid) => {
-                          if (!gid) return "";
-                          const m = String(gid).match(/ProductVariant\/(\d+)/);
-                          return m ? m[1] : "";
-                        };
-                        const items = (Array.isArray(lines) ? lines : [])
-                          .filter((l) => Number(l?.quantity) > 0)
-                          .map(
-                            (l) =>
-                              `${gidToNumeric(l.variantGid)}:${Math.max(
-                                1,
-                                Number(l.quantity)
-                              )}`
-                          )
-                          .filter((s) => s && !s.startsWith(":"));
-                        let url = `https://shop.journeysapparel.com/cart/${items.join(
-                          ","
-                        )}`;
-                        try {
-                          const params = new URLSearchParams(
-                            window.location.search || ""
-                          );
-                          const pass = [];
-                          params.forEach((v, k) => {
-                            const kk = String(k);
-                            if (
-                              kk === "discount" ||
-                              kk.toLowerCase().startsWith("utm_")
-                            ) {
-                              pass.push(
-                                `${encodeURIComponent(kk)}=${encodeURIComponent(
-                                  v
-                                )}`
-                              );
-                            }
-                          });
-                          if (pass.length) url += `?${pass.join("&")}`;
-                        } catch (_) {}
-                        return url;
-                      };
-                const lines = getLines() || [];
-                const nonEmpty = lines.filter((l) => Number(l?.quantity) > 0);
-                if (!nonEmpty.length) {
+                checkout.disabled = true;
+                checkout.textContent = "Loading checkout…";
+
+                // Build lines from mini-cart items (variantGid + qty)
+                const items =
+                  (window.__cart?.getCart && window.__cart.getCart()) || [];
+                if (!Array.isArray(items) || !items.length) {
                   alert("Your cart is empty.");
+                  checkout.disabled = false;
+                  checkout.textContent = "Proceed to Checkout";
                   return;
                 }
-                const url = build(nonEmpty);
-                if (!url) {
-                  alert("Checkout is unavailable. Please try again.");
-                  return;
+                const byVariant = {};
+                items.forEach((it) => {
+                  if (!it || !it.variantGid) return;
+                  const key = String(it.variantGid);
+                  byVariant[key] =
+                    (byVariant[key] || 0) + Math.max(1, Number(it.qty || 1));
+                });
+                const lines = Object.keys(byVariant).map((gid) => ({
+                  merchandiseId: gid,
+                  quantity: byVariant[gid],
+                }));
+
+                // Optional discount code: localStorage or URL param
+                let discountCode = "";
+                try {
+                  const fromLS = localStorage.getItem("ja_discount");
+                  if (fromLS) discountCode = fromLS;
+                } catch (_) {}
+                try {
+                  const params = new URLSearchParams(
+                    window.location.search || ""
+                  );
+                  if (!discountCode && params.get("discount"))
+                    discountCode = params.get("discount");
+                } catch (_) {}
+
+                const resp = await fetch("/.netlify/functions/beginCheckout", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "same-origin",
+                  body: JSON.stringify({ lines, discountCode }),
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok || !data.checkoutUrl) {
+                  throw new Error(
+                    data.error || data.message || "Checkout unavailable"
+                  );
                 }
-                window.location.href = url;
+
+                // Save cart id for possible follow-up actions
+                try {
+                  if (data.cart && data.cart.id)
+                    localStorage.setItem("ja_cart_id", data.cart.id);
+                } catch (_) {}
+
+                // Append UTM params to checkoutUrl (Shopify will preserve)
+                let finalUrl = String(data.checkoutUrl);
+                try {
+                  const params = new URLSearchParams(
+                    window.location.search || ""
+                  );
+                  const utms = [];
+                  params.forEach((v, k) => {
+                    const kk = String(k);
+                    if (kk.toLowerCase().startsWith("utm_")) {
+                      utms.push(
+                        `${encodeURIComponent(kk)}=${encodeURIComponent(v)}`
+                      );
+                    }
+                  });
+                  if (utms.length)
+                    finalUrl +=
+                      (finalUrl.includes("?") ? "&" : "?") + utms.join("&");
+                } catch (_) {}
+
+                window.location.href = finalUrl;
               } catch (err) {
                 console.error("Checkout failed:", err);
+                // Fallback to legacy permalink if available
+                try {
+                  if (typeof window.buildCheckoutUrl === "function") {
+                    const direct = window.buildCheckoutUrl();
+                    if (direct) {
+                      window.location.href = direct;
+                      return;
+                    }
+                  }
+                } catch (_) {}
                 alert("Checkout is unavailable. Please try again.");
+              } finally {
+                try {
+                  checkout.disabled = false;
+                  checkout.textContent = "Proceed to Checkout";
+                } catch (_) {}
               }
             });
             checkout.dataset.clickBound = "1";
