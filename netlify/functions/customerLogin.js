@@ -1,13 +1,44 @@
-import { createShopifyClient, handleGraphQLResponse, createApiResponse, createErrorResponse } from "./utils/shopify.js";
+import {
+  createShopifyClient,
+  handleGraphQLResponse,
+  createApiResponse,
+  createErrorResponse,
+} from "./utils/shopify.js";
 
-function setCookieHeader(token, expiresAt) {
+function makeDomainAttr(host) {
+  try {
+    const h = String(host || "")
+      .split(":")[0]
+      .toLowerCase();
+    if (!h) return "";
+    if (h === "journeys.para.com" || h.endsWith(".journeys.para.com"))
+      return "Domain=.journeys.para.com; ";
+    if (h === "journeysapparel.com" || h.endsWith(".journeysapparel.com"))
+      return "Domain=.journeysapparel.com; ";
+    const parts = h.split(".");
+    if (parts.length >= 2) {
+      const base = parts.slice(-2).join(".");
+      return `Domain=.${base}; `;
+    }
+    return "";
+  } catch (_) {
+    return "";
+  }
+}
+
+function setCookieHeader(token, expiresAt, host) {
+  const domainAttr = makeDomainAttr(host);
   try {
     const expires = new Date(expiresAt).toUTCString();
-    return `ja_customer_token=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+    return `ja_customer_token=${encodeURIComponent(
+      token
+    )}; ${domainAttr}Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
   } catch (_) {
     // Fallback: 24h
-    const expires = new Date(Date.now() + 24*60*60*1000).toUTCString();
-    return `ja_customer_token=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString();
+    return `ja_customer_token=${encodeURIComponent(
+      token
+    )}; ${domainAttr}Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
   }
 }
 
@@ -22,7 +53,8 @@ export const handler = async (event) => {
   try {
     const body = event.body ? JSON.parse(event.body) : {};
     const { email, password } = body;
-    if (!email || !password) return createErrorResponse("Email and password are required", 400);
+    if (!email || !password)
+      return createErrorResponse("Email and password are required", 400);
 
     const client = createShopifyClient();
 
@@ -35,8 +67,11 @@ export const handler = async (event) => {
       }
     `;
 
-    const tokenResp = await client.request(tokenMutation, { variables: { input: { email, password } } });
-    const tokenData = handleGraphQLResponse(tokenResp).customerAccessTokenCreate;
+    const tokenResp = await client.request(tokenMutation, {
+      variables: { input: { email, password } },
+    });
+    const tokenData =
+      handleGraphQLResponse(tokenResp).customerAccessTokenCreate;
     const errs = tokenData.customerUserErrors || [];
     if (!tokenData.customerAccessToken || errs.length) {
       const msg = errs[0]?.message || "Invalid email or password";
@@ -59,10 +94,13 @@ export const handler = async (event) => {
     const customer = meData.customer || null;
 
     const res = createApiResponse({ ok: true, customer }, 200);
-    res.headers["Set-Cookie"] = setCookieHeader(token, expiresAt);
+    res.headers["Set-Cookie"] = setCookieHeader(
+      token,
+      expiresAt,
+      event.headers.host || event.headers.Host
+    );
     return res;
   } catch (err) {
     return createErrorResponse(err.message || "Login failed", 500);
   }
 };
-

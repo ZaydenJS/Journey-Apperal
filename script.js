@@ -6679,9 +6679,25 @@
                               )}`
                           )
                           .filter((s) => s && !s.startsWith(":"));
-                        let url = `https://shop.journeysapparel.com/cart/${items.join(
-                          ","
-                        )}`;
+                        // Pick checkout subdomain dynamically based on current host
+                        let shopHost = "shop.journeysapparel.com";
+                        try {
+                          const h = String(
+                            window.location.hostname || ""
+                          ).toLowerCase();
+                          if (
+                            h === "journeys.para.com" ||
+                            h.endsWith(".journeys.para.com")
+                          ) {
+                            shopHost = "shop.journeys.para.com";
+                          } else if (
+                            h === "journeysapparel.com" ||
+                            h.endsWith(".journeysapparel.com")
+                          ) {
+                            shopHost = "shop.journeysapparel.com";
+                          }
+                        } catch (_) {}
+                        let url = `https://${shopHost}/cart/${items.join(",")}`;
                         try {
                           const params = new URLSearchParams(
                             window.location.search || ""
