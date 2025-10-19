@@ -1554,24 +1554,6 @@
                       }) || {}
                     ).value
                   : "") || "";
-              const colour =
-                (selectedVariant &&
-                Array.isArray(selectedVariant.selectedOptions)
-                  ? (
-                      selectedVariant.selectedOptions.find(function (o) {
-                        var n = String(o.name || "")
-                          .trim()
-                          .toLowerCase()
-                          .replace(/\s+/g, "");
-                        return (
-                          n === "colour" ||
-                          n === "color" ||
-                          n === "colourway" ||
-                          n === "colorway"
-                        );
-                      }) || {}
-                    ).value
-                  : "") || "";
               const image =
                 (document.querySelector(".gallery-main img") &&
                   document
@@ -1598,12 +1580,7 @@
                   ? window.__cart.getCart()
                   : [];
               const existing = items.find(function (it) {
-                var itColour = it.colour || it.color || "";
-                return (
-                  it.name === name &&
-                  it.size === size &&
-                  String(itColour) === String(colour || "")
-                );
+                return it.name === name && it.size === size;
               });
               if (existing) existing.qty = (existing.qty || 1) + 1;
               else
@@ -1611,7 +1588,6 @@
                   name: name,
                   price: price,
                   size: size,
-                  colour: colour,
                   image: image,
                   qty: 1,
                   variantGid: (selectedVariant && selectedVariant.id) || "",
@@ -6629,7 +6605,7 @@
 
           // Proceed to Checkout via Shopify Cart Permalink (client-only)
           if (!checkout.dataset.clickBound) {
-            checkout.addEventListener("click", async function (e) {
+            checkout.addEventListener("click", function (e) {
               e.preventDefault();
               try {
                 if (typeof window.buildCheckoutUrl === "function") {
@@ -6702,32 +6678,6 @@
                   alert("Your cart is empty.");
                   return;
                 }
-                // Try server-created checkout that attaches to logged-in customer
-                try {
-                  const resp = await (async () => {
-                    try {
-                      return await fetch(
-                        "/.netlify/functions/createCartCheckout",
-                        {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          credentials: "same-origin",
-                          body: JSON.stringify({ lines: nonEmpty }),
-                        }
-                      );
-                    } catch (_) {
-                      return null;
-                    }
-                  })();
-                  if (resp && resp.ok) {
-                    const data = await resp.json().catch(() => ({}));
-                    if (data && data.checkoutUrl) {
-                      window.location.href = data.checkoutUrl;
-                      return;
-                    }
-                  }
-                } catch (_) {}
-                // Fallback to client-only cart permalink
                 const url = build(nonEmpty);
                 if (!url) {
                   alert("Checkout is unavailable. Please try again.");
@@ -6933,12 +6883,9 @@
                   it.price || "$0.00"
                 }</div>
               </div>
-              <div style="font-size:12px; color:#666;">${[
-                it.colour || it.color ? `Colour ${it.colour || it.color}` : "",
-                it.size ? `Size ${it.size}` : "",
-              ]
-                .filter(Boolean)
-                .join(" · ")}</div>
+              <div style="font-size:12px; color:#666;">${
+                it.size ? `Size ${it.size}` : ""
+              }</div>
               <div style="display:flex; align-items:center; gap:12px;">
                 <div style="display:inline-flex; align-items:center; border:1px solid #dcdcdc; border-radius:8px; overflow:hidden; height:32px;">
                   <button data-step=\"dec\" data-idx=\"${idx}\" style=\"width:32px; height:32px; background:#fff; border:0; cursor:pointer; font-size:16px; color:#333;\">−</button>
@@ -7083,34 +7030,11 @@
         chosenId = selected.dataset.variantId;
       }
 
-      const colourEl = document.querySelector(
-        '#colour-swatches .swatch[aria-pressed="true"]'
-      );
-      const colour =
-        (colourEl &&
-          (colourEl.getAttribute("data-value") ||
-            colourEl.title ||
-            colourEl.getAttribute("aria-label") ||
-            "")) ||
-        "";
       const items = (window.__cart?.getCart && window.__cart.getCart()) || [];
-      const existing = items.find(
-        (it) =>
-          it.name === name &&
-          it.size === size &&
-          String(it.colour || it.color || "") === String(colour || "")
-      );
+      const existing = items.find((it) => it.name === name && it.size === size);
       if (existing) existing.qty = (existing.qty || 1) + 1;
       else
-        items.push({
-          name,
-          price,
-          size,
-          colour,
-          image,
-          qty: 1,
-          variantGid: chosenId,
-        });
+        items.push({ name, price, size, image, qty: 1, variantGid: chosenId });
       window.__cart?.setCart && window.__cart.setCart(items);
       // Open cart (initialize on-demand if still missing)
       try {
@@ -7214,23 +7138,10 @@
               chosenId = selected.dataset.variantId;
             }
 
-            const colourEl = document.querySelector(
-              '#colour-swatches .swatch[aria-pressed="true"]'
-            );
-            const colour =
-              (colourEl &&
-                (colourEl.getAttribute("data-value") ||
-                  colourEl.title ||
-                  colourEl.getAttribute("aria-label") ||
-                  "")) ||
-              "";
             const items =
               (window.__cart?.getCart && window.__cart.getCart()) || [];
             const existing = items.find(
-              (it) =>
-                it.name === name &&
-                it.size === size &&
-                String(it.colour || it.color || "") === String(colour || "")
+              (it) => it.name === name && it.size === size
             );
             if (existing) existing.qty = (existing.qty || 1) + 1;
             else
@@ -7238,7 +7149,6 @@
                 name,
                 price,
                 size,
-                colour,
                 image,
                 qty: 1,
                 variantGid: chosenId,
@@ -7326,34 +7236,11 @@
         chosenId = selected.dataset.variantId;
       }
 
-      const colourEl = document.querySelector(
-        '#colour-swatches .swatch[aria-pressed="true"]'
-      );
-      const colour =
-        (colourEl &&
-          (colourEl.getAttribute("data-value") ||
-            colourEl.title ||
-            colourEl.getAttribute("aria-label") ||
-            "")) ||
-        "";
       const items = (window.__cart?.getCart && window.__cart.getCart()) || [];
-      const existing = items.find(
-        (it) =>
-          it.name === name &&
-          it.size === size &&
-          String(it.colour || it.color || "") === String(colour || "")
-      );
+      const existing = items.find((it) => it.name === name && it.size === size);
       if (existing) existing.qty = (existing.qty || 1) + 1;
       else
-        items.push({
-          name,
-          price,
-          size,
-          colour,
-          image,
-          qty: 1,
-          variantGid: chosenId,
-        });
+        items.push({ name, price, size, image, qty: 1, variantGid: chosenId });
       window.__cart?.setCart && window.__cart.setCart(items);
 
       try {

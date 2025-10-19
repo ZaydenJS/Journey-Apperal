@@ -151,7 +151,7 @@
               <div class="card" style="border-radius:8px; padding:16px; border:1px solid #eee; margin-bottom:12px;">
                 <h2 class="upper" style="margin:0 0 8px; font-size:18px; font-weight:800; letter-spacing:0.5px;">Recent orders</h2>
                 <div id="ordersPreview" style="color:#666;">Loading your recent orders…</div>
-                <div style="margin-top:12px"><a class="btn secondary" target="_blank" rel="noopener" href="https://shop.journeysapparel.com/account">View all orders</a></div>
+                <div style="margin-top:12px"><a class="btn secondary" href="/account/orders.html">View all orders</a></div>
               </div>
               <div class="card" style="border-radius:8px; padding:16px; border:1px solid #eee;">
                 <h2 class="upper" style="margin:0 0 8px; font-size:18px; font-weight:800; letter-spacing:0.5px;">Settings</h2>
@@ -169,13 +169,57 @@
               // Legacy backend removed; profile email is managed by Shopify New Customer Accounts UI
             } catch (e) {}
 
-            // Fetch recent orders (mock or live)
-            try {
-              var box = card && card.querySelector("#ordersPreview");
-              if (box)
-                box.textContent =
-                  "No recent orders found. View all orders in your Shopify account.";
-            } catch (e) {}
+            // Fetch recent orders from Shopify via serverless function
+            fetch("/.netlify/functions/customerOrders?first=3", {
+              credentials: "same-origin",
+            })
+              .then(async function (resp) {
+                if (resp.status === 401) return null;
+                try {
+                  return await resp.json();
+                } catch (_) {
+                  return {};
+                }
+              })
+              .then(function (data) {
+                var box = card && card.querySelector("#ordersPreview");
+                if (!box || !data) return;
+                var orders = Array.isArray(data.orders) ? data.orders : [];
+                if (!orders.length) {
+                  box.textContent = "No recent orders found.";
+                  return;
+                }
+                box.innerHTML = orders
+                  .map(function (o) {
+                    var when = o.date
+                      ? new Date(o.date).toLocaleDateString()
+                      : "";
+                    var total =
+                      o.total && o.total.amount
+                        ? "$" +
+                          parseFloat(o.total.amount).toFixed(2) +
+                          " " +
+                          (o.total.currencyCode || "")
+                        : "-";
+                    return (
+                      '<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid #eee"><div><strong>#' +
+                      (o.orderNumber || "") +
+                      '</strong><div style="color:#666;font-size:13px">' +
+                      when +
+                      "</div></div><div>" +
+                      total +
+                      "</div><div>" +
+                      (o.statusUrl
+                        ? '<a href="' +
+                          o.statusUrl +
+                          '" target="_blank" rel="noopener" class="btn secondary" style="padding:6px 8px">View</a>'
+                        : "") +
+                      "</div></div>"
+                    );
+                  })
+                  .join("");
+              })
+              .catch(function () {});
 
             if (out)
               out.addEventListener("click", function () {

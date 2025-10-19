@@ -68,9 +68,7 @@ export const handler = async (event) => {
       variables: { token, first, after },
     });
     const data = handleGraphQLResponse(resp);
-    const customer = data.customer;
-    if (!customer) return createErrorResponse("Unauthorized", 401);
-    const ordersConn = customer.orders;
+    const ordersConn = data.customer?.orders;
     if (!ordersConn) return createErrorResponse("No orders", 200);
 
     const orders = ordersConn.edges.map(({ node }) => ({
