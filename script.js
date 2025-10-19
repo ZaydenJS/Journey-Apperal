@@ -1554,6 +1554,24 @@
                       }) || {}
                     ).value
                   : "") || "";
+              const colour =
+                (selectedVariant &&
+                Array.isArray(selectedVariant.selectedOptions)
+                  ? (
+                      selectedVariant.selectedOptions.find(function (o) {
+                        var n = String(o.name || "")
+                          .trim()
+                          .toLowerCase()
+                          .replace(/\s+/g, "");
+                        return (
+                          n === "colour" ||
+                          n === "color" ||
+                          n === "colourway" ||
+                          n === "colorway"
+                        );
+                      }) || {}
+                    ).value
+                  : "") || "";
               const image =
                 (document.querySelector(".gallery-main img") &&
                   document
@@ -1580,7 +1598,12 @@
                   ? window.__cart.getCart()
                   : [];
               const existing = items.find(function (it) {
-                return it.name === name && it.size === size;
+                var itColour = it.colour || it.color || "";
+                return (
+                  it.name === name &&
+                  it.size === size &&
+                  String(itColour) === String(colour || "")
+                );
               });
               if (existing) existing.qty = (existing.qty || 1) + 1;
               else
@@ -1588,6 +1611,7 @@
                   name: name,
                   price: price,
                   size: size,
+                  colour: colour,
                   image: image,
                   qty: 1,
                   variantGid: (selectedVariant && selectedVariant.id) || "",
@@ -6883,9 +6907,12 @@
                   it.price || "$0.00"
                 }</div>
               </div>
-              <div style="font-size:12px; color:#666;">${
-                it.size ? `Size ${it.size}` : ""
-              }</div>
+              <div style="font-size:12px; color:#666;">${[
+                it.colour || it.color ? `Colour ${it.colour || it.color}` : "",
+                it.size ? `Size ${it.size}` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")}</div>
               <div style="display:flex; align-items:center; gap:12px;">
                 <div style="display:inline-flex; align-items:center; border:1px solid #dcdcdc; border-radius:8px; overflow:hidden; height:32px;">
                   <button data-step=\"dec\" data-idx=\"${idx}\" style=\"width:32px; height:32px; background:#fff; border:0; cursor:pointer; font-size:16px; color:#333;\">−</button>
@@ -7030,11 +7057,34 @@
         chosenId = selected.dataset.variantId;
       }
 
+      const colourEl = document.querySelector(
+        '#colour-swatches .swatch[aria-pressed="true"]'
+      );
+      const colour =
+        (colourEl &&
+          (colourEl.getAttribute("data-value") ||
+            colourEl.title ||
+            colourEl.getAttribute("aria-label") ||
+            "")) ||
+        "";
       const items = (window.__cart?.getCart && window.__cart.getCart()) || [];
-      const existing = items.find((it) => it.name === name && it.size === size);
+      const existing = items.find(
+        (it) =>
+          it.name === name &&
+          it.size === size &&
+          String(it.colour || it.color || "") === String(colour || "")
+      );
       if (existing) existing.qty = (existing.qty || 1) + 1;
       else
-        items.push({ name, price, size, image, qty: 1, variantGid: chosenId });
+        items.push({
+          name,
+          price,
+          size,
+          colour,
+          image,
+          qty: 1,
+          variantGid: chosenId,
+        });
       window.__cart?.setCart && window.__cart.setCart(items);
       // Open cart (initialize on-demand if still missing)
       try {
@@ -7138,10 +7188,23 @@
               chosenId = selected.dataset.variantId;
             }
 
+            const colourEl = document.querySelector(
+              '#colour-swatches .swatch[aria-pressed="true"]'
+            );
+            const colour =
+              (colourEl &&
+                (colourEl.getAttribute("data-value") ||
+                  colourEl.title ||
+                  colourEl.getAttribute("aria-label") ||
+                  "")) ||
+              "";
             const items =
               (window.__cart?.getCart && window.__cart.getCart()) || [];
             const existing = items.find(
-              (it) => it.name === name && it.size === size
+              (it) =>
+                it.name === name &&
+                it.size === size &&
+                String(it.colour || it.color || "") === String(colour || "")
             );
             if (existing) existing.qty = (existing.qty || 1) + 1;
             else
@@ -7149,6 +7212,7 @@
                 name,
                 price,
                 size,
+                colour,
                 image,
                 qty: 1,
                 variantGid: chosenId,
@@ -7236,11 +7300,34 @@
         chosenId = selected.dataset.variantId;
       }
 
+      const colourEl = document.querySelector(
+        '#colour-swatches .swatch[aria-pressed="true"]'
+      );
+      const colour =
+        (colourEl &&
+          (colourEl.getAttribute("data-value") ||
+            colourEl.title ||
+            colourEl.getAttribute("aria-label") ||
+            "")) ||
+        "";
       const items = (window.__cart?.getCart && window.__cart.getCart()) || [];
-      const existing = items.find((it) => it.name === name && it.size === size);
+      const existing = items.find(
+        (it) =>
+          it.name === name &&
+          it.size === size &&
+          String(it.colour || it.color || "") === String(colour || "")
+      );
       if (existing) existing.qty = (existing.qty || 1) + 1;
       else
-        items.push({ name, price, size, image, qty: 1, variantGid: chosenId });
+        items.push({
+          name,
+          price,
+          size,
+          colour,
+          image,
+          qty: 1,
+          variantGid: chosenId,
+        });
       window.__cart?.setCart && window.__cart.setCart(items);
 
       try {
