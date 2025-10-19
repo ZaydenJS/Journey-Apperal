@@ -6629,7 +6629,7 @@
 
           // Proceed to Checkout via Shopify Cart Permalink (client-only)
           if (!checkout.dataset.clickBound) {
-            checkout.addEventListener("click", function (e) {
+            checkout.addEventListener("click", async function (e) {
               e.preventDefault();
               try {
                 if (typeof window.buildCheckoutUrl === "function") {
@@ -6702,6 +6702,32 @@
                   alert("Your cart is empty.");
                   return;
                 }
+                // Try server-created checkout that attaches to logged-in customer
+                try {
+                  const resp = await (async () => {
+                    try {
+                      return await fetch(
+                        "/.netlify/functions/createCartCheckout",
+                        {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          credentials: "same-origin",
+                          body: JSON.stringify({ lines: nonEmpty }),
+                        }
+                      );
+                    } catch (_) {
+                      return null;
+                    }
+                  })();
+                  if (resp && resp.ok) {
+                    const data = await resp.json().catch(() => ({}));
+                    if (data && data.checkoutUrl) {
+                      window.location.href = data.checkoutUrl;
+                      return;
+                    }
+                  }
+                } catch (_) {}
+                // Fallback to client-only cart permalink
                 const url = build(nonEmpty);
                 if (!url) {
                   alert("Checkout is unavailable. Please try again.");
