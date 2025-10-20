@@ -42,6 +42,16 @@ export function parseAltMeta(altText) {
   return out;
 }
 
+/** Find the first colour encountered in product.images alt metadata */
+function firstAltColorFromImages(product) {
+  const imgs = Array.isArray(product?.images) ? product.images : [];
+  for (const img of imgs) {
+    const meta = parseAltMeta(img.altText);
+    if (meta.color) return meta.color;
+  }
+  return null;
+}
+
 /**
  * Build the ordered image list for a given color.
  * Returns array of nodes: { url, altText, width, height }
@@ -84,6 +94,10 @@ export function preloadImages(urls = []) {
 /** Render images into a horizontal track (#hero-track) */
 export function renderGallery(trackEl, images = []) {
   if (!trackEl) return;
+  // Mark ownership so legacy scripts don't repopulate
+  try {
+    trackEl.setAttribute("data-external-gallery", "1");
+  } catch (_) {}
   trackEl.innerHTML = "";
   for (const img of images) {
     const el = document.createElement("img");
@@ -216,7 +230,7 @@ export function initColorGallery({
   const colors = listColors(product);
   ensureSwatches(swatches, colors);
 
-  // Initial color: from ?color= or first available
+  // Initial color: prefer ?color=; then currently selected swatch; then first alt-tagged colour; then first available
   let initial = (function () {
     try {
       const u = new URL(window.location.href);
@@ -226,6 +240,11 @@ export function initColorGallery({
     if (swatches) {
       const sel = getSelectedColorFromSwatches(swatches);
       if (sel) return sel;
+    }
+    const altFirst = firstAltColorFromImages(product);
+    if (altFirst) {
+      const match = colors.find((x) => norm(x) === norm(altFirst));
+      if (match) return match;
     }
     return colors[0] || "";
   })();

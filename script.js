@@ -713,7 +713,18 @@
       // Populate hero carousel (#hero-track) with Shopify images
       try {
         const heroTrack = document.getElementById("hero-track");
-        if (heroTrack && images && images.length) {
+        const external =
+          heroTrack && heroTrack.getAttribute("data-external-gallery") === "1";
+        const swatchEl = document.getElementById("colour-swatches");
+        const externalSwatches =
+          swatchEl && swatchEl.getAttribute("data-external-swatches") === "1";
+        if (
+          heroTrack &&
+          images &&
+          images.length &&
+          !external &&
+          !externalSwatches
+        ) {
           const trackImgs = Array.from(heroTrack.querySelectorAll("img"));
           // Update existing placeholders
           if (trackImgs[0] && images[0]) {
@@ -772,6 +783,12 @@
       try {
         const heroTrack = document.getElementById("hero-track");
         if (!heroTrack) throw new Error("heroTrack missing");
+        const external =
+          heroTrack.getAttribute("data-external-gallery") === "1";
+        const swatchEl = document.getElementById("colour-swatches");
+        const externalSwatches =
+          swatchEl && swatchEl.getAttribute("data-external-swatches") === "1";
+        if (external || externalSwatches) return; // external gallery owns hero; skip legacy wiring
 
         const prev = document.querySelector(".hero-carousel .ctrl.prev");
         const next = document.querySelector(".hero-carousel .ctrl.next");
