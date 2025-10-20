@@ -151,7 +151,7 @@
               <div class="card" style="border-radius:8px; padding:16px; border:1px solid #eee; margin-bottom:12px;">
                 <h2 class="upper" style="margin:0 0 8px; font-size:18px; font-weight:800; letter-spacing:0.5px;">Recent orders</h2>
                 <div id="ordersPreview" style="color:#666;">Loading your recent orders…</div>
-                <div style="margin-top:12px"><a class="btn secondary" target="_blank" rel="noopener" href="https://shop.journeysapparel.com/account">View all orders</a></div>
+                <div style="margin-top:12px"><a class="btn secondary" href="/account/orders.html">View all orders</a></div>
               </div>
               <div class="card" style="border-radius:8px; padding:16px; border:1px solid #eee;">
                 <h2 class="upper" style="margin:0 0 8px; font-size:18px; font-weight:800; letter-spacing:0.5px;">Settings</h2>
@@ -169,12 +169,60 @@
               // Legacy backend removed; profile email is managed by Shopify New Customer Accounts UI
             } catch (e) {}
 
-            // Fetch recent orders (mock or live)
+            // Fetch recent orders from Shopify via Netlify function
             try {
               var box = card && card.querySelector("#ordersPreview");
-              if (box)
-                box.textContent =
-                  "No recent orders found. View all orders in your Shopify account.";
+              if (!box) {
+                // nothing to render
+              } else {
+                box.textContent = "Loading your recent orders…";
+                fetch("/.netlify/functions/customerOrders?first=3", {
+                  credentials: "same-origin",
+                })
+                  .then(function (resp) {
+                    if (!resp.ok) throw new Error("Failed to load");
+                    return resp.json();
+                  })
+                  .then(function (data) {
+                    var orders = Array.isArray(data.orders) ? data.orders : [];
+                    if (!orders.length) {
+                      box.textContent = "No recent orders yet.";
+                      return;
+                    }
+                    var html = orders
+                      .map(function (o) {
+                        var total =
+                          o.total && typeof o.total.amount !== "undefined"
+                            ? "$" +
+                              parseFloat(o.total.amount).toFixed(2) +
+                              " " +
+                              (o.total.currencyCode || "")
+                            : "-";
+                        var when = o.date ? new Date(o.date) : null;
+                        var dateStr = when ? when.toLocaleDateString() : "";
+                        return (
+                          '<div style="display:flex;justify-content:space-between;gap:8px;border:1px solid #e5e5e5;border-radius:8px;padding:10px;align-items:center">' +
+                          "<div><strong>#" +
+                          (o.orderNumber || "") +
+                          '</strong><div style="color:#666;font-size:13px">' +
+                          dateStr +
+                          "</div></div>" +
+                          "<div>" +
+                          total +
+                          "</div>" +
+                          "<div>" +
+                          (o.fulfillmentStatus || "-") +
+                          "</div>" +
+                          "</div>"
+                        );
+                      })
+                      .join("");
+                    box.innerHTML = html;
+                  })
+                  .catch(function () {
+                    box.textContent = "Could not load recent orders.";
+                  });
+              }
             } catch (e) {}
 
             if (out)
