@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Product Not Found – Journey Apparel</title>
     <link rel="stylesheet" href="styles.css?v=pcnav26" />
+    <link rel="stylesheet" href="src/styles/gallery.css" />
+
     <style id="desktop-overrides">
       @media (min-width: 1024px) {
         html,
@@ -718,6 +720,11 @@
           function renderColours() {
             var container = document.getElementById("colour-swatches");
             if (!container || !colourOption) return;
+            // If external module owns swatches, do not overwrite
+            try {
+              if (container.getAttribute("data-external-swatches") === "1")
+                return;
+            } catch (_) {}
             var selected = getSelectedColour();
             container.innerHTML = "";
             (colourOption.values || []).forEach(function (val) {
@@ -922,6 +929,9 @@
                   mo.disconnect();
                 } catch (_) {}
               }
+
+
+              } catch (_) {}
             });
             mo.observe(document.documentElement || document, {
               subtree: true,
@@ -932,8 +942,14 @@
                 mo.disconnect();
               } catch (_) {}
             }, 1500);
+
+
           }
         } catch (_) {}
+
+          // Re-render sizes when external gallery updates colour (always on)
+          try { document.addEventListener('pdp:colour:change', function(){ try{ render(); }catch(_){ } }); } catch(_) {}
+
       })();
     </script>
   </head>
@@ -3577,6 +3593,7 @@
         });
       })();
     </script>
+    <script type="module" src="src/pages/product.js"></script>
 
     <!-- Shopify integration with error handling -->
     <script src="data/products.js" defer></script>
