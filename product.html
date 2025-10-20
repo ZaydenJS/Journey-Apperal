@@ -755,7 +755,7 @@
               btn.setAttribute("data-value", val);
               btn.setAttribute(
                 "aria-pressed",
-                String(val) === String(selected) ? "true" : "false"
+                String(val).trim().toLowerCase() === String(selected).trim().toLowerCase() ? "true" : "false"
               );
               btn.setAttribute("aria-label", val);
               btn.title = val;
@@ -766,7 +766,7 @@
               btn.style.height = "28px";
               btn.style.borderRadius = "50%";
               btn.style.border =
-                String(val) === String(selected)
+                String(val).trim().toLowerCase() === String(selected).trim().toLowerCase()
                   ? "2px solid #111"
                   : "1px solid #ccc";
               btn.style.background = bg;
@@ -829,7 +829,10 @@
                   var n = String((o.name || "").trim()).toLowerCase();
                   return n === "colour" || n === "color";
                 });
-                if (!col || String(col.value) !== String(selectedColour))
+                if (
+                  !col ||
+                  String(col.value).trim().toLowerCase() !== String(selectedColour).trim().toLowerCase()
+                )
                   return;
               }
               var so = (v.selectedOptions || []).find(function (o) {

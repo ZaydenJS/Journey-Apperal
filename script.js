@@ -1059,7 +1059,10 @@
             btn.setAttribute("data-value", val);
             btn.setAttribute(
               "aria-pressed",
-              String(val) === String(selectedColour) ? "true" : "false"
+              String(val).trim().toLowerCase() ===
+                String(selectedColour).trim().toLowerCase()
+                ? "true"
+                : "false"
             );
             const cssColor = (function (raw) {
               const t = String(raw || "")
@@ -1111,7 +1114,8 @@
             btn.style.height = "28px";
             btn.style.borderRadius = "50%";
             btn.style.border =
-              String(val) === String(selectedColour)
+              String(val).trim().toLowerCase() ===
+              String(selectedColour).trim().toLowerCase()
                 ? "2px solid #111"
                 : "1px solid #ccc";
             btn.style.background = cssColor || "#f0f0f0";
@@ -1151,7 +1155,12 @@
             const n = String((o.name || "").trim()).toLowerCase();
             return n === "colour" || n === "color";
           });
-          if (!col || String(col.value) !== String(selectedColour)) return;
+          if (
+            !col ||
+            String(col.value).trim().toLowerCase() !==
+              String(selectedColour).trim().toLowerCase()
+          )
+            return;
         }
         const so = (v.selectedOptions || []).find(
           (o) => String((o.name || "").trim()).toLowerCase() === "size"
