@@ -743,9 +743,8 @@
     <script src="/assets/account.js" defer></script>
     <script>
       window.addEventListener("DOMContentLoaded", function () {
-        try {
-          JAAccount.guardAuthenticated();
-        } catch (_) {}
+        // Note: We intentionally skip JAAccount.guardAuthenticated() here to avoid
+        // redirect loops; the fetch below handles auth and redirects only when truly logged out.
         var list = document.getElementById("orders");
         if (!list) return;
         list.innerHTML =
