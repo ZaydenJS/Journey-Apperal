@@ -164,15 +164,65 @@ export const handler = async (event) => {
       }
     `;
 
+    const ADMIN_CUSTOMER_BY_EMAIL = `
+      query AdminCustomerByEmail($q: String!) {
+        customers(first: 1, query: $q) {
+          edges { node { id email } }
+        }
+      }
+    `;
+
+    function customerNumericIdFromGid(gid) {
+      const m = String(gid || "").match(/Customer\/(\d+)/);
+      return m ? m[1] : null;
+    }
+
     async function fetchAdminOrdersByEmail(email, limit) {
       if (!email) return [];
-      const data = await adminGraphQL(ADMIN_ORDERS_QUERY, {
+      // First try searching orders by email
+      let data = await adminGraphQL(ADMIN_ORDERS_QUERY, {
         q: `email:${email}`,
         first: limit,
       });
-      const conn = data?.orders;
-      if (!conn) return [];
-      return (conn.edges || []).map(({ node }) => ({
+      let conn = data?.orders;
+      let edges = conn?.edges || [];
+      let mapped = edges.map(({ node }) => ({
+        id: node.id,
+        name: node.name,
+        orderNumber: node.orderNumber,
+        date: node.processedAt,
+        financialStatus: node.displayFinancialStatus,
+        fulfillmentStatus: node.displayFulfillmentStatus,
+        total: node.currentTotalPriceSet?.shopMoney || null,
+        statusUrl: node.statusUrl || null,
+        items:
+          (node.lineItems?.edges || []).map((e) => ({
+            title: e.node?.name || "",
+            quantity: e.node?.quantity || 0,
+            variant: {
+              title: e.node?.variant?.title || "",
+              sku: e.node?.variant?.sku || "",
+              image: { url: e.node?.variant?.image?.url || "" },
+            },
+          })) || [],
+      }));
+      if (mapped.length) return mapped;
+
+      // If none, try customer_id fallback
+      const custData = await adminGraphQL(ADMIN_CUSTOMER_BY_EMAIL, {
+        q: `email:${email}`,
+      });
+      const gid = custData?.customers?.edges?.[0]?.node?.id || null;
+      const customerId = customerNumericIdFromGid(gid);
+      if (!customerId) return [];
+
+      const data2 = await adminGraphQL(ADMIN_ORDERS_QUERY, {
+        q: `customer_id:${customerId}`,
+        first: limit,
+      });
+      const conn2 = data2?.orders;
+      const edges2 = conn2?.edges || [];
+      return edges2.map(({ node }) => ({
         id: node.id,
         name: node.name,
         orderNumber: node.orderNumber,
@@ -241,6 +291,7 @@ export const handler = async (event) => {
               if (adminOrders && adminOrders.length) {
                 orders = adminOrders;
                 const res2 = createApiResponse({ orders, pageInfo: {} }, 200);
+                res2.headers["X-Orders-Source"] = "admin";
                 const expires2 = new Date(newExp).toUTCString();
                 res2.headers[
                   "Set-Cookie"
@@ -256,6 +307,7 @@ export const handler = async (event) => {
             { orders, pageInfo: ordersConn?.pageInfo || {} },
             200
           );
+          res.headers["X-Orders-Source"] = "storefront";
           // Refresh cookie with renewed token
           const expires = new Date(newExp).toUTCString();
           res.headers["Set-Cookie"] = `ja_customer_token=${encodeURIComponent(
@@ -291,15 +343,22 @@ export const handler = async (event) => {
         const email = await getCustomerEmail(token);
         const adminOrders = await fetchAdminOrdersByEmail(email, first);
         if (adminOrders && adminOrders.length) {
-          return createApiResponse({ orders: adminOrders, pageInfo: {} }, 200);
+          const r = createApiResponse(
+            { orders: adminOrders, pageInfo: {} },
+            200
+          );
+          r.headers["X-Orders-Source"] = "admin";
+          return r;
         }
       } catch (_) {}
     }
 
-    return createApiResponse(
+    const out = createApiResponse(
       { orders, pageInfo: ordersConn?.pageInfo || {} },
       200
     );
+    out.headers["X-Orders-Source"] = "storefront";
+    return out;
   } catch (err) {
     return createErrorResponse(err.message || "Failed to load orders", 500);
   }
