@@ -1695,6 +1695,13 @@
           // Build pagination dots and sync active state (dynamic to support gallery updates)
           var dotsWrap = document.getElementById("hero-dots");
           var currentIdx = 0;
+          var animating = false;
+          var animTargetIdx = 0;
+          var animTimer = null;
+          function getActiveIdx() {
+            return animating ? animTargetIdx : currentIdx;
+          }
+
           function getImgs() {
             return Array.from(track.querySelectorAll("img"));
           }
@@ -1705,11 +1712,28 @@
             if (i >= imgs.length) i = 0; // wrap-around
             var el = imgs[i];
             if (el) {
-              track.scrollTo({
-                left: el.offsetLeft,
-                behavior: behavior || "smooth",
-              });
-              currentIdx = i;
+              // mark animating to keep state stable during smooth scroll
+              animating = true;
+              animTargetIdx = i;
+              if (animTimer) clearTimeout(animTimer);
+              animTimer = setTimeout(function () {
+                animating = false;
+                currentIdx = animTargetIdx;
+                setActive();
+              }, 500);
+              // scroll into view robustly
+              if (el.scrollIntoView) {
+                el.scrollIntoView({
+                  behavior: behavior || "smooth",
+                  inline: "center",
+                  block: "nearest",
+                });
+              } else {
+                track.scrollTo({
+                  left: el.offsetLeft,
+                  behavior: behavior || "smooth",
+                });
+              }
             }
           }
           function rebuildDots() {
@@ -1740,10 +1764,12 @@
                 nearest = i;
               }
             });
-            currentIdx = nearest;
+            // If animating, don't change currentIdx mid-animation; only update dots by target
+            var idxForDots = animating ? animTargetIdx : nearest;
+            if (!animating) currentIdx = nearest;
             if (dotsWrap) {
               Array.from(dotsWrap.children).forEach(function (dot, i) {
-                dot.style.background = i === nearest ? "#222" : "#c7c7c7";
+                dot.style.background = i === idxForDots ? "#222" : "#c7c7c7";
               });
             }
           }
@@ -1754,12 +1780,14 @@
           if (prevBtn)
             prevBtn.addEventListener("click", function (e) {
               e.preventDefault();
-              goTo(currentIdx - 1, "smooth");
+              var base = getActiveIdx();
+              goTo(base - 1, "smooth");
             });
           if (nextBtn)
             nextBtn.addEventListener("click", function (e) {
               e.preventDefault();
-              goTo(currentIdx + 1, "smooth");
+              var base = getActiveIdx();
+              goTo(base + 1, "smooth");
             });
 
           // Mobile swipe: direction-aware. Vertical scroll passes to page; horizontal swipe changes image.
@@ -1838,9 +1866,10 @@
                 if (mode === "h" && moved) {
                   var dx = e.changedTouches[0].clientX - startX;
                   var threshold = 30;
-                  if (dx < -threshold) goTo(currentIdx + 1, "smooth");
-                  else if (dx > threshold) goTo(currentIdx - 1, "smooth");
-                  else goTo(currentIdx, "smooth");
+                  var base = getActiveIdx();
+                  if (dx < -threshold) goTo(base + 1, "smooth");
+                  else if (dx > threshold) goTo(base - 1, "smooth");
+                  else goTo(base, "smooth");
                 }
                 resetLock();
               },
