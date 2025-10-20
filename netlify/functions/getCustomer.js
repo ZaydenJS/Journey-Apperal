@@ -16,9 +16,23 @@ function getTokenFromCookie(cookieHeader) {
   return null;
 }
 
-const clearCookieHeader = () => {
+function cookieDomainFromHost(host) {
+  try {
+    const h = String(host || "")
+      .split(":")[0]
+      .toLowerCase();
+    if (!h || h === "localhost" || /^(\d+\.){3}\d+$/.test(h)) return "";
+    const base = h.replace(/^www\./, "");
+    return `; Domain=.${base}`;
+  } catch (_) {
+    return "";
+  }
+}
+
+const clearCookieHeader = (host) => {
   const expires = new Date(0).toUTCString();
-  return `ja_customer_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+  const domainAttr = cookieDomainFromHost(host);
+  return `ja_customer_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}${domainAttr}`;
 };
 
 export const handler = async (event) => {
@@ -81,9 +95,12 @@ export const handler = async (event) => {
           if (data && data.customer) {
             const res = createApiResponse({ customer: data.customer }, 200);
             const expires = new Date(newExp).toUTCString();
+            const domainAttr = cookieDomainFromHost(
+              event.headers.host || event.headers.Host
+            );
             res.headers["Set-Cookie"] = `ja_customer_token=${encodeURIComponent(
               newTok
-            )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+            )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}${domainAttr}`;
             return res;
           }
         }
@@ -93,14 +110,18 @@ export const handler = async (event) => {
     const customer = data.customer;
     if (!customer) {
       const res = createErrorResponse("Unauthorized", 401);
-      res.headers["Set-Cookie"] = clearCookieHeader();
+      res.headers["Set-Cookie"] = clearCookieHeader(
+        event.headers.host || event.headers.Host
+      );
       return res;
     }
 
     return createApiResponse({ customer }, 200);
   } catch (err) {
     const res = createErrorResponse("Unauthorized", 401);
-    res.headers["Set-Cookie"] = clearCookieHeader();
+    res.headers["Set-Cookie"] = clearCookieHeader(
+      event.headers.host || event.headers.Host
+    );
     return res;
   }
 };

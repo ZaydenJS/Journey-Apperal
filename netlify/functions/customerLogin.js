@@ -5,18 +5,33 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-function setCookieHeader(token, expiresAt) {
+function cookieDomainFromHost(host) {
+  try {
+    const h = String(host || "")
+      .split(":")[0]
+      .toLowerCase();
+    if (!h || h === "localhost" || /^(\d+\.){3}\d+$/.test(h)) return "";
+    const base = h.replace(/^www\./, "");
+    return `; Domain=.${base}`;
+  } catch (_) {
+    return "";
+  }
+}
+
+function setCookieHeader(token, expiresAt, host) {
   try {
     const expires = new Date(expiresAt).toUTCString();
+    const domainAttr = cookieDomainFromHost(host);
     return `ja_customer_token=${encodeURIComponent(
       token
-    )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+    )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}${domainAttr}`;
   } catch (_) {
     // Fallback: 24h
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString();
+    const domainAttr = cookieDomainFromHost(host);
     return `ja_customer_token=${encodeURIComponent(
       token
-    )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+    )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}${domainAttr}`;
   }
 }
 
@@ -72,7 +87,11 @@ export const handler = async (event) => {
     const customer = meData.customer || null;
 
     const res = createApiResponse({ ok: true, customer }, 200);
-    res.headers["Set-Cookie"] = setCookieHeader(token, expiresAt);
+    res.headers["Set-Cookie"] = setCookieHeader(
+      token,
+      expiresAt,
+      event.headers.host || event.headers.Host
+    );
     return res;
   } catch (err) {
     return createErrorResponse(err.message || "Login failed", 500);

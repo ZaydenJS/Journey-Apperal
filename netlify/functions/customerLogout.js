@@ -5,9 +5,23 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const clearCookieHeader = () => {
+function cookieDomainFromHost(host) {
+  try {
+    const h = String(host || "")
+      .split(":")[0]
+      .toLowerCase();
+    if (!h || h === "localhost" || /^(\d+\.){3}\d+$/.test(h)) return "";
+    const base = h.replace(/^www\./, "");
+    return `; Domain=.${base}`;
+  } catch (_) {
+    return "";
+  }
+}
+
+const clearCookieHeader = (host) => {
   const expires = new Date(0).toUTCString();
-  return `ja_customer_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+  const domainAttr = cookieDomainFromHost(host);
+  return `ja_customer_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}${domainAttr}`;
 };
 
 function getTokenFromCookie(cookieHeader) {
@@ -24,7 +38,9 @@ function getTokenFromCookie(cookieHeader) {
 export const handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
     const res = createApiResponse({}, 200);
-    res.headers["Set-Cookie"] = clearCookieHeader();
+    res.headers["Set-Cookie"] = clearCookieHeader(
+      event.headers.host || event.headers.Host
+    );
     return res;
   }
   if (event.httpMethod !== "POST") {
@@ -54,11 +70,15 @@ export const handler = async (event) => {
     }
 
     const res = createApiResponse({ ok: true }, 200);
-    res.headers["Set-Cookie"] = clearCookieHeader();
+    res.headers["Set-Cookie"] = clearCookieHeader(
+      event.headers.host || event.headers.Host
+    );
     return res;
   } catch (err) {
     const res = createErrorResponse(err.message || "Logout failed", 500);
-    res.headers["Set-Cookie"] = clearCookieHeader();
+    res.headers["Set-Cookie"] = clearCookieHeader(
+      event.headers.host || event.headers.Host
+    );
     return res;
   }
 };

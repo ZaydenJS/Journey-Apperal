@@ -21,9 +21,28 @@ const clearCookieHeader = () => {
   return `ja_customer_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
 };
 
-function unauthorizedResponse() {
+function cookieDomainFromHost(host) {
+  try {
+    const h = String(host || "")
+      .split(":")[0]
+      .toLowerCase();
+    if (!h || h === "localhost" || /^(\d+\.){3}\d+$/.test(h)) return "";
+    const base = h.replace(/^www\./, "");
+    return `; Domain=.${base}`;
+  } catch (_) {
+    return "";
+  }
+}
+
+function unauthorizedResponse(event) {
   const res = createErrorResponse("Unauthorized", 401);
-  res.headers["Set-Cookie"] = clearCookieHeader();
+  const domainAttr = cookieDomainFromHost(
+    event?.headers?.host || event?.headers?.Host
+  );
+  res.headers["Set-Cookie"] = clearCookieHeader().replace(
+    /; Expires=[^;]+/,
+    (m) => `${m}${domainAttr}`
+  );
   return res;
 }
 
@@ -38,7 +57,7 @@ export const handler = async (event) => {
   const token = getTokenFromCookie(
     event.headers.cookie || event.headers.Cookie
   );
-  if (!token) return createErrorResponse("Unauthorized", 401);
+  if (!token) return unauthorizedResponse(event);
 
   const params = event.queryStringParameters || {};
   const first = Math.max(1, Math.min(50, parseInt(params.first || "20", 10)));
@@ -297,7 +316,9 @@ export const handler = async (event) => {
                   "Set-Cookie"
                 ] = `ja_customer_token=${encodeURIComponent(
                   newTok
-                )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires2}`;
+                )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires2}${cookieDomainFromHost(
+                  event.headers.host || event.headers.Host
+                )}`;
                 return res2;
               }
             } catch (_) {}
@@ -312,7 +333,9 @@ export const handler = async (event) => {
           const expires = new Date(newExp).toUTCString();
           res.headers["Set-Cookie"] = `ja_customer_token=${encodeURIComponent(
             newTok
-          )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+          )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}${cookieDomainFromHost(
+            event.headers.host || event.headers.Host
+          )}`;
           return res;
         }
       } catch (_) {}
