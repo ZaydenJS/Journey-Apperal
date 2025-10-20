@@ -1,6 +1,5 @@
 import {
   createShopifyClient,
-  createShopifyAdminRequester,
   handleGraphQLResponse,
   createApiResponse,
   createErrorResponse,
@@ -39,7 +38,6 @@ export const handler = async (event) => {
     const query = `
       query Orders($token: String!, $first: Int!, $after: String) {
         customer(customerAccessToken: $token) {
-          email
           orders(first: $first, after: $after, reverse: true) {
             edges {
               cursor
@@ -56,17 +54,7 @@ export const handler = async (event) => {
                 }
                 statusUrl
                 lineItems(first: 50) {
-                  edges { node {
-                    title
-                    quantity
-                    variant {
-                      id
-                      title
-                      sku
-                      selectedOptions { name value }
-                      image { url altText width height }
-                    }
-                  } }
+                  edges { node { title quantity variant { title sku } } }
                 }
               }
             }
@@ -81,11 +69,9 @@ export const handler = async (event) => {
     });
     const data = handleGraphQLResponse(resp);
     const ordersConn = data.customer?.orders;
-    const email = data.customer?.email || null;
-
     if (!ordersConn) return createErrorResponse("No orders", 200);
 
-    let orders = (ordersConn.edges || []).map(({ node }) => ({
+    const orders = ordersConn.edges.map(({ node }) => ({
       id: node.id,
       name: node.name,
       orderNumber: node.orderNumber,
@@ -99,68 +85,6 @@ export const handler = async (event) => {
       statusUrl: node.statusUrl || null,
       items: (node.lineItems?.edges || []).map((e) => e.node) || [],
     }));
-
-    // Fallback: if Storefront returns no orders (e.g., guest checkout), try Admin API by email
-    if ((!orders || orders.length === 0) && email) {
-      const adminRequest = createShopifyAdminRequester();
-      if (adminRequest) {
-        const adminQuery = `
-          query OrdersByEmail($first: Int!, $after: String, $q: String!) {
-            orders(first: $first, after: $after, reverse: true, query: $q) {
-              edges {
-                cursor
-                node {
-                  id
-                  number
-                  name
-                  processedAt
-                  displayFinancialStatus
-                  displayFulfillmentStatus
-                  totalPriceSet { shopMoney { amount currencyCode } }
-                  statusPageUrl
-                  lineItems(first: 50) {
-                    edges { node {
-                      name
-                      quantity
-                      sku
-                      variant { id title selectedOptions { name value } }
-                    } }
-                  }
-                }
-              }
-              pageInfo { hasNextPage hasPreviousPage endCursor startCursor }
-            }
-          }
-        `;
-        const q = `email:${email}`;
-        const adminResp = await adminRequest(adminQuery, { first, after, q });
-        const adminData = handleGraphQLResponse(adminResp);
-        const adminConn = adminData.orders;
-        if (adminConn) {
-          orders = (adminConn.edges || []).map(({ node }) => ({
-            id: node.id,
-            name: node.name,
-            orderNumber: node.number, // Admin uses `number` (Int)
-            date: node.processedAt,
-            financialStatus: node.displayFinancialStatus,
-            fulfillmentStatus: node.displayFulfillmentStatus,
-            total: node.totalPriceSet?.shopMoney || null,
-            statusUrl: node.statusPageUrl || null,
-            items:
-              (node.lineItems?.edges || []).map((e) => ({
-                title: e.node.name,
-                quantity: e.node.quantity,
-                variant: e.node.variant || null,
-                sku: e.node.sku || null,
-              })) || [],
-          }));
-          return createApiResponse(
-            { orders, pageInfo: adminConn.pageInfo },
-            200
-          );
-        }
-      }
-    }
 
     return createApiResponse({ orders, pageInfo: ordersConn.pageInfo }, 200);
   } catch (err) {

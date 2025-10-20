@@ -20,40 +20,6 @@ export const createShopifyClient = () => {
   });
 };
 
-// Initialize Shopify Admin GraphQL requester (fallback for orders by email)
-// Requires envs:
-// - SHOPIFY_ADMIN_ACCESS_TOKEN (scope: read_orders; optionally read_all_orders)
-// - SHOPIFY_ADMIN_DOMAIN (recommended: <shop>.myshopify.com). If absent, falls back to SHOPIFY_STOREFRONT_DOMAIN.
-// - SHOPIFY_ADMIN_API_VERSION (optional; defaults to SHOPIFY_API_VERSION or 2024-07)
-export const createShopifyAdminRequester = () => {
-  const adminToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
-  const apiVersion =
-    process.env.SHOPIFY_ADMIN_API_VERSION ||
-    process.env.SHOPIFY_API_VERSION ||
-    "2024-07";
-  const adminDomain =
-    process.env.SHOPIFY_ADMIN_DOMAIN ||
-    process.env.SHOPIFY_STOREFRONT_DOMAIN ||
-    process.env.SHOPIFY_STORE_DOMAIN;
-
-  // If missing credentials, return null so callers can skip admin fallback gracefully
-  if (!adminDomain || !adminToken) return null;
-
-  const endpoint = `https://${adminDomain}/admin/api/${apiVersion}/graphql.json`;
-
-  return async (query, variables) => {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Access-Token": adminToken,
-      },
-      body: JSON.stringify({ query, variables }),
-    });
-    return res.json();
-  };
-};
-
 // Common GraphQL fragments
 export const PRODUCT_FRAGMENT = `
   fragment ProductFragment on Product {

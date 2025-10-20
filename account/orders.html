@@ -821,64 +821,6 @@
                     o.statusUrl +
                     '" target="_blank" rel="noopener" class="btn secondary" style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;text-decoration:none">View Order</a>'
                   : '<button disabled style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#f6f6f6;color:#999;cursor:not-allowed">View Order</button>');
-              // Render line items with size/colour details
-              try {
-                var itemsHtml = (o.items || [])
-                  .map(function (li) {
-                    var v = li.variant || {};
-                    var opts = Array.isArray(v.selectedOptions)
-                      ? v.selectedOptions
-                      : [];
-                    function findOpt(keys) {
-                      var lower = keys.map(function (k) {
-                        return String(k).toLowerCase();
-                      });
-                      for (var i = 0; i < opts.length; i++) {
-                        var nm = String(opts[i].name || "").toLowerCase();
-                        if (lower.indexOf(nm) !== -1)
-                          return opts[i].value || "";
-                      }
-                      return null;
-                    }
-                    var size = findOpt(["size"]);
-                    var colour = findOpt(["colour", "color"]);
-                    var detailParts = [];
-                    if (size) detailParts.push("Size: " + size);
-                    if (colour) detailParts.push("COLOUR: " + colour);
-                    var title =
-                      li.title ||
-                      (v.product && v.product.title) ||
-                      v.title ||
-                      "Item";
-                    return (
-                      '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid #f0f0f0">' +
-                      '<div style="min-width:0"><div style="font-weight:600">' +
-                      title +
-                      "</div>" +
-                      (detailParts.length
-                        ? '<div style="color:#666;font-size:13px">' +
-                          detailParts.join(" · ") +
-                          "</div>"
-                        : "") +
-                      "</div>" +
-                      '<div style="white-space:nowrap;color:#111">×' +
-                      (li.quantity || 1) +
-                      "</div>" +
-                      "</div>"
-                    );
-                  })
-                  .join("");
-                var itemsContainer = document.createElement("div");
-                itemsContainer.style.cssText =
-                  "flex:1 1 100%; margin:4px 0 8px 0";
-                itemsContainer.innerHTML = itemsHtml;
-                var actionEl = card.querySelector("a.btn, button[disabled]");
-                if (actionEl) {
-                  card.insertBefore(itemsContainer, actionEl);
-                } else {
-                  card.appendChild(itemsContainer);
-                }
-              } catch (_) {}
               list.appendChild(card);
             });
           })
