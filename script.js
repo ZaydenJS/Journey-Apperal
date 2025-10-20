@@ -1031,32 +1031,24 @@
       // Determine COLOUR option and selected value; render swatches if present
       const swatches = document.getElementById("colour-swatches");
       const colourOption = (data.options || []).find((o) => {
-        const n = String((o.name || "").trim())
-          .toLowerCase()
-          .replace(/\s+/g, "");
-        return (
-          n === "colour" ||
-          n === "color" ||
-          n === "colourway" ||
-          n === "colorway"
-        );
+        const n = String((o.name || "").trim()).toLowerCase();
+        return n === "colour" || n === "color";
       });
       let selectedColour = "";
-      // Always determine a base selected colour from storage or first option,
-      // even if swatches container is not present in the DOM
-      if (colourOption) {
-        try {
-          selectedColour = localStorage.getItem("pdp:lastColour:" + handle) || "";
-        } catch (_) {}
-        if (!selectedColour) {
-          selectedColour = (colourOption.values && colourOption.values[0]) || "";
-        }
-      }
       if (swatches && colourOption) {
-        // If a swatch is pressed, it takes precedence over the base value
+        // Determine current selection from DOM, localStorage, or default
         const pressed = swatches.querySelector('.swatch[aria-pressed="true"]');
         if (pressed) {
-          selectedColour = pressed.getAttribute("data-value") || selectedColour;
+          selectedColour = pressed.getAttribute("data-value") || "";
+        } else {
+          try {
+            selectedColour =
+              localStorage.getItem("pdp:lastColour:" + handle) || "";
+          } catch (_) {}
+          if (!selectedColour) {
+            selectedColour =
+              (colourOption.values && colourOption.values[0]) || "";
+          }
         }
         // Render swatches if empty
           swatches.innerHTML = "";
@@ -1159,15 +1151,8 @@
         // If a COLOUR is selected, only consider variants matching that colour
         if (selectedColour) {
           const col = (v.selectedOptions || []).find((o) => {
-            const n = String((o.name || "").trim())
-              .toLowerCase()
-              .replace(/\s+/g, "");
-            return (
-              n === "colour" ||
-              n === "color" ||
-              n === "colourway" ||
-              n === "colorway"
-            );
+            const n = String((o.name || "").trim()).toLowerCase();
+            return n === "colour" || n === "color";
           });
           if (
             !col ||
@@ -1419,11 +1404,6 @@
       __cacheSet("pdp:product:" + handle, product);
       __cacheSet("pdp:variants:" + handle, payload);
       renderFrom(payload);
-      try {
-        document.addEventListener("pdp:colour:change", function () {
-          try { renderFrom(payload, true); } catch (_) {}
-        });
-      } catch (_) {}
     } catch (e) {
       console.warn("Failed to load product-variants", e);
     }

@@ -667,10 +667,10 @@
           }
           if (!payload || !payload.variants) return;
 
-          // Colour (COLOUR) option handling and swatches (support common synonyms)
+          // Colour (COLOUR) option handling and swatches
           var colourOption = (payload.options || []).find(function (o) {
-            var n = String((o.name || "").trim()).toLowerCase().replace(/\s+/g, "");
-            return n === "colour" || n === "color" || n === "colourway" || n === "colorway";
+            var n = String((o.name || "").trim()).toLowerCase();
+            return n === "colour" || n === "color";
           });
 
           // Helpers: map colour names to CSS, validate named/hex colours
@@ -790,8 +790,7 @@
                 try {
                   localStorage.setItem("pdp:lastColour:" + handle, val);
                 } catch (_) {}
-                // Notify any external listeners (e.g., main script) and re-render sizes
-                try { document.dispatchEvent(new CustomEvent('pdp:colour:change', { detail: { value: val } })); } catch (_) {}
+                // Re-render sizes for the chosen colour
                 render();
               });
 
@@ -827,8 +826,8 @@
               // If a colour is selected, only consider variants matching that colour
               if (selectedColour) {
                 var col = (v.selectedOptions || []).find(function (o) {
-                  var n = String((o.name || "").trim()).toLowerCase().replace(/\s+/g, "");
-                  return n === "colour" || n === "color" || n === "colourway" || n === "colorway";
+                  var n = String((o.name || "").trim()).toLowerCase();
+                  return n === "colour" || n === "color";
                 });
                 if (
                   !col ||
