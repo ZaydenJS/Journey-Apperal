@@ -57,35 +57,18 @@ export function imagesForColor(product, color) {
     }
   }
   if (tagged.length) {
-    // Sort tagged by explicit order, then append additional images inferred by altText
+    // Strict mode: only return images explicitly tagged for this colour
     tagged.sort((a, b) => (a.__order || 999) - (b.__order || 999));
-    const ordered = tagged.map(({ __order, ...rest }) => rest);
-    const seen = new Set(ordered.map((i) => i.url));
-    const inferred = [];
-    for (const img of imgs) {
-      if (seen.has(img.url)) continue;
-      const alt = String(img.altText || "").toLowerCase();
-      // Heuristic: include images whose alt text contains the selected colour name
-      if (alt && alt.includes(wanted)) {
-        inferred.push(img);
-        seen.add(img.url);
-      }
-    }
-    return [...ordered, ...inferred];
+    return tagged.map(({ __order, ...rest }) => rest);
   }
 
-  // Fallbacks (no tagged images at all): variant.image first if available, then remaining media
-  const first = [];
+  // Strict fallback (no tagged images at all): show only the selected variant's primary image
   const vWithImg = findVariantForColor(product, color, true);
   if (vWithImg && vWithImg.image && vWithImg.image.url) {
-    first.push({ ...vWithImg.image });
+    return [{ ...vWithImg.image }];
   }
-  // Add remaining product images (skip duplicates)
-  const seen = new Set(first.map((i) => i.url));
-  for (const img of imgs) {
-    if (!seen.has(img.url)) first.push(img);
-  }
-  return first;
+  // If variant has no image, return empty to avoid showing other colours inadvertently
+  return [];
 }
 
 /** Preload a list of image URLs to avoid flicker */
