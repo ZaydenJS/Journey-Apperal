@@ -797,8 +797,8 @@
               card.style.cssText =
                 "border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px";
               card.innerHTML =
-                '<div style="display:flex;flex-direction:column;gap:4px"><strong style="font-weight:700">Order #' +
-                (o.orderNumber || "") +
+                '<div style="display:flex;flex-direction:column;gap:4px"><strong style="font-weight:700">' +
+                (o.name ? o.name : "Order #" + (o.orderNumber || "")) +
                 '</strong><span style="color:#666;font-size:13px">' +
                 dateStr +
                 "</span></div>" +
@@ -815,7 +815,44 @@
                 " / " +
                 (o.fulfillmentStatus || "-") +
                 "</div>" +
-                '<div style="flex:1 1 100%"></div>' +
+                '<div style="flex:1 1 100%;margin-top:8px"></div>' +
+                // Line items with images
+                '<div class="line-items" style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px">' +
+                (Array.isArray(o.items)
+                  ? o.items
+                      .map(function (li) {
+                        var img =
+                          li.variant && li.variant.image && li.variant.image.url
+                            ? li.variant.image.url
+                            : "";
+                        var vt =
+                          li.variant && li.variant.title
+                            ? li.variant.title
+                            : "";
+                        var title = li.title || "";
+                        var qty = li.quantity || 0;
+                        return (
+                          '<div class="item" style="display:flex;gap:10px;align-items:center">' +
+                          (img
+                            ? '<img src="' +
+                              img +
+                              '" alt="' +
+                              title.replace(/"/g, "&quot;") +
+                              '" style="width:60px;height:60px;border-radius:6px;object-fit:cover" />'
+                            : '<div style="width:60px;height:60px;border-radius:6px;background:#f3f3f3"></div>') +
+                          '<div style="font-size:14px;color:#111">' +
+                          title +
+                          (vt ? " (" + vt + ")" : "") +
+                          " × " +
+                          qty +
+                          "</div>" +
+                          "</div>"
+                        );
+                      })
+                      .join("")
+                  : "") +
+                "</div>" +
+                '<div style="flex:1 1 100%;margin-top:8px"></div>' +
                 (o.statusUrl
                   ? '<a href="' +
                     o.statusUrl +

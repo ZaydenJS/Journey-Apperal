@@ -38,7 +38,7 @@ export const handler = async (event) => {
 
   try {
     const client = createShopifyClient();
-    const query = `
+    const QUERY = `
       query GetMe($token: String!) {
         customer(customerAccessToken: $token) {
           id
@@ -51,10 +51,46 @@ export const handler = async (event) => {
         }
       }
     `;
-    const resp = await client.request(query, { variables: { token } });
-    const data = handleGraphQLResponse(resp);
-    const customer = data.customer;
+    const RENEW = `
+      mutation Renew($customerAccessToken: String!) {
+        customerAccessTokenRenew(customerAccessToken: $customerAccessToken) {
+          customerAccessToken { accessToken expiresAt }
+          userErrors { field message }
+        }
+      }
+    `;
 
+    async function getMe(tok) {
+      const resp = await client.request(QUERY, { variables: { token: tok } });
+      return handleGraphQLResponse(resp);
+    }
+
+    let data = await getMe(token);
+    if (!data || !data.customer) {
+      // Attempt token renewal once
+      try {
+        const renewResp = await client.request(RENEW, {
+          variables: { customerAccessToken: token },
+        });
+        const renewData =
+          handleGraphQLResponse(renewResp).customerAccessTokenRenew;
+        const newTok = renewData?.customerAccessToken?.accessToken || null;
+        const newExp = renewData?.customerAccessToken?.expiresAt || null;
+        if (newTok && newExp) {
+          data = await getMe(newTok);
+          if (data && data.customer) {
+            const res = createApiResponse({ customer: data.customer }, 200);
+            const expires = new Date(newExp).toUTCString();
+            res.headers["Set-Cookie"] = `ja_customer_token=${encodeURIComponent(
+              newTok
+            )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`;
+            return res;
+          }
+        }
+      } catch (_) {}
+    }
+
+    const customer = data.customer;
     if (!customer) {
       const res = createErrorResponse("Unauthorized", 401);
       res.headers["Set-Cookie"] = clearCookieHeader();
