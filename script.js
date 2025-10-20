@@ -1174,19 +1174,17 @@
         });
         candidates.set(so.value, arr);
       });
-      // choose best candidate per size: any available variant (qty null or >0); otherwise first
+      // choose best candidate per size: any available variant; otherwise first
       for (const [sizeVal, arr] of candidates.entries()) {
         let best = null;
         for (const c of arr) {
-          if (c.available && (typeof c.qty !== "number" || c.qty > 0)) {
+          if (c.available) {
             best = c;
             break;
           }
         }
         if (!best) best = arr[0];
-        const hasAnyAvailable = arr.some(
-          (c) => c.available && (typeof c.qty !== "number" || c.qty > 0)
-        );
+        const hasAnyAvailable = arr.some((c) => c.available);
         bySize.set(sizeVal, {
           id: best && best.id,
           available: hasAnyAvailable,
@@ -1240,15 +1238,18 @@
           btn.textContent = val;
           // attach variant id on the button for robust fallback
           if (meta && meta.id) btn.dataset.variantId = String(meta.id);
-          const disabled =
-            meta.available === false ||
-            (typeof meta.qty === "number" && meta.qty <= 0);
+          const disabled = meta.available === false;
           if (disabled) {
             btn.setAttribute("disabled", "true");
             btn.style.opacity = "0.5";
             btn.style.cursor = "not-allowed";
           }
-          if (!disabled && typeof meta.qty === "number" && meta.qty <= 3) {
+          if (
+            !disabled &&
+            typeof meta.qty === "number" &&
+            meta.qty > 0 &&
+            meta.qty <= 3
+          ) {
             const low = document.createElement("span");
             low.textContent = "  Low stock";
             low.style.fontSize = "11px";

@@ -886,10 +886,8 @@
               var best = null;
               var hasAvail = false;
               rec.cands.forEach(function (c) {
-                if (!best && c.available && (c.qty == null || c.qty > 0))
-                  best = c;
-                if (c.available && (c.qty == null || c.qty > 0))
-                  hasAvail = true;
+                if (!best && c.available) best = c;
+                if (c.available) hasAvail = true;
               });
               if (!best) best = rec.cands[0] || null;
 
