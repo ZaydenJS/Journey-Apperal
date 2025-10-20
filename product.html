@@ -790,7 +790,8 @@
                 try {
                   localStorage.setItem("pdp:lastColour:" + handle, val);
                 } catch (_) {}
-                // Re-render sizes for the chosen colour
+                // Notify any external listeners (e.g., main script) and re-render sizes
+                try { document.dispatchEvent(new CustomEvent('pdp:colour:change', { detail: { value: val } })); } catch (_) {}
                 render();
               });
 

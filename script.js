@@ -1042,23 +1042,23 @@
         );
       });
       let selectedColour = "";
+      // Always determine a base selected colour from storage or first option,
+      // even if swatches container is not present in the DOM
+      if (colourOption) {
+        try {
+          selectedColour = localStorage.getItem("pdp:lastColour:" + handle) || "";
+        } catch (_) {}
+        if (!selectedColour) {
+          selectedColour = (colourOption.values && colourOption.values[0]) || "";
+        }
+      }
       if (swatches && colourOption) {
-        // Determine current selection from DOM, localStorage, or default
+        // If a swatch is pressed, it takes precedence over the base value
         const pressed = swatches.querySelector('.swatch[aria-pressed="true"]');
         if (pressed) {
-          selectedColour = pressed.getAttribute("data-value") || "";
-        } else {
-          try {
-            selectedColour =
-              localStorage.getItem("pdp:lastColour:" + handle) || "";
-          } catch (_) {}
-          if (!selectedColour) {
-            selectedColour =
-              (colourOption.values && colourOption.values[0]) || "";
-          }
+          selectedColour = pressed.getAttribute("data-value") || selectedColour;
         }
         // Render swatches if empty
-        if (!swatches.querySelector(".swatch")) {
           swatches.innerHTML = "";
           (colourOption.values || []).forEach((val) => {
             const btn = document.createElement("button");
@@ -1419,6 +1419,11 @@
       __cacheSet("pdp:product:" + handle, product);
       __cacheSet("pdp:variants:" + handle, payload);
       renderFrom(payload);
+      try {
+        document.addEventListener("pdp:colour:change", function () {
+          try { renderFrom(payload, true); } catch (_) {}
+        });
+      } catch (_) {}
     } catch (e) {
       console.warn("Failed to load product-variants", e);
     }
