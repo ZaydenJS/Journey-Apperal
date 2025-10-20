@@ -102,6 +102,17 @@ export function renderGallery(trackEl, images = []) {
     el.loading = "eager";
     trackEl.appendChild(el);
   }
+  // Ensure we start at the first image and trigger a layout flush to avoid mis-center
+  try {
+    trackEl.scrollTo({ left: 0, top: 0, behavior: "auto" });
+  } catch (_) {
+    try {
+      trackEl.scrollLeft = 0;
+    } catch (_) {}
+  }
+  try {
+    void trackEl.offsetHeight;
+  } catch (_) {}
 }
 
 function getSelectedColorFromSwatches(swatchContainer) {
@@ -118,6 +129,58 @@ function setURLColorParam(color) {
   } catch (_) {}
 }
 
+function __isValidCssColor(c) {
+  try {
+    const s = document.createElement("span").style;
+    s.color = "";
+    s.color = c;
+    return !!s.color;
+  } catch (_) {
+    return false;
+  }
+}
+function __resolveCssColor(val) {
+  const t = String(val || "")
+    .trim()
+    .toLowerCase();
+  const map = {
+    black: "#000000",
+    white: "#ffffff",
+    blue: "#0000ff",
+    navy: "#001f3f",
+    sky: "#87ceeb",
+    skyblue: "#87ceeb",
+    red: "#ff0000",
+    burgundy: "#800020",
+    maroon: "#800000",
+    green: "#008000",
+    forest: "#0b3d0b",
+    olive: "#808000",
+    sage: "#b2ac88",
+    yellow: "#ffff00",
+    orange: "#ffa500",
+    tan: "#d2b48c",
+    khaki: "#c3b091",
+    sand: "#c2b280",
+    ecru: "#c2b280",
+    cream: "#f5f5dc",
+    beige: "#f5f5dc",
+    brown: "#8b4513",
+    grey: "#808080",
+    gray: "#808080",
+    charcoal: "#333333",
+    silver: "#c0c0c0",
+    gold: "#d4af37",
+    purple: "#800080",
+    lilac: "#c8a2c8",
+    pink: "#ffc0cb",
+  };
+  if (map[t]) return map[t];
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(t)) return t;
+  if (__isValidCssColor(t)) return t;
+  return "";
+}
+
 function ensureSwatches(container, colors) {
   if (!container) return;
   // Mark container so legacy inline script doesn't overwrite our swatches
@@ -131,6 +194,10 @@ function ensureSwatches(container, colors) {
     btn.setAttribute("data-value", label);
     btn.setAttribute("aria-pressed", idx === 0 ? "true" : "false");
     btn.setAttribute("aria-label", label);
+    // Visual fill from colour name/hex when possible
+    const css = __resolveCssColor(label);
+    if (css) btn.style.background = css;
+    btn.title = label;
     container.appendChild(btn);
   });
 }
