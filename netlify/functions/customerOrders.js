@@ -34,15 +34,18 @@ function cookieDomainFromHost(host) {
   }
 }
 
-function unauthorizedResponse(event) {
+function unauthorizedResponse(event, reason) {
   const res = createErrorResponse("Unauthorized", 401);
   const domainAttr = cookieDomainFromHost(
     event?.headers?.host || event?.headers?.Host
   );
-  res.headers["Set-Cookie"] = clearCookieHeader().replace(
-    /; Expires=[^;]+/,
-    (m) => `${m}${domainAttr}`
-  );
+  if (reason === "no-cookie") {
+    res.headers["Set-Cookie"] = clearCookieHeader().replace(
+      /; Expires=[^;]+/,
+      (m) => `${m}${domainAttr}`
+    );
+  }
+  if (reason) res.headers["X-Auth-Reason"] = String(reason);
   return res;
 }
 
@@ -57,7 +60,7 @@ export const handler = async (event) => {
   const token = getTokenFromCookie(
     event.headers.cookie || event.headers.Cookie
   );
-  if (!token) return unauthorizedResponse(event);
+  if (!token) return unauthorizedResponse(event, "no-cookie");
 
   const params = event.queryStringParameters || {};
   const first = Math.max(1, Math.min(50, parseInt(params.first || "20", 10)));
@@ -354,7 +357,7 @@ export const handler = async (event) => {
           }
         } catch (_) {}
       }
-      return unauthorizedResponse(event);
+      return unauthorizedResponse(event, "no-customer-or-orders");
     }
 
     const ordersConn = data.customer?.orders;

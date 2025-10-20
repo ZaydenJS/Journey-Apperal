@@ -47,7 +47,9 @@ export const handler = async (event) => {
     event.headers.cookie || event.headers.Cookie
   );
   if (!token) {
-    return createErrorResponse("Unauthorized", 401);
+    const res = createErrorResponse("Unauthorized", 401);
+    res.headers["X-Auth-Reason"] = "no-cookie";
+    return res;
   }
 
   try {
@@ -113,6 +115,7 @@ export const handler = async (event) => {
       res.headers["Set-Cookie"] = clearCookieHeader(
         event.headers.host || event.headers.Host
       );
+      res.headers["X-Auth-Reason"] = "invalid-or-expired-token";
       return res;
     }
 
@@ -122,6 +125,7 @@ export const handler = async (event) => {
     res.headers["Set-Cookie"] = clearCookieHeader(
       event.headers.host || event.headers.Host
     );
+    res.headers["X-Auth-Reason"] = "error";
     return res;
   }
 };

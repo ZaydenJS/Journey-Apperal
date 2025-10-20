@@ -752,7 +752,7 @@
           '<div style="color:#666;text-align:center">Loading your orders…</div>';
 
         fetch("/.netlify/functions/customerOrders?first=20", {
-          credentials: "same-origin",
+          credentials: "include",
         })
           .then(async function (resp) {
             if (resp.status === 401) {
