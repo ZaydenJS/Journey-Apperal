@@ -1770,6 +1770,7 @@
               moved = false; // mode: 'h' | 'v'
             function resetLock() {
               track.classList.remove("no-hscroll");
+              track.classList.remove("press-guard");
               mode = null;
               moved = false;
             }
@@ -1803,14 +1804,14 @@
                     : Date.now();
                 var elapsed = now - startAt;
                 if (!mode) {
-                  if (elapsed < 400) {
-                    // During the first 400ms, avoid classifying as horizontal; keep carousel fixed
+                  var earlyH = adx >= 24 && adx > ady * 1.2; // strong early horizontal swipe
+                  if (elapsed < 400 && !earlyH) {
+                    // During the first 400ms without a strong horizontal cue, keep carousel fixed
                     track.scrollLeft = startScrollX;
                     return;
-                  } else {
-                    // Dwell complete: allow horizontal classification
-                    track.classList.remove("press-guard");
                   }
+                  // Dwell complete OR strong early horizontal: allow classification
+                  track.classList.remove("press-guard");
                   if (adx > 10 || ady > 10) {
                     mode = adx > ady * 1.2 ? "h" : "v";
                     if (mode === "h") {
