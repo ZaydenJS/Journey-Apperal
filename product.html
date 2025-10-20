@@ -829,7 +829,7 @@
                   var n = String((o.name || "").trim()).toLowerCase();
                   return n === "colour" || n === "color";
                 });
-                if (!col || String(col.value) !== String(selectedColour))
+                if (!col || String(col.value || "").trim().toLowerCase() !== String(selectedColour || "").trim().toLowerCase())
                   return;
               }
               var so = (v.selectedOptions || []).find(function (o) {
