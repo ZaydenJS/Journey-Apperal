@@ -1031,8 +1031,15 @@
       // Determine COLOUR option and selected value; render swatches if present
       const swatches = document.getElementById("colour-swatches");
       const colourOption = (data.options || []).find((o) => {
-        const n = String((o.name || "").trim()).toLowerCase();
-        return n === "colour" || n === "color";
+        const n = String((o.name || "").trim())
+          .toLowerCase()
+          .replace(/\s+/g, "");
+        return (
+          n === "colour" ||
+          n === "color" ||
+          n === "colourway" ||
+          n === "colorway"
+        );
       });
       let selectedColour = "";
       if (swatches && colourOption) {
@@ -1152,8 +1159,15 @@
         // If a COLOUR is selected, only consider variants matching that colour
         if (selectedColour) {
           const col = (v.selectedOptions || []).find((o) => {
-            const n = String((o.name || "").trim()).toLowerCase();
-            return n === "colour" || n === "color";
+            const n = String((o.name || "").trim())
+              .toLowerCase()
+              .replace(/\s+/g, "");
+            return (
+              n === "colour" ||
+              n === "color" ||
+              n === "colourway" ||
+              n === "colorway"
+            );
           });
           if (
             !col ||

@@ -667,10 +667,10 @@
           }
           if (!payload || !payload.variants) return;
 
-          // Colour (COLOUR) option handling and swatches
+          // Colour (COLOUR) option handling and swatches (support common synonyms)
           var colourOption = (payload.options || []).find(function (o) {
-            var n = String((o.name || "").trim()).toLowerCase();
-            return n === "colour" || n === "color";
+            var n = String((o.name || "").trim()).toLowerCase().replace(/\s+/g, "");
+            return n === "colour" || n === "color" || n === "colourway" || n === "colorway";
           });
 
           // Helpers: map colour names to CSS, validate named/hex colours
@@ -826,8 +826,8 @@
               // If a colour is selected, only consider variants matching that colour
               if (selectedColour) {
                 var col = (v.selectedOptions || []).find(function (o) {
-                  var n = String((o.name || "").trim()).toLowerCase();
-                  return n === "colour" || n === "color";
+                  var n = String((o.name || "").trim()).toLowerCase().replace(/\s+/g, "");
+                  return n === "colour" || n === "color" || n === "colourway" || n === "colorway";
                 });
                 if (
                   !col ||

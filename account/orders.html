@@ -754,6 +754,16 @@
           credentials: "include",
         })
           .then(async function (resp) {
+            try {
+              var hdrs = {};
+              if (resp && resp.headers) {
+                resp.headers.forEach(function (v, k) {
+                  hdrs[k] = v;
+                });
+              }
+              window.__jaOrdersHeaders = hdrs; // debug visibility in DevTools
+              console.log("Orders headers:", hdrs);
+            } catch (_) {}
             if (resp.status === 401) {
               var reason = resp.headers
                 ? resp.headers.get("X-Auth-Reason")
