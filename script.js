@@ -1051,6 +1051,7 @@
           }
         }
         // Render swatches if empty
+        if (!swatches.querySelector(".swatch")) {
           swatches.innerHTML = "";
           (colourOption.values || []).forEach((val) => {
             const btn = document.createElement("button");
@@ -1058,10 +1059,7 @@
             btn.setAttribute("data-value", val);
             btn.setAttribute(
               "aria-pressed",
-              String(val).trim().toLowerCase() ===
-                String(selectedColour).trim().toLowerCase()
-                ? "true"
-                : "false"
+              String(val) === String(selectedColour) ? "true" : "false"
             );
             const cssColor = (function (raw) {
               const t = String(raw || "")
@@ -1113,8 +1111,7 @@
             btn.style.height = "28px";
             btn.style.borderRadius = "50%";
             btn.style.border =
-              String(val).trim().toLowerCase() ===
-              String(selectedColour).trim().toLowerCase()
+              String(val) === String(selectedColour)
                 ? "2px solid #111"
                 : "1px solid #ccc";
             btn.style.background = cssColor || "#f0f0f0";
@@ -1154,12 +1151,7 @@
             const n = String((o.name || "").trim()).toLowerCase();
             return n === "colour" || n === "color";
           });
-          if (
-            !col ||
-            String(col.value).trim().toLowerCase() !==
-              String(selectedColour).trim().toLowerCase()
-          )
-            return;
+          if (!col || String(col.value) !== String(selectedColour)) return;
         }
         const so = (v.selectedOptions || []).find(
           (o) => String((o.name || "").trim()).toLowerCase() === "size"
@@ -1173,17 +1165,19 @@
         });
         candidates.set(so.value, arr);
       });
-      // choose best candidate per size: any available variant; otherwise first
+      // choose best candidate per size: any available variant (qty null or >0); otherwise first
       for (const [sizeVal, arr] of candidates.entries()) {
         let best = null;
         for (const c of arr) {
-          if (c.available) {
+          if (c.available && (typeof c.qty !== "number" || c.qty > 0)) {
             best = c;
             break;
           }
         }
         if (!best) best = arr[0];
-        const hasAnyAvailable = arr.some((c) => c.available);
+        const hasAnyAvailable = arr.some(
+          (c) => c.available && (typeof c.qty !== "number" || c.qty > 0)
+        );
         bySize.set(sizeVal, {
           id: best && best.id,
           available: hasAnyAvailable,
@@ -1237,18 +1231,15 @@
           btn.textContent = val;
           // attach variant id on the button for robust fallback
           if (meta && meta.id) btn.dataset.variantId = String(meta.id);
-          const disabled = meta.available === false;
+          const disabled =
+            meta.available === false ||
+            (typeof meta.qty === "number" && meta.qty <= 0);
           if (disabled) {
             btn.setAttribute("disabled", "true");
             btn.style.opacity = "0.5";
             btn.style.cursor = "not-allowed";
           }
-          if (
-            !disabled &&
-            typeof meta.qty === "number" &&
-            meta.qty > 0 &&
-            meta.qty <= 3
-          ) {
+          if (!disabled && typeof meta.qty === "number" && meta.qty <= 3) {
             const low = document.createElement("span");
             low.textContent = "  Low stock";
             low.style.fontSize = "11px";
@@ -2050,7 +2041,17 @@
               // Bind arrows to scrollBy like homepage (single-track)
               const prevs = section.querySelectorAll(".prev");
               const nexts = section.querySelectorAll(".next");
-              const step = () => track.clientWidth * 0.8;
+              const step = () => {
+                const first = track.children[0];
+                if (first) {
+                  const rect = first.getBoundingClientRect();
+                  const styles = getComputedStyle(track);
+                  const gap =
+                    parseFloat(styles.columnGap || styles.gap || 0) || 0;
+                  return rect.width + gap;
+                }
+                return track.clientWidth * 0.8;
+              };
               prevs.forEach((btn) =>
                 btn.addEventListener("click", () =>
                   track.scrollBy({ left: -step(), behavior: "smooth" })
@@ -2061,7 +2062,41 @@
                   track.scrollBy({ left: step(), behavior: "smooth" })
                 )
               );
-              /* Removed custom pointer-drag swipe to match New Arrivals mobile behavior (native scroll + scroll-snap only) */
+              // Drag to scroll (pointer events) — identical to homepage
+              if (!track.hasAttribute("data-swipe-step")) {
+                track.setAttribute("data-swipe-step", "1");
+                let startX = 0,
+                  startT = 0,
+                  dragging = false;
+                const threshold = 30;
+                const velocityThresh = 0.6; // px per ms
+                const getStep = step;
+                track.addEventListener("pointerdown", (e) => {
+                  dragging = true;
+                  startX = e.pageX;
+                  startT = performance.now();
+                });
+                const finish = (e) => {
+                  if (!dragging) return;
+                  dragging = false;
+                  const dx = (e.pageX || 0) - startX;
+                  const dt = Math.max(performance.now() - startT, 1);
+                  const v = Math.abs(dx) / dt;
+                  const s = getStep();
+                  if (Math.abs(dx) > threshold || v > velocityThresh) {
+                    const dir = dx < 0 ? 1 : -1;
+                    track.scrollBy({ left: dir * s, behavior: "smooth" });
+                  } else {
+                    const target = Math.round(track.scrollLeft / s) * s;
+                    track.scrollTo({ left: target, behavior: "smooth" });
+                  }
+                };
+                track.addEventListener("pointerup", finish);
+                track.addEventListener("pointercancel", finish);
+                track.addEventListener("pointerleave", () => {
+                  dragging = false;
+                });
+              }
             } catch (_) {}
 
             // Prefetch PDP for visible cards to ensure instant PDP-to-PDP nav
@@ -2177,7 +2212,49 @@
         });
         bestTrack.style.willChange =
           bestTrack.style.willChange || "scroll-position";
-        /* Removed custom pointer-drag swipe to match New Arrivals mobile behavior (native scroll + scroll-snap only) */
+        if (!bestTrack.hasAttribute("data-swipe-step")) {
+          bestTrack.setAttribute("data-swipe-step", "1");
+          let startX = 0,
+            startT = 0,
+            dragging = false;
+          const threshold = 30;
+          const velocityThresh = 0.6; // px per ms
+          const step = () => {
+            const first = bestTrack.children[0];
+            if (first) {
+              const rect = first.getBoundingClientRect();
+              const styles = getComputedStyle(bestTrack);
+              const gap = parseFloat(styles.columnGap || styles.gap || 0) || 0;
+              return rect.width + gap;
+            }
+            return bestTrack.clientWidth * 0.8;
+          };
+          bestTrack.addEventListener("pointerdown", (e) => {
+            dragging = true;
+            startX = e.pageX;
+            startT = performance.now();
+          });
+          const finish = (e) => {
+            if (!dragging) return;
+            dragging = false;
+            const dx = (e.pageX || 0) - startX;
+            const dt = Math.max(performance.now() - startT, 1);
+            const v = Math.abs(dx) / dt;
+            const s = step();
+            if (Math.abs(dx) > threshold || v > velocityThresh) {
+              const dir = dx < 0 ? 1 : -1;
+              bestTrack.scrollBy({ left: dir * s, behavior: "smooth" });
+            } else {
+              const target = Math.round(bestTrack.scrollLeft / s) * s;
+              bestTrack.scrollTo({ left: target, behavior: "smooth" });
+            }
+          };
+          bestTrack.addEventListener("pointerup", finish);
+          bestTrack.addEventListener("pointercancel", finish);
+          bestTrack.addEventListener("pointerleave", () => {
+            dragging = false;
+          });
+        }
       }
 
       // Build real Best Sellers list (no placeholders)
@@ -2631,8 +2708,17 @@
             renderPage();
           });
         } else {
-          // Mobile: bind arrows to scroll the track horizontally (same as homepage New Arrivals)
-          const step = () => bestTrack.clientWidth * 0.8;
+          // Mobile: bind arrows to scroll the track horizontally
+          const step = () => {
+            const first = bestTrack.children[0];
+            if (first) {
+              const rect = first.getBoundingClientRect();
+              const styles = getComputedStyle(bestTrack);
+              const gap = parseFloat(styles.columnGap || styles.gap || 0) || 0;
+              return rect.width + gap;
+            }
+            return bestTrack.clientWidth * 0.8;
+          };
           prevBtn.addEventListener("click", (e) => {
             e.preventDefault();
             bestTrack.scrollBy({ left: -step(), behavior: "smooth" });

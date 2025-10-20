@@ -755,7 +755,7 @@
               btn.setAttribute("data-value", val);
               btn.setAttribute(
                 "aria-pressed",
-                String(val).trim().toLowerCase() === String(selected).trim().toLowerCase() ? "true" : "false"
+                String(val) === String(selected) ? "true" : "false"
               );
               btn.setAttribute("aria-label", val);
               btn.title = val;
@@ -766,7 +766,7 @@
               btn.style.height = "28px";
               btn.style.borderRadius = "50%";
               btn.style.border =
-                String(val).trim().toLowerCase() === String(selected).trim().toLowerCase()
+                String(val) === String(selected)
                   ? "2px solid #111"
                   : "1px solid #ccc";
               btn.style.background = bg;
@@ -829,10 +829,7 @@
                   var n = String((o.name || "").trim()).toLowerCase();
                   return n === "colour" || n === "color";
                 });
-                if (
-                  !col ||
-                  String(col.value).trim().toLowerCase() !== String(selectedColour).trim().toLowerCase()
-                )
+                if (!col || String(col.value) !== String(selectedColour))
                   return;
               }
               var so = (v.selectedOptions || []).find(function (o) {
@@ -886,8 +883,10 @@
               var best = null;
               var hasAvail = false;
               rec.cands.forEach(function (c) {
-                if (!best && c.available) best = c;
-                if (c.available) hasAvail = true;
+                if (!best && c.available && (c.qty == null || c.qty > 0))
+                  best = c;
+                if (c.available && (c.qty == null || c.qty > 0))
+                  hasAvail = true;
               });
               if (!best) best = rec.cands[0] || null;
 
