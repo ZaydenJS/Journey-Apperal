@@ -1797,8 +1797,8 @@
                     : Date.now();
                 var elapsed = now - startAt;
                 if (!mode) {
-                  if (elapsed < 20) {
-                    // During the first 20ms, avoid classifying as horizontal; keep carousel fixed
+                  if (elapsed < 400) {
+                    // During the first 400ms, avoid classifying as horizontal; keep carousel fixed
                     track.scrollLeft = startScrollX;
                     return;
                   }
