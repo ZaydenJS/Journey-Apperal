@@ -1700,7 +1700,9 @@
           }
           function goTo(i, behavior) {
             var imgs = getImgs();
-            i = Math.max(0, Math.min(imgs.length - 1, i));
+            if (!imgs.length) return;
+            if (i < 0) i = imgs.length - 1; // wrap-around
+            if (i >= imgs.length) i = 0; // wrap-around
             var el = imgs[i];
             if (el) {
               track.scrollTo({
@@ -1804,7 +1806,7 @@
                     : Date.now();
                 var elapsed = now - startAt;
                 if (!mode) {
-                  var earlyH = adx >= 24 && adx > ady * 1.2; // strong early horizontal swipe
+                  var earlyH = adx >= 16 && adx > ady * 1.2; // strong early horizontal swipe
                   if (elapsed < 400 && !earlyH) {
                     // During the first 400ms without a strong horizontal cue, keep carousel fixed
                     track.scrollLeft = startScrollX;
@@ -1835,9 +1837,10 @@
               function (e) {
                 if (mode === "h" && moved) {
                   var dx = e.changedTouches[0].clientX - startX;
-                  var threshold = 40;
+                  var threshold = 30;
                   if (dx < -threshold) goTo(currentIdx + 1, "smooth");
                   else if (dx > threshold) goTo(currentIdx - 1, "smooth");
+                  else goTo(currentIdx, "smooth");
                 }
                 resetLock();
               },
