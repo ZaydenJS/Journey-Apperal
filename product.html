@@ -370,6 +370,18 @@
           overflow-y: hidden !important;
           -webkit-overflow-scrolling: touch !important;
         }
+        /* Ensure identical swipe animation: enable scroll-snap for both tracks on mobile */
+        .p-details #you-also-viewed .carousel-track,
+        .p-details #featured-collection .carousel-track {
+          scroll-snap-type: x mandatory !important;
+          scroll-padding: 12px !important;
+          overscroll-behavior-x: contain !important;
+        }
+        .p-details #you-also-viewed .carousel-track > *,
+        .p-details #featured-collection .carousel-track > * {
+          scroll-snap-align: center !important;
+        }
+
         /* Match New Arrivals aspect ratio */
         .p-details #you-also-viewed .img-wrap,
         .p-details #featured-collection .img-wrap {
@@ -1748,6 +1760,7 @@
             var startX = 0,
               startY = 0,
               startScrollX = 0,
+              startAt = 0,
               mode = null,
               moved = false; // mode: 'h' | 'v'
             function resetLock() {
@@ -1762,6 +1775,10 @@
                 startX = t.clientX;
                 startY = t.clientY;
                 startScrollX = track.scrollLeft;
+                startAt =
+                  typeof performance !== "undefined" && performance.now
+                    ? performance.now()
+                    : Date.now();
                 resetLock();
               },
               { passive: true }
@@ -1774,10 +1791,22 @@
                 var dy = t.clientY - startY;
                 var adx = Math.abs(dx);
                 var ady = Math.abs(dy);
-                if (!mode && (adx > 10 || ady > 10)) {
-                  mode = adx > ady * 1.2 ? "h" : "v";
-                  if (mode === "v") {
-                    track.classList.add("no-hscroll");
+                var now =
+                  typeof performance !== "undefined" && performance.now
+                    ? performance.now()
+                    : Date.now();
+                var elapsed = now - startAt;
+                if (!mode) {
+                  if (elapsed < 20) {
+                    // During the first 20ms, avoid classifying as horizontal; keep carousel fixed
+                    track.scrollLeft = startScrollX;
+                    return;
+                  }
+                  if (adx > 10 || ady > 10) {
+                    mode = adx > ady * 1.2 ? "h" : "v";
+                    if (mode === "v") {
+                      track.classList.add("no-hscroll");
+                    }
                   }
                 }
                 if (mode === "h") {
