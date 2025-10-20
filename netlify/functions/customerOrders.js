@@ -127,6 +127,32 @@ export const handler = async (event) => {
       process.env.SHOPIFY_ADMIN_TOKEN ||
       process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
 
+    const adminEnabled = !!(storeDomain && adminToken);
+    let lastAdminError = null;
+    function addDebugHeaders(resp, extra) {
+      try {
+        resp.headers = resp.headers || {};
+        resp.headers["X-Admin-Enabled"] = String(adminEnabled);
+        if (storeDomain) resp.headers["X-Admin-Store"] = String(storeDomain);
+        if (extra && typeof extra.storefrontCount === "number") {
+          resp.headers["X-Storefront-Orders-Count"] = String(
+            extra.storefrontCount
+          );
+        }
+        if (extra && typeof extra.adminCount === "number") {
+          resp.headers["X-Admin-Orders-Count"] = String(extra.adminCount);
+        }
+        if (extra && extra.email)
+          resp.headers["X-Customer-Email"] = String(extra.email);
+        if (lastAdminError || (extra && extra.error)) {
+          resp.headers["X-Admin-Error"] = String(
+            extra?.error || lastAdminError
+          ).slice(0, 200);
+        }
+      } catch (_) {}
+      return resp;
+    }
+
     async function getCustomerEmail(tok) {
       try {
         const resp = await client.request(ME_QUERY, {
@@ -140,7 +166,10 @@ export const handler = async (event) => {
     }
 
     async function adminGraphQL(query, variables) {
-      if (!storeDomain || !adminToken) return null;
+      if (!adminEnabled) {
+        lastAdminError = "admin-not-enabled";
+        return null;
+      }
       const url = `https://${storeDomain}/admin/api/2024-07/graphql.json`;
       const r = await fetch(url, {
         method: "POST",
@@ -152,9 +181,13 @@ export const handler = async (event) => {
       });
       const json = await r.json().catch(() => ({}));
       if (!r.ok || json.errors) {
+        lastAdminError = String(
+          json?.errors?.[0]?.message || r.statusText || "unknown-admin-error"
+        );
         console.error("Admin GraphQL error", json.errors || r.statusText);
         return null;
       }
+      lastAdminError = null;
       return json.data || null;
     }
 
@@ -322,7 +355,11 @@ export const handler = async (event) => {
                 )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires2}${cookieDomainFromHost(
                   event.headers.host || event.headers.Host
                 )}`;
-                return res2;
+                return addDebugHeaders(res2, {
+                  adminCount: orders.length,
+                  email,
+                  storefrontCount: 0,
+                });
               }
             } catch (_) {}
           }
@@ -339,7 +376,7 @@ export const handler = async (event) => {
           )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}${cookieDomainFromHost(
             event.headers.host || event.headers.Host
           )}`;
-          return res;
+          return addDebugHeaders(res, { storefrontCount: orders.length });
         }
       } catch (_) {}
       // If Storefront couldn't load the customer at all, still try Admin fallback by email
@@ -353,14 +390,18 @@ export const handler = async (event) => {
               200
             );
             r.headers["X-Orders-Source"] = "admin";
-            return r;
+            return addDebugHeaders(r, {
+              adminCount: adminOrders.length,
+              email,
+              storefrontCount: 0,
+            });
           }
         } catch (_) {}
       }
       const r = createApiResponse({ orders: [], pageInfo: {} }, 200);
       r.headers["X-Orders-Source"] = "none";
       r.headers["X-Auth-Reason"] = "no-customer-or-orders";
-      return r;
+      return addDebugHeaders(r, { storefrontCount: 0, adminCount: 0 });
     }
 
     const ordersConn = data.customer?.orders;
@@ -392,7 +433,7 @@ export const handler = async (event) => {
             200
           );
           r.headers["X-Orders-Source"] = "admin";
-          return r;
+          return addDebugHeaders(r, { adminCount: adminOrders.length });
         }
       } catch (_) {}
     }
@@ -402,7 +443,7 @@ export const handler = async (event) => {
       200
     );
     out.headers["X-Orders-Source"] = "storefront";
-    return out;
+    return addDebugHeaders(out, { storefrontCount: orders.length });
   } catch (err) {
     return createErrorResponse(err.message || "Failed to load orders", 500);
   }
