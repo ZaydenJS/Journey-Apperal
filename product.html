@@ -164,6 +164,11 @@
           object-position: center center !important; /* center on desktop to match mobile and gallery module */
         }
 
+        /* Disable snap during programmatic animation to avoid overshoot */
+        #hero-track.snap-off {
+          scroll-snap-type: none !important;
+        }
+
         .p-gallery {
           margin: 0 !important;
         }
@@ -1715,10 +1720,12 @@
               // mark animating to keep state stable during smooth scroll
               animating = true;
               animTargetIdx = i;
+              track.classList.add("snap-off");
               if (animTimer) clearTimeout(animTimer);
               animTimer = setTimeout(function () {
                 animating = false;
                 currentIdx = animTargetIdx;
+                track.classList.remove("snap-off");
                 setActive();
               }, 500);
               // scroll into view robustly
