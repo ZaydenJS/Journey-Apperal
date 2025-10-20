@@ -339,7 +339,22 @@ export const handler = async (event) => {
           return res;
         }
       } catch (_) {}
-      return unauthorizedResponse();
+      // If Storefront couldn't load the customer at all, still try Admin fallback by email
+      if (adminToken && storeDomain) {
+        try {
+          const email = await getCustomerEmail(token);
+          const adminOrders = await fetchAdminOrdersByEmail(email, first);
+          if (adminOrders && adminOrders.length) {
+            const r = createApiResponse(
+              { orders: adminOrders, pageInfo: {} },
+              200
+            );
+            r.headers["X-Orders-Source"] = "admin";
+            return r;
+          }
+        } catch (_) {}
+      }
+      return unauthorizedResponse(event);
     }
 
     const ordersConn = data.customer?.orders;
