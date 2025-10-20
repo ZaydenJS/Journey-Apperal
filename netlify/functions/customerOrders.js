@@ -357,7 +357,10 @@ export const handler = async (event) => {
           }
         } catch (_) {}
       }
-      return unauthorizedResponse(event, "no-customer-or-orders");
+      const r = createApiResponse({ orders: [], pageInfo: {} }, 200);
+      r.headers["X-Orders-Source"] = "none";
+      r.headers["X-Auth-Reason"] = "no-customer-or-orders";
+      return r;
     }
 
     const ordersConn = data.customer?.orders;
