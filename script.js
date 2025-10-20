@@ -3380,9 +3380,12 @@
 
     // Prefetch PDP data/images on hover/touch/mousedown so PDP renders instantly
     const trigger = (e) => {
-      const el = e.target.closest(
-        '.card[data-href], a[href*="product.html"], a[href*="/products/"]'
-      );
+      const el =
+        e && e.target && typeof e.target.closest === "function"
+          ? e.target.closest(
+              '.card[data-href], a[href*="product.html"], a[href*="/products/"]'
+            )
+          : null;
       if (!el) return;
       const href =
         el.getAttribute("data-href") ||

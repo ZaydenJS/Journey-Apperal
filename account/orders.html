@@ -742,8 +742,10 @@
 
     <script src="/assets/account.js" defer></script>
     <script>
-      (function () {
-        JAAccount.guardAuthenticated();
+      window.addEventListener("DOMContentLoaded", function () {
+        try {
+          JAAccount.guardAuthenticated();
+        } catch (_) {}
         var list = document.getElementById("orders");
         if (!list) return;
         list.innerHTML =
@@ -816,7 +818,6 @@
                 (o.fulfillmentStatus || "-") +
                 "</div>" +
                 '<div style="flex:1 1 100%;margin-top:8px"></div>' +
-                // Line items with images
                 '<div class="line-items" style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px">' +
                 (Array.isArray(o.items)
                   ? o.items
@@ -867,7 +868,7 @@
               (err && err.message ? err.message : "Unknown error") +
               "</div>";
           });
-      })();
+      });
     </script>
     <script src="/script.js" defer></script>
   </body>
