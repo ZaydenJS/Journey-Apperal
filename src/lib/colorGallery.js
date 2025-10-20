@@ -113,6 +113,12 @@ export function renderGallery(trackEl, images = []) {
   try {
     void trackEl.offsetHeight;
   } catch (_) {}
+  // Notify page scripts that hero images were updated (rebuild arrows/dots/state)
+  try {
+    document.dispatchEvent(
+      new CustomEvent("pdp:hero:updated", { detail: { count: images.length } })
+    );
+  } catch (_) {}
 }
 
 function getSelectedColorFromSwatches(swatchContainer) {

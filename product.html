@@ -1675,11 +1675,14 @@
             }
           })();
 
-          // Build pagination dots and sync active state
-          var imgs = Array.from(track.querySelectorAll("img"));
+          // Build pagination dots and sync active state (dynamic to support gallery updates)
           var dotsWrap = document.getElementById("hero-dots");
           var currentIdx = 0;
+          function getImgs() {
+            return Array.from(track.querySelectorAll("img"));
+          }
           function goTo(i, behavior) {
+            var imgs = getImgs();
             i = Math.max(0, Math.min(imgs.length - 1, i));
             var el = imgs[i];
             if (el) {
@@ -1690,10 +1693,10 @@
               currentIdx = i;
             }
           }
-
-          if (dotsWrap) {
+          function rebuildDots() {
+            if (!dotsWrap) return;
             dotsWrap.innerHTML = "";
-            imgs.forEach(function (_, i) {
+            getImgs().forEach(function (_, i) {
               var dot = document.createElement("span");
               dot.setAttribute("data-idx", i);
               dot.style.cssText =
@@ -1705,8 +1708,8 @@
               dotsWrap.appendChild(dot);
             });
           }
-
           function setActive() {
+            var imgs = getImgs();
             var mid = track.scrollLeft + track.clientWidth / 2;
             var nearest = 0,
               dist = Infinity;
@@ -1745,15 +1748,13 @@
             var startX = 0,
               startY = 0,
               startScrollX = 0,
-              mode = null, // 'h' for horizontal, 'v' for vertical
-              moved = false;
-
+              mode = null,
+              moved = false; // mode: 'h' | 'v'
             function resetLock() {
               track.classList.remove("no-hscroll");
               mode = null;
               moved = false;
             }
-
             track.addEventListener(
               "touchstart",
               function (e) {
@@ -1765,7 +1766,6 @@
               },
               { passive: true }
             );
-
             track.addEventListener(
               "touchmove",
               function (e) {
@@ -1774,29 +1774,21 @@
                 var dy = t.clientY - startY;
                 var adx = Math.abs(dx);
                 var ady = Math.abs(dy);
-
                 if (!mode && (adx > 10 || ady > 10)) {
                   mode = adx > ady * 1.2 ? "h" : "v";
                   if (mode === "v") {
-                    // Lock out horizontal scroll during vertical gestures
                     track.classList.add("no-hscroll");
                   }
                 }
-
                 if (mode === "h") {
-                  // Handle horizontal swipe ourselves; prevent native scroll
                   e.preventDefault();
                   moved = true;
                 } else {
-                  // Vertical gesture: keep the carousel fixed
-                  track.scrollLeft = startScrollX; // freeze horizontal position
-
-                  // Let the page scroll naturally; do not preventDefault
+                  track.scrollLeft = startScrollX;
                 }
               },
               { passive: false }
             );
-
             track.addEventListener(
               "touchend",
               function (e) {
@@ -1810,11 +1802,28 @@
               },
               { passive: true }
             );
-
             track.addEventListener("touchcancel", resetLock, { passive: true });
           })();
 
+          // Initial dots/active state
+          rebuildDots();
           setActive();
+
+          // When gallery updates images (e.g., color change), re-size hero, rebuild dots and reset index
+          try {
+            document.addEventListener("pdp:hero:updated", function () {
+              try {
+                sizeHero();
+              } catch (_) {}
+              rebuildDots();
+              currentIdx = 0;
+              requestAnimationFrame(function () {
+                goTo(0, "auto");
+                setActive();
+              });
+            });
+          } catch (_) {}
+
           track.addEventListener(
             "scroll",
             function () {
