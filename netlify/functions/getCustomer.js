@@ -112,9 +112,7 @@ export const handler = async (event) => {
     const customer = data.customer;
     if (!customer) {
       const res = createErrorResponse("Unauthorized", 401);
-      res.headers["Set-Cookie"] = clearCookieHeader(
-        event.headers.host || event.headers.Host
-      );
+      // Do not clear cookie here; let caller decide. Include reason for diagnostics.
       res.headers["X-Auth-Reason"] = "invalid-or-expired-token";
       return res;
     }
@@ -122,9 +120,7 @@ export const handler = async (event) => {
     return createApiResponse({ customer }, 200);
   } catch (err) {
     const res = createErrorResponse("Unauthorized", 401);
-    res.headers["Set-Cookie"] = clearCookieHeader(
-      event.headers.host || event.headers.Host
-    );
+    // Do not clear cookie on transient error; include reason for debugging
     res.headers["X-Auth-Reason"] = "error";
     return res;
   }

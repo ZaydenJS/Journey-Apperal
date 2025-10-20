@@ -756,8 +756,15 @@
         })
           .then(async function (resp) {
             if (resp.status === 401) {
-              location.replace("/account/login.html");
-              return null;
+              var reason = resp.headers
+                ? resp.headers.get("X-Auth-Reason")
+                : null;
+              if (reason === "no-cookie") {
+                location.replace("/account/login.html");
+                return null;
+              }
+              // For other reasons (e.g., invalid/expired), treat as empty orders to avoid redirect loop
+              return { orders: [] };
             }
             var data = await resp.json().catch(function () {
               return {};

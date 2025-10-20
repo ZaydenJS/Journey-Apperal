@@ -170,7 +170,7 @@
   async function refreshCustomerData() {
     try {
       var resp = await fetch(API_BASE + "/getCustomer", {
-        credentials: "same-origin",
+        credentials: "include",
       });
       if (!resp.ok) return null;
       var data = await resp.json().catch(function () {
@@ -258,7 +258,7 @@
   async function guardAuthenticated() {
     try {
       var resp = await fetch(API_BASE + "/getCustomer", {
-        credentials: "same-origin",
+        credentials: "include",
       });
       if (resp.ok) {
         var data = await resp.json().catch(function () {
@@ -271,15 +271,25 @@
           } catch (_) {}
           return; // allow page to render
         }
+      } else {
+        var reason = resp.headers ? resp.headers.get("X-Auth-Reason") : null;
+        // Only force redirect when no cookie is present (definitely logged out)
+        if (reason === "no-cookie") {
+          try {
+            sessionStorage.setItem(
+              "ja_redirect_after_login",
+              location.pathname + location.search + location.hash
+            );
+          } catch (_) {}
+          location.replace(LOGIN_PAGE);
+          return;
+        }
+        // Otherwise (e.g., expired/invalid token), allow page JS to handle gracefully
+        return;
       }
     } catch (_) {}
-    try {
-      sessionStorage.setItem(
-        "ja_redirect_after_login",
-        location.pathname + location.search + location.hash
-      );
-    } catch (_) {}
-    location.replace(LOGIN_PAGE);
+    // Network or unexpected issue: allow the page to handle rendering
+    return;
   }
 
   // After successful login/registration, redirect back if a prior page saved
