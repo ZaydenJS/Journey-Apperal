@@ -341,6 +341,11 @@
         #hero-track.no-hscroll {
           overflow-x: hidden !important;
         }
+        /* Initial press guard: block h-scroll during dwell */
+        #hero-track.press-guard {
+          overflow-x: hidden !important;
+          touch-action: pan-y !important;
+        }
 
         #hero-track img {
           height: 100% !important;
@@ -1771,6 +1776,7 @@
             track.addEventListener(
               "touchstart",
               function (e) {
+                track.classList.add("press-guard");
                 var t = e.touches[0];
                 startX = t.clientX;
                 startY = t.clientY;
@@ -1801,10 +1807,15 @@
                     // During the first 400ms, avoid classifying as horizontal; keep carousel fixed
                     track.scrollLeft = startScrollX;
                     return;
+                  } else {
+                    // Dwell complete: allow horizontal classification
+                    track.classList.remove("press-guard");
                   }
                   if (adx > 10 || ady > 10) {
                     mode = adx > ady * 1.2 ? "h" : "v";
-                    if (mode === "v") {
+                    if (mode === "h") {
+                      track.classList.remove("press-guard");
+                    } else {
                       track.classList.add("no-hscroll");
                     }
                   }
