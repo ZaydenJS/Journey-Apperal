@@ -1625,12 +1625,49 @@
                 } catch (_) {}
               }
 
+              let colour = "";
+              try {
+                const opts =
+                  (selectedVariant && selectedVariant.selectedOptions) || [];
+                const col = Array.isArray(opts)
+                  ? opts.find(function (o) {
+                      const n = String(o.name || "")
+                        .trim()
+                        .toLowerCase();
+                      return n.includes("colour") || n.includes("color");
+                    })
+                  : null;
+                if (col && col.value) colour = String(col.value);
+                if (!colour) {
+                  const pressed = document.querySelector(
+                    '#colour-swatches .swatch[aria-pressed="true"]'
+                  );
+                  if (pressed)
+                    colour = pressed.getAttribute("data-value") || "";
+                }
+                if (!colour) {
+                  try {
+                    const handleKey =
+                      (product && (product.handle || product.slug)) ||
+                      window.location.pathname.split("/").pop() ||
+                      "";
+                    colour =
+                      localStorage.getItem("pdp:lastColour:" + handleKey) || "";
+                  } catch (_) {}
+                }
+              } catch (_) {}
+
               const items =
                 window.__cart && typeof window.__cart.getCart === "function"
                   ? window.__cart.getCart()
                   : [];
               const existing = items.find(function (it) {
-                return it.name === name && it.size === size;
+                return (
+                  it.name === name &&
+                  it.size === size &&
+                  String(it.colour || "").toLowerCase() ===
+                    String(colour || "").toLowerCase()
+                );
               });
               if (existing) existing.qty = (existing.qty || 1) + 1;
               else
@@ -1638,6 +1675,7 @@
                   name: name,
                   price: price,
                   size: size,
+                  colour: colour,
                   image: image,
                   qty: 1,
                   variantGid: (selectedVariant && selectedVariant.id) || "",
@@ -6937,7 +6975,9 @@
                 }</div>
               </div>
               <div style="font-size:12px; color:#666;">${
-                it.size ? `Size ${it.size}` : ""
+                (it.colour ? `COLOUR ${it.colour}` : "") +
+                (it.colour && it.size ? " · " : "") +
+                (it.size ? `Size ${it.size}` : "")
               }</div>
               <div style="display:flex; align-items:center; gap:12px;">
                 <div style="display:inline-flex; align-items:center; border:1px solid #dcdcdc; border-radius:8px; overflow:hidden; height:32px;">
@@ -7083,11 +7123,33 @@
         chosenId = selected.dataset.variantId;
       }
 
+      let colour = "";
+      try {
+        const pressed = document.querySelector(
+          '#colour-swatches .swatch[aria-pressed="true"]'
+        );
+        if (pressed) colour = pressed.getAttribute("data-value") || "";
+      } catch (_) {}
+
       const items = (window.__cart?.getCart && window.__cart.getCart()) || [];
-      const existing = items.find((it) => it.name === name && it.size === size);
+      const existing = items.find(
+        (it) =>
+          it.name === name &&
+          it.size === size &&
+          String(it.colour || "").toLowerCase() ===
+            String(colour || "").toLowerCase()
+      );
       if (existing) existing.qty = (existing.qty || 1) + 1;
       else
-        items.push({ name, price, size, image, qty: 1, variantGid: chosenId });
+        items.push({
+          name,
+          price,
+          size,
+          colour,
+          image,
+          qty: 1,
+          variantGid: chosenId,
+        });
       window.__cart?.setCart && window.__cart.setCart(items);
       // Open cart (initialize on-demand if still missing)
       try {
@@ -7191,10 +7253,22 @@
               chosenId = selected.dataset.variantId;
             }
 
+            let colour = "";
+            try {
+              const pressed = document.querySelector(
+                '#colour-swatches .swatch[aria-pressed="true"]'
+              );
+              if (pressed) colour = pressed.getAttribute("data-value") || "";
+            } catch (_) {}
+
             const items =
               (window.__cart?.getCart && window.__cart.getCart()) || [];
             const existing = items.find(
-              (it) => it.name === name && it.size === size
+              (it) =>
+                it.name === name &&
+                it.size === size &&
+                String(it.colour || "").toLowerCase() ===
+                  String(colour || "").toLowerCase()
             );
             if (existing) existing.qty = (existing.qty || 1) + 1;
             else
@@ -7202,6 +7276,7 @@
                 name,
                 price,
                 size,
+                colour,
                 image,
                 qty: 1,
                 variantGid: chosenId,
