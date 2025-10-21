@@ -190,7 +190,7 @@ export const handler = async (event) => {
         lastAdminError = "admin-not-enabled";
         return null;
       }
-      const url = `https://${storeDomain}/admin/api/2024-07/graphql.json`;
+      const url = `https://${storeDomain}/admin/api/2024-10/graphql.json`;
       const r = await fetch(url, {
         method: "POST",
         headers: {
@@ -223,11 +223,13 @@ export const handler = async (event) => {
               displayFinancialStatus
               displayFulfillmentStatus
               currentTotalPriceSet { shopMoney { amount currencyCode } }
+              statusPageUrl
               lineItems(first: 50) {
                 edges {
                   node {
                     name
                     quantity
+                    variant { title sku image { url } }
                   }
                 }
               }
@@ -271,7 +273,7 @@ export const handler = async (event) => {
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
           total: node.currentTotalPriceSet?.shopMoney || null,
-          statusUrl: null,
+          statusUrl: node.statusPageUrl || null,
           items:
             (node.lineItems?.edges || []).map((e) => ({
               title: e.node?.name || "",
@@ -305,7 +307,7 @@ export const handler = async (event) => {
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
           total: node.currentTotalPriceSet?.shopMoney || null,
-          statusUrl: null,
+          statusUrl: node.statusPageUrl || null,
           items:
             (node.lineItems?.edges || []).map((e) => ({
               title: e.node?.name || "",
