@@ -52,7 +52,7 @@
       (window.ENV &&
         (window.ENV.SHOPIFY_STOREFRONT_DOMAIN ||
           window.ENV.SHOPIFY_STORE_DOMAIN)) ||
-      "7196su-vk.myshopify.com";
+      "shop.journeysapparel.com";
     let url = `https://${store}/cart/${items.join(",")}`;
     try {
       const code = localStorage.getItem("ja_discount");
