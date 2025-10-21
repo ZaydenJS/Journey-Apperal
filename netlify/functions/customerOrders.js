@@ -72,7 +72,7 @@ export const handler = async (event) => {
     const ORDERS_QUERY = `
       query Orders($token: String!, $first: Int!, $after: String) {
         customer(customerAccessToken: $token) {
-          orders(first: $first, after: $after, reverse: true) {
+          orders(first: $first, after: $after, sortKey: PROCESSED_AT, reverse: true) {
             edges {
               cursor
               node {
