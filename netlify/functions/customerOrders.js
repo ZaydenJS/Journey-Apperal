@@ -117,7 +117,7 @@ export const handler = async (event) => {
     // For Admin fallback: fetch customer email and then Admin orders by email
     const ME_QUERY = `
       query GetMe($token: String!) {
-        customer(customerAccessToken: $token) { email }
+        customer(customerAccessToken: $token) { id email }
       }
     `;
 
@@ -161,15 +161,18 @@ export const handler = async (event) => {
       return resp;
     }
 
-    async function getCustomerEmail(tok) {
+    async function getCustomerIdentity(tok) {
       try {
         const resp = await client.request(ME_QUERY, {
           variables: { token: tok },
         });
         const d = handleGraphQLResponse(resp);
-        return d?.customer?.email || null;
+        return {
+          id: d?.customer?.id || null,
+          email: d?.customer?.email || null,
+        };
       } catch (_) {
-        return null;
+        return { id: null, email: null };
       }
     }
 
@@ -241,71 +244,69 @@ export const handler = async (event) => {
       return m ? m[1] : null;
     }
 
-    async function fetchAdminOrdersByEmail(email, limit) {
-      if (!email) return [];
-      // First try searching orders by email
-      let data = await adminGraphQL(ADMIN_ORDERS_QUERY, {
-        q: `email:${email}`,
-        first: limit,
-      });
-      let conn = data?.orders;
-      let edges = conn?.edges || [];
-      let mapped = edges.map(({ node }) => ({
-        id: node.id,
-        name: node.name,
-        orderNumber: node.orderNumber,
-        date: node.processedAt || node.createdAt,
-        financialStatus: node.displayFinancialStatus,
-        fulfillmentStatus: node.displayFulfillmentStatus,
-        total: node.currentTotalPriceSet?.shopMoney || null,
-        statusUrl: node.statusUrl || null,
-        items:
-          (node.lineItems?.edges || []).map((e) => ({
-            title: e.node?.name || "",
-            quantity: e.node?.quantity || 0,
-            variant: {
-              title: e.node?.variant?.title || "",
-              sku: e.node?.variant?.sku || "",
-              image: { url: e.node?.variant?.image?.url || "" },
-            },
-          })) || [],
-      }));
-      if (mapped.length) return mapped;
+    async function fetchAdminOrders(customerId, email, limit) {
+      // Try by customer_id first if available (does not require protected customer data)
+      if (customerId) {
+        const data = await adminGraphQL(ADMIN_ORDERS_QUERY, {
+          q: `customer_id:${customerId}`,
+          first: limit,
+        });
+        const conn = data?.orders;
+        const edges = conn?.edges || [];
+        const mapped = edges.map(({ node }) => ({
+          id: node.id,
+          name: node.name,
+          orderNumber: node.orderNumber,
+          date: node.processedAt || node.createdAt,
+          financialStatus: node.displayFinancialStatus,
+          fulfillmentStatus: node.displayFulfillmentStatus,
+          total: node.currentTotalPriceSet?.shopMoney || null,
+          statusUrl: node.statusUrl || null,
+          items:
+            (node.lineItems?.edges || []).map((e) => ({
+              title: e.node?.name || "",
+              quantity: e.node?.quantity || 0,
+              variant: {
+                title: e.node?.variant?.title || "",
+                sku: e.node?.variant?.sku || "",
+                image: { url: e.node?.variant?.image?.url || "" },
+              },
+            })) || [],
+        }));
+        if (mapped.length) return mapped;
+      }
 
-      // If none, try customer_id fallback
-      const custData = await adminGraphQL(ADMIN_CUSTOMER_BY_EMAIL, {
-        q: `email:${email}`,
-      });
-      const gid = custData?.customers?.edges?.[0]?.node?.id || null;
-      const customerId = customerNumericIdFromGid(gid);
-      if (!customerId) return [];
+      // Fallback to searching by email (works without protected customer data)
+      if (email) {
+        const data2 = await adminGraphQL(ADMIN_ORDERS_QUERY, {
+          q: `email:${email}`,
+          first: limit,
+        });
+        const conn2 = data2?.orders;
+        const edges2 = conn2?.edges || [];
+        return edges2.map(({ node }) => ({
+          id: node.id,
+          name: node.name,
+          orderNumber: node.orderNumber,
+          date: node.processedAt || node.createdAt,
+          financialStatus: node.displayFinancialStatus,
+          fulfillmentStatus: node.displayFulfillmentStatus,
+          total: node.currentTotalPriceSet?.shopMoney || null,
+          statusUrl: node.statusUrl || null,
+          items:
+            (node.lineItems?.edges || []).map((e) => ({
+              title: e.node?.name || "",
+              quantity: e.node?.quantity || 0,
+              variant: {
+                title: e.node?.variant?.title || "",
+                sku: e.node?.variant?.sku || "",
+                image: { url: e.node?.variant?.image?.url || "" },
+              },
+            })) || [],
+        }));
+      }
 
-      const data2 = await adminGraphQL(ADMIN_ORDERS_QUERY, {
-        q: `customer_id:${customerId}`,
-        first: limit,
-      });
-      const conn2 = data2?.orders;
-      const edges2 = conn2?.edges || [];
-      return edges2.map(({ node }) => ({
-        id: node.id,
-        name: node.name,
-        orderNumber: node.orderNumber,
-        date: node.processedAt || node.createdAt,
-        financialStatus: node.displayFinancialStatus,
-        fulfillmentStatus: node.displayFulfillmentStatus,
-        total: node.currentTotalPriceSet?.shopMoney || null,
-        statusUrl: node.statusUrl || null,
-        items:
-          (node.lineItems?.edges || []).map((e) => ({
-            title: e.node?.name || "",
-            quantity: e.node?.quantity || 0,
-            variant: {
-              title: e.node?.variant?.title || "",
-              sku: e.node?.variant?.sku || "",
-              image: { url: e.node?.variant?.image?.url || "" },
-            },
-          })) || [],
-      }));
+      return [];
     }
 
     async function fetchOrdersWith(tokenValue) {
@@ -350,8 +351,12 @@ export const handler = async (event) => {
           // Merge Admin orders to include any that Storefront doesn't expose (dedupe by orderNumber)
           if (ENABLE_ADMIN && adminToken && storeDomain) {
             try {
-              const email = await getCustomerEmail(newTok);
-              const adminOrders = await fetchAdminOrdersByEmail(email, first);
+              const ident = await getCustomerIdentity(newTok);
+              const adminOrders = await fetchAdminOrders(
+                customerNumericIdFromGid(ident?.id),
+                ident?.email,
+                first
+              );
               if (adminOrders && adminOrders.length) {
                 const byNumber = new Map();
                 // Prefer Storefront payload when overlapping
@@ -378,8 +383,12 @@ export const handler = async (event) => {
             storeDomain
           ) {
             try {
-              const email = await getCustomerEmail(newTok);
-              const adminOrders = await fetchAdminOrdersByEmail(email, first);
+              const ident = await getCustomerIdentity(newTok);
+              const adminOrders = await fetchAdminOrders(
+                customerNumericIdFromGid(ident?.id),
+                ident?.email,
+                first
+              );
               if (adminOrders && adminOrders.length) {
                 orders = adminOrders;
                 const res2 = createApiResponse({ orders, pageInfo: {} }, 200);
@@ -394,7 +403,7 @@ export const handler = async (event) => {
                 )}`;
                 return addDebugHeaders(res2, {
                   adminCount: orders.length,
-                  email,
+                  email: ident?.email,
                   storefrontCount: 0,
                 });
               }
@@ -419,8 +428,12 @@ export const handler = async (event) => {
       // If Storefront couldn't load the customer at all, still try Admin fallback by email
       if (ENABLE_ADMIN && adminToken && storeDomain) {
         try {
-          const email = await getCustomerEmail(token);
-          const adminOrders = await fetchAdminOrdersByEmail(email, first);
+          const ident = await getCustomerIdentity(token);
+          const adminOrders = await fetchAdminOrders(
+            customerNumericIdFromGid(ident?.id),
+            ident?.email,
+            first
+          );
           if (adminOrders && adminOrders.length) {
             const r = createApiResponse(
               { orders: adminOrders, pageInfo: {} },
@@ -429,7 +442,7 @@ export const handler = async (event) => {
             r.headers["X-Orders-Source"] = "admin";
             return addDebugHeaders(r, {
               adminCount: adminOrders.length,
-              email,
+              email: ident?.email,
               storefrontCount: 0,
             });
           }
@@ -462,8 +475,12 @@ export const handler = async (event) => {
     // Merge Admin orders to include any that Storefront doesn't expose (dedupe by orderNumber)
     if (ENABLE_ADMIN && adminToken && storeDomain) {
       try {
-        const email = await getCustomerEmail(token);
-        const adminOrders = await fetchAdminOrdersByEmail(email, first);
+        const ident = await getCustomerIdentity(token);
+        const adminOrders = await fetchAdminOrders(
+          customerNumericIdFromGid(ident?.id),
+          ident?.email,
+          first
+        );
         if (adminOrders && adminOrders.length) {
           const byNumber = new Map();
           // Prefer Storefront payload when overlapping
@@ -489,8 +506,12 @@ export const handler = async (event) => {
       storeDomain
     ) {
       try {
-        const email = await getCustomerEmail(token);
-        const adminOrders = await fetchAdminOrdersByEmail(email, first);
+        const ident = await getCustomerIdentity(token);
+        const adminOrders = await fetchAdminOrders(
+          customerNumericIdFromGid(ident?.id),
+          ident?.email,
+          first
+        );
         if (adminOrders && adminOrders.length) {
           const r = createApiResponse(
             { orders: adminOrders, pageInfo: {} },
