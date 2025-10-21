@@ -5,7 +5,7 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const FUNCTION_REV = "customerOrders-2025-10-21-01";
+const FUNCTION_REV = "customerOrders-2025-10-21-03";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -139,12 +139,18 @@ export const handler = async (event) => {
       "true";
 
     let lastAdminError = null;
+    let lastAdminQuery = null;
+    let lastAdminCustomerId = null;
     function addDebugHeaders(resp, extra) {
       try {
         resp.headers = resp.headers || {};
         resp.headers["X-Function-Rev"] = FUNCTION_REV;
         resp.headers["X-Admin-Enabled"] = String(adminEnabled && ENABLE_ADMIN);
         if (storeDomain) resp.headers["X-Admin-Store"] = String(storeDomain);
+        if (lastAdminQuery)
+          resp.headers["X-Admin-Query"] = String(lastAdminQuery).slice(0, 200);
+        if (lastAdminCustomerId)
+          resp.headers["X-Admin-CustomerId"] = String(lastAdminCustomerId);
         if (extra && typeof extra.storefrontCount === "number") {
           resp.headers["X-Storefront-Orders-Count"] = String(
             extra.storefrontCount
@@ -217,7 +223,6 @@ export const handler = async (event) => {
               displayFinancialStatus
               displayFulfillmentStatus
               currentTotalPriceSet { shopMoney { amount currencyCode } }
-              statusUrl
               lineItems(first: 50) {
                 edges {
                   node {
@@ -249,8 +254,10 @@ export const handler = async (event) => {
     async function fetchAdminOrders(customerId, email, limit) {
       // Try by customer_id first if available (does not require protected customer data)
       if (customerId) {
+        lastAdminCustomerId = customerId;
+        lastAdminQuery = `customer_id:${customerId}`;
         const data = await adminGraphQL(ADMIN_ORDERS_QUERY, {
-          q: `customer_id:${customerId}`,
+          q: lastAdminQuery,
           first: limit,
         });
         const conn = data?.orders;
@@ -265,7 +272,7 @@ export const handler = async (event) => {
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
           total: node.currentTotalPriceSet?.shopMoney || null,
-          statusUrl: node.statusUrl || null,
+          statusUrl: null,
           items:
             (node.lineItems?.edges || []).map((e) => ({
               title: e.node?.name || "",
@@ -282,8 +289,9 @@ export const handler = async (event) => {
 
       // Fallback to searching by email (works without protected customer data)
       if (email) {
+        lastAdminQuery = `email:${email}`;
         const data2 = await adminGraphQL(ADMIN_ORDERS_QUERY, {
-          q: `email:${email}`,
+          q: lastAdminQuery,
           first: limit,
         });
         const conn2 = data2?.orders;
@@ -298,7 +306,7 @@ export const handler = async (event) => {
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
           total: node.currentTotalPriceSet?.shopMoney || null,
-          statusUrl: node.statusUrl || null,
+          statusUrl: null,
           items:
             (node.lineItems?.edges || []).map((e) => ({
               title: e.node?.name || "",
