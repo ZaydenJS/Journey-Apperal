@@ -129,11 +129,16 @@ export const handler = async (event) => {
       process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
 
     const adminEnabled = !!(storeDomain && adminToken);
+
+    // Industry-standard for My Account order history is Storefront API only.
+    // Disable Admin fallback/merge to avoid interference and duplication.
+    const ENABLE_ADMIN = false;
+
     let lastAdminError = null;
     function addDebugHeaders(resp, extra) {
       try {
         resp.headers = resp.headers || {};
-        resp.headers["X-Admin-Enabled"] = String(adminEnabled);
+        resp.headers["X-Admin-Enabled"] = String(adminEnabled && ENABLE_ADMIN);
         if (storeDomain) resp.headers["X-Admin-Store"] = String(storeDomain);
         if (extra && typeof extra.storefrontCount === "number") {
           resp.headers["X-Storefront-Orders-Count"] = String(
@@ -341,7 +346,7 @@ export const handler = async (event) => {
             : [];
 
           // Merge Admin orders to include any that Storefront doesn't expose (dedupe by orderNumber)
-          if (adminToken && storeDomain) {
+          if (ENABLE_ADMIN && adminToken && storeDomain) {
             try {
               const email = await getCustomerEmail(newTok);
               const adminOrders = await fetchAdminOrdersByEmail(email, first);
@@ -364,7 +369,12 @@ export const handler = async (event) => {
           }
 
           // Admin fallback if no orders found after renewal
-          if ((!orders || orders.length === 0) && adminToken && storeDomain) {
+          if (
+            (!orders || orders.length === 0) &&
+            ENABLE_ADMIN &&
+            adminToken &&
+            storeDomain
+          ) {
             try {
               const email = await getCustomerEmail(newTok);
               const adminOrders = await fetchAdminOrdersByEmail(email, first);
@@ -405,7 +415,7 @@ export const handler = async (event) => {
         }
       } catch (_) {}
       // If Storefront couldn't load the customer at all, still try Admin fallback by email
-      if (adminToken && storeDomain) {
+      if (ENABLE_ADMIN && adminToken && storeDomain) {
         try {
           const email = await getCustomerEmail(token);
           const adminOrders = await fetchAdminOrdersByEmail(email, first);
@@ -448,7 +458,7 @@ export const handler = async (event) => {
       : [];
 
     // Merge Admin orders to include any that Storefront doesn't expose (dedupe by orderNumber)
-    if (adminToken && storeDomain) {
+    if (ENABLE_ADMIN && adminToken && storeDomain) {
       try {
         const email = await getCustomerEmail(token);
         const adminOrders = await fetchAdminOrdersByEmail(email, first);
@@ -470,7 +480,12 @@ export const handler = async (event) => {
     }
 
     // Admin fallback if Storefront returns no orders
-    if ((!orders || orders.length === 0) && adminToken && storeDomain) {
+    if (
+      (!orders || orders.length === 0) &&
+      ENABLE_ADMIN &&
+      adminToken &&
+      storeDomain
+    ) {
       try {
         const email = await getCustomerEmail(token);
         const adminOrders = await fetchAdminOrdersByEmail(email, first);

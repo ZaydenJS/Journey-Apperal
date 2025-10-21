@@ -7364,11 +7364,33 @@
         chosenId = selected.dataset.variantId;
       }
 
+      let colour = "";
+      try {
+        const pressed = document.querySelector(
+          '#colour-swatches .swatch[aria-pressed="true"]'
+        );
+        if (pressed) colour = pressed.getAttribute("data-value") || "";
+      } catch (_) {}
+
       const items = (window.__cart?.getCart && window.__cart.getCart()) || [];
-      const existing = items.find((it) => it.name === name && it.size === size);
+      const existing = items.find(
+        (it) =>
+          it.name === name &&
+          it.size === size &&
+          String(it.colour || "").toLowerCase() ===
+            String(colour || "").toLowerCase()
+      );
       if (existing) existing.qty = (existing.qty || 1) + 1;
       else
-        items.push({ name, price, size, image, qty: 1, variantGid: chosenId });
+        items.push({
+          name,
+          price,
+          size,
+          colour,
+          image,
+          qty: 1,
+          variantGid: chosenId,
+        });
       window.__cart?.setCart && window.__cart.setCart(items);
 
       try {
