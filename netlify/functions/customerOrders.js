@@ -72,7 +72,7 @@ export const handler = async (event) => {
     const ORDERS_QUERY = `
       query Orders($token: String!, $first: Int!, $after: String) {
         customer(customerAccessToken: $token) {
-          orders(first: $first, after: $after, sortKey: PROCESSED_AT, reverse: true) {
+          orders(first: $first, after: $after, sortKey: CREATED_AT, reverse: true) {
             edges {
               cursor
               node {
@@ -80,6 +80,7 @@ export const handler = async (event) => {
                 orderNumber
                 name
                 processedAt
+                createdAt
                 financialStatus
                 fulfillmentStatus
                 totalPriceSet {
@@ -200,6 +201,7 @@ export const handler = async (event) => {
               name
               orderNumber
               processedAt
+              createdAt
               displayFinancialStatus
               displayFulfillmentStatus
               currentTotalPriceSet { shopMoney { amount currencyCode } }
@@ -245,7 +247,7 @@ export const handler = async (event) => {
         id: node.id,
         name: node.name,
         orderNumber: node.orderNumber,
-        date: node.processedAt,
+        date: node.processedAt || node.createdAt,
         financialStatus: node.displayFinancialStatus,
         fulfillmentStatus: node.displayFulfillmentStatus,
         total: node.currentTotalPriceSet?.shopMoney || null,
@@ -281,7 +283,7 @@ export const handler = async (event) => {
         id: node.id,
         name: node.name,
         orderNumber: node.orderNumber,
-        date: node.processedAt,
+        date: node.processedAt || node.createdAt,
         financialStatus: node.displayFinancialStatus,
         fulfillmentStatus: node.displayFulfillmentStatus,
         total: node.currentTotalPriceSet?.shopMoney || null,
@@ -326,7 +328,7 @@ export const handler = async (event) => {
                 id: node.id,
                 name: node.name,
                 orderNumber: node.orderNumber,
-                date: node.processedAt,
+                date: node.processedAt || node.createdAt,
                 financialStatus: node.financialStatus,
                 fulfillmentStatus: node.fulfillmentStatus,
                 total:
@@ -337,6 +339,29 @@ export const handler = async (event) => {
                 items: (node.lineItems?.edges || []).map((e) => e.node) || [],
               }))
             : [];
+
+          // Merge Admin orders to include any that Storefront doesn't expose (dedupe by orderNumber)
+          if (adminToken && storeDomain) {
+            try {
+              const email = await getCustomerEmail(newTok);
+              const adminOrders = await fetchAdminOrdersByEmail(email, first);
+              if (adminOrders && adminOrders.length) {
+                const byNumber = new Map();
+                // Prefer Storefront payload when overlapping
+                [...orders, ...adminOrders].forEach((o) => {
+                  if (!byNumber.has(o.orderNumber))
+                    byNumber.set(o.orderNumber, o);
+                });
+                orders = Array.from(byNumber.values())
+                  .sort((a, b) => {
+                    const da = a?.date ? new Date(a.date).getTime() : 0;
+                    const db = b?.date ? new Date(b.date).getTime() : 0;
+                    return db - da;
+                  })
+                  .slice(0, first);
+              }
+            } catch (_) {}
+          }
 
           // Admin fallback if no orders found after renewal
           if ((!orders || orders.length === 0) && adminToken && storeDomain) {
@@ -410,7 +435,7 @@ export const handler = async (event) => {
           id: node.id,
           name: node.name,
           orderNumber: node.orderNumber,
-          date: node.processedAt,
+          date: node.processedAt || node.createdAt,
           financialStatus: node.financialStatus,
           fulfillmentStatus: node.fulfillmentStatus,
           total:
@@ -421,6 +446,28 @@ export const handler = async (event) => {
           items: (node.lineItems?.edges || []).map((e) => e.node) || [],
         }))
       : [];
+
+    // Merge Admin orders to include any that Storefront doesn't expose (dedupe by orderNumber)
+    if (adminToken && storeDomain) {
+      try {
+        const email = await getCustomerEmail(token);
+        const adminOrders = await fetchAdminOrdersByEmail(email, first);
+        if (adminOrders && adminOrders.length) {
+          const byNumber = new Map();
+          // Prefer Storefront payload when overlapping
+          [...orders, ...adminOrders].forEach((o) => {
+            if (!byNumber.has(o.orderNumber)) byNumber.set(o.orderNumber, o);
+          });
+          orders = Array.from(byNumber.values())
+            .sort((a, b) => {
+              const da = a?.date ? new Date(a.date).getTime() : 0;
+              const db = b?.date ? new Date(b.date).getTime() : 0;
+              return db - da;
+            })
+            .slice(0, first);
+        }
+      } catch (_) {}
+    }
 
     // Admin fallback if Storefront returns no orders
     if ((!orders || orders.length === 0) && adminToken && storeDomain) {
