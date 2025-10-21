@@ -7927,3 +7927,119 @@ function setupIdleWarmCollections() {
     }
   } catch (_) {}
 }
+
+// Delegated fallback for Checkout button — handles duplicates of #checkout-btn and late-rendered buttons
+(function () {
+  if (window.__checkoutDelegatedBound) return;
+  window.__checkoutDelegatedBound = true;
+
+  async function performCheckout() {
+    try {
+      var CP = window.CartPermalink || {};
+      var getLines =
+        typeof CP.getLines === "function"
+          ? CP.getLines
+          : function () {
+              try {
+                var raw = localStorage.getItem("ja_cart_lines") || "[]";
+                var arr = JSON.parse(raw);
+                return Array.isArray(arr) ? arr : [];
+              } catch (_) {
+                return [];
+              }
+            };
+      var lines = getLines();
+      if (!Array.isArray(lines) || !lines.length) {
+        alert("Your cart is empty.");
+        return;
+      }
+      // Try server-built checkout first
+      try {
+        var resp = await fetch("/.netlify/functions/buildCheckout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ lines: lines }),
+        });
+        if (resp && resp.ok) {
+          var data = await resp.json().catch(function () {
+            return {};
+          });
+          if (data && data.checkoutUrl) {
+            window.location.href = data.checkoutUrl;
+            return;
+          }
+        }
+      } catch (__) {
+        /* ignore and fallback */
+      }
+
+      // Fallback 1: direct URL builder from mini-cart (uses subdomain)
+      if (typeof window.buildCheckoutUrl === "function") {
+        var direct = window.buildCheckoutUrl();
+        if (direct) {
+          window.location.href = direct;
+          return;
+        }
+      }
+
+      // Fallback 2: CartPermalink helper
+      var dom =
+        (window.CartPermalink && window.CartPermalink.defaultDomain) ||
+        "shop.journeysapparel.com";
+      var toNumericId = function (id, gid) {
+        if (!id && gid) {
+          try {
+            id = String(gid).split("/").pop();
+          } catch (_) {
+            id = "";
+          }
+        }
+        return String(id || "").replace(/[^0-9]/g, "");
+      };
+      var url = (function () {
+        try {
+          var lns = lines.map(function (l) {
+            return {
+              id: toNumericId(l.variantId, l.variantGid),
+              qty: Number(l.quantity || l.qty || 1),
+            };
+          });
+          lns = lns.filter(function (l) {
+            return l.id && l.qty > 0;
+          });
+          if (!lns.length) return "";
+          return (
+            "https://" +
+            dom +
+            "/cart/" +
+            lns
+              .map(function (it) {
+                return it.id + ":" + it.qty;
+              })
+              .join(",")
+          );
+        } catch (_) {
+          return "";
+        }
+      })();
+      if (!url) {
+        alert("Checkout is unavailable. Please try again.");
+        return;
+      }
+      window.location.href = url;
+    } catch (err) {
+      console.error("Checkout failed (delegated):", err);
+      alert("Checkout is unavailable. Please try again.");
+    }
+  }
+  window.__performCheckout = performCheckout;
+
+  document.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest && e.target.closest("#checkout-btn");
+    if (!btn) return;
+    if (btn.dataset && btn.dataset.clickBound === "1") return; // avoid double-handling when direct handler is attached
+    e.preventDefault();
+    performCheckout();
+  });
+})();

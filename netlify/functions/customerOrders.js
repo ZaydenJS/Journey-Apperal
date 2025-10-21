@@ -130,9 +130,11 @@ export const handler = async (event) => {
 
     const adminEnabled = !!(storeDomain && adminToken);
 
-    // Industry-standard for My Account order history is Storefront API only.
-    // Disable Admin fallback/merge to avoid interference and duplication.
-    const ENABLE_ADMIN = false;
+    // Enable Admin fallback/merge so orders appear even if Storefront association fails
+    // You can toggle this with env var ENABLE_ADMIN_ORDERS=true
+    const ENABLE_ADMIN =
+      String(process.env.ENABLE_ADMIN_ORDERS || "true").toLowerCase() ===
+      "true";
 
     let lastAdminError = null;
     function addDebugHeaders(resp, extra) {
