@@ -446,6 +446,10 @@ export const handler = async (event) => {
                 ident?.email,
                 first
               );
+
+              // Ensure admin fallback orders have statusUrl
+              orders = await fillAdminStatusUrls(orders);
+
               if (adminOrders && adminOrders.length) {
                 orders = adminOrders;
                 const res2 = createApiResponse({ orders, pageInfo: {} }, 200);
@@ -466,6 +470,9 @@ export const handler = async (event) => {
               }
             } catch (_) {}
           }
+
+          // Ensure statusUrl exists for any Admin-merged orders
+          orders = await fillAdminStatusUrls(orders);
 
           const res = createApiResponse(
             { orders, pageInfo: ordersConn?.pageInfo || {} },
@@ -579,6 +586,9 @@ export const handler = async (event) => {
         }
       } catch (_) {}
     }
+
+    // Final pass: ensure all outgoing orders have statusUrl
+    orders = await fillAdminStatusUrls(orders);
 
     const out = createApiResponse(
       { orders, pageInfo: ordersConn?.pageInfo || {} },
