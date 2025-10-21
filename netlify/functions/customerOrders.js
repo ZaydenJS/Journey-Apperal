@@ -5,7 +5,7 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const FUNCTION_REV = "customerOrders-2025-10-21-03";
+const FUNCTION_REV = "customerOrders-2025-10-21-04";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -228,7 +228,6 @@ export const handler = async (event) => {
                   node {
                     name
                     quantity
-                    variant { title sku image { url } }
                   }
                 }
               }
