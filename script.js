@@ -6720,30 +6720,26 @@
                   return;
                 }
 
-                // If logged in (customer token cookie present), try server-built checkout to associate order to account
-                const hasCustomerCookie =
-                  (document.cookie || "").indexOf("ja_customer_token=") !== -1;
-                if (hasCustomerCookie) {
-                  try {
-                    const resp = await fetch(
-                      "/.netlify/functions/buildCheckout",
-                      {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        credentials: "include",
-                        body: JSON.stringify({ lines }),
-                      }
-                    );
-                    if (resp && resp.ok) {
-                      const data = await resp.json().catch(() => ({}));
-                      if (data && data.checkoutUrl) {
-                        window.location.href = data.checkoutUrl;
-                        return;
-                      }
+                // Try server-built checkout first (function will use cookie if present to associate customer)
+                try {
+                  const resp = await fetch(
+                    "/.netlify/functions/buildCheckout",
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                      body: JSON.stringify({ lines }),
                     }
-                  } catch (_) {
-                    // ignore and fallback
+                  );
+                  if (resp && resp.ok) {
+                    const data = await resp.json().catch(() => ({}));
+                    if (data && data.checkoutUrl) {
+                      window.location.href = data.checkoutUrl;
+                      return;
+                    }
                   }
+                } catch (_) {
+                  // ignore and fallback
                 }
 
                 // Fallback 1: direct URL builder from mini-cart (uses subdomain)
