@@ -5,7 +5,7 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const FUNCTION_REV = "customerOrders-2025-10-21-05";
+const FUNCTION_REV = "customerOrders-2025-10-21-06";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -159,6 +159,9 @@ export const handler = async (event) => {
         if (extra && typeof extra.adminCount === "number") {
           resp.headers["X-Admin-Orders-Count"] = String(extra.adminCount);
         }
+        if (extra && typeof extra.statusFilled === "number") {
+          resp.headers["X-Status-Filled"] = String(extra.statusFilled);
+        }
         if (extra && extra.email)
           resp.headers["X-Customer-Email"] = String(extra.email);
         if (lastAdminError || (extra && extra.error)) {
@@ -220,6 +223,7 @@ export const handler = async (event) => {
               name
               processedAt
               createdAt
+              statusPageUrl
               displayFinancialStatus
               displayFulfillmentStatus
               currentTotalPriceSet { shopMoney { amount currencyCode } }
@@ -313,7 +317,7 @@ export const handler = async (event) => {
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
           total: node.currentTotalPriceSet?.shopMoney || null,
-          statusUrl: null,
+          statusUrl: node.statusPageUrl || null,
           items:
             (node.lineItems?.edges || []).map((e) => ({
               title: e.node?.name || "",
@@ -348,7 +352,7 @@ export const handler = async (event) => {
             financialStatus: node.displayFinancialStatus,
             fulfillmentStatus: node.displayFulfillmentStatus,
             total: node.currentTotalPriceSet?.shopMoney || null,
-            statusUrl: null,
+            statusUrl: node.statusPageUrl || null,
             items:
               (node.lineItems?.edges || []).map((e) => ({
                 title: e.node?.name || "",
@@ -447,11 +451,9 @@ export const handler = async (event) => {
                 first
               );
 
-              // Ensure admin fallback orders have statusUrl
-              orders = await fillAdminStatusUrls(orders);
-
               if (adminOrders && adminOrders.length) {
-                orders = adminOrders;
+                const enrichedAdmin = await fillAdminStatusUrls(adminOrders);
+                const orders = enrichedAdmin;
                 const res2 = createApiResponse({ orders, pageInfo: {} }, 200);
                 res2.headers["X-Orders-Source"] = "admin";
                 const expires2 = new Date(newExp).toUTCString();
@@ -466,6 +468,7 @@ export const handler = async (event) => {
                   adminCount: orders.length,
                   email: ident?.email,
                   storefrontCount: 0,
+                  statusFilled: orders.filter((o) => !!o.statusUrl).length,
                 });
               }
             } catch (_) {}
@@ -577,12 +580,16 @@ export const handler = async (event) => {
           first
         );
         if (adminOrders && adminOrders.length) {
+          const enrichedAdmin = await fillAdminStatusUrls(adminOrders);
           const r = createApiResponse(
-            { orders: adminOrders, pageInfo: {} },
+            { orders: enrichedAdmin, pageInfo: {} },
             200
           );
           r.headers["X-Orders-Source"] = "admin";
-          return addDebugHeaders(r, { adminCount: adminOrders.length });
+          return addDebugHeaders(r, {
+            adminCount: enrichedAdmin.length,
+            statusFilled: enrichedAdmin.filter((o) => !!o.statusUrl).length,
+          });
         }
       } catch (_) {}
     }
@@ -595,7 +602,10 @@ export const handler = async (event) => {
       200
     );
     out.headers["X-Orders-Source"] = "storefront";
-    return addDebugHeaders(out, { storefrontCount: orders.length });
+    return addDebugHeaders(out, {
+      storefrontCount: orders.length,
+      statusFilled: orders.filter((o) => !!o.statusUrl).length,
+    });
   } catch (err) {
     return createErrorResponse(err.message || "Failed to load orders", 500);
   }
