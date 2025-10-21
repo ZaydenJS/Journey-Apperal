@@ -5,6 +5,8 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
+const FUNCTION_REV = "customerOrders-2025-10-21-01";
+
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
   const parts = cookieHeader.split(/;\s*/);
@@ -140,6 +142,7 @@ export const handler = async (event) => {
     function addDebugHeaders(resp, extra) {
       try {
         resp.headers = resp.headers || {};
+        resp.headers["X-Function-Rev"] = FUNCTION_REV;
         resp.headers["X-Admin-Enabled"] = String(adminEnabled && ENABLE_ADMIN);
         if (storeDomain) resp.headers["X-Admin-Store"] = String(storeDomain);
         if (extra && typeof extra.storefrontCount === "number") {
@@ -209,7 +212,6 @@ export const handler = async (event) => {
             node {
               id
               name
-              orderNumber
               processedAt
               createdAt
               displayFinancialStatus
@@ -256,7 +258,9 @@ export const handler = async (event) => {
         const mapped = edges.map(({ node }) => ({
           id: node.id,
           name: node.name,
-          orderNumber: node.orderNumber,
+          orderNumber:
+            Number.parseInt(String(node.name || "").replace(/[^0-9]/g, "")) ||
+            null,
           date: node.processedAt || node.createdAt,
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
@@ -287,7 +291,9 @@ export const handler = async (event) => {
         return edges2.map(({ node }) => ({
           id: node.id,
           name: node.name,
-          orderNumber: node.orderNumber,
+          orderNumber:
+            Number.parseInt(String(node.name || "").replace(/[^0-9]/g, "")) ||
+            null,
           date: node.processedAt || node.createdAt,
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
