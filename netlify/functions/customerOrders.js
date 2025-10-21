@@ -5,7 +5,7 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const FUNCTION_REV = "customerOrders-2025-10-21-06";
+const FUNCTION_REV = "customerOrders-2025-10-21-04";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -159,9 +159,6 @@ export const handler = async (event) => {
         if (extra && typeof extra.adminCount === "number") {
           resp.headers["X-Admin-Orders-Count"] = String(extra.adminCount);
         }
-        if (extra && typeof extra.statusFilled === "number") {
-          resp.headers["X-Status-Filled"] = String(extra.statusFilled);
-        }
         if (extra && extra.email)
           resp.headers["X-Customer-Email"] = String(extra.email);
         if (lastAdminError || (extra && extra.error)) {
@@ -223,7 +220,6 @@ export const handler = async (event) => {
               name
               processedAt
               createdAt
-              statusPageUrl
               displayFinancialStatus
               displayFulfillmentStatus
               currentTotalPriceSet { shopMoney { amount currencyCode } }
@@ -248,48 +244,6 @@ export const handler = async (event) => {
         }
       }
     `;
-
-    // Helpers to enrich Admin orders with status URLs via Admin REST
-    function orderNumericIdFromGid(gid) {
-      const m = String(gid || "").match(/Order\/(\d+)/);
-      return m ? m[1] : null;
-    }
-
-    async function adminRestGetOrderStatusUrl(orderNumericId) {
-      if (!adminEnabled) return null;
-      try {
-        const url = `https://${storeDomain}/admin/api/2024-07/orders/${orderNumericId}.json?fields=order_status_url`;
-        const r = await fetch(url, {
-          method: "GET",
-          headers: { "X-Shopify-Access-Token": adminToken },
-        });
-        const json = await r.json().catch(() => ({}));
-        if (!r.ok) return null;
-        return json?.order?.order_status_url || null;
-      } catch (_) {
-        return null;
-      }
-    }
-
-    async function fillAdminStatusUrls(arr) {
-      try {
-        const out = await Promise.all(
-          (arr || []).map(async (o) => {
-            if (!o || o.statusUrl) return o;
-            const numId = orderNumericIdFromGid(o.id);
-            if (!numId) return o;
-            try {
-              const su = await adminRestGetOrderStatusUrl(numId);
-              if (su) o.statusUrl = su;
-            } catch (_) {}
-            return o;
-          })
-        );
-        return out;
-      } catch (_) {
-        return arr || [];
-      }
-    }
 
     function customerNumericIdFromGid(gid) {
       const m = String(gid || "").match(/Customer\/(\d+)/);
@@ -317,7 +271,7 @@ export const handler = async (event) => {
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
           total: node.currentTotalPriceSet?.shopMoney || null,
-          statusUrl: node.statusPageUrl || null,
+          statusUrl: null,
           items:
             (node.lineItems?.edges || []).map((e) => ({
               title: e.node?.name || "",
@@ -329,7 +283,7 @@ export const handler = async (event) => {
               },
             })) || [],
         }));
-        if (mapped.length) return await fillAdminStatusUrls(mapped);
+        if (mapped.length) return mapped;
       }
 
       // Fallback to searching by email (works without protected customer data)
@@ -341,30 +295,28 @@ export const handler = async (event) => {
         });
         const conn2 = data2?.orders;
         const edges2 = conn2?.edges || [];
-        return await fillAdminStatusUrls(
-          edges2.map(({ node }) => ({
-            id: node.id,
-            name: node.name,
-            orderNumber:
-              Number.parseInt(String(node.name || "").replace(/[^0-9]/g, "")) ||
-              null,
-            date: node.processedAt || node.createdAt,
-            financialStatus: node.displayFinancialStatus,
-            fulfillmentStatus: node.displayFulfillmentStatus,
-            total: node.currentTotalPriceSet?.shopMoney || null,
-            statusUrl: node.statusPageUrl || null,
-            items:
-              (node.lineItems?.edges || []).map((e) => ({
-                title: e.node?.name || "",
-                quantity: e.node?.quantity || 0,
-                variant: {
-                  title: e.node?.variant?.title || "",
-                  sku: e.node?.variant?.sku || "",
-                  image: { url: e.node?.variant?.image?.url || "" },
-                },
-              })) || [],
-          }))
-        );
+        return edges2.map(({ node }) => ({
+          id: node.id,
+          name: node.name,
+          orderNumber:
+            Number.parseInt(String(node.name || "").replace(/[^0-9]/g, "")) ||
+            null,
+          date: node.processedAt || node.createdAt,
+          financialStatus: node.displayFinancialStatus,
+          fulfillmentStatus: node.displayFulfillmentStatus,
+          total: node.currentTotalPriceSet?.shopMoney || null,
+          statusUrl: null,
+          items:
+            (node.lineItems?.edges || []).map((e) => ({
+              title: e.node?.name || "",
+              quantity: e.node?.quantity || 0,
+              variant: {
+                title: e.node?.variant?.title || "",
+                sku: e.node?.variant?.sku || "",
+                image: { url: e.node?.variant?.image?.url || "" },
+              },
+            })) || [],
+        }));
       }
 
       return [];
@@ -450,10 +402,8 @@ export const handler = async (event) => {
                 ident?.email,
                 first
               );
-
               if (adminOrders && adminOrders.length) {
-                const enrichedAdmin = await fillAdminStatusUrls(adminOrders);
-                const orders = enrichedAdmin;
+                orders = adminOrders;
                 const res2 = createApiResponse({ orders, pageInfo: {} }, 200);
                 res2.headers["X-Orders-Source"] = "admin";
                 const expires2 = new Date(newExp).toUTCString();
@@ -468,14 +418,10 @@ export const handler = async (event) => {
                   adminCount: orders.length,
                   email: ident?.email,
                   storefrontCount: 0,
-                  statusFilled: orders.filter((o) => !!o.statusUrl).length,
                 });
               }
             } catch (_) {}
           }
-
-          // Ensure statusUrl exists for any Admin-merged orders
-          orders = await fillAdminStatusUrls(orders);
 
           const res = createApiResponse(
             { orders, pageInfo: ordersConn?.pageInfo || {} },
@@ -580,32 +526,22 @@ export const handler = async (event) => {
           first
         );
         if (adminOrders && adminOrders.length) {
-          const enrichedAdmin = await fillAdminStatusUrls(adminOrders);
           const r = createApiResponse(
-            { orders: enrichedAdmin, pageInfo: {} },
+            { orders: adminOrders, pageInfo: {} },
             200
           );
           r.headers["X-Orders-Source"] = "admin";
-          return addDebugHeaders(r, {
-            adminCount: enrichedAdmin.length,
-            statusFilled: enrichedAdmin.filter((o) => !!o.statusUrl).length,
-          });
+          return addDebugHeaders(r, { adminCount: adminOrders.length });
         }
       } catch (_) {}
     }
-
-    // Final pass: ensure all outgoing orders have statusUrl
-    orders = await fillAdminStatusUrls(orders);
 
     const out = createApiResponse(
       { orders, pageInfo: ordersConn?.pageInfo || {} },
       200
     );
     out.headers["X-Orders-Source"] = "storefront";
-    return addDebugHeaders(out, {
-      storefrontCount: orders.length,
-      statusFilled: orders.filter((o) => !!o.statusUrl).length,
-    });
+    return addDebugHeaders(out, { storefrontCount: orders.length });
   } catch (err) {
     return createErrorResponse(err.message || "Failed to load orders", 500);
   }
