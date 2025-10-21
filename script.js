@@ -1036,7 +1036,7 @@
       const swatches = document.getElementById("colour-swatches");
       const colourOption = (data.options || []).find((o) => {
         const n = String((o.name || "").trim()).toLowerCase();
-        return n === "colour" || n === "color";
+        return n.includes("colour") || n.includes("color");
       });
       let selectedColour = "";
       if (swatches && colourOption) {
@@ -1157,7 +1157,7 @@
         if (selectedColour) {
           const col = (v.selectedOptions || []).find((o) => {
             const n = String((o.name || "").trim()).toLowerCase();
-            return n === "colour" || n === "color";
+            return n.includes("colour") || n.includes("color");
           });
           if (
             !col ||
@@ -1170,8 +1170,10 @@
           )
             return;
         }
-        const so = (v.selectedOptions || []).find(
-          (o) => String((o.name || "").trim()).toLowerCase() === "size"
+        const so = (v.selectedOptions || []).find((o) =>
+          String((o.name || "").trim())
+            .toLowerCase()
+            .includes("size")
         );
         if (!so) return;
         const arr = candidates.get(so.value) || [];
@@ -1203,8 +1205,10 @@
       }
 
       const values =
-        (data.options || []).find(
-          (o) => String((o.name || "").trim()).toLowerCase() === "size"
+        (data.options || []).find((o) =>
+          String((o.name || "").trim())
+            .toLowerCase()
+            .includes("size")
         )?.values || Array.from(bySize.keys());
       if (!values || !values.length) return;
 

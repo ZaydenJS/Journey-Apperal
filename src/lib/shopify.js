@@ -26,7 +26,9 @@ export async function fetchProduct(handle) {
   );
   if (!resp.ok) {
     const msg = await resp.text().catch(() => "");
-    throw new Error(`getProduct failed (${resp.status}): ${msg || resp.statusText}`);
+    throw new Error(
+      `getProduct failed (${resp.status}): ${msg || resp.statusText}`
+    );
   }
   const data = await resp.json();
   return data && (data.product || data);
@@ -36,8 +38,16 @@ export async function fetchProduct(handle) {
 export function getColorOption(product) {
   const opts = (product && product.options) || [];
   return (
-    opts.find((o) => String(o.name || "").toLowerCase() === "colour") ||
-    opts.find((o) => String(o.name || "").toLowerCase() === "color") ||
+    opts.find((o) =>
+      String(o.name || "")
+        .toLowerCase()
+        .includes("colour")
+    ) ||
+    opts.find((o) =>
+      String(o.name || "")
+        .toLowerCase()
+        .includes("color")
+    ) ||
     null
   );
 }
@@ -48,8 +58,10 @@ export function listColors(product) {
   const variants = (product && product.variants) || [];
   for (const v of variants) {
     for (const so of v.selectedOptions || []) {
-      const name = String(so.name || "").trim().toLowerCase();
-      if (name === "colour" || name === "color") {
+      const name = String(so.name || "")
+        .trim()
+        .toLowerCase();
+      if (name.includes("colour") || name.includes("color")) {
         const disp = String(so.value || "").trim();
         const key = disp.toLowerCase();
         if (disp && !map.has(key)) map.set(key, disp);
@@ -60,7 +72,9 @@ export function listColors(product) {
   if (!map.size) {
     const opt = getColorOption(product);
     for (const v of (opt && opt.values) || []) {
-      const key = String(v || "").trim().toLowerCase();
+      const key = String(v || "")
+        .trim()
+        .toLowerCase();
       if (key && !map.has(key)) map.set(key, String(v));
     }
   }
@@ -69,12 +83,21 @@ export function listColors(product) {
 
 /** Find first variant (optionally with image) for a given color (case-insensitive) */
 export function findVariantForColor(product, color, withImage = false) {
-  const target = String(color || "").trim().toLowerCase();
+  const target = String(color || "")
+    .trim()
+    .toLowerCase();
   if (!target) return null;
   for (const v of (product && product.variants) || []) {
     const hasColor = (v.selectedOptions || []).some((so) => {
-      const n = String(so.name || "").trim().toLowerCase();
-      return (n === "colour" || n === "color") && String(so.value || "").trim().toLowerCase() === target;
+      const n = String(so.name || "")
+        .trim()
+        .toLowerCase();
+      return (
+        (n.includes("colour") || n.includes("color")) &&
+        String(so.value || "")
+          .trim()
+          .toLowerCase() === target
+      );
     });
     if (hasColor) {
       if (withImage) {
@@ -86,4 +109,3 @@ export function findVariantForColor(product, color, withImage = false) {
   }
   return null;
 }
-

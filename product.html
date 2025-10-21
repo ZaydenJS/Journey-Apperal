@@ -670,7 +670,7 @@
           // Colour (COLOUR) option handling and swatches
           var colourOption = (payload.options || []).find(function (o) {
             var n = String((o.name || "").trim()).toLowerCase();
-            return n === "colour" || n === "color";
+            return n.indexOf("colour") !== -1 || n.indexOf("color") !== -1;
           });
 
           // Helpers: map colour names to CSS, validate named/hex colours
@@ -827,7 +827,7 @@
               if (selectedColour) {
                 var col = (v.selectedOptions || []).find(function (o) {
                   var n = String((o.name || "").trim()).toLowerCase();
-                  return n === "colour" || n === "color";
+                  return n.indexOf("colour") !== -1 || n.indexOf("color") !== -1;
                 });
                 if (!col || String(col.value || "").trim().toLowerCase() !== String(selectedColour || "").trim().toLowerCase())
                   return;
