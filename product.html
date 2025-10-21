@@ -825,12 +825,20 @@
             (payload.variants || []).forEach(function (v) {
               // If a colour is selected, only consider variants matching that colour
               if (selectedColour) {
-                var col = (v.selectedOptions || []).find(function (o) {
+                var opts = v.selectedOptions || [];
+                var col = opts.find(function (o) {
                   var n = String((o.name || "").trim()).toLowerCase();
                   return n.indexOf("colour") !== -1 || n.indexOf("color") !== -1;
                 });
-                if (!col || String(col.value || "").trim().toLowerCase() !== String(selectedColour || "").trim().toLowerCase())
-                  return;
+                var norm = function (s) { return String(s || "").trim().toLowerCase(); };
+                var matchesColour = false;
+                if (col) {
+                  matchesColour = norm(col.value) === norm(selectedColour);
+                } else {
+                  // Fallback: if there is no explicit colour option, match by any option value
+                  matchesColour = opts.some(function (o) { return norm(o.value) === norm(selectedColour); });
+                }
+                if (!matchesColour) return;
               }
               var so = (v.selectedOptions || []).find(function (o) {
                 return String((o.name || "").trim()).toLowerCase() === "size";

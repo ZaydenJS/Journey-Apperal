@@ -88,7 +88,8 @@ export function findVariantForColor(product, color, withImage = false) {
     .toLowerCase();
   if (!target) return null;
   for (const v of (product && product.variants) || []) {
-    const hasColor = (v.selectedOptions || []).some((so) => {
+    const opts = v.selectedOptions || [];
+    const hasNamedColor = opts.some((so) => {
       const n = String(so.name || "")
         .trim()
         .toLowerCase();
@@ -99,6 +100,15 @@ export function findVariantForColor(product, color, withImage = false) {
           .toLowerCase() === target
       );
     });
+    const hasValueMatch = hasNamedColor
+      ? false
+      : opts.some(
+          (so) =>
+            String(so.value || "")
+              .trim()
+              .toLowerCase() === target
+        );
+    const hasColor = hasNamedColor || hasValueMatch;
     if (hasColor) {
       if (withImage) {
         if (v.image && v.image.url) return v;

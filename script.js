@@ -1155,20 +1155,25 @@
       (data.variants || []).forEach((v) => {
         // If a COLOUR is selected, only consider variants matching that colour
         if (selectedColour) {
-          const col = (v.selectedOptions || []).find((o) => {
+          const opts = v.selectedOptions || [];
+          const col = opts.find((o) => {
             const n = String((o.name || "").trim()).toLowerCase();
             return n.includes("colour") || n.includes("color");
           });
-          if (
-            !col ||
-            String(col.value || "")
+          const norm = (s) =>
+            String(s || "")
               .trim()
-              .toLowerCase() !==
-              String(selectedColour || "")
-                .trim()
-                .toLowerCase()
-          )
-            return;
+              .toLowerCase();
+          let matchesColour = false;
+          if (col) {
+            matchesColour = norm(col.value) === norm(selectedColour);
+          } else {
+            // Fallback: if there is no explicit colour option, match by any option value
+            matchesColour = opts.some(
+              (o) => norm(o.value) === norm(selectedColour)
+            );
+          }
+          if (!matchesColour) return;
         }
         const so = (v.selectedOptions || []).find((o) =>
           String((o.name || "").trim())
