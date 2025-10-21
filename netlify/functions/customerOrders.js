@@ -185,12 +185,12 @@ export const handler = async (event) => {
       }
     }
 
-    async function adminGraphQL(query, variables, apiVersion = "2024-10") {
+    async function adminGraphQL(query, variables) {
       if (!adminEnabled) {
         lastAdminError = "admin-not-enabled";
         return null;
       }
-      const url = `https://${storeDomain}/admin/api/${apiVersion}/graphql.json`;
+      const url = `https://${storeDomain}/admin/api/2024-07/graphql.json`;
       const r = await fetch(url, {
         method: "POST",
         headers: {
@@ -223,37 +223,13 @@ export const handler = async (event) => {
               displayFinancialStatus
               displayFulfillmentStatus
               currentTotalPriceSet { shopMoney { amount currencyCode } }
-              statusPageUrl
               lineItems(first: 50) {
                 edges {
                   node {
                     name
                     quantity
-                    variant { title sku image { url } }
                   }
                 }
-              }
-            }
-          }
-        }
-      }
-    `;
-
-    // Legacy Admin query without statusPageUrl for older API versions
-    const ADMIN_ORDERS_QUERY_LEGACY = `
-      query AdminOrders($q: String!, $first: Int!) {
-        orders(first: $first, query: $q, sortKey: CREATED_AT, reverse: true) {
-          edges {
-            node {
-              id
-              name
-              processedAt
-              createdAt
-              displayFinancialStatus
-              displayFulfillmentStatus
-              currentTotalPriceSet { shopMoney { amount currencyCode } }
-              lineItems(first: 50) {
-                edges { node { name quantity variant { title sku image { url } } } }
               }
             }
           }
@@ -279,17 +255,10 @@ export const handler = async (event) => {
       if (customerId) {
         lastAdminCustomerId = customerId;
         lastAdminQuery = `customer_id:${customerId}`;
-        let data = await adminGraphQL(ADMIN_ORDERS_QUERY, {
+        const data = await adminGraphQL(ADMIN_ORDERS_QUERY, {
           q: lastAdminQuery,
           first: limit,
         });
-        if (!data) {
-          data = await adminGraphQL(
-            ADMIN_ORDERS_QUERY_LEGACY,
-            { q: lastAdminQuery, first: limit },
-            "2024-07"
-          );
-        }
         const conn = data?.orders;
         const edges = conn?.edges || [];
         const mapped = edges.map(({ node }) => ({
@@ -302,7 +271,7 @@ export const handler = async (event) => {
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
           total: node.currentTotalPriceSet?.shopMoney || null,
-          statusUrl: node.statusPageUrl || null,
+          statusUrl: null,
           items:
             (node.lineItems?.edges || []).map((e) => ({
               title: e.node?.name || "",
@@ -320,17 +289,10 @@ export const handler = async (event) => {
       // Fallback to searching by email (works without protected customer data)
       if (email) {
         lastAdminQuery = `email:${email}`;
-        let data2 = await adminGraphQL(ADMIN_ORDERS_QUERY, {
+        const data2 = await adminGraphQL(ADMIN_ORDERS_QUERY, {
           q: lastAdminQuery,
           first: limit,
         });
-        if (!data2) {
-          data2 = await adminGraphQL(
-            ADMIN_ORDERS_QUERY_LEGACY,
-            { q: lastAdminQuery, first: limit },
-            "2024-07"
-          );
-        }
         const conn2 = data2?.orders;
         const edges2 = conn2?.edges || [];
         return edges2.map(({ node }) => ({
@@ -343,7 +305,7 @@ export const handler = async (event) => {
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
           total: node.currentTotalPriceSet?.shopMoney || null,
-          statusUrl: node.statusPageUrl || null,
+          statusUrl: null,
           items:
             (node.lineItems?.edges || []).map((e) => ({
               title: e.node?.name || "",
