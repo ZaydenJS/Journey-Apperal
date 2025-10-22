@@ -750,6 +750,13 @@
         list.innerHTML =
           '<div style="color:#666;text-align:center">Loading your orders…</div>';
 
+        // Fallback Shopify domain for account/order links when statusUrl is unavailable
+        var SHOP_DOMAIN =
+          (window.ENV &&
+            (window.ENV.SHOPIFY_STOREFRONT_DOMAIN ||
+              window.ENV.SHOPIFY_STORE_DOMAIN)) ||
+          "7196su-vk.myshopify.com";
+
         fetch("/.netlify/functions/customerOrders?first=20", {
           credentials: "include",
         })
@@ -860,11 +867,9 @@
                   : "") +
                 "</div>" +
                 '<div style="flex:1 1 100%;margin-top:8px"></div>' +
-                (o.statusUrl
-                  ? '<a href="' +
-                    o.statusUrl +
-                    '" target="_blank" rel="noopener" class="btn secondary" style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;text-decoration:none">View Order</a>'
-                  : '<button disabled style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#f6f6f6;color:#999;cursor:not-allowed">View Order</button>');
+                '<a href="' +
+                (o.statusUrl || "https://" + SHOP_DOMAIN + "/account/orders") +
+                '" target="_blank" rel="noopener" class="btn secondary" style="padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#fff;text-decoration:none">View Order</a>';
               list.appendChild(card);
             });
           })
