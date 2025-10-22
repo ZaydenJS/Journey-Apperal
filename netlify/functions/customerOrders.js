@@ -5,7 +5,7 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const FUNCTION_REV = "customerOrders-2025-10-21-10";
+const FUNCTION_REV = "customerOrders-2025-10-21-11";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -253,11 +253,14 @@ export const handler = async (event) => {
           (arr || []).map(async (o) => {
             if (!o || o.statusUrl) return o;
             const numId = orderNumericIdFromGid(o.id);
-            if (!numId) return o;
             try {
-              // Prefer Admin GraphQL; fall back to REST if needed
+              // Try Admin GraphQL regardless of numeric id availability
               const suGql = await adminGqlGetOrderStatusUrl(o.id);
-              const su = suGql || (await adminRestGetOrderStatusUrl(numId));
+              let su = suGql;
+              // If GQL did not return, and we have a numeric id, try REST fallback
+              if (!su && numId) {
+                su = await adminRestGetOrderStatusUrl(numId);
+              }
               if (su) o.statusUrl = su;
             } catch (_) {}
             return o;
