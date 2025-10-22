@@ -5,7 +5,7 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const FUNCTION_REV = "customerOrders-2025-10-21-12";
+const FUNCTION_REV = "customerOrders-2025-10-21-13";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -143,6 +143,7 @@ export const handler = async (event) => {
     let lastAdminError = null;
     let lastAdminQuery = null;
     let lastAdminCustomerId = null;
+    let lastStatusMetrics = null;
     function addDebugHeaders(resp, extra) {
       try {
         resp.headers = resp.headers || {};
@@ -154,6 +155,16 @@ export const handler = async (event) => {
           resp.headers["X-Admin-Query"] = String(lastAdminQuery).slice(0, 200);
         if (lastAdminCustomerId)
           resp.headers["X-Admin-CustomerId"] = String(lastAdminCustomerId);
+        if (lastStatusMetrics) {
+          const {
+            attempted = 0,
+            gqlHits = 0,
+            restHits = 0,
+          } = lastStatusMetrics || {};
+          resp.headers["X-Status-Attempted"] = String(attempted);
+          resp.headers["X-Status-GQL-Hits"] = String(gqlHits);
+          resp.headers["X-Status-REST-Hits"] = String(restHits);
+        }
         if (extra && typeof extra.storefrontCount === "number") {
           resp.headers["X-Storefront-Orders-Count"] = String(
             extra.storefrontCount
@@ -197,6 +208,11 @@ export const handler = async (event) => {
         return null;
       }
       const url = `https://${adminStoreDomain}/admin/api/2024-07/graphql.json`;
+      try {
+        lastAdminQuery = `AdminGQL:${
+          variables && variables.id ? variables.id : ""
+        }`;
+      } catch (_) {}
       const r = await fetch(url, {
         method: "POST",
         headers: {
@@ -252,25 +268,34 @@ export const handler = async (event) => {
 
     async function fillAdminStatusUrls(arr) {
       try {
+        let attempted = 0;
+        let gqlHits = 0;
+        let restHits = 0;
         const out = await Promise.all(
           (arr || []).map(async (o) => {
             if (!o || o.statusUrl) return o;
+            attempted++;
             const numId = orderNumericIdFromGid(o.id);
             try {
               // Try Admin GraphQL regardless of numeric id availability
               const suGql = await adminGqlGetOrderStatusUrl(o.id);
               let su = suGql;
+              if (suGql) gqlHits++;
               // If GQL did not return, and we have a numeric id, try REST fallback
               if (!su && numId) {
-                su = await adminRestGetOrderStatusUrl(numId);
+                const suRest = await adminRestGetOrderStatusUrl(numId);
+                if (suRest) restHits++;
+                su = suRest;
               }
               if (su) o.statusUrl = su;
             } catch (_) {}
             return o;
           })
         );
+        lastStatusMetrics = { attempted, gqlHits, restHits };
         return out;
       } catch (_) {
+        lastStatusMetrics = { attempted: 0, gqlHits: 0, restHits: 0 };
         return arr || [];
       }
     }
