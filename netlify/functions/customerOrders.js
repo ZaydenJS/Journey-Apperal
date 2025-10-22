@@ -5,7 +5,7 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const FUNCTION_REV = "customerOrders-2025-10-21-08";
+const FUNCTION_REV = "customerOrders-2025-10-21-09";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -214,7 +214,7 @@ export const handler = async (event) => {
       return json.data || null;
     }
 
-    // --- Enrichments: statusUrl via Admin REST, images via Storefront ---
+    // --- Enrichments: statusUrl via Admin GraphQL/REST, images via Storefront ---
     function orderNumericIdFromGid(gid) {
       const m = String(gid || "").match(/Order\/(\d+)/);
       return m ? m[1] : null;
@@ -236,6 +236,17 @@ export const handler = async (event) => {
       }
     }
 
+    async function adminGqlGetOrderStatusUrl(orderGid) {
+      try {
+        const data = await adminGraphQL(ADMIN_ORDER_STATUS_QUERY, {
+          id: orderGid,
+        });
+        return data?.order?.statusPageUrl || null;
+      } catch (_) {
+        return null;
+      }
+    }
+
     async function fillAdminStatusUrls(arr) {
       try {
         const out = await Promise.all(
@@ -244,7 +255,9 @@ export const handler = async (event) => {
             const numId = orderNumericIdFromGid(o.id);
             if (!numId) return o;
             try {
-              const su = await adminRestGetOrderStatusUrl(numId);
+              // Prefer Admin GraphQL; fall back to REST if needed
+              const suGql = await adminGqlGetOrderStatusUrl(o.id);
+              const su = suGql || (await adminRestGetOrderStatusUrl(numId));
               if (su) o.statusUrl = su;
             } catch (_) {}
             return o;
@@ -350,6 +363,12 @@ export const handler = async (event) => {
         customers(first: 1, query: $q) {
           edges { node { id email } }
         }
+      }
+    `;
+
+    const ADMIN_ORDER_STATUS_QUERY = `
+      query AdminOrderStatus($id: ID!) {
+        order(id: $id) { statusPageUrl }
       }
     `;
 
