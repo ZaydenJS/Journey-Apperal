@@ -264,6 +264,16 @@ export const handler = async (event) => {
 	      }
 	    `;
 
+    function baseProductTitle(raw) {
+      const t = String(raw || "").trim();
+      if (!t) return "";
+      let b = t.split(" - ")[0];
+      b = b.split(" – ")[0];
+      b = b.split("(")[0];
+      b = b.split(",")[0];
+      return b.trim();
+    }
+
     async function fillLineItemImagesViaStorefront(client, orders) {
       try {
         if (!orders || !orders.length) return orders || [];
@@ -271,11 +281,11 @@ export const handler = async (event) => {
         for (const o of orders) {
           for (const li of o.items || []) {
             const hasImg = !!li?.variant?.image?.url;
-            const title = (li?.title || "").trim();
-            if (hasImg || !title || titleToImage.has(title)) continue;
+            const base = baseProductTitle(li?.title);
+            if (hasImg || !base || titleToImage.has(base)) continue;
             try {
               const resp = await client.request(PRODUCT_SEARCH, {
-                variables: { q: `title:\"${title.replace(/\"/g, '\\"')}\"` },
+                variables: { q: base },
               });
               const d = handleGraphQLResponse(resp);
               const prod = d?.products?.edges?.[0]?.node || null;
@@ -283,7 +293,7 @@ export const handler = async (event) => {
                 prod?.featuredImage?.url ||
                 prod?.images?.edges?.[0]?.node?.url ||
                 "";
-              if (imgUrl) titleToImage.set(title, imgUrl);
+              if (imgUrl) titleToImage.set(base, imgUrl);
             } catch (_) {}
           }
         }
@@ -293,8 +303,8 @@ export const handler = async (event) => {
               li &&
               (!li.variant || !li.variant.image || !li.variant.image.url)
             ) {
-              const title = (li.title || "").trim();
-              const url = titleToImage.get(title);
+              const base = baseProductTitle(li?.title);
+              const url = titleToImage.get(base);
               if (url) {
                 li.variant = li.variant || {};
                 li.variant.image = li.variant.image || {};
@@ -321,6 +331,7 @@ export const handler = async (event) => {
               displayFinancialStatus
               displayFulfillmentStatus
               currentTotalPriceSet { shopMoney { amount currencyCode } }
+              statusPageUrl
               lineItems(first: 50) {
                 edges {
                   node {
@@ -369,7 +380,7 @@ export const handler = async (event) => {
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
           total: node.currentTotalPriceSet?.shopMoney || null,
-          statusUrl: null,
+          statusUrl: node.statusPageUrl || null,
           items:
             (node.lineItems?.edges || []).map((e) => ({
               title: e.node?.name || "",
@@ -403,7 +414,7 @@ export const handler = async (event) => {
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
           total: node.currentTotalPriceSet?.shopMoney || null,
-          statusUrl: null,
+          statusUrl: node.statusPageUrl || null,
           items:
             (node.lineItems?.edges || []).map((e) => ({
               title: e.node?.name || "",
