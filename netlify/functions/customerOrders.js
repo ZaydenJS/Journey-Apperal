@@ -5,7 +5,7 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const FUNCTION_REV = "customerOrders-2025-10-21-07";
+const FUNCTION_REV = "customerOrders-2025-10-21-08";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -331,7 +331,6 @@ export const handler = async (event) => {
               displayFinancialStatus
               displayFulfillmentStatus
               currentTotalPriceSet { shopMoney { amount currencyCode } }
-              statusPageUrl
               lineItems(first: 50) {
                 edges {
                   node {
@@ -380,7 +379,7 @@ export const handler = async (event) => {
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
           total: node.currentTotalPriceSet?.shopMoney || null,
-          statusUrl: node.statusPageUrl || null,
+          statusUrl: null,
           items:
             (node.lineItems?.edges || []).map((e) => ({
               title: e.node?.name || "",
@@ -414,7 +413,7 @@ export const handler = async (event) => {
           financialStatus: node.displayFinancialStatus,
           fulfillmentStatus: node.displayFulfillmentStatus,
           total: node.currentTotalPriceSet?.shopMoney || null,
-          statusUrl: node.statusPageUrl || null,
+          statusUrl: null,
           items:
             (node.lineItems?.edges || []).map((e) => ({
               title: e.node?.name || "",
