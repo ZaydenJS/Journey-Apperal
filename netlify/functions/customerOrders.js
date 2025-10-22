@@ -5,7 +5,7 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const FUNCTION_REV = "customerOrders-2025-10-21-13";
+const FUNCTION_REV = "customerOrders-2025-10-21-14";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -107,6 +107,14 @@ export const handler = async (event) => {
       }
     `;
 
+    const ORDER_STATUS_BY_ID_QUERY = `
+	      query OrderStatusById($token: String!, $id: ID!) {
+	        customer(customerAccessToken: $token) {
+	          order(id: $id) { statusUrl }
+	        }
+	      }
+	    `;
+
     const RENEW_MUTATION = `
       mutation Renew($customerAccessToken: String!) {
         customerAccessTokenRenew(customerAccessToken: $customerAccessToken) {
@@ -160,10 +168,12 @@ export const handler = async (event) => {
             attempted = 0,
             gqlHits = 0,
             restHits = 0,
+            sfHits = 0,
           } = lastStatusMetrics || {};
           resp.headers["X-Status-Attempted"] = String(attempted);
           resp.headers["X-Status-GQL-Hits"] = String(gqlHits);
           resp.headers["X-Status-REST-Hits"] = String(restHits);
+          resp.headers["X-Status-SF-Hits"] = String(sfHits);
         }
         if (extra && typeof extra.storefrontCount === "number") {
           resp.headers["X-Storefront-Orders-Count"] = String(
@@ -290,7 +300,34 @@ export const handler = async (event) => {
               if (su) o.statusUrl = su;
             } catch (_) {}
             return o;
+        /*
           })
+
+	    async function fillStorefrontStatusUrls(client, tokenValue, arr) {
+	      try {
+	        let sfHits = 0;
+	        const out = await Promise.all(
+	          (arr || []).map(async (o) => {
+	            if (!o || o.statusUrl) return o;
+	            try {
+	              const resp = await client.request(ORDER_STATUS_BY_ID_QUERY, {
+	                variables: { token: tokenValue, id: o.id },
+	              });
+	              const d = handleGraphQLResponse(resp);
+	              const su = d?.customer?.order?.statusUrl || null;
+	              if (su) {
+	                o.statusUrl = su;
+	                sfHits++;
+	              }
+	            } catch (_) {}
+	            return o;
+	          })
+	        );
+	        lastStatusMetrics = { ...(lastStatusMetrics || {}), sfHits };
+	        return out;
+	      } catch (_) {
+        */
+
         );
         lastStatusMetrics = { attempted, gqlHits, restHits };
         return out;
@@ -299,6 +336,34 @@ export const handler = async (event) => {
         return arr || [];
       }
     }
+
+	    async function fillStorefrontStatusUrls(client, tokenValue, arr) {
+	      try {
+	        let sfHits = 0;
+	        const out = await Promise.all(
+	          (arr || []).map(async (o) => {
+	            if (!o || o.statusUrl) return o;
+	            try {
+	              const resp = await client.request(ORDER_STATUS_BY_ID_QUERY, {
+	                variables: { token: tokenValue, id: o.id },
+	              });
+	              const d = handleGraphQLResponse(resp);
+	              const su = d?.customer?.order?.statusUrl || null;
+	              if (su) {
+	                o.statusUrl = su;
+	                sfHits++;
+	              }
+	            } catch (_) {}
+	            return o;
+	          })
+	        );
+	        lastStatusMetrics = { ...(lastStatusMetrics || {}), sfHits };
+	        return out;
+	      } catch (_) {
+	        return arr || [];
+	      }
+	    }
+
 
     const PRODUCT_SEARCH = `
 	      query ProdByTitle($q: String!) {
@@ -711,6 +776,8 @@ export const handler = async (event) => {
 
     // Final enrich: ensure statusUrl and images are present without changing order list
     orders = await fillAdminStatusUrls(orders);
+    orders = await fillStorefrontStatusUrls(client, token, orders);
+
     orders = await fillLineItemImagesViaStorefront(client, orders);
 
     const out = createApiResponse(
