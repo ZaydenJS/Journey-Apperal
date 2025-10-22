@@ -300,34 +300,7 @@ export const handler = async (event) => {
               if (su) o.statusUrl = su;
             } catch (_) {}
             return o;
-        /*
           })
-
-	    async function fillStorefrontStatusUrls(client, tokenValue, arr) {
-	      try {
-	        let sfHits = 0;
-	        const out = await Promise.all(
-	          (arr || []).map(async (o) => {
-	            if (!o || o.statusUrl) return o;
-	            try {
-	              const resp = await client.request(ORDER_STATUS_BY_ID_QUERY, {
-	                variables: { token: tokenValue, id: o.id },
-	              });
-	              const d = handleGraphQLResponse(resp);
-	              const su = d?.customer?.order?.statusUrl || null;
-	              if (su) {
-	                o.statusUrl = su;
-	                sfHits++;
-	              }
-	            } catch (_) {}
-	            return o;
-	          })
-	        );
-	        lastStatusMetrics = { ...(lastStatusMetrics || {}), sfHits };
-	        return out;
-	      } catch (_) {
-        */
-
         );
         lastStatusMetrics = { attempted, gqlHits, restHits };
         return out;
@@ -337,33 +310,32 @@ export const handler = async (event) => {
       }
     }
 
-	    async function fillStorefrontStatusUrls(client, tokenValue, arr) {
-	      try {
-	        let sfHits = 0;
-	        const out = await Promise.all(
-	          (arr || []).map(async (o) => {
-	            if (!o || o.statusUrl) return o;
-	            try {
-	              const resp = await client.request(ORDER_STATUS_BY_ID_QUERY, {
-	                variables: { token: tokenValue, id: o.id },
-	              });
-	              const d = handleGraphQLResponse(resp);
-	              const su = d?.customer?.order?.statusUrl || null;
-	              if (su) {
-	                o.statusUrl = su;
-	                sfHits++;
-	              }
-	            } catch (_) {}
-	            return o;
-	          })
-	        );
-	        lastStatusMetrics = { ...(lastStatusMetrics || {}), sfHits };
-	        return out;
-	      } catch (_) {
-	        return arr || [];
-	      }
-	    }
-
+    async function fillStorefrontStatusUrls(client, tokenValue, arr) {
+      try {
+        let sfHits = 0;
+        const out = await Promise.all(
+          (arr || []).map(async (o) => {
+            if (!o || o.statusUrl) return o;
+            try {
+              const resp = await client.request(ORDER_STATUS_BY_ID_QUERY, {
+                variables: { token: tokenValue, id: o.id },
+              });
+              const d = handleGraphQLResponse(resp);
+              const su = d?.customer?.order?.statusUrl || null;
+              if (su) {
+                o.statusUrl = su;
+                sfHits++;
+              }
+            } catch (_) {}
+            return o;
+          })
+        );
+        lastStatusMetrics = { ...(lastStatusMetrics || {}), sfHits };
+        return out;
+      } catch (_) {
+        return arr || [];
+      }
+    }
 
     const PRODUCT_SEARCH = `
 	      query ProdByTitle($q: String!) {
