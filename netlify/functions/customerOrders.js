@@ -5,7 +5,7 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const FUNCTION_REV = "customerOrders-2025-10-21-09";
+const FUNCTION_REV = "customerOrders-2025-10-21-10";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -660,12 +660,20 @@ export const handler = async (event) => {
           first
         );
         if (adminOrders && adminOrders.length) {
+          const enriched2 = await fillAdminStatusUrls(adminOrders);
+          const withImages2 = await fillLineItemImagesViaStorefront(
+            client,
+            enriched2
+          );
           const r = createApiResponse(
-            { orders: adminOrders, pageInfo: {} },
+            { orders: withImages2, pageInfo: {} },
             200
           );
           r.headers["X-Orders-Source"] = "admin";
-          return addDebugHeaders(r, { adminCount: adminOrders.length });
+          return addDebugHeaders(r, {
+            adminCount: withImages2.length,
+            statusFilled: withImages2.filter((o) => !!o.statusUrl).length,
+          });
         }
       } catch (_) {}
     }
