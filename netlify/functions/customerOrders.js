@@ -5,7 +5,7 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const FUNCTION_REV = "customerOrders-2025-10-21-11";
+const FUNCTION_REV = "customerOrders-2025-10-21-12";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -123,14 +123,16 @@ export const handler = async (event) => {
       }
     `;
 
-    const storeDomain =
-      process.env.SHOPIFY_STOREFRONT_DOMAIN || process.env.SHOPIFY_STORE_DOMAIN;
+    const adminStoreDomain =
+      process.env.SHOPIFY_STORE_DOMAIN ||
+      process.env.SHOPIFY_ADMIN_STORE_DOMAIN ||
+      process.env.SHOPIFY_STOREFRONT_DOMAIN;
     const adminToken =
       process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN ||
       process.env.SHOPIFY_ADMIN_TOKEN ||
       process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
 
-    const adminEnabled = !!(storeDomain && adminToken);
+    const adminEnabled = !!(adminStoreDomain && adminToken);
 
     // Enable Admin fallback/merge so orders appear even if Storefront association fails
     // You can toggle this with env var ENABLE_ADMIN_ORDERS=true
@@ -146,7 +148,8 @@ export const handler = async (event) => {
         resp.headers = resp.headers || {};
         resp.headers["X-Function-Rev"] = FUNCTION_REV;
         resp.headers["X-Admin-Enabled"] = String(adminEnabled && ENABLE_ADMIN);
-        if (storeDomain) resp.headers["X-Admin-Store"] = String(storeDomain);
+        if (adminStoreDomain)
+          resp.headers["X-Admin-Store"] = String(adminStoreDomain);
         if (lastAdminQuery)
           resp.headers["X-Admin-Query"] = String(lastAdminQuery).slice(0, 200);
         if (lastAdminCustomerId)
@@ -193,7 +196,7 @@ export const handler = async (event) => {
         lastAdminError = "admin-not-enabled";
         return null;
       }
-      const url = `https://${storeDomain}/admin/api/2024-07/graphql.json`;
+      const url = `https://${adminStoreDomain}/admin/api/2024-07/graphql.json`;
       const r = await fetch(url, {
         method: "POST",
         headers: {
@@ -223,7 +226,7 @@ export const handler = async (event) => {
     async function adminRestGetOrderStatusUrl(orderNumericId) {
       if (!adminEnabled) return null;
       try {
-        const url = `https://${storeDomain}/admin/api/2024-07/orders/${orderNumericId}.json?fields=order_status_url`;
+        const url = `https://${adminStoreDomain}/admin/api/2024-07/orders/${orderNumericId}.json?fields=order_status_url`;
         const r = await fetch(url, {
           method: "GET",
           headers: { "X-Shopify-Access-Token": adminToken },
@@ -492,7 +495,7 @@ export const handler = async (event) => {
             : [];
 
           // Merge Admin orders to include any that Storefront doesn't expose (dedupe by orderNumber)
-          if (ENABLE_ADMIN && adminToken && storeDomain) {
+          if (ENABLE_ADMIN && adminToken && adminStoreDomain) {
             try {
               const ident = await getCustomerIdentity(newTok);
               const adminOrders = await fetchAdminOrders(
@@ -523,7 +526,7 @@ export const handler = async (event) => {
             (!orders || orders.length === 0) &&
             ENABLE_ADMIN &&
             adminToken &&
-            storeDomain
+            adminStoreDomain
           ) {
             try {
               const ident = await getCustomerIdentity(newTok);
@@ -570,7 +573,7 @@ export const handler = async (event) => {
         }
       } catch (_) {}
       // If Storefront couldn't load the customer at all, still try Admin fallback by email
-      if (ENABLE_ADMIN && adminToken && storeDomain) {
+      if (ENABLE_ADMIN && adminToken && adminStoreDomain) {
         try {
           const ident = await getCustomerIdentity(token);
           const adminOrders = await fetchAdminOrders(
@@ -623,7 +626,7 @@ export const handler = async (event) => {
       : [];
 
     // Merge Admin orders to include any that Storefront doesn't expose (dedupe by orderNumber)
-    if (ENABLE_ADMIN && adminToken && storeDomain) {
+    if (ENABLE_ADMIN && adminToken && adminStoreDomain) {
       try {
         const ident = await getCustomerIdentity(token);
         const adminOrders = await fetchAdminOrders(
@@ -653,7 +656,7 @@ export const handler = async (event) => {
       (!orders || orders.length === 0) &&
       ENABLE_ADMIN &&
       adminToken &&
-      storeDomain
+      adminStoreDomain
     ) {
       try {
         const ident = await getCustomerIdentity(token);
