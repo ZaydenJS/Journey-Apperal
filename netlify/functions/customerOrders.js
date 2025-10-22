@@ -5,7 +5,7 @@ import {
   createErrorResponse,
 } from "./utils/shopify.js";
 
-const FUNCTION_REV = "customerOrders-2025-10-21-04";
+const FUNCTION_REV = "customerOrders-2025-10-21-06";
 
 function getTokenFromCookie(cookieHeader) {
   if (!cookieHeader) return null;
@@ -159,6 +159,9 @@ export const handler = async (event) => {
         if (extra && typeof extra.adminCount === "number") {
           resp.headers["X-Admin-Orders-Count"] = String(extra.adminCount);
         }
+        if (extra && typeof extra.statusFilled === "number") {
+          resp.headers["X-Status-Filled"] = String(extra.statusFilled);
+        }
         if (extra && extra.email)
           resp.headers["X-Customer-Email"] = String(extra.email);
         if (lastAdminError || (extra && extra.error)) {
@@ -209,6 +212,98 @@ export const handler = async (event) => {
       }
       lastAdminError = null;
       return json.data || null;
+    }
+    // Helpers to enrich Admin orders with status URLs via Admin REST
+    function orderNumericIdFromGid(gid) {
+      const m = String(gid || "").match(/Order\/(\d+)/);
+      return m ? m[1] : null;
+    }
+
+    async function adminRestGetOrderStatusUrl(orderNumericId) {
+      if (!adminEnabled) return null;
+      try {
+        const url = `https://${storeDomain}/admin/api/2024-07/orders/${orderNumericId}.json?fields=order_status_url`;
+        const r = await fetch(url, {
+          method: "GET",
+          headers: { "X-Shopify-Access-Token": adminToken },
+        });
+        const json = await r.json().catch(() => ({}));
+        if (!r.ok) return null;
+        return json?.order?.order_status_url || null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function fillAdminStatusUrls(arr) {
+      try {
+        const out = await Promise.all(
+          (arr || []).map(async (o) => {
+            if (!o || o.statusUrl) return o;
+            const numId = orderNumericIdFromGid(o.id);
+            if (!numId) return o;
+            try {
+              const su = await adminRestGetOrderStatusUrl(numId);
+              if (su) o.statusUrl = su;
+            } catch (_) {}
+            return o;
+          })
+        );
+        return out;
+      } catch (_) {
+        return arr || [];
+      }
+    }
+
+    // Lightweight image rehydration for line items missing images (via Storefront)
+    const PRODUCT_SEARCH = `
+      query ProdByTitle($q: String!) {
+        products(first: 1, query: $q) {
+          edges {
+            node {
+              featuredImage { url }
+              images(first: 1) { edges { node { url } } }
+            }
+          }
+        }
+      }
+    `;
+
+    async function fillLineItemImagesViaStorefront(client, orders) {
+      try {
+        if (!orders || !orders.length) return orders || [];
+        const titleToImage = new Map();
+        for (const o of orders) {
+          for (const li of o.items || []) {
+            const hasImg = !!(li?.variant?.image?.url);
+            const title = (li?.title || "").trim();
+            if (hasImg || !title || titleToImage.has(title)) continue;
+            try {
+              const resp = await client.request(PRODUCT_SEARCH, { variables: { q: `title:\"${title.replace(/"/g, '\\"')}\"` } });
+              const d = handleGraphQLResponse(resp);
+              const prod = d?.products?.edges?.[0]?.node || null;
+              const imgUrl = prod?.featuredImage?.url || prod?.images?.edges?.[0]?.node?.url || "";
+              if (imgUrl) titleToImage.set(title, imgUrl);
+            } catch (_) {}
+          }
+        }
+        for (const o of orders) {
+          for (const li of o.items || []) {
+            if (li && (!li.variant || !li.variant.image || !li.variant.image.url)) {
+              const title = (li.title || "").trim();
+              const url = titleToImage.get(title);
+              if (url) {
+                li.variant = li.variant || {};
+                li.variant.image = li.variant.image || {};
+                li.variant.image.url = url;
+              }
+            }
+          }
+        }
+        return orders;
+      } catch (_) {
+        return orders || [];
+      }
     }
 
     const ADMIN_ORDERS_QUERY = `
@@ -277,13 +372,13 @@ export const handler = async (event) => {
               title: e.node?.name || "",
               quantity: e.node?.quantity || 0,
               variant: {
-                title: e.node?.variant?.title || "",
-                sku: e.node?.variant?.sku || "",
-                image: { url: e.node?.variant?.image?.url || "" },
+                title: "",
+                sku: "",
+                image: { url: "" },
               },
             })) || [],
         }));
-        if (mapped.length) return mapped;
+        if (mapped.length) return await fillAdminStatusUrls(mapped);
       }
 
       // Fallback to searching by email (works without protected customer data)
@@ -295,7 +390,7 @@ export const handler = async (event) => {
         });
         const conn2 = data2?.orders;
         const edges2 = conn2?.edges || [];
-        return edges2.map(({ node }) => ({
+        return await fillAdminStatusUrls(edges2.map(({ node }) => ({
           id: node.id,
           name: node.name,
           orderNumber:
@@ -311,12 +406,12 @@ export const handler = async (event) => {
               title: e.node?.name || "",
               quantity: e.node?.quantity || 0,
               variant: {
-                title: e.node?.variant?.title || "",
-                sku: e.node?.variant?.sku || "",
-                image: { url: e.node?.variant?.image?.url || "" },
+                title: "",
+                sku: "",
+                image: { url: "" },
               },
             })) || [],
-        }));
+        }))
       }
 
       return [];
@@ -403,7 +498,8 @@ export const handler = async (event) => {
                 first
               );
               if (adminOrders && adminOrders.length) {
-                orders = adminOrders;
+                const enrichedAdmin = await fillAdminStatusUrls(adminOrders);
+                const orders = enrichedAdmin;
                 const res2 = createApiResponse({ orders, pageInfo: {} }, 200);
                 res2.headers["X-Orders-Source"] = "admin";
                 const expires2 = new Date(newExp).toUTCString();
@@ -418,10 +514,15 @@ export const handler = async (event) => {
                   adminCount: orders.length,
                   email: ident?.email,
                   storefrontCount: 0,
+                  statusFilled: orders.filter(o => !!o.statusUrl).length,
                 });
               }
             } catch (_) {}
           }
+
+          // Ensure statusUrl and images are populated before returning
+          orders = await fillAdminStatusUrls(orders);
+          orders = await fillLineItemImagesViaStorefront(client, orders);
 
           const res = createApiResponse(
             { orders, pageInfo: ordersConn?.pageInfo || {} },
@@ -435,7 +536,7 @@ export const handler = async (event) => {
           )}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires}${cookieDomainFromHost(
             event.headers.host || event.headers.Host
           )}`;
-          return addDebugHeaders(res, { storefrontCount: orders.length });
+          return addDebugHeaders(res, { storefrontCount: orders.length, statusFilled: orders.filter(o => !!o.statusUrl).length });
         }
       } catch (_) {}
       // If Storefront couldn't load the customer at all, still try Admin fallback by email
@@ -448,15 +549,18 @@ export const handler = async (event) => {
             first
           );
           if (adminOrders && adminOrders.length) {
+            const enrichedAdmin = await fillAdminStatusUrls(adminOrders);
+            const withImages = await fillLineItemImagesViaStorefront(client, enrichedAdmin);
             const r = createApiResponse(
-              { orders: adminOrders, pageInfo: {} },
+              { orders: withImages, pageInfo: {} },
               200
             );
             r.headers["X-Orders-Source"] = "admin";
             return addDebugHeaders(r, {
-              adminCount: adminOrders.length,
+              adminCount: withImages.length,
               email: ident?.email,
               storefrontCount: 0,
+              statusFilled: withImages.filter(o => !!o.statusUrl).length,
             });
           }
         } catch (_) {}
@@ -507,6 +611,8 @@ export const handler = async (event) => {
               return db - da;
             })
             .slice(0, first);
+          // Final pass: ensure any outgoing orders have statusUrl
+          orders = await fillAdminStatusUrls(orders);
         }
       } catch (_) {}
     }
@@ -526,22 +632,27 @@ export const handler = async (event) => {
           first
         );
         if (adminOrders && adminOrders.length) {
+          const enrichedAdmin = await fillAdminStatusUrls(adminOrders);
+          const withImages = await fillLineItemImagesViaStorefront(client, enrichedAdmin);
           const r = createApiResponse(
-            { orders: adminOrders, pageInfo: {} },
+            { orders: withImages, pageInfo: {} },
             200
           );
           r.headers["X-Orders-Source"] = "admin";
-          return addDebugHeaders(r, { adminCount: adminOrders.length });
+          return addDebugHeaders(r, { adminCount: withImages.length, statusFilled: withImages.filter(o => !!o.statusUrl).length });
         }
       } catch (_) {}
     }
+
+    // Rehydrate missing images for any remaining items
+    orders = await fillLineItemImagesViaStorefront(client, orders);
 
     const out = createApiResponse(
       { orders, pageInfo: ordersConn?.pageInfo || {} },
       200
     );
     out.headers["X-Orders-Source"] = "storefront";
-    return addDebugHeaders(out, { storefrontCount: orders.length });
+    return addDebugHeaders(out, { storefrontCount: orders.length, statusFilled: orders.filter(o => !!o.statusUrl).length });
   } catch (err) {
     return createErrorResponse(err.message || "Failed to load orders", 500);
   }
