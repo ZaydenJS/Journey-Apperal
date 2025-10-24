@@ -85,15 +85,8 @@ input {
   padding: 8px 10px;
 }
 /* Ensure consistent logo styling across all pages (match index) */
-header.header .logo,
-.logo {
-  font-weight: 800 !important;
-  letter-spacing: 2px !important;
-}
-header.header .logo a {
-  font-size: 1em !important;
-  letter-spacing: 2px !important;
-}
+header.header .logo, .logo { font-weight: 800 !important; letter-spacing: 2px !important; }
+header.header .logo a { font-size: 1em !important; letter-spacing: 2px !important; }
 
 .icon-btn {
   background: none;
@@ -101,23 +94,9 @@ header.header .logo a {
   padding: 6px;
   line-height: 0;
 }
-.wish {
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #fff;
-  font-size: 18px;
-}
-.wish.active {
-  color: #e11d48;
-  border-color: #e11d48;
-}
-.installments {
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 4px;
-}
+.wish { width:44px; height:44px; border:1px solid var(--border); border-radius:8px; background:#fff; font-size:18px; }
+.wish.active { color:#e11d48; border-color:#e11d48; }
+.installments { color: var(--muted); font-size: 12px; margin-top: 4px; }
 
 .badge {
   background: var(--text);
@@ -161,7 +140,7 @@ header.header .logo a {
   max-width: 420px;
   background: #fff;
   transform: translateX(-100%);
-  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.32s cubic-bezier(0.4, 0.0, 0.2, 1);
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -234,7 +213,7 @@ header.header .logo a {
 
 /* Animated hamburger (mobile & desktop) */
 .menu-toggle span {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.2s ease;
   transform-origin: center;
 }
 .menu-toggle.open span:nth-child(1) {
@@ -248,7 +227,7 @@ header.header .logo a {
 }
 
 .shop-hamburger span {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.2s ease;
   transform-origin: center;
 }
 .shop-hamburger.open span:nth-child(1) {
@@ -288,6 +267,7 @@ header.header .logo a {
   padding: 12px 8px;
   border-bottom: 1px solid var(--border);
   font-weight: 600;
+
 }
 
 /* Force bold header nav items across all pages (matches index header weight) */
@@ -295,6 +275,21 @@ header.header .nav a,
 header.header .header-item,
 .header .nav a {
   font-weight: 700 !important; /* unify with global bold */
+}
+
+/* Header typography consistency (desktop): match index header exactly */
+@media (min-width: 1024px) {
+  header.header .nav a,
+  header.header .header-item {
+    font-size: 14px !important;
+    letter-spacing: 0.3px !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  }
+  /* Announcement strip above header */
+  .announcement {
+    font-size: 12px !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  }
 }
 
 /* Sitewide: make all header text bold (desktop and mobile) */
@@ -306,25 +301,19 @@ header.header nav a,
   font-weight: 700 !important;
 }
 
+
 /* Sitewide: slightly enlarge header text (desktop + mobile) */
 /* desktop sizing handled below; keep mobile logo sizing unchanged */
 header.header .header-item,
 header.header nav a,
-.header .nav a {
-  font-size: 15px !important;
-}
-.announcement {
-  font-size: 13px !important;
-}
+.header .nav a { font-size: 15px !important; }
+.announcement { font-size: 13px !important; }
 /* Mega dropdown links */
-.header .mega .links a,
-.mega .links a {
-  font-weight: 700 !important;
-  font-size: 15px !important;
-}
+.header .mega .links a, .mega .links a { font-weight: 700 !important; font-size: 15px !important; }
 /* Mobile drawer menu */
 /* keep mobile drawer sizes unchanged */
 /* .drawer-nav .row-item, .drawer-nav a { font-weight: 700 !important; font-size: 16px !important; } */
+
 
 /* Mega menu (desktop) */
 .mega {
@@ -488,9 +477,7 @@ header.header nav a,
   pointer-events: none;
   z-index: 1;
 }
-.card {
-  cursor: pointer;
-}
+.card { cursor: pointer; }
 
 .price {
   font-weight: 600;
@@ -529,8 +516,7 @@ header.header nav a,
   appearance: none;
   -webkit-appearance: none;
 }
-.size[aria-pressed="true"],
-.size.selected {
+.size[aria-pressed="true"], .size.selected {
   background: #fff;
   color: #111;
   border-color: #111;
@@ -560,19 +546,33 @@ header.header nav a,
   }
 
   /* Category carousel controls: black chevrons, visible on mobile */
+  .category-carousel .ctrl {
+    display: inline-flex;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    color: #fff; /* white chevrons */
+    box-shadow: none;
+    font-size: 28px;
+    line-height: 1;
+  }
   /* Slightly wider cards on mobile for categories */
   .category-carousel .carousel-track {
     grid-auto-columns: 80%;
   }
   /* Make sure category carousel arrows are positioned and visible */
-  .category-carousel {
-    position: relative;
-  }
-  .category-carousel .prev {
-    left: 8px;
-  }
-  .category-carousel .next {
-    right: 8px;
+  .category-carousel { position: relative; }
+  .category-carousel .prev { left: 8px; }
+  .category-carousel .next { right: 8px; }
+  .category-carousel .ctrl { position: absolute; top: 50%; transform: translateY(-50%); display: inline-flex !important; z-index: 5; }
+    .category-carousel .ctrl {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      display: inline-flex !important;
+      z-index: 5;
+    }
   }
 }
 .panel {
@@ -675,7 +675,7 @@ header.header nav a,
   font-size: 28px;
   line-height: 1;
   z-index: 3;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
 }
 .carousel .prev {
   left: 8px;
@@ -697,9 +697,7 @@ header.header nav a,
   }
 }
 /* Category carousel overrides (apply on all breakpoints) */
-.category-carousel {
-  position: relative;
-}
+.category-carousel { position: relative; }
 .category-carousel .ctrl {
   position: absolute;
   top: 50%;
@@ -715,12 +713,9 @@ header.header nav a,
   line-height: 1;
   z-index: 6;
 }
-.category-carousel .prev {
-  left: 8px;
-}
-.category-carousel .next {
-  right: 8px;
-}
+.category-carousel .prev { left: 8px; }
+.category-carousel .next { right: 8px; }
+
 
 /* Arrivals carousel tweaks: 2x2 layout with taller images */
 .arrivals-carousel .carousel-track {
@@ -778,6 +773,7 @@ header.header nav a,
 .arrivals-carousel .ctrl.bottom {
   top: 75%;
 }
+
 
 /* Best Sellers carousel: uniform image size */
 .best-sellers .card .img-wrap {
@@ -852,7 +848,6 @@ header.header nav a,
   align-items: center;
   border-top: 1px solid var(--border);
   padding: 12px 0;
-}
 
 /* Center footer content */
 .footer .top {
@@ -872,26 +867,14 @@ header.header nav a,
 }
 
 /* Ensure footer link lists are centered too */
-.footer .top .links {
-  justify-items: center;
-  text-align: center;
-}
-.footer .top h4 {
-  text-align: center;
-}
+.footer .top .links { justify-items: center; text-align: center; }
+.footer .top h4 { text-align: center; }
 
 /* Strong centering rules to ensure all footer text is centered */
-.footer .top > div {
-  text-align: center;
-}
-.footer .top .links {
-  place-items: center;
-}
-.footer .top .links a {
-  display: block;
-  width: 100%;
-  text-align: center;
-}
+.footer .top > div { text-align: center; }
+.footer .top .links { place-items: center; }
+.footer .top .links a { display: block; width: 100%; text-align: center; }
+
 
 .currency {
   border: 1px solid var(--border);
@@ -996,17 +979,11 @@ header.header nav a,
   -webkit-appearance: none;
   font-size: 14px;
   color: #111;
-  letter-spacing: 0.3px;
+  letter-spacing: .3px;
 }
-.collapsible button:hover {
-  color: #111;
-}
-.collapsible + .collapsible {
-  border-top: 1px solid var(--border);
-}
-.collapsible:last-of-type {
-  border-bottom: 1px solid var(--border);
-}
+.collapsible button:hover { color: #111; }
+.collapsible + .collapsible { border-top: 1px solid var(--border); }
+.collapsible:last-of-type { border-bottom: 1px solid var(--border); }
 .collapsible .content {
   height: 0;
   overflow: hidden;
@@ -1050,20 +1027,17 @@ header.header nav a,
 .collapsible button::after {
   content: "\203A"; /* › */
   float: right;
-  transition: transform 0.2s ease;
+  transition: transform .2s ease;
 }
 .collapsible button[aria-expanded="true"]::after {
   transform: rotate(90deg);
 }
 
 /* Product page: ensure collapsible button labels are perfectly centered on all devices */
-.p-details .collapsible button {
-  text-align: center !important;
-}
+.p-details .collapsible button { text-align: center !important; }
 /* Remove auto-injected chevron that can offset centering on mobile */
-.p-details .collapsible button::after {
-  content: none !important;
-}
+.p-details .collapsible button::after { content: none !important; }
+
 
 /* Trust list rows */
 .trust-list {
@@ -1109,17 +1083,9 @@ header.header nav a,
   transform: translate(-50%, -50%);
   z-index: 2;
 }
-.edge-gallery .edge img.adj.left {
-  left: 0;
-  width: 42%;
-  opacity: 0.9;
-}
-.edge-gallery .edge img.adj.right {
-  right: 0;
-  left: auto;
-  width: 42%;
-  opacity: 0.9;
-}
+.edge-gallery .edge img.adj.left { left: 0; width: 42%; opacity: 0.9; }
+.edge-gallery .edge img.adj.right { right: 0; left: auto; width: 42%; opacity: 0.9; }
+
 
 /* Chat widget */
 .chat {
@@ -1146,23 +1112,12 @@ header.header nav a,
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   display: none;
 }
-.chat.open .panel {
-  display: block;
-}
+.chat.open .panel { display: block; }
 
 /* Focus states */
-.btn:focus-visible,
-.icon-btn:focus-visible,
-.size:focus-visible {
-  outline: 2px solid #111;
-  outline-offset: 2px;
-}
-.btn:hover {
-  filter: brightness(0.92);
-}
-.btn.sp:hover {
-  filter: brightness(0.96);
-}
+.btn:focus-visible, .icon-btn:focus-visible, .size:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+.btn:hover { filter: brightness(0.92); }
+.btn.sp:hover { filter: brightness(0.96); }
 
 /* FORCE: Mobile-first centering and button width matching */
 .p-details .size-grid,
@@ -1224,17 +1179,12 @@ header.header nav a,
   -webkit-appearance: none !important;
   font-size: 14px !important;
   color: #111 !important;
-  letter-spacing: 0.3px !important;
+  letter-spacing: .3px !important;
 }
 
 /* Desktop split layout for product page */
 @media (min-width: 992px) {
-  main.product {
-    display: grid;
-    grid-template-columns: minmax(380px, 55%) 1fr;
-    gap: 24px;
-    align-items: start;
-  }
+  main.product { display: grid; grid-template-columns: minmax(380px, 55%) 1fr; gap: 24px; align-items: start; }
 }
 
 /* Utilities */
@@ -1246,11 +1196,7 @@ header.header nav a,
   letter-spacing: 1.5px;
 }
 /* Center all titles sitewide */
-.section h2,
-.section h3,
-.product h1,
-header h1,
-header h2 {
+.section h2, .section h3, .product h1, header h1, header h2 {
   text-align: center !important;
   margin-left: auto;
   margin-right: auto;
@@ -1297,46 +1243,25 @@ header h2 {
   }
 }
 
+
 /* Desktop: stronger, larger header logo + nav */
 @media (min-width: 1024px) {
   /* Thicker JOURNEYS logo */
-  header.header .logo a {
-    font-weight: 900 !important;
-    font-size: 1.12em !important;
-    letter-spacing: 2.2px !important;
-  }
+  header.header .logo a { font-weight: 900 !important; font-size: 1.12em !important; letter-spacing: 2.2px !important; }
   /* Larger, deeper bold for primary nav items */
   header.header .header-item,
-  header.header .nav a {
-    font-weight: 800 !important;
-    font-size: 26px !important;
-  }
+  header.header .nav a { font-weight: 800 !important; font-size: 26px !important; }
   /* Mega dropdown links match nav scale */
-  .header .mega .links a,
-  .mega .links a {
-    font-weight: 800 !important;
-    font-size: 26px !important;
-  }
+  .header .mega .links a, .mega .links a { font-weight: 800 !important; font-size: 26px !important; }
 }
 
+
 /* iOS Safari: prevent input-focus zoom and keep scale stable */
-html {
-  -webkit-text-size-adjust: 100%;
-}
+html { -webkit-text-size-adjust: 100%; }
 @media (max-width: 1024px) {
-  input,
-  textarea,
-  select,
-  button {
-    font-size: 16px !important;
-  }
+  input, textarea, select, button { font-size: 16px !important; }
 }
 @supports (-webkit-touch-callout: none) {
   /* Extra guard for iOS */
-  input,
-  textarea,
-  select,
-  button {
-    font-size: 16px !important;
-  }
+  input, textarea, select, button { font-size: 16px !important; }
 }
