@@ -48,7 +48,7 @@
         <a href="/collection.html" class="header-item">Sale<span class="badge">-20%</span></a>
       </nav>
     </div>
-    <h1 class="logo"><a href="/" aria-label="Journey Apparel Home">JOURNEY</a></h1>
+    <h1 class="logo"><a href="/" aria-label="Journeys Apparel Home">JOURNEYS</a></h1>
     <div id="site-search" style="position: fixed; inset: 0 0 auto 0; top: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(2px); z-index: 1000; display: none; padding: 12px 16px;">
       <form id="site-search-form" style="max-width: 800px; margin: 0 auto; display: flex; gap: 8px">
         <input id="site-search-input" type="search" placeholder="Search pages or sections (e.g., New Arrivals, Best Sellers, Pair It With, Cart)" style="flex:1; padding:12px; border-radius:8px; border:1px solid #ddd; font-size:16px; background:#fff" />
@@ -271,26 +271,26 @@
       // Also normalize the account icon now
       syncHeaderProfileLink();
     } catch (_) {}
+  }
 
-    function normalizePageInternalLinks() {
-      try {
-        const anchors = document.querySelectorAll(
-          'a[href^="collection.html"], a[href^="index.html"], a[href^="./collection.html"], a[href^="./index.html"]'
-        );
-        anchors.forEach((a) => {
-          const href = a.getAttribute("href");
-          if (!href) return;
-          const isAbsolute =
-            href.startsWith("/") ||
-            href.startsWith("http") ||
-            href.startsWith("mailto:") ||
-            href.startsWith("tel:");
-          if (!isAbsolute && href !== "#") {
-            a.setAttribute("href", "/" + href.replace(/^\/+/, ""));
-          }
-        });
-      } catch (_) {}
-    }
+  function normalizePageInternalLinks() {
+    try {
+      const anchors = document.querySelectorAll(
+        'a[href^="collection.html"], a[href^="index.html"], a[href^="./collection.html"], a[href^="./index.html"]'
+      );
+      anchors.forEach((a) => {
+        const href = a.getAttribute("href");
+        if (!href) return;
+        const isAbsolute =
+          href.startsWith("/") ||
+          href.startsWith("http") ||
+          href.startsWith("mailto:") ||
+          href.startsWith("tel:");
+        if (!isAbsolute && href !== "#") {
+          a.setAttribute("href", "/" + href.replace(/^\/+/, ""));
+        }
+      });
+    } catch (_) {}
   }
 
   window.addEventListener("storage", function (e) {
@@ -300,126 +300,124 @@
         syncHeaderProfileLink();
       } catch (_) {}
     }
-
-    // Ensure hero/background videos autoplay inline on mobile Safari and loop
-    function setupHeroAutoplay() {
-      try {
-        const vids = Array.from(
-          document.querySelectorAll(
-            "#hero video, .hero video, video[autoplay][muted][playsinline]"
-          )
-        );
-        if (!vids.length) return;
-        vids.forEach((v) => {
-          try {
-            // iOS requirements
-            v.muted = true;
-            v.autoplay = true;
-            v.loop = true;
-            v.playsInline = true; // property
-            v.setAttribute("playsinline", ""); // attribute
-
-            const tryPlay = () => {
-              const p = v.play();
-              if (p && typeof p.catch === "function") p.catch(() => {});
-            };
-
-            if (v.readyState >= 2) tryPlay();
-            else v.addEventListener("canplay", tryPlay, { once: true });
-
-            // Resume when returning to tab
-            document.addEventListener("visibilitychange", () => {
-              if (!document.hidden && v.paused) tryPlay();
-            });
-
-            // Last-resort: first interaction
-            const resume = () => {
-              if (v.paused) tryPlay();
-              window.removeEventListener("touchstart", resume);
-              window.removeEventListener("click", resume);
-            };
-            window.addEventListener("touchstart", resume, { once: true });
-            window.addEventListener("click", resume, { once: true });
-          } catch (_) {}
-        });
-      } catch (_) {}
-    }
-
-    // iOS Safari: reliably restore zoom after keyboard dismiss
-    function setupIOSInputZoomFix() {
-      try {
-        const ua = navigator.userAgent || "";
-        const isIOS =
-          /(iPad|iPhone|iPod)/.test(ua) &&
-          /Apple/i.test(navigator.vendor || "");
-        if (!isIOS) return;
-        const vp = document.querySelector('meta[name="viewport"]');
-        if (!vp) return;
-        const base =
-          vp.getAttribute("content") || "width=device-width, initial-scale=1";
-        const set = (s) => vp.setAttribute("content", s);
-        const disable = () => set(base + ", maximum-scale=1, user-scalable=no");
-        const enable = () =>
-          set(base + ", maximum-scale=10, user-scalable=yes");
-        const isFormEl = (el) =>
-          !!el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
-
-        // On focus, prevent any zoom-in
-        document.addEventListener(
-          "focusin",
-          (e) => {
-            if (isFormEl(e.target)) disable();
-          },
-          true
-        );
-
-        const restore = () => {
-          // Give iOS time to close keyboard and settle layout
-          setTimeout(() => {
-            enable();
-            // Second pass to be extra sure
-            setTimeout(() => set(base), 50);
-            // If VisualViewport exists and we're still zoomed, nudge layout
-            try {
-              if (
-                window.visualViewport &&
-                window.visualViewport.scale > 1 &&
-                !isFormEl(document.activeElement)
-              ) {
-                window.scrollTo({ top: window.scrollY + 1, left: 0 });
-                window.scrollTo({ top: window.scrollY, left: 0 });
-              }
-            } catch (_) {}
-          }, 150);
-        };
-
-        // On blur/focusout, restore zoom
-        document.addEventListener(
-          "blur",
-          (e) => {
-            if (isFormEl(e.target)) restore();
-          },
-          true
-        );
-        document.addEventListener(
-          "focusout",
-          (e) => {
-            if (isFormEl(e.target)) restore();
-          },
-          true
-        );
-
-        // Also watch viewport changes; when no input focused, clamp back to base
-        if (window.visualViewport) {
-          const vvClamp = () => {
-            if (!isFormEl(document.activeElement)) set(base);
-          };
-          window.visualViewport.addEventListener("resize", vvClamp);
-          window.visualViewport.addEventListener("scroll", vvClamp);
-        }
-      } catch (_) {}
-    }
   });
+
+  // Ensure hero/background videos autoplay inline on mobile Safari and loop
+  function setupHeroAutoplay() {
+    try {
+      const vids = Array.from(
+        document.querySelectorAll(
+          "#hero video, .hero video, video[autoplay][muted][playsinline]"
+        )
+      );
+      if (!vids.length) return;
+      vids.forEach((v) => {
+        try {
+          // iOS requirements
+          v.muted = true;
+          v.autoplay = true;
+          v.loop = true;
+          v.playsInline = true; // property
+          v.setAttribute("playsinline", ""); // attribute
+
+          const tryPlay = () => {
+            const p = v.play();
+            if (p && typeof p.catch === "function") p.catch(() => {});
+          };
+
+          if (v.readyState >= 2) tryPlay();
+          else v.addEventListener("canplay", tryPlay, { once: true });
+
+          // Resume when returning to tab
+          document.addEventListener("visibilitychange", () => {
+            if (!document.hidden && v.paused) tryPlay();
+          });
+
+          // Last-resort: first interaction
+          const resume = () => {
+            if (v.paused) tryPlay();
+            window.removeEventListener("touchstart", resume);
+            window.removeEventListener("click", resume);
+          };
+          window.addEventListener("touchstart", resume, { once: true });
+          window.addEventListener("click", resume, { once: true });
+        } catch (_) {}
+      });
+    } catch (_) {}
+  }
+
+  // iOS Safari: reliably restore zoom after keyboard dismiss
+  function setupIOSInputZoomFix() {
+    try {
+      const ua = navigator.userAgent || "";
+      const isIOS =
+        /(iPad|iPhone|iPod)/.test(ua) && /Apple/i.test(navigator.vendor || "");
+      if (!isIOS) return;
+      const vp = document.querySelector('meta[name="viewport"]');
+      if (!vp) return;
+      const base =
+        vp.getAttribute("content") || "width=device-width, initial-scale=1";
+      const set = (s) => vp.setAttribute("content", s);
+      const disable = () => set(base + ", maximum-scale=1, user-scalable=no");
+      const enable = () => set(base + ", maximum-scale=10, user-scalable=yes");
+      const isFormEl = (el) =>
+        !!el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
+
+      // On focus, prevent any zoom-in
+      document.addEventListener(
+        "focusin",
+        (e) => {
+          if (isFormEl(e.target)) disable();
+        },
+        true
+      );
+
+      const restore = () => {
+        // Give iOS time to close keyboard and settle layout
+        setTimeout(() => {
+          enable();
+          // Second pass to be extra sure
+          setTimeout(() => set(base), 50);
+          // If VisualViewport exists and we're still zoomed, nudge layout
+          try {
+            if (
+              window.visualViewport &&
+              window.visualViewport.scale > 1 &&
+              !isFormEl(document.activeElement)
+            ) {
+              window.scrollTo({ top: window.scrollY + 1, left: 0 });
+              window.scrollTo({ top: window.scrollY, left: 0 });
+            }
+          } catch (_) {}
+        }, 150);
+      };
+
+      // On blur/focusout, restore zoom
+      document.addEventListener(
+        "blur",
+        (e) => {
+          if (isFormEl(e.target)) restore();
+        },
+        true
+      );
+      document.addEventListener(
+        "focusout",
+        (e) => {
+          if (isFormEl(e.target)) restore();
+        },
+        true
+      );
+
+      // Also watch viewport changes; when no input focused, clamp back to base
+      if (window.visualViewport) {
+        const vvClamp = () => {
+          if (!isFormEl(document.activeElement)) set(base);
+        };
+        window.visualViewport.addEventListener("resize", vvClamp);
+        window.visualViewport.addEventListener("scroll", vvClamp);
+      }
+    } catch (_) {}
+  }
 
   function setupSizeSelection() {
     const grid = document.getElementById("size-grid");
@@ -8041,5 +8039,15 @@ function setupIdleWarmCollections() {
     if (btn.dataset && btn.dataset.clickBound === "1") return; // avoid double-handling when direct handler is attached
     e.preventDefault();
     performCheckout();
+  });
+
+  // Initialize media and iOS viewport behaviors on DOM ready (idempotent)
+  document.addEventListener("DOMContentLoaded", function () {
+    try {
+      setupHeroAutoplay();
+    } catch (_) {}
+    try {
+      setupIOSInputZoomFix();
+    } catch (_) {}
   });
 })();
