@@ -1053,7 +1053,7 @@
         return n.includes("colour") || n.includes("color");
       });
       let selectedColour = "";
-      if (swatches && colourOption) {
+      if (false && swatches && colourOption) {
         // Determine current selection from DOM, localStorage, or default
         const pressed = swatches.querySelector('.swatch[aria-pressed="true"]');
         if (pressed) {

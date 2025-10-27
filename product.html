@@ -824,7 +824,7 @@
             })();
             (payload.variants || []).forEach(function (v) {
               // If a colour is selected, only consider variants matching that colour
-              if (selectedColour) {
+              if (false) {
                 var opts = v.selectedOptions || [];
                 var col = opts.find(function (o) {
                   var n = String((o.name || "").trim()).toLowerCase();
@@ -2001,37 +2001,6 @@
             } catch (e) {}
           })();
         </script>
-
-        <!-- Colour (COLOUR) selector between installments line and size section -->
-        <div
-          class="row"
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            margin: 8px 0 0 0;
-          "
-        >
-          <div
-            class="upper"
-            style="font-weight: 800; font-size: 12px; letter-spacing: 0.4px"
-          >
-            SELECT COLOUR
-          </div>
-        </div>
-        <div
-          id="colour-swatches"
-          data-external-swatches="1"
-          class="colour-swatches"
-          style="
-            margin-top: 6px;
-            margin-bottom: 8px;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-          "
-        ></div>
 
         <div
           class="row mt-16"
@@ -3708,7 +3677,6 @@
         });
       })();
     </script>
-    <script type="module" src="src/pages/product.js"></script>
 
     <!-- Shopify integration with error handling -->
     <script src="data/products.js" defer></script>
