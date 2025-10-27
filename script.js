@@ -8,7 +8,7 @@
     if (document.querySelector("header.header")) return;
     const tpl = `
 <div class="announcement upper" data-injected="1" style="position: sticky; top: 0; left: 0; right: 0">
-  Free Shipping On Orders Over $100
+  Free Shipping On Orders Over $150
 </div>
 <header class="header" data-injected="1" style="top: 0; left: 0; right: 0">
   <div class="container header-inner" style="max-width: none; width: 100%; padding-left: 16px; padding-right: 16px;">
@@ -788,7 +788,12 @@
         const swatchEl = document.getElementById("colour-swatches");
         const externalSwatches =
           swatchEl && swatchEl.getAttribute("data-external-swatches") === "1";
-        if (external || externalSwatches) return; // external gallery owns hero; skip legacy wiring
+        if (
+          external ||
+          externalSwatches ||
+          (heroTrack && heroTrack.hasAttribute("data-skip-hero-bind"))
+        )
+          return; // external gallery owns hero; skip legacy wiring
 
         const prev = document.querySelector(".hero-carousel .ctrl.prev");
         const next = document.querySelector(".hero-carousel .ctrl.next");
@@ -3921,7 +3926,7 @@
         e.preventDefault();
         modal.classList.remove("open");
         localStorage.setItem(key, "1");
-        alert("Thanks! Free shipping unlocked.");
+        alert("Thanks! 25% off unlocked.");
       });
   }
 
@@ -6081,7 +6086,7 @@
       }
       const ann = document.querySelector(".announcement.upper");
       if (ann && /[\x00-\x1F]/.test(ann.textContent || "")) {
-        ann.textContent = "Free Shipping On Orders Over $100";
+        ann.textContent = "Free Shipping On Orders Over $150";
       }
     } catch (e) {
       /* no-op */
