@@ -879,7 +879,7 @@
           playsinline
           autoplay
           loop
-          preload="metadata"
+          preload="auto"
           src="Journey%20Summer%20Set%20Video/10.mp4"
           style="
             position: absolute;
@@ -2039,109 +2039,6 @@
             </div>
           </div>
         </div>
-        <!-- 25% off promo modal -->
-        <div
-          id="free-ship-modal"
-          aria-hidden="true"
-          style="
-            position: fixed;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.55);
-            z-index: 9999;
-          "
-        >
-          <div
-            role="dialog"
-            aria-label="25% off your first order"
-            style="
-              background: #fff;
-              padding: 22px 22px 16px;
-              border-radius: 10px;
-              width: min(92vw, 420px);
-              box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-              position: relative;
-            "
-          >
-            <button
-              type="button"
-              data-close
-              aria-label="Close"
-              style="
-                position: absolute;
-                top: 8px;
-                right: 10px;
-                background: transparent;
-                border: 0;
-                font-size: 22px;
-                line-height: 1;
-                cursor: pointer;
-              "
-            >
-              ×
-            </button>
-            <h3 class="upper" style="margin: 0 0 6px; text-align: center">
-              25% off your first order
-            </h3>
-            <p style="margin: 0 0 12px; text-align: center; color: #444">
-              Subscribe here
-            </p>
-            <form
-              id="subscribe-cta-form"
-              style="
-                display: flex;
-                gap: 8px;
-                align-items: center;
-                justify-content: center;
-              "
-            >
-              <input
-                type="email"
-                name="EMAIL"
-                placeholder="Enter email address"
-                required
-                style="
-                  flex: 1;
-                  min-width: 0;
-                  padding: 10px 12px;
-                  border: 1px solid #ddd;
-                  border-radius: 6px;
-                "
-              />
-              <button type="submit" class="btn" style="padding: 10px 14px">
-                Subscribe
-              </button>
-            </form>
-            <div
-              id="subscribe-cta-message"
-              style="
-                margin-top: 8px;
-                font-size: 13px;
-                text-align: center;
-                color: #333;
-              "
-            ></div>
-          </div>
-        </div>
-        <script>
-          (function () {
-            var modal = document.getElementById("free-ship-modal");
-            if (!modal) return;
-            // Toggle display via class .open
-            var orig = modal.style.display;
-            var obs = new MutationObserver(function () {
-              if (modal.classList.contains("open"))
-                modal.style.display = "flex";
-              else modal.style.display = "none";
-            });
-            obs.observe(modal, {
-              attributes: true,
-              attributeFilter: ["class"],
-            });
-          })();
-        </script>
       </div>
     </footer>
 

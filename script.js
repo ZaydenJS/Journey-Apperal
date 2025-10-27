@@ -156,7 +156,6 @@
     __safe("setupQuickShopTouch", setupQuickShopTouch);
     __safe("setupCardLinks", setupCardLinks);
 
-    __safe("setupModalFreeShipping", setupModalFreeShipping);
     __safe("setupCountdown", setupCountdown);
     __safe("setupNewsletter", setupNewsletter);
     __safe("setupCurrency", setupCurrency);
@@ -195,7 +194,7 @@
     __safe("setupImageFallbacks", setupImageFallbacks);
     __safe("setupThematicImages", setupThematicImages);
     __safe("normalizeCarouselMedia", normalizeCarouselMedia);
-    __safe("setupMobileCTA", setupMobileCTA);
+
     __safe("enforcePointerCursor", enforcePointerCursor);
     __safe("applyDesktopHeaderZIndexFix", applyDesktopHeaderZIndexFix);
     __safe("ensureShopClickToggle", ensureShopClickToggle);
@@ -318,6 +317,16 @@
             v.loop = true;
             v.playsInline = true; // property
             v.setAttribute("playsinline", ""); // attribute
+
+            // Ensure eager loading so autoplay works reliably on laptops/smaller screens
+            try {
+              v.preload = v.getAttribute("preload") || "auto";
+            } catch (_) {}
+            if (v.readyState === 0) {
+              try {
+                v.load();
+              } catch (_) {}
+            }
 
             const tryPlay = () => {
               const p = v.play();
@@ -5002,14 +5011,19 @@
 
     const renderList = (list) => {
       if (!list || !list.length) return; // avoid placeholders
-      container.innerHTML = list
+      // Dedupe by product handle to prevent duplicates from overlapping collections
+      const seen = new Set();
+      const deduped = list.filter((p) =>
+        p?.handle && !seen.has(p.handle) ? (seen.add(p.handle), true) : false
+      );
+      container.innerHTML = deduped
         .map((p) => renderHomepageProductCard(p))
         .join("");
       try {
         setupCardLinks();
         // Warm PDP caches and prewarm images
         const firstImgs = [];
-        list.forEach((p, idx) => {
+        deduped.forEach((p, idx) => {
           if (p?.handle) __cacheSet("pdp:product:" + p.handle, p);
           const u =
             (p.images && (p.images[0]?.url || p.images[0]?.src)) || null;
@@ -5106,7 +5120,7 @@
                   // Early paint once we have enough and no cache was shown
                   if (!earlyPainted && acc.length >= limit && !cached?.length) {
                     earlyPainted = true;
-                    const firstSlice =
+                    let base =
                       section === "new-arrivals"
                         ? acc
                             .slice()
@@ -5114,8 +5128,15 @@
                               (a, b) =>
                                 new Date(b.createdAt) - new Date(a.createdAt)
                             )
-                            .slice(0, limit)
-                        : acc.slice(0, limit);
+                        : acc.slice();
+                    // Dedupe by handle before slicing to avoid duplicates
+                    const seen = new Set();
+                    const deduped = base.filter((p) =>
+                      p?.handle && !seen.has(p.handle)
+                        ? (seen.add(p.handle), true)
+                        : false
+                    );
+                    const firstSlice = deduped.slice(0, limit);
                     __cacheSet(cacheKey, firstSlice);
                     renderList(firstSlice);
                   }
@@ -5125,6 +5146,14 @@
           );
 
           products = acc;
+          {
+            const seen = new Set();
+            products = products.filter((p) =>
+              p?.handle && !seen.has(p.handle)
+                ? (seen.add(p.handle), true)
+                : false
+            );
+          }
         }
       } else {
         console.log("Shopify API not available for homepage products");
