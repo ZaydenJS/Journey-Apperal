@@ -4705,9 +4705,13 @@
         "new-arrivals": "New Arrivals",
         "back-in-stock": "Back In Stock",
         "shop-all": "Shop All",
+        sale: "Sales Items",
       };
       label = map[v] || toTitle(v);
       collectionHandle = "all"; // Default collection
+      if (v === "sale") {
+        tag = "sales item";
+      }
     } else if (params.get("category")) {
       const categoryRaw = params.get("category");
       const isPrefixed = /^category-/i.test(categoryRaw);
@@ -4720,6 +4724,9 @@
       const collection = params.get("collection");
       label = toTitle(collection);
       collectionHandle = collection.toLowerCase().replace(/\s+/g, "-");
+      if (collectionHandle === "journeys-authentic-collection") {
+        tag = "journeys authentic collection";
+      }
     } else {
       label = "Shop All";
       collectionHandle = "all";

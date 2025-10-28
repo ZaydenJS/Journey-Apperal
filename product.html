@@ -1316,6 +1316,12 @@
         <a href="/collection.html?section=new-arrivals" class="row-item"
           >New Arrivals</a
         >
+        <a
+          href="/collection.html?section=sale"
+          class="row-item"
+          style="color: #c00; font-weight: 700"
+          >Sales Items</a
+        >
         <a href="/collection.html?section=back-in-stock" class="row-item"
           >Back in Stock</a
         >
@@ -1345,13 +1351,6 @@
             >Journeys X Leyos Collection</a
           >
         </div>
-
-        <a
-          href="/collection.html?section=sale"
-          class="row-item"
-          style="color: #c00; font-weight: 700"
-          >Sales Items</a
-        >
 
         <button class="row-item accordion" data-accordion aria-expanded="false">
           Support & Contact <span class="chev">›</span>
@@ -1751,19 +1750,12 @@
                 track.classList.remove("snap-off");
                 setActive();
               }, 500);
-              // scroll into view robustly
-              if (el.scrollIntoView) {
-                el.scrollIntoView({
-                  behavior: behavior || "smooth",
-                  inline: "center",
-                  block: "nearest",
-                });
-              } else {
-                track.scrollTo({
-                  left: el.offsetLeft,
-                  behavior: behavior || "smooth",
-                });
-              }
+              // Step exactly one image by index using fixed track width
+              var w = track.clientWidth || 1;
+              track.scrollTo({
+                left: i * w,
+                behavior: behavior || "smooth",
+              });
             }
           }
           function rebuildDots() {

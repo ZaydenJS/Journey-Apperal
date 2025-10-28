@@ -45,7 +45,7 @@ export const handler = async (event, context) => {
     const variables = {
       first,
       after,
-      query: tag ? `tag:${tag}` : null,
+      query: tag ? `tag:"${String(tag).replace(/"/g, '\\"')}"` : null,
     };
 
     const response = await client.request(query, { variables });
@@ -66,7 +66,9 @@ export const handler = async (event, context) => {
       priceRange: edge.node.priceRange,
       compareAtPriceRange: edge.node.compareAtPriceRange,
       images: (edge.node.images?.edges || []).map((imgEdge) => imgEdge.node),
-      variants: (edge.node.variants?.edges || []).map((varEdge) => varEdge.node),
+      variants: (edge.node.variants?.edges || []).map(
+        (varEdge) => varEdge.node
+      ),
       options: edge.node.options,
       seo: edge.node.seo,
       slug: edge.node.handle,
@@ -85,4 +87,3 @@ export const handler = async (event, context) => {
     return createErrorResponse(error.message);
   }
 };
-

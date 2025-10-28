@@ -62,7 +62,12 @@ export const handler = async (event, context) => {
         ${COLLECTION_FRAGMENT}
         ${PRODUCT_FRAGMENT}
       `;
-      variables = { handle, tag: `tag:${tag}`, first: parseInt(first), after };
+      variables = {
+        handle,
+        tag: `tag:"${String(tag).replace(/"/g, '\\"')}"`,
+        first: parseInt(first),
+        after,
+      };
     } else {
       // Query all products in a collection
       query = `
