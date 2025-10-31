@@ -200,6 +200,7 @@
     __safe("enforcePointerCursor", enforcePointerCursor);
     __safe("applyDesktopHeaderZIndexFix", applyDesktopHeaderZIndexFix);
     __safe("ensureShopClickToggle", ensureShopClickToggle);
+    __safe("ensureMegaSaleSection", ensureMegaSaleSection);
     __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
     __safe("syncDrawerLoginState", syncDrawerLoginState);
@@ -3941,6 +3942,48 @@
       });
   }
 
+  // Ensure the desktop mega menu shows a dedicated "Sale Items" section
+  function ensureMegaSaleSection() {
+    try {
+      var header = document.querySelector("header.header");
+      if (!header) return;
+      var grid = header.querySelector(".nav .header-item .mega .mega-grid");
+      if (!grid) return;
+      var cols = Array.from(grid.children || []);
+      cols.forEach(function (col) {
+        var h4s = Array.from(col.querySelectorAll("h4"));
+        var hasShopByCollection = h4s.some(function (h) {
+          return /shop\s*by\s*collection/i.test((h.textContent || "").trim());
+        });
+        if (!hasShopByCollection) return;
+
+        // Remove any inline "Sale Items" link from the Shop by Collection list to avoid duplicates
+        Array.from(col.querySelectorAll(".links a")).forEach(function (a) {
+          if (/sale\s*items/i.test((a.textContent || "").trim())) a.remove();
+        });
+
+        // If a dedicated Sale Items section already exists, skip
+        var already = h4s.some(function (h) {
+          return /sale\s*items/i.test((h.textContent || "").trim());
+        });
+        if (already) return;
+
+        // Append new section below Shop by Collection
+        var h = document.createElement("h4");
+        h.className = "upper";
+        h.textContent = "Sale Items";
+        var links = document.createElement("div");
+        links.className = "links";
+        var a = document.createElement("a");
+        a.href = "/collection.html?section=sale";
+        a.textContent = "Sale Items";
+        links.appendChild(a);
+        col.appendChild(h);
+        col.appendChild(links);
+      });
+    } catch (_) {}
+  }
+
   function setupCountdown() {
     const el = $("#countdown");
     if (!el) return;
@@ -4298,6 +4341,37 @@
       content.appendChild(wrapper);
       content.appendChild(msg);
       card.appendChild(closeBtn);
+
+      // Desktop refinements: keep stacked layout but upscale spacing/typography
+      if (!isPopupMobile) {
+        try {
+          card.style.maxWidth = "980px";
+          heroImg.style.height = "420px";
+          heroImg.style.minHeight = "420px";
+
+          content.style.padding = "28px 32px 26px";
+          content.style.textAlign = "center";
+          content.style.alignItems = "center";
+
+          headline.style.fontSize = "24px";
+          headline.style.letterSpacing = "0.2px";
+          headline.style.marginBottom = "10px";
+
+          sub.style.fontSize = "16px";
+          sub.style.marginBottom = "18px";
+
+          form.style.maxWidth = "540px";
+          form.style.margin = "0 auto";
+          form.style.gap = "10px";
+
+          input.style.padding = "14px 16px";
+          input.style.fontSize = "15px";
+
+          btn.style.padding = "14px 18px";
+          btn.style.fontSize = "15px";
+        } catch (_) {}
+      }
+
       card.appendChild(heroImg);
       card.appendChild(content);
       overlay.appendChild(card);

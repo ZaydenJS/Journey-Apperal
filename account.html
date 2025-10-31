@@ -79,13 +79,134 @@
     </style>
   </head>
   <body>
-    <header class="header">
-      <div class="header-inner">
-        <div class="nav-left">
-          <a href="/index.html" class="logo" aria-label="Journeys Apparel Home"
-            ><span>JOURNEYS</span></a
+    <header class="header" style="top: 0; left: 0; right: 0">
+      <div
+        class="container header-inner"
+        style="
+          max-width: none;
+          width: 100%;
+          padding-left: 0;
+          padding-right: 16px;
+        "
+      >
+        <div class="nav-left row">
+          <button
+            class="menu-toggle"
+            aria-label="Open menu"
+            style="
+              background: transparent;
+              border: none;
+              padding: 8px;
+              display: inline-flex;
+              flex-direction: column;
+              gap: 4px;
+              align-items: center;
+              justify-content: center;
+              width: 36px;
+              height: 36px;
+            "
           >
+            <span
+              style="
+                display: block;
+                width: 22px;
+                height: 2px;
+                background: #000;
+                border-radius: 1px;
+              "
+            ></span>
+            <span
+              style="
+                display: block;
+                width: 22px;
+                height: 2px;
+                background: #000;
+                border-radius: 1px;
+              "
+            ></span>
+            <span
+              style="
+                display: block;
+                width: 22px;
+                height: 2px;
+                background: #000;
+                border-radius: 1px;
+              "
+            ></span>
+          </button>
+          <nav class="nav" aria-label="Primary">
+            <a
+              href="/collection.html?section=shop-all"
+              class="header-item"
+              aria-haspopup="true"
+              aria-expanded="false"
+              style="
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+              "
+            >
+              Shop
+              <div class="mega" role="dialog" aria-label="Mega menu">
+                <div class="mega-grid container">
+                  <div>
+                    <h4 class="upper">Shop by Category</h4>
+                    <div class="links">
+                      <a href="/collection.html?collection=tops">Tees</a>
+                      <a href="/collection.html?collection=hoodies">Hoodies</a>
+                      <a href="/collection.html?collection=bottoms">Bottoms</a>
+                      <a href="/collection.html?collection=hats">Hats</a>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 class="upper">Shop by Collection</h4>
+                    <div class="links">
+                      <a
+                        href="/collection.html?collection=journeys-x-leyos-collection"
+                        >Journeys X Leyos Collection</a
+                      >
+                      <a
+                        href="/collection.html?collection=journeys-authentic-collection"
+                        >Journeys Authentic Collection</a
+                      >
+                      <a href="/collection.html">AeroLite</a>
+                      <a href="/collection.html">Journey</a>
+                      <a href="/collection.html">Core365</a>
+                      <a href="/collection.html">Black Label</a>
+                      <a href="/collection.html?section=sale">Sale Items</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+            <a
+              href="/collection.html?collection=best-sellers"
+              class="header-item"
+              >Best Sellers</a
+            >
+            <a href="/collection.html?section=new-arrivals" class="header-item"
+              >New Arrivals</a
+            >
+            <a
+              href="/collection.html?collection=journeys-x-leyos-collection"
+              class="header-item"
+              >Journeys X Leyos</a
+            >
+            <a
+              href="/collection.html?collection=journeys-authentic-collection"
+              class="header-item"
+              >Journeys Authentic Collection</a
+            >
+          </nav>
         </div>
+        <h1 class="logo">
+          <a
+            href="/index.html"
+            aria-label="Journeys Apparel Home"
+            style="font-size: 0.94em; letter-spacing: 1.8px"
+            >JOURNEYS</a
+          >
+        </h1>
         <div class="nav-right">
           <a
             id="headerProfileLink"
