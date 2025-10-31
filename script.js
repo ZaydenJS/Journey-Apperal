@@ -157,6 +157,8 @@
     __safe("setupCardLinks", setupCardLinks);
 
     __safe("setupCountdown", setupCountdown);
+    __safe("setupNewsletterPopup", setupNewsletterPopup);
+
     __safe("setupNewsletter", setupNewsletter);
     __safe("setupCurrency", setupCurrency);
     __safe("setupChatWidget", setupChatWidget);
@@ -4120,6 +4122,176 @@
       if (!hasSubscribeButton) return;
       bindForm(form);
     });
+  }
+
+  function setupNewsletterPopup() {
+    try {
+      const params = new URLSearchParams(location.search);
+      const force =
+        params.get("newsletter") === "show" ||
+        params.get("newsletter") === "1" ||
+        params.get("mc") === "show" ||
+        params.get("mc") === "1";
+      const key = "mc_popup_shown_v1";
+      if (!force) {
+        try {
+          if (localStorage.getItem(key) === "1") return;
+        } catch (_) {}
+      }
+
+      // Build the dialog immediately so setupNewsletter can bind to the form,
+      // then reveal it after a short delay.
+      const overlay = document.createElement("div");
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute("aria-label", "Subscribe to our newsletter");
+      overlay.style.cssText = [
+        "position: fixed",
+        "inset: 0",
+        "background: rgba(0,0,0,0.55)",
+        "display: none",
+        "align-items: center",
+        "justify-content: center",
+        "z-index: 10000",
+        "padding: 16px",
+      ].join(";");
+
+      const card = document.createElement("div");
+      card.style.cssText = [
+        "width: 100%",
+        "max-width: 480px",
+        "background: #fff",
+        "border-radius: 12px",
+        "box-shadow: 0 10px 30px rgba(0,0,0,0.25)",
+        "position: relative",
+        "overflow: hidden",
+      ].join(";");
+
+      const closeBtn = document.createElement("button");
+      closeBtn.setAttribute("aria-label", "Close");
+      closeBtn.textContent = "×";
+      closeBtn.style.cssText = [
+        "position: absolute",
+        "top: 8px",
+        "right: 10px",
+        "background: transparent",
+        "border: 0",
+        "font-size: 28px",
+        "line-height: 1",
+        "color: #000",
+        "cursor: pointer",
+      ].join(";");
+
+      const content = document.createElement("div");
+      content.style.cssText = [
+        "padding: 22px 18px 18px",
+        "text-align: left",
+        "color: #000",
+      ].join(";");
+
+      const headline = document.createElement("div");
+      headline.textContent = "Subscribe for exclusive updates and offers";
+      headline.style.cssText = [
+        "font-size: 18px",
+        "font-weight: 700",
+        "margin-bottom: 8px",
+      ].join(";");
+
+      const sub = document.createElement("div");
+      sub.textContent = "Join the list to hear about new drops first.";
+      sub.style.cssText = [
+        "font-size: 14px",
+        "opacity: 0.85",
+        "margin-bottom: 14px",
+      ].join(";");
+
+      const form = document.createElement("form");
+      form.style.cssText = [
+        "display:flex",
+        "gap:8px",
+        "align-items:stretch",
+        "width: 100%",
+      ].join(";");
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "newsletter";
+      wrapper.appendChild(form);
+
+      const input = document.createElement("input");
+      input.type = "email";
+      input.name = "email";
+      input.placeholder = "Enter your email";
+      input.required = true;
+      input.style.cssText = [
+        "flex:1",
+        "padding:12px 14px",
+        "border:1px solid #ddd",
+        "border-radius:8px",
+        "font-size:14px",
+        "background:#fff",
+        "color:#111",
+      ].join(";");
+
+      const btn = document.createElement("button");
+      btn.type = "submit";
+      btn.textContent = "Subscribe";
+      btn.style.cssText = [
+        "padding: 12px 16px",
+        "border-radius: 8px",
+        "background: #111",
+        "color: #fff",
+        "border: 1px solid #111",
+        "font-weight: 600",
+        "cursor: pointer",
+        "white-space: nowrap",
+      ].join(";");
+
+      const msg = document.createElement("div");
+      msg.className = "mc-message";
+      msg.setAttribute("role", "status");
+      msg.style.cssText = "margin-top:10px; font-size:13px; color:#111;";
+
+      const prevOverflow = document.body.style.overflow;
+      function dismiss() {
+        try {
+          localStorage.setItem(key, "1");
+        } catch (_) {}
+        document.body.style.overflow = prevOverflow || "";
+        if (overlay && overlay.parentNode)
+          overlay.parentNode.removeChild(overlay);
+      }
+
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) dismiss();
+      });
+      closeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        dismiss();
+      });
+
+      form.appendChild(input);
+      form.appendChild(btn);
+
+      content.appendChild(headline);
+      content.appendChild(sub);
+      content.appendChild(wrapper);
+      content.appendChild(msg);
+      card.appendChild(closeBtn);
+      card.appendChild(content);
+      overlay.appendChild(card);
+
+      document.body.appendChild(overlay);
+
+      setTimeout(
+        () => {
+          overlay.style.display = "flex";
+          document.body.style.overflow = "hidden";
+        },
+        force ? 100 : 1200
+      );
+    } catch (err) {
+      console.warn("setupNewsletterPopup error", err);
+    }
   }
 
   function setupCurrency() {
