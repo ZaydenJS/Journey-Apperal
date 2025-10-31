@@ -4168,14 +4168,14 @@
       ].join(";");
       const isPopupMobile = window.innerWidth <= 720;
       card.style.display = "flex";
-      card.style.flexDirection = isPopupMobile ? "column" : "row";
+      card.style.flexDirection = "column";
       const heroImg = document.createElement("img");
       heroImg.src =
         "/Pop%20up%20ad%20photo/Panther%20Can_t%20Catch%20Us%20-%20Cream%20-%20Trainer%20Hoodie%20Ultra%20Heavy%20Weight%20-%201.png";
       heroImg.alt = "Journeys – latest drop";
       heroImg.style.cssText = [
-        isPopupMobile ? "width: 100%" : "width: 50%",
-        isPopupMobile ? "height: 220px" : "height: auto",
+        "width: 100%",
+        isPopupMobile ? "height: 240px" : "height: 320px",
         "object-fit: cover",
         "display: block",
         "background: #f4f4f4",
@@ -4202,29 +4202,13 @@
         "display: flex",
         "flex-direction: column",
         "justify-content: center",
-        isPopupMobile ? "padding: 16px" : "padding: 24px 20px",
-        "background: #fff",
+        "padding: 20px",
+        "background: transparent",
         "color: #000",
-        isPopupMobile
-          ? "margin: 12px 12px 16px"
-          : "margin: 16px 16px 16px -8px",
-        "border-radius: 12px",
-        "box-shadow: 0 8px 24px rgba(0,0,0,0.12)",
+        "margin: 0",
+        "border-radius: 0",
+        "box-shadow: none",
       ].join(";");
-      if (!isPopupMobile) {
-        const tail = document.createElement("div");
-        tail.style.cssText = [
-          "position:absolute",
-          "left:-10px",
-          "top:24px",
-          "width:0",
-          "height:0",
-          "border-top:10px solid transparent",
-          "border-bottom:10px solid transparent",
-          "border-right:10px solid #fff",
-        ].join(";");
-        content.appendChild(tail);
-      }
 
       const headline = document.createElement("div");
       headline.textContent = "Subscribe for exclusive updates and offers";
