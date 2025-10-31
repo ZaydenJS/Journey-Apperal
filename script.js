@@ -4159,12 +4159,26 @@
       const card = document.createElement("div");
       card.style.cssText = [
         "width: 100%",
-        "max-width: 480px",
+        "max-width: 860px",
         "background: #fff",
         "border-radius: 12px",
         "box-shadow: 0 10px 30px rgba(0,0,0,0.25)",
         "position: relative",
         "overflow: hidden",
+      ].join(";");
+      const isPopupMobile = window.innerWidth <= 720;
+      card.style.display = "flex";
+      card.style.flexDirection = isPopupMobile ? "column" : "row";
+      const heroImg = document.createElement("img");
+      heroImg.src =
+        "/Pop%20up%20ad%20photo/Panther%20Can_t%20Catch%20Us%20-%20Cream%20-%20Trainer%20Hoodie%20Ultra%20Heavy%20Weight%20-%201.png";
+      heroImg.alt = "Journeys – latest drop";
+      heroImg.style.cssText = [
+        isPopupMobile ? "width: 100%" : "width: 50%",
+        isPopupMobile ? "height: 220px" : "height: auto",
+        "object-fit: cover",
+        "display: block",
+        "background: #f4f4f4",
       ].join(";");
 
       const closeBtn = document.createElement("button");
@@ -4184,10 +4198,33 @@
 
       const content = document.createElement("div");
       content.style.cssText = [
-        "padding: 22px 18px 18px",
-        "text-align: left",
+        "position: relative",
+        "display: flex",
+        "flex-direction: column",
+        "justify-content: center",
+        isPopupMobile ? "padding: 16px" : "padding: 24px 20px",
+        "background: #fff",
         "color: #000",
+        isPopupMobile
+          ? "margin: 12px 12px 16px"
+          : "margin: 16px 16px 16px -8px",
+        "border-radius: 12px",
+        "box-shadow: 0 8px 24px rgba(0,0,0,0.12)",
       ].join(";");
+      if (!isPopupMobile) {
+        const tail = document.createElement("div");
+        tail.style.cssText = [
+          "position:absolute",
+          "left:-10px",
+          "top:24px",
+          "width:0",
+          "height:0",
+          "border-top:10px solid transparent",
+          "border-bottom:10px solid transparent",
+          "border-right:10px solid #fff",
+        ].join(";");
+        content.appendChild(tail);
+      }
 
       const headline = document.createElement("div");
       headline.textContent = "Subscribe for exclusive updates and offers";
@@ -4277,6 +4314,7 @@
       content.appendChild(wrapper);
       content.appendChild(msg);
       card.appendChild(closeBtn);
+      card.appendChild(heroImg);
       card.appendChild(content);
       overlay.appendChild(card);
 
@@ -4877,12 +4915,14 @@
         "new-arrivals": "New Arrivals",
         "back-in-stock": "Back In Stock",
         "shop-all": "Shop All",
-        sale: "Sales Items",
+        sale: "Sale Items",
       };
       label = map[v] || toTitle(v);
       collectionHandle = "all"; // Default collection
       if (v === "sale") {
-        tag = "sales item";
+        tag = "sale items";
+      } else if (v === "new-arrivals") {
+        tag = "new arrivals";
       }
     } else if (params.get("category")) {
       const categoryRaw = params.get("category");
@@ -5066,6 +5106,30 @@
           "Shopify API not available, using fallback product loading"
         );
         products = [];
+      }
+
+      // Enforce tag filtering when provided (e.g., "new arrivals", "sale items")
+      if (tag && typeof tag === "string" && tag.trim()) {
+        const target = tag.trim().toLowerCase();
+        products = (products || []).filter((p) => {
+          const raw = p?.tags;
+          const arr = Array.isArray(raw)
+            ? raw
+            : typeof raw === "string"
+            ? raw.split(",")
+            : [];
+          const tags = arr.map((t) =>
+            String(t || "")
+              .trim()
+              .toLowerCase()
+          );
+          return tags.includes(target) && p.availableForSale !== false;
+        });
+        // Dedupe by handle
+        const seen = new Set();
+        products = products.filter((p) =>
+          p?.handle && !seen.has(p.handle) ? (seen.add(p.handle), true) : false
+        );
       }
 
       // Update cache
@@ -5280,6 +5344,39 @@
               ? (seen.add(p.handle), true)
               : false
           );
+        } else if (section === "new-arrivals") {
+          // Strictly load only products tagged "new arrivals" then sort by newest
+          const data = await window.shopifyAPI.getCollection(
+            "all",
+            "new arrivals"
+          );
+          products = (
+            data && Array.isArray(data.products) ? data.products : []
+          ).filter((p) => {
+            const raw = p.tags;
+            const arr = Array.isArray(raw)
+              ? raw
+              : typeof raw === "string"
+              ? raw.split(",")
+              : [];
+            const tags = arr.map((t) =>
+              String(t || "")
+                .trim()
+                .toLowerCase()
+            );
+            return (
+              tags.includes("new arrivals") && p.availableForSale !== false
+            );
+          });
+          // Dedupe by handle
+          {
+            const seen = new Set();
+            products = products.filter((p) =>
+              p?.handle && !seen.has(p.handle)
+                ? (seen.add(p.handle), true)
+                : false
+            );
+          }
         } else {
           const collections = await window.shopifyAPI.getCollections();
           const cols = (collections && collections.collections) || [];
@@ -5368,7 +5465,7 @@
         if (section === "best-sellers") {
           __cacheSet("collection:best-sellers:-", productsFull);
         } else if (section === "new-arrivals") {
-          __cacheSet("collection:all:-", products.slice());
+          __cacheSet("collection:all:new arrivals", products.slice());
         }
       } catch (_) {}
       const currentHandles = Array.from(
