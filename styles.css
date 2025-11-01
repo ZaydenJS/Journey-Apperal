@@ -185,7 +185,7 @@ header.header .logo a { font-size: 1em !important; letter-spacing: 2px !importan
 }
 
 /* Highlight Sale Items link in mobile drawer */
-.drawer-nav .row-item.sale { color: var(--accent); font-weight: 800; }
+.drawer-nav .row-item.sale { color: var(--accent); font-weight: 600; }
 
 
 /* Highlight Sale Items link in desktop header (not bold) */
