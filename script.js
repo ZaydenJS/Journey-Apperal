@@ -3945,44 +3945,62 @@
   }
 
   // Ensure the desktop mega menu shows a dedicated "Sale Items" section
+  // placed UNDER the entire "Shop by Collection" area (not inside it)
   function ensureMegaSaleSection() {
     try {
       var header = document.querySelector("header.header");
       if (!header) return;
-      var grid = header.querySelector(".nav .header-item .mega .mega-grid");
+      var mega = header.querySelector(".nav .header-item .mega");
+      if (!mega) return;
+      var grid = mega.querySelector(".mega-grid");
       if (!grid) return;
-      var cols = Array.from(grid.children || []);
-      cols.forEach(function (col) {
-        var h4s = Array.from(col.querySelectorAll("h4"));
-        var hasShopByCollection = h4s.some(function (h) {
-          return /shop\s*by\s*collection/i.test((h.textContent || "").trim());
-        });
-        if (!hasShopByCollection) return;
 
-        // Remove any inline "Sale Items" link from the Shop by Collection list to avoid duplicates
+      // In the "Shop by Collection" column, remove any inline "Sale Items" link
+      // and also remove any previously injected in-column Sale Items block
+      Array.from(grid.children || []).forEach(function (col) {
+        var h4 = col.querySelector("h4");
+        var isShopByCollection =
+          h4 && /shop\s*by\s*collection/i.test((h4.textContent || "").trim());
+        if (!isShopByCollection) return;
+
         Array.from(col.querySelectorAll(".links a")).forEach(function (a) {
           if (/sale\s*items/i.test((a.textContent || "").trim())) a.remove();
         });
-
-        // If a dedicated Sale Items section already exists, skip
-        var already = h4s.some(function (h) {
-          return /sale\s*items/i.test((h.textContent || "").trim());
+        // Remove any in-column Sale Items header/links that may have been added earlier
+        Array.from(col.querySelectorAll("h4")).forEach(function (h) {
+          if (/sale\s*items/i.test((h.textContent || "").trim())) {
+            var next = h.nextElementSibling;
+            h.remove();
+            if (next && next.classList && next.classList.contains("links"))
+              next.remove();
+          }
         });
-        if (already) return;
-
-        // Append new section below Shop by Collection
-        var h = document.createElement("h4");
-        h.className = "upper";
-        h.textContent = "Sale Items";
-        var links = document.createElement("div");
-        links.className = "links";
-        var a = document.createElement("a");
-        a.href = "/collection.html?section=sale";
-        a.textContent = "Sale Items";
-        links.appendChild(a);
-        col.appendChild(h);
-        col.appendChild(links);
       });
+
+      // If a dedicated Sale Items section already exists OUTSIDE the grid, skip
+      var already = mega.querySelector(".mega-sale-section");
+      if (already) return;
+
+      // Create a new block directly under the grid
+      var wrap = document.createElement("div");
+      wrap.className = "mega-sale-section";
+      var h = document.createElement("h4");
+      h.className = "upper";
+      h.textContent = "Sale Items";
+      var links = document.createElement("div");
+      links.className = "links";
+      var a = document.createElement("a");
+      a.href = "/collection.html?section=sale";
+      a.textContent = "Sale Items";
+      links.appendChild(a);
+      wrap.appendChild(h);
+      wrap.appendChild(links);
+
+      if (grid.nextSibling) {
+        mega.insertBefore(wrap, grid.nextSibling);
+      } else {
+        mega.appendChild(wrap);
+      }
     } catch (_) {}
   }
 
@@ -4291,7 +4309,7 @@
       ].join(";");
 
       const headline = document.createElement("div");
-      headline.textContent = "Subscribe for exclusive updates and offers";
+      headline.textContent = "25% OFF your first order!";
       headline.style.cssText = [
         "font-size: 18px",
         "font-weight: 700",
@@ -4299,7 +4317,7 @@
       ].join(";");
 
       const sub = document.createElement("div");
-      sub.textContent = "Join the list to hear about new drops first.";
+      sub.textContent = "When you join the journeys team";
       sub.style.cssText = [
         "font-size: 14px",
         "opacity: 0.85",
@@ -4382,9 +4400,9 @@
       // Desktop refinements: keep stacked layout but upscale spacing/typography
       if (!isPopupMobile) {
         try {
-          card.style.maxWidth = "980px";
-          heroImg.style.height = "420px";
-          heroImg.style.minHeight = "420px";
+          card.style.maxWidth = "900px";
+          heroImg.style.height = "460px";
+          heroImg.style.minHeight = "460px";
 
           content.style.padding = "28px 32px 26px";
           content.style.textAlign = "center";
