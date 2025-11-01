@@ -102,6 +102,7 @@
       <a href="/collection.html?collection=boxing">Boxing</a>
       <a href="/collection.html?collection=womens-activewear">Women’s Activewear</a>
     </div>
+    <a href="/collection.html?section=sale" class="row-item sale">Sale Items</a>
     <a href="#" class="row-item">Gift Cards</a>
 
     <button class="row-item accordion" data-accordion aria-expanded="false">Customer Care <span class="chev">›</span></button>
@@ -201,6 +202,7 @@
     __safe("applyDesktopHeaderZIndexFix", applyDesktopHeaderZIndexFix);
     __safe("ensureShopClickToggle", ensureShopClickToggle);
     __safe("ensureMegaSaleSection", ensureMegaSaleSection);
+    __safe("ensureDrawerSaleItem", ensureDrawerSaleItem);
     __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
     __safe("syncDrawerLoginState", syncDrawerLoginState);
@@ -3981,6 +3983,41 @@
         col.appendChild(h);
         col.appendChild(links);
       });
+    } catch (_) {}
+  }
+
+  // Ensure the mobile drawer shows a top-level "Sale Items" link between Collections and Support
+  function ensureDrawerSaleItem() {
+    try {
+      var drawer = document.getElementById("mobile-drawer");
+      if (!drawer) return;
+      var nav = drawer.querySelector(".drawer-nav");
+      if (!nav) return;
+      // Skip if already present
+      var exists = Array.from(nav.querySelectorAll("a.row-item")).some(
+        function (a) {
+          return /sale\s*items/i.test((a.textContent || "").trim());
+        }
+      );
+      if (exists) return;
+      // Create the link
+      var sale = document.createElement("a");
+      sale.href = "/collection.html?section=sale";
+      sale.className = "row-item sale";
+      sale.textContent = "Sale Items";
+      // Insert before "Customer Care" (Support & Contact)
+      var caret = Array.from(nav.querySelectorAll("button.row-item")).find(
+        function (b) {
+          return /(customer\s*care|support|contact)/i.test(
+            (b.textContent || "").trim()
+          );
+        }
+      );
+      if (caret && caret.parentNode === nav) {
+        nav.insertBefore(sale, caret);
+      } else {
+        nav.appendChild(sale);
+      }
     } catch (_) {}
   }
 
