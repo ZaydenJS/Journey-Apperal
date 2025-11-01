@@ -203,6 +203,7 @@
     __safe("ensureShopClickToggle", ensureShopClickToggle);
     __safe("ensureMegaSaleSection", ensureMegaSaleSection);
     __safe("ensureDrawerSaleItem", ensureDrawerSaleItem);
+    __safe("ensureStandardFooter", ensureStandardFooter);
     __safe("applyDesktopButtonHoverStyles", applyDesktopButtonHoverStyles);
     __safe("applyDesktopPointerCursorCSS", applyDesktopPointerCursorCSS);
     __safe("syncDrawerLoginState", syncDrawerLoginState);
@@ -4011,31 +4012,126 @@
       if (!drawer) return;
       var nav = drawer.querySelector(".drawer-nav");
       if (!nav) return;
-      // Skip if already present
-      var exists = Array.from(nav.querySelectorAll("a.row-item")).some(
-        function (a) {
-          return /sale\s*items/i.test((a.textContent || "").trim());
-        }
-      );
-      if (exists) return;
-      // Create the link
-      var sale = document.createElement("a");
-      sale.href = "/collection.html?section=sale";
-      sale.className = "row-item sale";
-      sale.textContent = "Sale Items";
-      // Insert before "Customer Care" (Support & Contact)
-      var caret = Array.from(nav.querySelectorAll("button.row-item")).find(
+
+      // 1) Remove any in-accordion "Sale Items" under "Shop by Collection"
+      var collBtn = Array.from(nav.querySelectorAll("button.row-item")).find(
         function (b) {
-          return /(customer\s*care|support|contact)/i.test(
-            (b.textContent || "").trim()
-          );
+          return /shop\s*by\s*collection/i.test((b.textContent || "").trim());
         }
       );
-      if (caret && caret.parentNode === nav) {
-        nav.insertBefore(sale, caret);
-      } else {
-        nav.appendChild(sale);
+      if (collBtn) {
+        var sub = collBtn.nextElementSibling;
+        if (sub && sub.classList && sub.classList.contains("sub")) {
+          Array.from(sub.querySelectorAll("a")).forEach(function (a) {
+            if (/sale\s*items/i.test((a.textContent || "").trim())) a.remove();
+          });
+        }
       }
+
+      // 2) Ensure a top-level link exists (direct child of nav)
+      var exists = Array.from(nav.children || []).some(function (el) {
+        return (
+          el.tagName === "A" &&
+          el.classList &&
+          el.classList.contains("row-item") &&
+          /sale\s*items/i.test((el.textContent || "").trim())
+        );
+      });
+
+      if (!exists) {
+        var sale = document.createElement("a");
+        sale.href = "/collection.html?section=sale";
+        sale.className = "row-item sale";
+        sale.textContent = "Sale Items";
+        // Insert above "Support & Contact" (or Customer Care)
+        var caret = Array.from(nav.querySelectorAll("button.row-item")).find(
+          function (b) {
+            return /(customer\s*care|support\s*&?\s*contact|support|contact)/i.test(
+              (b.textContent || "").trim()
+            );
+          }
+        );
+        if (caret && caret.parentNode === nav) {
+          nav.insertBefore(sale, caret);
+        } else {
+          nav.appendChild(sale);
+        }
+      }
+    } catch (_) {}
+  }
+
+  // Standardize footer across all pages using the index.html design
+  function ensureStandardFooter() {
+    try {
+      var footer = document.querySelector("footer");
+      if (!footer) return;
+      // If already standardized (Instagram link with SVG present), skip
+      var already = footer.querySelector('a[aria-label="Instagram"] svg');
+      if (already) return;
+
+      footer.setAttribute(
+        "style",
+        "background: #fff; color: #111; margin-top: 0"
+      );
+
+      var html =
+        "" +
+        '<div style="padding: 48px 0 32px 0">' +
+        '  <div style="max-width: 1200px; margin: 0 auto; padding: 0 16px">' +
+        '    <style>@media (max-width: 767px){#footer-grid h4{margin-bottom:16px!important}#footer-grid div[style*="flex-direction: column"]{gap:12px!important}#footer-grid > div{margin-bottom:16px!important}}</style>' +
+        '    <div id="footer-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:40px; margin-bottom:40px;">' +
+        '      <div style="text-align:center; display:flex; flex-direction:column; align-items:center;">' +
+        '        <img src="/LOGO/Header.png" alt="Journey Apparel Logo" style="height:120px; margin:0 auto 20px auto; display:block" />' +
+        '        <p style="color:#000; font-size:14px; line-height:1.6; margin:0 0 20px; max-width:280px; text-align:center;">Premium streetwear apparel. Designed and printed in house on our very own cut and sow garments. Each collection reflects creativity, precision and individuality made for those who live and breathe culture. Running the streets - Built to last</p>' +
+        '        <div style="display:flex; justify-content:center; gap:12px">' +
+        '          <a href="https://www.instagram.com/journeysapparel/" style="width:40px; height:40px; background:#f1f1f1; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#111; text-decoration:none; transition:background .2s ease" onmouseover="this.style.background=\'#e5e5e5\'" onmouseout="this.style.background=\'#f1f1f1\'" aria-label="Instagram" target="_blank" rel="noopener">' +
+        '            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" ry="5"></rect><circle cx="12" cy="12" r="3.5"></circle><circle cx="17.5" cy="6.5" r="1"></circle></svg>' +
+        "          </a>" +
+        '          <a href="https://www.facebook.com/journeysapparel" style="width:40px; height:40px; background:#f1f1f1; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#111; text-decoration:none; transition:background .2s ease" onmouseover="this.style.background=\'#e5e5e5\'" onmouseout="this.style.background=\'#f1f1f1\'" aria-label="Facebook" target="_blank" rel="noopener">' +
+        '            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12.06C22 6.48 17.52 2 11.94 2S2 6.48 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.64c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.45h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.44 2.91h-2.34v7.03C18.34 21.24 22 17.08 22 12.06z"/></svg>' +
+        "          </a>" +
+        "        </div>" +
+        "      </div>" +
+        '      <div style="text-align:center">' +
+        '        <h4 style="font-size:16px; font-weight:700; margin:0 0 12px 0; color:#000;">Support & Contact</h4>' +
+        '        <div style="display:flex; flex-direction:column; gap:8px">' +
+        '          <a href="contact.html" style="color:#000; text-decoration:none; font-size:14px; transition:color .2s ease">Contact Us</a>' +
+        '          <a href="shipping.html" style="color:#000; text-decoration:none; font-size:14px; transition:color .2s ease">Shipping Info</a>' +
+        '          <a href="returns.html" style="color:#000; text-decoration:none; font-size:14px; transition:color .2s ease">Returns & Exchanges</a>' +
+        '          <a href="product.html#size-guide" style="color:#000; text-decoration:none; font-size:14px; transition:color .2s ease">Size Guide</a>' +
+        '          <a href="policies.html" style="color:#000; text-decoration:none; font-size:14px; transition:color .2s ease">Policies</a>' +
+        "        </div>" +
+        "      </div>" +
+        '      <div style="text-align:center">' +
+        '        <h4 style="font-size:16px; font-weight:700; margin:0 0 12px 0; color:#000;">Company</h4>' +
+        '        <div style="display:flex; flex-direction:column; gap:8px">' +
+        '          <a href="about.html" style="color:#000; text-decoration:none; font-size:14px; transition:color .2s ease">About</a>' +
+        "        </div>" +
+        "      </div>" +
+        '      <div style="text-align:center">' +
+        '        <h4 style="font-size:16px; font-weight:700; margin:0 0 12px 0; color:#000;">Stay Connected</h4>' +
+        '        <p style="color:#000; font-size:14px; margin:0 0 16px 0">Get exclusive access to new drops and news.</p>' +
+        '        <div class="newsletter">' +
+        '          <form style="display:flex; gap:8px; max-width:280px; margin:0 auto">' +
+        '            <input type="email" placeholder="Enter your email" required style="flex:1; padding:12px 16px; border:1px solid #444; border-radius:8px; background:#fff; color:#000; font-size:14px" />' +
+        '            <button type="submit" style="padding:12px 16px; border-radius:8px; background:#fff; color:#000; border:none; font-weight:600; cursor:pointer; white-space:nowrap">Subscribe</button>' +
+        "          </form>" +
+        "        </div>" +
+        '        <p style="color:#000; font-size:12px; margin:12px 0 0 0">By subscribing, you agree to our Privacy Policy.</p>' +
+        "      </div>" +
+        "    </div>" +
+        "  </div></div>" +
+        '  <div style="border-top:1px solid #333; padding:24px 0">' +
+        '    <div style="max-width:1200px; margin:0 auto; padding:0 16px">' +
+        '      <div style="display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center">' +
+        '        <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:24px;">' +
+        '          <span style="color:#000; font-size:14px">© 2025 Journey Apparel. All rights reserved.</span>' +
+        "        </div>" +
+        "      </div>" +
+        "    </div>" +
+        "  </div>";
+
+      footer.innerHTML = html;
     } catch (_) {}
   }
 
@@ -4268,7 +4364,11 @@
       card.style.display = "flex";
       card.style.flexDirection = "column";
       const heroImg = document.createElement("img");
-      heroImg.src = "/LOGO/Header.png";
+      heroImg.src = "/LOGO/POPUP.png";
+      heroImg.onerror = function () {
+        this.onerror = null;
+        this.src = "/LOGO/Header.png";
+      };
       heroImg.alt = "Journeys – latest drop";
       heroImg.style.cssText = [
         "width: 100%",
