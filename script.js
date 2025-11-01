@@ -3951,56 +3951,56 @@
     try {
       var header = document.querySelector("header.header");
       if (!header) return;
-      var mega = header.querySelector(".nav .header-item .mega");
-      if (!mega) return;
-      var grid = mega.querySelector(".mega-grid");
-      if (!grid) return;
+      var nav = header.querySelector(".nav");
+      if (!nav) return;
 
-      // In the "Shop by Collection" column, remove any inline "Sale Items" link
-      // and also remove any previously injected in-column Sale Items block
-      Array.from(grid.children || []).forEach(function (col) {
-        var h4 = col.querySelector("h4");
-        var isShopByCollection =
-          h4 && /shop\s*by\s*collection/i.test((h4.textContent || "").trim());
-        if (!isShopByCollection) return;
-
-        Array.from(col.querySelectorAll(".links a")).forEach(function (a) {
-          if (/sale\s*items/i.test((a.textContent || "").trim())) a.remove();
-        });
-        // Remove any in-column Sale Items header/links that may have been added earlier
-        Array.from(col.querySelectorAll("h4")).forEach(function (h) {
-          if (/sale\s*items/i.test((h.textContent || "").trim())) {
-            var next = h.nextElementSibling;
-            h.remove();
-            if (next && next.classList && next.classList.contains("links"))
-              next.remove();
+      // Remove any "Sale Items" inside the desktop mega dropdown entirely
+      var mega = nav.querySelector(".header-item .mega");
+      if (mega) {
+        var grid = mega.querySelector(".mega-grid");
+        if (grid) {
+          Array.from(grid.children || []).forEach(function (col) {
+            var h4 = col.querySelector("h4");
+            var isShopByCollection =
+              h4 &&
+              /shop\s*by\s*collection/i.test((h4.textContent || "").trim());
+            if (!isShopByCollection) return;
+            Array.from(col.querySelectorAll(".links a")).forEach(function (a) {
+              if (/sale\s*items/i.test((a.textContent || "").trim()))
+                a.remove();
+            });
+          });
+        }
+        // Remove any previously injected dedicated Sale block in the dropdown
+        Array.from(mega.querySelectorAll(".mega-sale-section")).forEach(
+          function (x) {
+            x.remove();
           }
-        });
-      });
+        );
+      }
 
-      // If a dedicated Sale Items section already exists OUTSIDE the grid, skip
-      var already = mega.querySelector(".mega-sale-section");
-      if (already) return;
-
-      // Create a new block directly under the grid
-      var wrap = document.createElement("div");
-      wrap.className = "mega-sale-section";
-      var h = document.createElement("h4");
-      h.className = "upper";
-      h.textContent = "Sale Items";
-      var links = document.createElement("div");
-      links.className = "links";
-      var a = document.createElement("a");
-      a.href = "/collection.html?section=sale";
-      a.textContent = "Sale Items";
-      links.appendChild(a);
-      wrap.appendChild(h);
-      wrap.appendChild(links);
-
-      if (grid.nextSibling) {
-        mega.insertBefore(wrap, grid.nextSibling);
-      } else {
-        mega.appendChild(wrap);
+      // Ensure a TOP-LEVEL header link "Sale Items" exists (not in dropdown)
+      var exists = Array.from(nav.querySelectorAll("a.header-item")).some(
+        function (a) {
+          return /sale\s*items/i.test((a.textContent || "").trim());
+        }
+      );
+      if (!exists) {
+        var sale = document.createElement("a");
+        sale.href = "/collection.html?section=sale";
+        sale.className = "header-item sale";
+        sale.textContent = "Sale Items";
+        // Insert right after "Shop" header item
+        var shop = nav.querySelector("a.header-item");
+        if (shop && shop.parentNode === nav) {
+          if (shop.nextSibling) {
+            nav.insertBefore(sale, shop.nextSibling);
+          } else {
+            nav.appendChild(sale);
+          }
+        } else {
+          nav.appendChild(sale);
+        }
       }
     } catch (_) {}
   }
@@ -4064,11 +4064,11 @@
   function ensureStandardFooter() {
     try {
       var footer = document.querySelector("footer");
-      if (!footer) return;
-      // If already standardized (Instagram link with SVG present), skip
-      var already = footer.querySelector('a[aria-label="Instagram"] svg');
-      if (already) return;
-
+      if (!footer) {
+        footer = document.createElement("footer");
+        if (document.body) document.body.appendChild(footer);
+      }
+      // Always enforce the index.html footer on every page
       footer.setAttribute(
         "style",
         "background: #fff; color: #111; margin-top: 0"
