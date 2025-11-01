@@ -4268,8 +4268,7 @@
       card.style.display = "flex";
       card.style.flexDirection = "column";
       const heroImg = document.createElement("img");
-      heroImg.src =
-        "/Pop%20up%20ad%20photo/Panther%20Can_t%20Catch%20Us%20-%20Cream%20-%20Trainer%20Hoodie%20Ultra%20Heavy%20Weight%20-%201.png";
+      heroImg.src = "/LOGO/Header.png";
       heroImg.alt = "Journeys – latest drop";
       heroImg.style.cssText = [
         "width: 100%",
@@ -4408,11 +4407,11 @@
           content.style.textAlign = "center";
           content.style.alignItems = "center";
 
-          headline.style.fontSize = "24px";
+          headline.style.fontSize = "32px";
           headline.style.letterSpacing = "0.2px";
           headline.style.marginBottom = "10px";
 
-          sub.style.fontSize = "16px";
+          sub.style.fontSize = "18px";
           sub.style.marginBottom = "18px";
 
           form.style.maxWidth = "540px";
