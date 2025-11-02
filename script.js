@@ -4364,10 +4364,17 @@
       card.style.display = "flex";
       card.style.flexDirection = "column";
       const heroImg = document.createElement("img");
-      heroImg.src = "/LOGO/POPUP.png";
+      // Prefer site root POPUP.png; fall back to legacy path then header logo
+      heroImg.src = "/POPUP.png";
+      let __popupImgTry = 0;
       heroImg.onerror = function () {
-        this.onerror = null;
-        this.src = "/LOGO/Header.png";
+        if (__popupImgTry === 0) {
+          __popupImgTry = 1;
+          this.src = "/LOGO/POPUP.png";
+        } else {
+          this.onerror = null;
+          this.src = "/LOGO/Header.png";
+        }
       };
       heroImg.alt = "Journeys – latest drop";
       heroImg.style.cssText = [
