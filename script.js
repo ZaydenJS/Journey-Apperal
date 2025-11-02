@@ -4364,12 +4364,14 @@
       card.style.display = "flex";
       card.style.flexDirection = "column";
       const heroImg = document.createElement("img");
-      // Prefer site root POPUP.png; fall back to legacy path then header logo
-      heroImg.src = "/POPUP.png";
+      // Prefer POPUP.png inside 'Pop up ad photo' dir; then root; then legacy; then header
+      heroImg.src = encodeURI("/Pop up ad photo/POPUP.png");
       let __popupImgTry = 0;
       heroImg.onerror = function () {
-        if (__popupImgTry === 0) {
-          __popupImgTry = 1;
+        __popupImgTry++;
+        if (__popupImgTry === 1) {
+          this.src = "/POPUP.png";
+        } else if (__popupImgTry === 2) {
           this.src = "/LOGO/POPUP.png";
         } else {
           this.onerror = null;
