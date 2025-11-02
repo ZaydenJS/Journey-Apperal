@@ -4382,7 +4382,7 @@
       heroImg.style.cssText = [
         "width: 100%",
         isPopupMobile ? "height: 240px" : "height: 320px",
-        "object-fit: cover",
+        "object-fit: contain",
         "display: block",
         "background: #f4f4f4",
       ].join(";");
