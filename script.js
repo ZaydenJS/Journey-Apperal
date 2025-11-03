@@ -4547,7 +4547,7 @@
       mcIframe.addEventListener("load", () => {
         if (!mcAwaiting) return; // Ignore initial blank load
         mcAwaiting = false;
-        msg.textContent = "✅ Thanks! Check your email for your 25% off code.";
+        msg.textContent = "Thanks! Check your email for your 25% off code.";
         // Optional: auto-close the popup after 3 seconds
         // setTimeout(() => { try { dismiss(); } catch (_) {} }, 3000); // Optional: auto-close after 3s
       });
