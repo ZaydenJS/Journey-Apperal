@@ -170,6 +170,7 @@
     __safe("setupCollectionUI", setupCollectionUI);
     __safe("setupProductFromSlug", setupProductFromSlug);
     __safe("setupHomepageProducts", setupHomepageProducts);
+    __safe("setupNewArrivalsMobile", setupNewArrivalsMobile);
     __safe(
       "setupRecentlyViewedAndBestSellers",
       setupRecentlyViewedAndBestSellers
@@ -3108,7 +3109,16 @@
           if (!track) return;
           const prevs = $$(".prev", row);
           const nexts = $$(".next", row);
-          const step = () => track.clientWidth * 0.8;
+          const step = () => {
+            const first = track.children[0];
+            if (first) {
+              const rect = first.getBoundingClientRect();
+              const styles = getComputedStyle(track);
+              const gap = parseFloat(styles.columnGap || styles.gap || 0) || 0;
+              return rect.width + gap; // scroll exactly one card at a time on mobile
+            }
+            return track.clientWidth * 0.8;
+          };
           prevs.forEach((btn) =>
             btn.addEventListener("click", () =>
               track.scrollBy({ left: -step(), behavior: "smooth" })
@@ -5540,6 +5550,10 @@
           if (u && idx < 12) firstImgs.push(u);
         });
         __prewarmImages(firstImgs);
+        try {
+          if (section === "new-arrivals" && window.innerWidth < 1024)
+            setupNewArrivalsMobile();
+        } catch (_) {}
         // Prefetch visible PDPs immediately
         const cards = Array.from(
           container.querySelectorAll("article.card[data-href]")
@@ -5790,6 +5804,9 @@
             ${
               hasComparePrice
                 ? `
+
+
+
               <span class="price compare-at" style="font-weight: 400; text-decoration: line-through; color: #999; margin-right: 8px; font-size: 13px;">$${parseFloat(
                 compareAtPrice
               ).toFixed(2)}</span>
@@ -5803,6 +5820,97 @@
         </div>
       </article>
     `;
+  }
+
+  function setupNewArrivalsMobile() {
+    try {
+      const section = document.getElementById("new-arrivals");
+      if (!section) return;
+      if (window.innerWidth >= 1024) return; // mobile only
+
+      const tracks = section.querySelectorAll(".carousel-row .carousel-track");
+      if (!tracks || !tracks.length) return;
+
+      tracks.forEach((track) => {
+        // Apply horizontal grid track like Best Sellers mobile
+        track.style.display = "grid";
+        track.style.gridTemplateColumns = "unset";
+        track.style.gridAutoFlow = "column";
+        track.style.gridAutoColumns = "50%";
+        track.style.gap = track.style.gap || "12px";
+        track.style.overflowX = "auto";
+        track.style.overflowY = "hidden";
+        track.style.scrollBehavior = track.style.scrollBehavior || "smooth";
+        track.style.webkitOverflowScrolling = "touch";
+        track.style.touchAction = "pan-x";
+        track.style.overscrollBehaviorX = "contain";
+        track.style.padding = track.style.padding || "0";
+        track.style.scrollSnapType = "x mandatory";
+        Array.from(track.children).forEach((child) => {
+          try {
+            child.style.scrollSnapAlign = "start";
+          } catch (_) {}
+        });
+
+        // Avoid double-binding
+        if (track.hasAttribute("data-na-mobile-bound")) return;
+        track.setAttribute("data-na-mobile-bound", "1");
+
+        const step = () => {
+          const first = track.children[0];
+          if (first) {
+            const rect = first.getBoundingClientRect();
+            const styles = getComputedStyle(track);
+            const gap = parseFloat(styles.columnGap || styles.gap || 0) || 0;
+            return rect.width + gap; // one card at a time
+          }
+          return track.clientWidth * 0.5;
+        };
+
+        const row = track.closest(".carousel-row");
+        const prevs = row ? row.querySelectorAll(".prev") : [];
+        const nexts = row ? row.querySelectorAll(".next") : [];
+        prevs.forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            try {
+              e.preventDefault();
+              e.stopImmediatePropagation();
+            } catch (_) {}
+            track.scrollBy({ left: -step(), behavior: "smooth" });
+          });
+        });
+        nexts.forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            try {
+              e.preventDefault();
+              e.stopImmediatePropagation();
+            } catch (_) {}
+            track.scrollBy({ left: step(), behavior: "smooth" });
+          });
+        });
+
+        // Drag-to-scroll (lightweight)
+        let startX = 0,
+          scrollLeft = 0,
+          isDown = false;
+        track.addEventListener("pointerdown", (e) => {
+          isDown = true;
+          startX = e.pageX;
+          scrollLeft = track.scrollLeft;
+        });
+        track.addEventListener("pointermove", (e) => {
+          if (!isDown) return;
+          const dx = e.pageX - startX;
+          track.scrollLeft = scrollLeft - dx;
+        });
+        const end = () => {
+          isDown = false;
+        };
+        track.addEventListener("pointerup", end);
+        track.addEventListener("pointercancel", end);
+        track.addEventListener("pointerleave", end);
+      });
+    } catch (_) {}
   }
 
   function setupCollectionUI() {
