@@ -4440,13 +4440,22 @@
         "width: 100%",
       ].join(";");
 
+      // Post directly to Mailchimp; target hidden iframe (no redirect)
+      form.action =
+        "https://journeysapparel.us5.list-manage.com/subscribe/post?u=de14f9e1de5e70d726b870a4e&id=49f5f16177";
+      form.method = "POST";
+      form.target = "hidden_iframe";
+      form.setAttribute("novalidate", "");
+      // Bypass our JSONP binder for this form
+      form.dataset.mcDirect = "1";
+
       const wrapper = document.createElement("div");
       wrapper.className = "newsletter";
       wrapper.appendChild(form);
 
       const input = document.createElement("input");
       input.type = "email";
-      input.name = "email";
+      input.name = "EMAIL";
       input.placeholder = "Enter your email";
       input.required = true;
       input.style.cssText = [
@@ -4473,10 +4482,12 @@
         "white-space: nowrap",
       ].join(";");
 
-      const msg = document.createElement("div");
-      msg.className = "mc-message";
-      msg.setAttribute("role", "status");
-      msg.style.cssText = "margin-top:10px; font-size:13px; color:#111;";
+      const successMessage = document.createElement("p");
+      successMessage.id = "success-message";
+      successMessage.style.cssText =
+        "margin-top:10px; font-size:13px; color:#111; display:none;";
+      successMessage.textContent =
+        "✅ Thanks! Check your email for your 25% off code.";
 
       const prevOverflow = document.body.style.overflow;
       function dismiss() {
@@ -4499,11 +4510,46 @@
       form.appendChild(input);
       form.appendChild(btn);
 
+      // Add Mailchimp tag to identify popup signups
+      const tag = document.createElement("input");
+      tag.type = "hidden";
+      tag.name = "TAGS";
+      tag.value = "popup";
+      form.appendChild(tag);
+
+      // Mailchimp honeypot
+      const hpWrap = document.createElement("div");
+      hpWrap.style.cssText = "position:absolute;left:-5000px;";
+      hpWrap.setAttribute("aria-hidden", "true");
+      const hp = document.createElement("input");
+      hp.type = "text";
+      hp.name = "b_de14f9e1de5e70d726b870a4e_49f5f16177";
+      hp.tabIndex = -1;
+      hp.value = "";
+      hpWrap.appendChild(hp);
+      form.appendChild(hpWrap);
+
       content.appendChild(headline);
       content.appendChild(sub);
       content.appendChild(wrapper);
-      content.appendChild(msg);
+
+      // Hidden iframe to prevent redirect while still posting to Mailchimp
+      const hiddenIframe = document.createElement("iframe");
+      hiddenIframe.name = "hidden_iframe";
+      hiddenIframe.style.display = "none";
+      content.appendChild(hiddenIframe);
+
+      content.appendChild(successMessage);
       card.appendChild(closeBtn);
+
+      // Show inline success message shortly after submit
+      form.addEventListener("submit", () => {
+        setTimeout(() => {
+          try {
+            successMessage.style.display = "block";
+          } catch (_) {}
+        }, 1000);
+      });
 
       // Desktop refinements: keep stacked layout but upscale spacing/typography
       if (!isPopupMobile) {
