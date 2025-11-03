@@ -4183,6 +4183,13 @@
 
     const bindForm = (form) => {
       if (!form || form.dataset.mcBound === "1") return;
+      // Allow direct Mailchimp POST forms (e.g., popup) to bypass JSONP binding
+      const action = form.getAttribute("action") || "";
+      if (
+        form.dataset.mcDirect === "1" ||
+        /list-manage\.com\/subscribe\/post/i.test(action)
+      )
+        return;
       const emailInput = form.querySelector(
         "input[type='email'], input[name='EMAIL'], input[name='email']"
       );
@@ -4439,6 +4446,12 @@
         "align-items:stretch",
         "width: 100%",
       ].join(";");
+      // Post directly to Mailchimp in a new tab; keep UI unchanged
+      form.action =
+        "https://journeysapparel.us5.list-manage.com/subscribe/post?u=de14f9e1de5e70d726b870a4e&id=49f5f16177&f_id=0071cae1f0";
+      form.method = "POST";
+      form.target = "_blank";
+      form.dataset.mcDirect = "1";
 
       const wrapper = document.createElement("div");
       wrapper.className = "newsletter";
@@ -4446,7 +4459,7 @@
 
       const input = document.createElement("input");
       input.type = "email";
-      input.name = "email";
+      input.name = "EMAIL";
       input.placeholder = "Enter your email";
       input.required = true;
       input.style.cssText = [
