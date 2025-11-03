@@ -4183,13 +4183,6 @@
 
     const bindForm = (form) => {
       if (!form || form.dataset.mcBound === "1") return;
-      // Allow direct Mailchimp POST forms (e.g., popup) to bypass JSONP binding
-      const action = form.getAttribute("action") || "";
-      if (
-        form.dataset.mcDirect === "1" ||
-        /list-manage\.com\/subscribe\/post/i.test(action)
-      )
-        return;
       const emailInput = form.querySelector(
         "input[type='email'], input[name='EMAIL'], input[name='email']"
       );
@@ -4446,18 +4439,6 @@
         "align-items:stretch",
         "width: 100%",
       ].join(";");
-      // Post directly to Mailchimp via hidden iframe to avoid redirect; automations still fire
-      form.action =
-        "https://journeysapparel.us5.list-manage.com/subscribe/post?u=de14f9e1de5e70d726b870a4e&id=49f5f16177&f_id=0071cae1f0";
-      form.method = "POST";
-      form.target = "mc-target"; // Required: use a hidden iframe named "mc-target"
-      form.dataset.mcDirect = "1";
-      // Hidden tag so Mailchimp adds "popup" tag to contact
-      const tag = document.createElement("input");
-      tag.type = "hidden";
-      tag.name = "TAGS";
-      tag.value = "popup";
-      form.appendChild(tag);
 
       const wrapper = document.createElement("div");
       wrapper.className = "newsletter";
@@ -4465,10 +4446,9 @@
 
       const input = document.createElement("input");
       input.type = "email";
-      input.name = "EMAIL";
+      input.name = "email";
       input.placeholder = "Enter your email";
       input.required = true;
-      input.setAttribute("aria-label", "Email address");
       input.style.cssText = [
         "flex:1",
         "padding:12px 14px",
@@ -4492,65 +4472,11 @@
         "cursor: pointer",
         "white-space: nowrap",
       ].join(";");
-      // Mailchimp honeypot field (to reduce bot signups)
-      const hpWrap = document.createElement("div");
-      hpWrap.style.cssText = "position:absolute; left:-5000px;";
-      hpWrap.setAttribute("aria-hidden", "true");
-      const hp = document.createElement("input");
-      hp.type = "text";
-      hp.name = "b_de14f9e1de5e70d726b870a4e_49f5f16177";
-      hp.tabIndex = -1;
-      hp.value = "";
-      hpWrap.appendChild(hp);
-
-      const err = document.createElement("div");
-      err.className = "mc-error";
-      err.setAttribute("role", "alert");
-      err.style.cssText = "margin-top:6px; font-size:13px; color:#c0392b;";
 
       const msg = document.createElement("div");
       msg.className = "mc-message";
       msg.setAttribute("role", "status");
       msg.style.cssText = "margin-top:10px; font-size:13px; color:#111;";
-
-      // Hidden iframe to capture Mailchimp response without redirect
-      const mcIframeName = "mc-target";
-      let mcAwaiting = false;
-      const mcIframe = document.createElement("iframe");
-      mcIframe.name = mcIframeName;
-      mcIframe.id = mcIframeName;
-      mcIframe.style.cssText =
-        "position:absolute; left:-9999px; width:0; height:0; border:0;";
-      mcIframe.setAttribute("tabindex", "-1");
-      mcIframe.setAttribute("aria-hidden", "true");
-      overlay.appendChild(mcIframe);
-
-      // Validate before submit; success will be shown on iframe load
-      form.addEventListener("submit", (e) => {
-        const emailVal = (input.value || "").trim();
-        const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailVal);
-        if (!valid) {
-          e.preventDefault();
-          err.textContent = "Please enter a valid email address.";
-          msg.textContent = "";
-          try {
-            input.focus();
-          } catch (_) {}
-          return;
-        }
-        err.textContent = "";
-        msg.textContent = "";
-        mcAwaiting = true; // Wait for iframe load to confirm
-      });
-
-      // On iframe load after a submit, show inline success message
-      mcIframe.addEventListener("load", () => {
-        if (!mcAwaiting) return; // Ignore initial blank load
-        mcAwaiting = false;
-        msg.textContent = "Thanks! Check your email for your 25% off code.";
-        // Optional: auto-close the popup after 3 seconds
-        // setTimeout(() => { try { dismiss(); } catch (_) {} }, 3000); // Optional: auto-close after 3s
-      });
 
       const prevOverflow = document.body.style.overflow;
       function dismiss() {
@@ -4571,13 +4497,11 @@
       });
 
       form.appendChild(input);
-      form.appendChild(hpWrap);
       form.appendChild(btn);
 
       content.appendChild(headline);
       content.appendChild(sub);
       content.appendChild(wrapper);
-      content.appendChild(err);
       content.appendChild(msg);
       card.appendChild(closeBtn);
 
