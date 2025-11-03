@@ -4485,11 +4485,43 @@
         "cursor: pointer",
         "white-space: nowrap",
       ].join(";");
+      // Mailchimp honeypot field (to reduce bot signups)
+      const hpWrap = document.createElement("div");
+      hpWrap.style.cssText = "position:absolute; left:-5000px;";
+      hpWrap.setAttribute("aria-hidden", "true");
+      const hp = document.createElement("input");
+      hp.type = "text";
+      hp.name = "b_de14f9e1de5e70d726b870a4e_49f5f16177";
+      hp.tabIndex = -1;
+      hp.value = "";
+      hpWrap.appendChild(hp);
 
       const msg = document.createElement("div");
       msg.className = "mc-message";
       msg.setAttribute("role", "status");
       msg.style.cssText = "margin-top:10px; font-size:13px; color:#111;";
+
+      // Lightweight success UX without changing design; do not block POST
+      form.addEventListener("submit", (e) => {
+        const email = (input.value || "").trim();
+        const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+        if (!valid) {
+          e.preventDefault();
+          msg.textContent = "Please enter a valid email.";
+          try {
+            input.focus();
+          } catch (_) {}
+          return;
+        }
+        msg.textContent =
+          "Thanks! Check your inbox for your exclusive discount.";
+        // Optionally hide the popup shortly after submitting
+        setTimeout(() => {
+          try {
+            dismiss();
+          } catch (_) {}
+        }, 1400);
+      });
 
       const prevOverflow = document.body.style.overflow;
       function dismiss() {
@@ -4510,6 +4542,7 @@
       });
 
       form.appendChild(input);
+      form.appendChild(hpWrap);
       form.appendChild(btn);
 
       content.appendChild(headline);
