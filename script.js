@@ -4487,7 +4487,7 @@
       successMessage.style.cssText =
         "margin-top:10px; font-size:13px; color:#111; display:none;";
       successMessage.textContent =
-        "✅ Thanks! Check your email for your 25% off code.";
+        "✅ Your 25% off code has been sent! Be sure to check all inboxes, Promotions or Spam too, so you don’t miss it.";
 
       const prevOverflow = document.body.style.overflow;
       function dismiss() {
