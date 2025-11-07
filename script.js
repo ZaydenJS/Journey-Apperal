@@ -6055,10 +6055,37 @@
       })
     );
 
+    // Build size options dynamically from loaded products (fallback to standard order)
+    const __SIZE_ORDER = ["2XS", "XS", "S", "M", "L", "XL", "2XL", "3XL", "OS"];
+    const getAvailableSizes = () => {
+      try {
+        const norm = window.__COLLECTION_PRODUCTS_NORM;
+        if (Array.isArray(norm) && norm.length) {
+          const set = new Set();
+          norm.forEach((it) => {
+            if (it && it.sizes) it.sizes.forEach((s) => set.add(String(s)));
+          });
+          const present = Array.from(set);
+          const ordered = __SIZE_ORDER.filter((s) => set.has(s));
+          const extras = present
+            .filter((s) => !__SIZE_ORDER.includes(s))
+            .sort((a, b) => {
+              const na = Number(a),
+                nb = Number(b);
+              if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+              return String(a).localeCompare(String(b));
+            });
+          const list = ordered.concat(extras);
+          return list.length ? list : __SIZE_ORDER.slice();
+        }
+      } catch (_) {}
+      return __SIZE_ORDER.slice();
+    };
+
     // Premium chip dropdowns: Size, Color, Product type, Availability
     const chipMenus = {
       // Size Guide authoritative list
-      size: ["2XS", "XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      size: () => getAvailableSizes(),
       // Seed colors; can be extended dynamically from loaded products
       color: ["Black", "White", "Gray", "Blue", "Green"],
       // Align exactly with site categories
@@ -6100,51 +6127,56 @@
         transform: "translateY(-2px)",
       });
 
-      options.forEach((label) => {
-        const row = document.createElement("label");
-        Object.assign(row.style, {
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          padding: "8px 10px",
-          cursor: "pointer",
-          borderRadius: "8px",
-          fontSize: "14px",
-          color: "#111",
+      const buildRows = (list) => {
+        menu.innerHTML = "";
+        list.forEach((label) => {
+          const row = document.createElement("label");
+          Object.assign(row.style, {
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "8px 10px",
+            cursor: "pointer",
+            borderRadius: "8px",
+            fontSize: "14px",
+            color: "#111",
+          });
+          row.addEventListener(
+            "mouseenter",
+            () => (row.style.background = "#f6f6f6")
+          );
+          row.addEventListener(
+            "mouseleave",
+            () => (row.style.background = "transparent")
+          );
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = chipState[key].has(label);
+          cb.addEventListener("change", () => {
+            if (cb.checked) chipState[key].add(label);
+            else chipState[key].delete(label);
+            const nameSpan = chip.querySelector("span");
+            if (nameSpan) {
+              const base =
+                chip.getAttribute("data-label-base") ||
+                nameSpan.textContent.split("•")[0].trim();
+              chip.setAttribute("data-label-base", base);
+              const count = chipState[key].size;
+              nameSpan.textContent = count ? `${base} • ${count}` : base;
+              chip.style.border = count ? "1px solid #000" : "1px solid #ddd";
+            }
+            // Apply filters immediately
+            if (window.__applyCollection) window.__applyCollection();
+          });
+          const txt = document.createElement("span");
+          txt.textContent = label;
+          row.appendChild(cb);
+          row.appendChild(txt);
+          menu.appendChild(row);
         });
-        row.addEventListener(
-          "mouseenter",
-          () => (row.style.background = "#f6f6f6")
-        );
-        row.addEventListener(
-          "mouseleave",
-          () => (row.style.background = "transparent")
-        );
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.checked = chipState[key].has(label);
-        cb.addEventListener("change", () => {
-          if (cb.checked) chipState[key].add(label);
-          else chipState[key].delete(label);
-          const nameSpan = chip.querySelector("span");
-          if (nameSpan) {
-            const base =
-              chip.getAttribute("data-label-base") ||
-              nameSpan.textContent.split("•")[0].trim();
-            chip.setAttribute("data-label-base", base);
-            const count = chipState[key].size;
-            nameSpan.textContent = count ? `${base} • ${count}` : base;
-            chip.style.border = count ? "1px solid #000" : "1px solid #ddd";
-          }
-          // Apply filters immediately
-          if (window.__applyCollection) window.__applyCollection();
-        });
-        const txt = document.createElement("span");
-        txt.textContent = label;
-        row.appendChild(cb);
-        row.appendChild(txt);
-        menu.appendChild(row);
-      });
+      };
+      buildRows(options);
+      menu.__rebuild = buildRows;
 
       document.body.appendChild(menu);
 
@@ -6197,9 +6229,21 @@
       return { open, close, position, el: menu };
     };
 
+    // Allow dynamic refresh of chip options (e.g., once products load)
+    window.__refreshChipOptions = function (key) {
+      try {
+        const menu = document.querySelector(`[data-chip-panel="${key}"]`);
+        if (!menu || typeof menu.__rebuild !== "function") return;
+        const def = chipMenus[key];
+        const opts = typeof def === "function" ? def() : def;
+        if (Array.isArray(opts)) menu.__rebuild(opts);
+      } catch (_) {}
+    };
+
     document.querySelectorAll(".filter-chip").forEach((chip) => {
       const key = chip.getAttribute("data-filter");
-      const opts = chipMenus[key];
+      const def = chipMenus[key];
+      const opts = typeof def === "function" ? def() : def;
       if (!opts) return;
       createChipMenu(chip, key, opts);
     });
@@ -6546,6 +6590,11 @@
             window.__COLLECTION_PRODUCTS_NORM = live.map(norm);
             window.__COLLECTION_PRODUCTS_NORM_SRC = live;
           }
+          try {
+            if (window.__refreshChipOptions)
+              window.__refreshChipOptions("size");
+          } catch (_) {}
+
           let items = window.__COLLECTION_PRODUCTS_NORM.slice();
 
           // Apply filters
