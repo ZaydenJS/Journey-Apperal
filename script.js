@@ -5211,10 +5211,19 @@
       tag = isPrefixed ? categoryRaw.toLowerCase() : base.toLowerCase();
     } else if (params.get("collection")) {
       const collection = params.get("collection");
-      label = toTitle(collection);
-      collectionHandle = collection.toLowerCase().replace(/\s+/g, "-");
-      if (collectionHandle === "journeys-authentic-collection") {
-        tag = "journeys authentic collection";
+      const raw = String(collection || "");
+      const normalized = raw.toLowerCase().replace(/\s+/g, "-");
+      // Special: "Summer 25/26" — fetch by tag across all products, and keep slash in label
+      if (normalized === "summer-25-26") {
+        label = "Summer 25/26";
+        collectionHandle = "all"; // search storewide by tag
+        tag = "summer25/26";
+      } else {
+        label = toTitle(collection);
+        collectionHandle = normalized;
+        if (collectionHandle === "journeys-authentic-collection") {
+          tag = "journeys authentic collection";
+        }
       }
     } else {
       label = "Shop All";
