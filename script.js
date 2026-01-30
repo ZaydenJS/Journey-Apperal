@@ -594,6 +594,15 @@
     let __pdpSetupDone = false;
     const renderFrom = (p) => {
       if (!p) return;
+	      // Meta Pixel: ViewContent (deduped in JourneyPixel)
+	      try {
+	        if (
+	          window.JourneyPixel &&
+	          typeof window.JourneyPixel.trackViewContent === "function"
+	        ) {
+	          window.JourneyPixel.trackViewContent(p);
+	        }
+	      } catch (_) {}
       // Update page title
       document.title = `${p.title} – Journey Apparel`;
 
@@ -1713,7 +1722,48 @@
               }
             } catch (_) {}
           }
-          setLines(lines);
+	          setLines(lines);
+
+	          // Meta Pixel: AddToCart (fire after cart is updated)
+	          try {
+	            if (
+	              window.JourneyPixel &&
+	              typeof window.JourneyPixel.trackAddToCart === "function"
+	            ) {
+	              var __pxValue = null;
+	              var __pxCurrency = "USD";
+	              try {
+	                if (
+	                  selectedVariant &&
+	                  selectedVariant.price &&
+	                  selectedVariant.price.amount
+	                ) {
+	                  __pxValue = parseFloat(selectedVariant.price.amount);
+	                  __pxCurrency =
+	                    selectedVariant.price.currencyCode || __pxCurrency;
+	                } else if (
+	                  product &&
+	                  product.priceRange &&
+	                  product.priceRange.minVariantPrice &&
+	                  product.priceRange.minVariantPrice.amount
+	                ) {
+	                  __pxValue = parseFloat(product.priceRange.minVariantPrice.amount);
+	                  __pxCurrency =
+	                    product.priceRange.minVariantPrice.currencyCode || __pxCurrency;
+	                }
+	              } catch (_) {}
+	              window.JourneyPixel.trackAddToCart({
+	                variantId: selectedVariant && selectedVariant.id,
+	                name: (product && product.title) || "",
+	                value:
+	                  __pxValue != null && isFinite(__pxValue)
+	                    ? __pxValue
+	                    : undefined,
+	                currency: __pxCurrency,
+	                quantity: 1,
+	              });
+	            }
+	          } catch (_) {}
 
           btn.textContent = "Added!";
           setTimeout(() => {
@@ -7441,6 +7491,15 @@
           if (!checkout.dataset.clickBound) {
             checkout.addEventListener("click", async function (e) {
               e.preventDefault();
+	              // Meta Pixel: InitiateCheckout (fire before redirect)
+	              try {
+	                if (
+	                  window.JourneyPixel &&
+	                  typeof window.JourneyPixel.trackInitiateCheckout === "function"
+	                ) {
+	                  window.JourneyPixel.trackInitiateCheckout();
+	                }
+	              } catch (_) {}
               try {
                 const CP = window.CartPermalink || {};
                 const getLines =
@@ -8162,6 +8221,29 @@
           variantGid: chosenId,
         });
       window.__cart?.setCart && window.__cart.setCart(items);
+
+	      // Meta Pixel: AddToCart (delegated fallback)
+	      try {
+	        if (
+	          window.JourneyPixel &&
+	          typeof window.JourneyPixel.trackAddToCart === "function"
+	        ) {
+	          var __val = null;
+	          try {
+	            var m = String(price || "")
+	              .replace(/,/g, "")
+	              .match(/([0-9]+(?:\.[0-9]+)?)/);
+	            if (m) __val = parseFloat(m[1]);
+	          } catch (_) {}
+	          window.JourneyPixel.trackAddToCart({
+	            variantId: chosenId,
+	            name: name,
+	            value: __val != null && isFinite(__val) ? __val : undefined,
+	            currency: "USD",
+	            quantity: 1,
+	          });
+	        }
+	      } catch (_) {}
 
       try {
         if (
