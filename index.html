@@ -899,10 +899,12 @@
           aria-hidden="true"
           muted
           playsinline
+	          poster="CTA%20Image/Stacker%20-%20Pistachio%20Tee%20-%203.jpg"
           autoplay
           loop
           preload="auto"
 	          src="NEW%20VIDEO/JOURNEYS1.mp4"
+	          onloadeddata="this.style.opacity='1'"
           style="
             position: absolute;
             inset: 0;
@@ -911,6 +913,8 @@
             object-fit: cover;
             z-index: 0;
             pointer-events: none;
+	            opacity: 0;
+	            transition: opacity 240ms ease;
           "
         >
           <source
