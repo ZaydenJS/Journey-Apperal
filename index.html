@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-	    <script src="/assets/meta-pixel.js"></script>
+	    <meta charset="utf-8" />
+	    <meta name="viewport" content="width=device-width, initial-scale=1" />
+	    <style id="critical-paint">
+	      /* Prevent a white flash before styles.css/video have loaded */
+	      html { background: #000; }
+	      body { margin: 0; }
+	    </style>
+		    <script src="/assets/meta-pixel.js"></script>
     <title>Journey Apparel — Modern Performance Essentials</title>
-    <link rel="preconnect" href="https://images.unsplash.com" />
-    <link rel="stylesheet" href="styles.css?v=pcnav26" />
+	    <link rel="preconnect" href="https://images.unsplash.com" />
+	    <link
+	      rel="preload"
+	      as="video"
+	      href="NEW%20HERO%20VIDEO/JOURNEYS2.mp4"
+	      type="video/mp4"
+	    />
+	    <link rel="stylesheet" href="styles.css?v=pcnav26" />
     <meta
       name="description"
       content="Premium athletic apparel. Minimal design. Maximum performance."
@@ -557,19 +568,21 @@
     </aside>
 
     <!-- Hero -->
-    <section
-      class="hero"
-      id="hero"
-      aria-label="Hero"
-	      style="width: 100%; margin: 0 0 36px; padding: 0; overflow: hidden; background: #000"
-    >
+	    <section
+	      class="hero"
+	      id="hero"
+	      aria-label="Hero"
+		      style="width: 100%; margin: 0 0 36px; padding: 0; overflow: hidden; background: #000; position: relative; min-height: 100vh"
+	    >
       <video
         class="hero-media"
         autoplay
         muted
         loop
-        playsinline
+	        playsinline
+	        webkit-playsinline
         preload="auto"
+	        src="NEW%20HERO%20VIDEO/JOURNEYS2.mp4"
 	        poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
         aria-hidden="true"
         style="
@@ -578,6 +591,7 @@
           width: 100%;
           height: 100%;
           object-fit: cover;
+	          background: #000;
         "
       >
 	        <source src="NEW%20HERO%20VIDEO/JOURNEYS2.mp4" type="video/mp4" />
