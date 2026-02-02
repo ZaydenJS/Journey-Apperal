@@ -128,9 +128,10 @@
 	        #hero .hero-media {
 	          display: block !important;
 	        }
-	        #hero {
-	          background-image: url("CTA%20Image/Use%20this.jpg");
-	          background-size: cover;
+		        #hero {
+		          background-image: none !important;
+		          background-color: #000 !important;
+		          background-size: cover;
 	          background-position: center;
 	          background-repeat: no-repeat;
 	        }
@@ -560,7 +561,7 @@
       class="hero"
       id="hero"
       aria-label="Hero"
-      style="width: 100%; margin: 0 0 36px; padding: 0; overflow: hidden"
+	      style="width: 100%; margin: 0 0 36px; padding: 0; overflow: hidden; background: #000"
     >
       <video
         class="hero-media"
@@ -569,7 +570,7 @@
         loop
         playsinline
         preload="auto"
-        poster="CTA%20Image/Stacker%20-%20Pistachio%20Tee%20-%203.jpg"
+	        poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
         aria-hidden="true"
         style="
           position: absolute;
