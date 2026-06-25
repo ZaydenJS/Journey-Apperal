@@ -4380,6 +4380,9 @@
   }
 
   function setupNewsletterPopup() {
+    // backup1: Temporarily disabled the 25% off newsletter popup on desktop and mobile.
+    return;
+
     try {
       const params = new URLSearchParams(location.search);
       const force =
