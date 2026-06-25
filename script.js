@@ -158,7 +158,8 @@
     __safe("setupCardLinks", setupCardLinks);
 
     __safe("setupCountdown", setupCountdown);
-    __safe("setupNewsletterPopup", setupNewsletterPopup);
+    // backup1: Temporarily disabled the 25% off newsletter popup on desktop and mobile.
+    // __safe("setupNewsletterPopup", setupNewsletterPopup);
 
     __safe("setupNewsletter", setupNewsletter);
     __safe("setupCurrency", setupCurrency);
